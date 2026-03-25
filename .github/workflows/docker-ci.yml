@@ -1,0 +1,32 @@
+name: docker-ci
+
+on:
+  push:
+    paths:
+      - "compose.yaml"
+      - "apps/api/**"
+      - "apps/web/**"
+      - ".github/workflows/docker-ci.yml"
+  pull_request:
+    paths:
+      - "compose.yaml"
+      - "apps/api/**"
+      - "apps/web/**"
+      - ".github/workflows/docker-ci.yml"
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate compose
+        run: docker compose -f compose.yaml config
+
+      - name: Build API image
+        run: docker build -t streamgate-api:ci ./apps/api
+
+      - name: Build Web image
+        run: docker build -t streamgate-web:ci ./apps/web
