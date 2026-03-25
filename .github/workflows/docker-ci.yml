@@ -2,17 +2,13 @@ name: docker-ci
 
 on:
   push:
-    paths:
-      - "compose.yaml"
-      - "apps/api/**"
-      - "apps/web/**"
-      - ".github/workflows/docker-ci.yml"
+    branches:
+      - dev
   pull_request:
-    paths:
-      - "compose.yaml"
-      - "apps/api/**"
-      - "apps/web/**"
-      - ".github/workflows/docker-ci.yml"
+    branches:
+      - dev
+      - main
+  workflow_dispatch:
 
 jobs:
   docker:
