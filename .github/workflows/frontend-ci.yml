@@ -2,13 +2,13 @@ name: frontend-ci
 
 on:
   push:
-    paths:
-      - "apps/web/**"
-      - ".github/workflows/frontend-ci.yml"
+    branches:
+      - dev
   pull_request:
-    paths:
-      - "apps/web/**"
-      - ".github/workflows/frontend-ci.yml"
+    branches:
+      - dev
+      - main
+  workflow_dispatch:
 
 jobs:
   frontend:
