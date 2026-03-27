@@ -76,8 +76,15 @@ function Invoke-ComposeCommand {
     [string]$Arguments
   )
 
-  $output = & cmd.exe /d /c "docker compose $Arguments" 2>&1
-  $exitCode = $LASTEXITCODE
+  $previousPreference = $ErrorActionPreference
+  try {
+    $ErrorActionPreference = 'Continue'
+    $output = & cmd.exe /d /c "docker compose $Arguments 2>&1"
+    $exitCode = $LASTEXITCODE
+  }
+  finally {
+    $ErrorActionPreference = $previousPreference
+  }
 
   [pscustomobject]@{
     Output = @($output)
@@ -173,17 +180,23 @@ function Get-ComposeServices {
     throw "Falha ao consultar status do Docker Compose: $($result.Output -join ' ')"
   }
 
-  $raw = $result.Output -join "`n"
+  $lines = @($result.Output | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 
-  if ([string]::IsNullOrWhiteSpace($raw)) {
+  if ($lines.Count -eq 0) {
     return @()
   }
 
-  $parsed = $raw | ConvertFrom-Json
+  if ($lines.Count -eq 1) {
+    $parsed = $lines[0] | ConvertFrom-Json
+    if ($parsed -is [System.Array]) {
+      return $parsed
+    }
 
-  if ($parsed -is [System.Array]) {
-    return $parsed
+    return @($parsed)
   }
 
-  return @($parsed)
+  return @($lines | ForEach-Object { $_ | ConvertFrom-Json })
 }
+
+
+

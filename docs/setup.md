@@ -196,6 +196,17 @@ Na raiz do projeto:
 ./scripts/dev-up.sh full
 ./scripts/dev-down.sh
 ./scripts/compose-health-tests.sh
+./scripts/ci-local.sh
+```
+
+O `./scripts/ci-local.sh` reproduz localmente os tres workflows do GitHub Actions com blocos separados por workflow, passos individuais e um resumo final mostrando claramente o que passou ou falhou.
+
+Se quiser validar apenas um workflow:
+
+```bash
+./scripts/ci-local.sh frontend
+./scripts/ci-local.sh backend
+./scripts/ci-local.sh docker
 ```
 
 ## Fallback para Windows puro
@@ -207,6 +218,7 @@ Se voce precisar rodar o projeto fora do WSL, ainda existem os scripts PowerShel
 .\scripts\dev-up.ps1
 .\scripts\dev-up.ps1 -Mode full
 .\scripts\dev-down.ps1
+.\scripts\ci-local.ps1
 ```
 
 Mas o fluxo recomendado segue sendo o `WSL-first`.

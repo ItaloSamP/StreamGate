@@ -55,8 +55,20 @@ get_compose_services_json() {
 
 analyze_compose_services() {
   local services_json="$1"
+  local service_json
+  local name
+  local state
+  local health
+  local exit_code
 
-  while IFS=$'\t' read -r name state health exit_code; do
+  while IFS= read -r service_json; do
+    [[ -z "$service_json" ]] && continue
+
+    name="$(jq -r '.Service' <<<"$service_json")"
+    state="$(jq -r '.State' <<<"$service_json")"
+    health="$(jq -r '(.Health // "")' <<<"$service_json")"
+    exit_code="$(jq -r '(.ExitCode // 0)' <<<"$service_json")"
+
     if [[ "$name" == "minio-init" ]]; then
       if [[ "$state" == "exited" && "$exit_code" == "0" ]]; then
         continue
@@ -90,9 +102,9 @@ analyze_compose_services() {
     fi
 
     printf 'fatal\tService '\''%s'\'' is unhealthy.\n' "$name"
-  done < <(
-    jq -r '.[] | [.Service, .State, (.Health // ""), ((.ExitCode // 0) | tostring)] | @tsv' <<<"$services_json"
-  )
+  done < <(jq -c '.[]' <<<"$services_json")
+
+  return 0
 }
 
 test_compose_services_ready() {

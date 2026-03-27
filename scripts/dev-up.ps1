@@ -1,10 +1,10 @@
-$ErrorActionPreference = "Stop"
-$PSNativeCommandUseErrorActionPreference = $false
-
 param(
   [ValidateSet('infra', 'app', 'full')]
   [string]$Mode = 'infra'
 )
+
+$ErrorActionPreference = "Stop"
+$PSNativeCommandUseErrorActionPreference = $false
 
 . "$PSScriptRoot/compose-health.ps1"
 

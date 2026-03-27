@@ -90,6 +90,17 @@ Os workflows atuais ficam em `.github/workflows`:
 - `backend-ci.yml`: testa `apps/api` e `apps/worker`
 - `docker-ci.yml`: valida o compose e builda as imagens Docker da API e do frontend
 
+
+Para reproduzir esses workflows localmente com um comando e um relatorio detalhado:
+
+- WSL/Linux: `./scripts/ci-local.sh`
+- PowerShell: `.\scripts\ci-local.ps1`
+
+Tambem e possivel rodar apenas um workflow:
+
+- `./scripts/ci-local.sh frontend`
+- `./scripts/ci-local.sh backend`
+- `./scripts/ci-local.sh docker`
 ## Docker
 
 Imagens prontas para validacao no CI:
@@ -105,3 +116,5 @@ Imagens prontas para validacao no CI:
 - [Arquitetura](C:/estudos/StreamGate/docs/architecture.md)
 - [Setup do ambiente](C:/estudos/StreamGate/docs/setup.md)
 - [Roadmap DevOps](C:/estudos/StreamGate/docs/devops-roadmap.md)
+
+
