@@ -77,11 +77,10 @@ services:
       minio:
         condition: service_healthy
     entrypoint: >
-      /bin/sh -c "
+      /bin/sh -eu -c "
       mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
       mc mb --ignore-existing local/${MINIO_BUCKET_RAW};
       mc anonymous set private local/${MINIO_BUCKET_RAW};
-      exit 0;
       "
 
   clickhouse:
@@ -110,3 +109,4 @@ volumes:
   rabbitmq_data:
   minio_data:
   clickhouse_data:
+

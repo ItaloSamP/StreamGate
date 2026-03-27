@@ -40,13 +40,26 @@ A stack definida para a base atual e:
 `-- .env.example
 ```
 
+## Ambiente recomendado
+
+O projeto agora deve ser tratado como `WSL-first` no Windows.
+
+Recomendacao:
+
+- manter o repositorio principal dentro do filesystem Linux, por exemplo `~/projects/streamgate`
+- usar `Docker Desktop` com integracao WSL2 habilitada
+- abrir o projeto no VS Code a partir do Ubuntu com `code .`
+
+Os scripts `.sh` em `scripts/` sao o fluxo principal para WSL/Linux.
+Os scripts `.ps1` continuam no repositorio como fallback para Windows puro.
+
 ## Primeiros passos
 
 1. Leia o guia de setup em [docs/setup.md](C:/estudos/StreamGate/docs/setup.md).
 2. Copie `.env.example` para `.env` e preencha os valores locais.
-3. Rode `./scripts/check-prereqs.ps1`.
-4. Suba a infraestrutura com `./scripts/dev-up.ps1`.
-5. Inicie o frontend em `apps/web` com `pnpm dev`.
+3. Rode `./scripts/check-prereqs.sh`.
+4. Suba a infraestrutura com `./scripts/dev-up.sh`.
+5. Inicie o frontend em `apps/web` com `pnpm dev --host`.
 6. Prepare a API em `apps/api` com `bundle exec rails db:prepare`.
 7. Suba a API em `apps/api` com `bundle exec rails server`.
 8. Rode os testes do worker em `apps/worker` com `bundle exec rspec`.
@@ -60,6 +73,7 @@ A stack definida para a base atual e:
 - Dockerfiles independentes para frontend e backend
 - compose validado
 - CI separado em tres workflows
+- scripts de bootstrap para `WSL/Linux` e `PowerShell`
 
 ## CI/CD
 

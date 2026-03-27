@@ -16,7 +16,7 @@ Entregas:
 - estrutura de monorepo
 - `.env.example`
 - `compose.yaml`
-- scripts PowerShell de bootstrap
+- scripts de bootstrap para `WSL/Linux` e `PowerShell`
 - documentacao de onboarding
 
 ## Fase 1: padrao de desenvolvimento

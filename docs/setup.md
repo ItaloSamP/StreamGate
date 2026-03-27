@@ -1,14 +1,29 @@
 # Setup do Ambiente
 
+## Ambiente recomendado
+
+O setup principal do projeto e `WSL2 + Ubuntu + Docker Desktop com integracao WSL`.
+
+No Windows, a recomendacao pratica e:
+
+- usar o Windows apenas como host
+- manter o repositorio principal dentro do filesystem Linux, por exemplo `~/projects/streamgate`
+- abrir o projeto pelo Ubuntu com `code .`
+- usar os scripts `.sh` em `scripts/` como fluxo padrao
+
+Os scripts `.ps1` continuam disponiveis apenas como fallback para Windows puro.
+
 ## O que voce precisa instalar
 
 Instale nesta ordem:
 
 1. `Git`
 2. `Docker Desktop`
-3. `Node.js 22 LTS`
-4. `Ruby 3.4.x`
-5. `Rails 8.1.x`
+3. `WSL2`
+4. `Ubuntu` no WSL
+5. `Node.js 22 LTS`
+6. `Ruby 3.4.x`
+7. `Rails 8.1.x`
 
 Opcional, mas recomendado logo no inicio:
 
@@ -17,52 +32,43 @@ Opcional, mas recomendado logo no inicio:
 3. extensao `ESLint`
 4. extensao `Prettier`
 5. extensao `Docker`
+6. extensao `Remote - WSL`
 
-## O que ja foi ajustado nesta maquina
+## Como organizar o repositorio
 
-Eu validei no ambiente atual:
+Se voce estava trabalhando em `C:\estudos\StreamGate`, a migracao recomendada e:
 
-- `Git`: instalado
-- `Docker`: instalado
-- `Docker Compose`: instalado
-- `Node`: instalado
-- `Ruby`: instalado
-- `Rails`: instalado
-- `pnpm`: instalado
-
-Pontos de atencao no Windows:
-
-- o `npm` pode falhar no PowerShell por causa da policy de execucao do Windows
-- se isso acontecer, use `npm.cmd` ou ajuste a policy do usuario
-
-## Como corrigir o problema do npm no PowerShell
-
-Abra um PowerShell como usuario comum e rode:
-
-```powershell
-Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+```bash
+mkdir -p ~/projects/streamgate
+cp -a /mnt/c/estudos/StreamGate/. ~/projects/streamgate/
+cd ~/projects/streamgate
 ```
 
-Depois feche e abra o terminal novamente.
+Depois disso, trate `~/projects/streamgate` como a copia principal do projeto.
+Nao use o repositorio no Windows como origem diaria de trabalho.
 
-Se preferir nao mudar isso agora, use `npm.cmd` em vez de `npm` dentro do PowerShell.
+## Ferramentas recomendadas no Ubuntu
 
-## Ferramentas recomendadas
+### Base do sistema
+
+```bash
+sudo apt update
+sudo apt install -y curl git build-essential rsync unzip jq
+```
 
 ### Node
 
-Se precisar reinstalar ou preparar outra maquina:
+Recomendado com `nvm`:
 
-```powershell
+```bash
+curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+source ~/.bashrc
+nvm install 22
+nvm use 22
+nvm alias default 22
 corepack enable
-npm.cmd install -g pnpm
+corepack prepare pnpm@latest --activate
 ```
-
-Por que usar `pnpm`:
-
-- melhor performance em monorepo
-- menos espaco em disco
-- instalacao deterministica
 
 ### Ruby
 
@@ -73,7 +79,7 @@ Padrao atual do projeto:
 
 Para projetos Ruby dentro do repositorio, prefira instalar gems localmente:
 
-```powershell
+```bash
 bundle config set --local path vendor/bundle
 ```
 
@@ -82,17 +88,18 @@ bundle config set --local path vendor/bundle
 No Windows, confira:
 
 - WSL2 habilitado
-- integracao do Docker com sua distribuicao WSL, se for usar Linux containers
-- virtualizacao habilitada na BIOS, se o Docker reclamar
+- integracao da distro `Ubuntu` ligada em `Settings > Resources > WSL Integration`
+- Linux containers ativos
 
 ## Como preparar o repositorio
 
-Na raiz do projeto:
+Na raiz do projeto, dentro do Ubuntu:
 
-```powershell
-Copy-Item .env.example .env
-.\scripts\check-prereqs.ps1
-.\scripts\dev-up.ps1
+```bash
+cp .env.example .env
+chmod +x scripts/*.sh
+./scripts/check-prereqs.sh
+./scripts/dev-up.sh
 ```
 
 ## Servicos locais e acessos
@@ -107,31 +114,65 @@ Depois de subir o compose, voce deve ter:
 - MinIO Console: [http://localhost:9001](http://localhost:9001)
 - ClickHouse HTTP: [http://localhost:8123](http://localhost:8123)
 
+## Nota sobre o MinIO
+
+Voce vera dois containers relacionados ao MinIO:
+
+- `streamgate-minio`: servidor principal, deve ficar `Up`
+- `streamgate-minio-init`: container one-shot de inicializacao, deve terminar em `Exited (0)`
+
+Esse `minio-init` nao deve ficar rodando. Ele sobe, cria/configura o bucket e encerra com sucesso.
+No `docker ps -a` ele aparece parado; isso e esperado.
+
 ## Como rodar cada app
 
 ### Frontend
 
-```powershell
-Set-Location .\apps\web
-pnpm dev
+```bash
+cd ~/projects/streamgate/apps/web
+pnpm install
+pnpm dev --host
 ```
 
 ### API
 
 A API usa as variaveis do `compose` para conectar no PostgreSQL local.
 
-```powershell
-Set-Location .\apps\api
+```bash
+cd ~/projects/streamgate/apps/api
 bundle exec rails db:prepare
 bundle exec rails server
 ```
 
 ### Worker
 
-```powershell
-Set-Location .\apps\worker
+```bash
+cd ~/projects/streamgate/apps/worker
 bundle exec rspec
 ```
+
+## Scripts principais no WSL
+
+Na raiz do projeto:
+
+```bash
+./scripts/check-prereqs.sh
+./scripts/dev-up.sh
+./scripts/dev-down.sh
+./scripts/compose-health-tests.sh
+```
+
+## Fallback para Windows puro
+
+Se voce precisar rodar o projeto fora do WSL, ainda existem os scripts PowerShell:
+
+```powershell
+.\scripts\check-prereqs.ps1
+.\scripts\dev-up.ps1
+.\scripts\dev-down.ps1
+```
+
+Mas o fluxo recomendado segue sendo o `WSL-first`.
 
 ## CI atual
 
