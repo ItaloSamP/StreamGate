@@ -30,7 +30,11 @@ jobs:
 
     env:
       RAILS_ENV: test
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432/streamgate_test
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: streamgate_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
       BUNDLE_WITHOUT: production
 
     defaults:

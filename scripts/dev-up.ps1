@@ -1,6 +1,11 @@
 $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $false
 
+param(
+  [ValidateSet('infra', 'app', 'full')]
+  [string]$Mode = 'infra'
+)
+
 . "$PSScriptRoot/compose-health.ps1"
 
 if (-not (Test-Path ".env")) {
@@ -20,8 +25,16 @@ $timeoutSeconds = 180
 $pollIntervalSeconds = 5
 $deadline = (Get-Date).AddSeconds($timeoutSeconds)
 
+$composeArgs = @()
+if ($Mode -ne 'infra') {
+  $composeArgs += '--profile'
+  $composeArgs += $Mode
+}
+$composeArgs += 'up'
+$composeArgs += '-d'
+
 try {
-  $composeUpResult = Invoke-ComposeCommand -Arguments 'up -d'
+  $composeUpResult = Invoke-ComposeCommand -Arguments ($composeArgs -join ' ')
   $composeUpResult.Output | Out-Host
 
   if ($composeUpResult.ExitCode -ne 0) {
@@ -31,7 +44,7 @@ try {
       throw $friendlyError
     }
 
-    throw "docker compose up -d falhou."
+    throw "docker compose $($composeArgs -join ' ') falhou."
   }
 
   while ($true) {
@@ -41,7 +54,12 @@ try {
     if ($result.IsReady) {
       (Invoke-ComposeCommand -Arguments 'ps').Output | Out-Host
       Write-Host ""
-      Write-Host "Infraestrutura local do StreamGate iniciada e saudavel." -ForegroundColor Green
+      if ($Mode -eq 'infra') {
+        Write-Host "Infraestrutura local do StreamGate iniciada e saudavel." -ForegroundColor Green
+      }
+      else {
+        Write-Host "Ambiente '$Mode' do StreamGate iniciado e saudavel." -ForegroundColor Green
+      }
       exit 0
     }
 

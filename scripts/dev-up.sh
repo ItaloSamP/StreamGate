@@ -8,6 +8,15 @@ source "$SCRIPT_DIR/compose-health.sh"
 
 cd "$ROOT_DIR"
 
+mode="${1:-infra}"
+case "$mode" in
+  infra|app|full) ;;
+  *)
+    echo "Modo invalido: '$mode'. Use 'infra', 'app' ou 'full'." >&2
+    exit 1
+    ;;
+esac
+
 if [[ ! -f ".env" ]]; then
   echo "Arquivo .env nao encontrado. Copie .env.example para .env antes de subir o ambiente." >&2
   exit 1
@@ -25,8 +34,14 @@ timeout_seconds=180
 poll_interval_seconds=5
 deadline=$((SECONDS + timeout_seconds))
 
+compose_args=()
+if [[ "$mode" != "infra" ]]; then
+  compose_args+=(--profile "$mode")
+fi
+compose_args+=(up -d)
+
 set +e
-compose_up_output="$(invoke_compose_command up -d 2>&1)"
+compose_up_output="$(invoke_compose_command "${compose_args[@]}" 2>&1)"
 compose_up_exit=$?
 set -e
 
@@ -42,7 +57,7 @@ if [[ $compose_up_exit -ne 0 ]]; then
   fi
 
   echo ""
-  echo "Erro ao subir a infraestrutura local do StreamGate: docker compose up -d falhou." >&2
+  echo "Erro ao subir a infraestrutura local do StreamGate: docker compose ${compose_args[*]} falhou." >&2
   exit 1
 fi
 
@@ -52,7 +67,11 @@ while true; do
   if analysis_output="$(test_compose_services_ready "$services_json")"; then
     invoke_compose_command ps
     echo ""
-    echo "Infraestrutura local do StreamGate iniciada e saudavel."
+    if [[ "$mode" == "infra" ]]; then
+      echo "Infraestrutura local do StreamGate iniciada e saudavel."
+    else
+      echo "Ambiente '$mode' do StreamGate iniciado e saudavel."
+    fi
     exit 0
   fi
 
@@ -62,7 +81,9 @@ while true; do
   if [[ -n "$fatal_issues" ]]; then
     echo ""
     echo "Falha ao subir a infraestrutura local do StreamGate." >&2
-    printf ' - %s\n' "$fatal_issues" >&2
+    while IFS= read -r issue; do
+      [[ -n "$issue" ]] && printf ' - %s\n' "$issue" >&2
+    done <<< "$fatal_issues"
     invoke_compose_command ps
     invoke_compose_command down
     exit 1
@@ -72,7 +93,9 @@ while true; do
     echo ""
     echo "Timeout aguardando containers ficarem prontos." >&2
     if [[ -n "$pending_issues" ]]; then
-      printf ' - %s\n' "$pending_issues" >&2
+      while IFS= read -r issue; do
+        [[ -n "$issue" ]] && printf ' - %s\n' "$issue" >&2
+      done <<< "$pending_issues"
     fi
     invoke_compose_command ps
     invoke_compose_command down

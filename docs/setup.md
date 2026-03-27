@@ -99,12 +99,36 @@ Na raiz do projeto, dentro do Ubuntu:
 cp .env.example .env
 chmod +x scripts/*.sh
 ./scripts/check-prereqs.sh
+```
+
+## Perfis do compose
+
+O fluxo principal agora e controlado por perfis:
+
+- `infra`: apenas infraestrutura de apoio
+- `full`: infraestrutura + `api` + `web` + `worker`
+
+Comandos principais:
+
+```bash
 ./scripts/dev-up.sh
+./scripts/dev-up.sh full
+./scripts/dev-down.sh
+```
+
+Ou diretamente com Docker Compose:
+
+```bash
+docker compose up -d
+docker compose --profile full up -d
+docker compose down
 ```
 
 ## Servicos locais e acessos
 
 Depois de subir o compose, voce deve ter:
+
+### Infra
 
 - PostgreSQL: `localhost:5432`
 - Redis: `localhost:6379`
@@ -113,6 +137,11 @@ Depois de subir o compose, voce deve ter:
 - MinIO API: [http://localhost:9000](http://localhost:9000)
 - MinIO Console: [http://localhost:9001](http://localhost:9001)
 - ClickHouse HTTP: [http://localhost:8123](http://localhost:8123)
+
+### Aplicacao no profile `full`
+
+- API Rails: [http://localhost:3000](http://localhost:3000)
+- Frontend Vite: [http://localhost:5173](http://localhost:5173)
 
 ## Nota sobre o MinIO
 
@@ -124,7 +153,13 @@ Voce vera dois containers relacionados ao MinIO:
 Esse `minio-init` nao deve ficar rodando. Ele sobe, cria/configura o bucket e encerra com sucesso.
 No `docker ps -a` ele aparece parado; isso e esperado.
 
-## Como rodar cada app
+## Nota sobre o worker no profile `full`
+
+O `worker` ainda nao possui loop real de consumo de filas implementado no codigo do projeto.
+Por isso, o container do `worker` no `profile full` sobe como ambiente de desenvolvimento pronto para a gem, mantendo o processo ativo e validando que o pacote `worker` carrega corretamente.
+Quando o runtime do worker for implementado, esse comando pode ser trocado pelo processo real de consumo.
+
+## Como rodar cada app fora do compose
 
 ### Frontend
 
@@ -158,6 +193,7 @@ Na raiz do projeto:
 ```bash
 ./scripts/check-prereqs.sh
 ./scripts/dev-up.sh
+./scripts/dev-up.sh full
 ./scripts/dev-down.sh
 ./scripts/compose-health-tests.sh
 ```
@@ -169,6 +205,7 @@ Se voce precisar rodar o projeto fora do WSL, ainda existem os scripts PowerShel
 ```powershell
 .\scripts\check-prereqs.ps1
 .\scripts\dev-up.ps1
+.\scripts\dev-up.ps1 -Mode full
 .\scripts\dev-down.ps1
 ```
 
