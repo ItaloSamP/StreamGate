@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -28,48 +29,63 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --radius: 0.75rem;
+  --background: oklch(0.14 0 0);
+  --foreground: oklch(0.97 0 0);
+  --card: oklch(0.18 0 0);
+  --card-foreground: oklch(0.97 0 0);
+  --popover: oklch(0.17 0 0);
+  --popover-foreground: oklch(0.95 0 0);
+  --primary: oklch(0.97 0 0);
+  --primary-foreground: oklch(0.14 0 0);
+  --secondary: oklch(0.22 0 0);
+  --secondary-foreground: oklch(0.86 0 0);
+  --muted: oklch(0.2 0 0);
+  --muted-foreground: oklch(0.68 0 0);
+  --accent: oklch(0.24 0 0);
+  --accent-foreground: oklch(0.95 0 0);
+  --destructive: oklch(0.63 0.19 25);
+  --destructive-foreground: oklch(0.97 0 0);
+  --border: oklch(0.28 0 0);
+  --input: oklch(0.23 0 0);
+  --ring: oklch(0.71 0 0);
+  --radius: 0.9rem;
+
+  --surface-0: #0a0a0a;
+  --surface-1: #0f0f0f;
+  --surface-2: #141414;
+  --surface-3: #1a1a1a;
+  --surface-4: #202020;
+  --text-soft: #d4d4d4;
+  --text-dim: #909090;
+  --text-faint: #5a5a5a;
+  --signal-blue: #4d9de0;
+  --signal-teal: #3ccfcf;
+  --signal-green: #3ecf8e;
+  --signal-yellow: #f0c040;
+  --signal-red: #e05c5c;
+  --signal-purple: #9b7fe8;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
+  --background: oklch(0.14 0 0);
+  --foreground: oklch(0.97 0 0);
+  --card: oklch(0.18 0 0);
+  --card-foreground: oklch(0.97 0 0);
+  --popover: oklch(0.17 0 0);
+  --popover-foreground: oklch(0.95 0 0);
+  --primary: oklch(0.97 0 0);
+  --primary-foreground: oklch(0.14 0 0);
+  --secondary: oklch(0.22 0 0);
+  --secondary-foreground: oklch(0.86 0 0);
+  --muted: oklch(0.2 0 0);
+  --muted-foreground: oklch(0.68 0 0);
+  --accent: oklch(0.24 0 0);
+  --accent-foreground: oklch(0.95 0 0);
+  --destructive: oklch(0.63 0.19 25);
+  --destructive-foreground: oklch(0.97 0 0);
   --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --input: oklch(1 0 0 / 13%);
+  --ring: oklch(0.66 0 0);
 }
 
 @layer base {
@@ -77,12 +93,57 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    font-family: "Plus Jakarta Sans", ui-sans-serif, sans-serif;
+    background-image:
+      radial-gradient(circle at top left, rgb(77 157 224 / 0.12), transparent 32%),
+      radial-gradient(circle at 80% 10%, rgb(60 207 207 / 0.08), transparent 24%),
+      linear-gradient(180deg, #0f0f0f 0%, #0a0a0a 100%);
   }
 
   #root {
     min-height: 100vh;
+  }
+
+  ::selection {
+    background: rgb(77 157 224 / 0.28);
+    color: var(--foreground);
+  }
+}
+
+@layer utilities {
+  .text-mono {
+    font-family: "DM Mono", ui-monospace, monospace;
+  }
+
+  .panel-shell {
+    border: 1px solid rgb(255 255 255 / 0.08);
+    border-radius: 20px;
+    background: var(--surface-2);
+    box-shadow: 0 24px 80px rgb(0 0 0 / 0.34);
+  }
+
+  .panel-grid {
+    background-image:
+      linear-gradient(to right, rgb(255 255 255 / 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.03) 1px, transparent 1px);
+    background-size: 36px 36px;
+  }
+
+  .inset-noise {
+    position: relative;
+  }
+
+  .inset-noise::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: linear-gradient(rgb(255 255 255 / 0.018), rgb(255 255 255 / 0));
   }
 }

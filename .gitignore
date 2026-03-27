@@ -8,6 +8,10 @@ Thumbs.db
 .idea/
 .vscode/
 
+/.agents/skills/
+/.claude/
+/skills-lock.json
+
 coverage/
 
 node_modules/
