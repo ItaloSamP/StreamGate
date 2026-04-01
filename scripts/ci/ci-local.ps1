@@ -6,9 +6,8 @@ param(
 $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $false
 
-. "$PSScriptRoot/compose-health.ps1"
-
-$root = Split-Path -Parent $PSScriptRoot
+$root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+. (Join-Path $root 'scripts/compose/compose-health.ps1')
 $results = New-Object System.Collections.Generic.List[object]
 $createdEnv = $false
 
@@ -176,7 +175,7 @@ function Run-BackendWorkflow {
   $failed = $false
   $reason = 'Todos os jobs passaram.'
   $steps = @(
-    @{ Name = 'Infra for backend'; Dir = $root; Command = 'powershell -ExecutionPolicy Bypass -File .\scripts\dev-up.ps1'; Reason = 'Falha ao subir a infra para backend-ci.' },
+    @{ Name = 'Infra for backend'; Dir = $root; Command = 'powershell -ExecutionPolicy Bypass -File .\\scripts\\dev\\dev-up.ps1'; Reason = 'Falha ao subir a infra para backend-ci.' },
     @{ Name = 'API install dependencies'; Dir = (Join-Path $root 'apps/api'); Command = 'bundle install --jobs 4 --retry 3'; Reason = 'Falha em API install dependencies.' },
     @{ Name = 'API prepare database'; Dir = (Join-Path $root 'apps/api'); Command = $apiPrepareCommand; Reason = 'Falha em API prepare database.' },
     @{ Name = 'API tests'; Dir = (Join-Path $root 'apps/api'); Command = $apiTestCommand; Reason = 'Falha em API tests.' },
@@ -197,7 +196,7 @@ function Run-BackendWorkflow {
   }
 
   try {
-    Invoke-WorkflowStep -WorkflowName $workflowName -StepName 'Stop backend infra' -WorkingDirectory $root -Command 'powershell -ExecutionPolicy Bypass -File .\scripts\dev-down.ps1' | Out-Null
+    Invoke-WorkflowStep -WorkflowName $workflowName -StepName 'Stop backend infra' -WorkingDirectory $root -Command 'powershell -ExecutionPolicy Bypass -File .\\scripts\\dev\\dev-down.ps1' | Out-Null
   }
   catch {
   }
@@ -216,21 +215,21 @@ function Run-DockerWorkflow {
 
   Ensure-EnvFile
 
-  $composeHealthCommand = Get-PowerShellFileCommand -FilePath '.\scripts\compose-health.tests.ps1'
+  $composeHealthCommand = Get-PowerShellFileCommand -FilePath '.\\scripts\\compose\\compose-health.tests.ps1'
 
   $failed = $false
   $reason = 'Todos os passos passaram.'
   $steps = @(
     @{ Name = 'Validate compose default config'; Dir = $root; Command = 'docker compose -f compose.yaml config'; Reason = 'Falha em Validate compose default config.' },
     @{ Name = 'Validate compose full profile'; Dir = $root; Command = 'docker compose -f compose.yaml --profile full config'; Reason = 'Falha em Validate compose full profile.' },
-    @{ Name = 'Validate WSL bash health helpers'; Dir = $root; Command = 'bash scripts/compose-health-tests.sh'; Reason = 'Falha em Validate WSL bash health helpers.' },
+    @{ Name = 'Validate WSL bash health helpers'; Dir = $root; Command = 'bash scripts/compose/compose-health-tests.sh'; Reason = 'Falha em Validate WSL bash health helpers.' },
     @{ Name = 'Validate PowerShell health helpers'; Dir = $root; Command = $composeHealthCommand; Reason = 'Falha em Validate PowerShell health helpers.' },
     @{ Name = 'Build API production image'; Dir = $root; Command = 'docker build -t streamgate-api:ci .\apps\api'; Reason = 'Falha em Build API production image.' },
     @{ Name = 'Build API development image'; Dir = $root; Command = 'docker build -f apps/api/Dockerfile.dev -t streamgate-api-dev:ci .\apps\api'; Reason = 'Falha em Build API development image.' },
     @{ Name = 'Build Web production image'; Dir = $root; Command = 'docker build -t streamgate-web:ci .\apps\web'; Reason = 'Falha em Build Web production image.' },
     @{ Name = 'Build Web development image'; Dir = $root; Command = 'docker build -f apps/web/Dockerfile.dev -t streamgate-web-dev:ci .\apps\web'; Reason = 'Falha em Build Web development image.' },
     @{ Name = 'Build Worker development image'; Dir = $root; Command = 'docker build -f apps/worker/Dockerfile.dev -t streamgate-worker-dev:ci .\apps\worker'; Reason = 'Falha em Build Worker development image.' },
-    @{ Name = 'Smoke test infra profile'; Dir = $root; Command = 'docker compose up -d && python scripts/compose-smoke.py && docker compose ps'; Reason = 'Falha em Smoke test infra profile.' }
+    @{ Name = 'Smoke test infra profile'; Dir = $root; Command = 'docker compose up -d && python scripts/compose/compose-smoke.py && docker compose ps'; Reason = 'Falha em Smoke test infra profile.' }
   )
 
   foreach ($step in $steps) {
@@ -290,3 +289,5 @@ if ($createdEnv -and (Test-Path (Join-Path $root '.env'))) {
 if ($failureCount -gt 0) {
   exit 1
 }
+
+

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
+ROOT_DIR="$(cd -- "$SCRIPT_DIR/../.." && pwd)"
 
 source "$SCRIPT_DIR/ci-local-lib.sh"
 
@@ -10,7 +10,7 @@ mode="${1:-all}"
 case "$mode" in
   all|frontend|backend|docker) ;;
   *)
-    echo "Uso: ./scripts/ci-local.sh [all|frontend|backend|docker]" >&2
+    echo "Uso: ./scripts/ci/ci-local.sh [all|frontend|backend|docker]" >&2
     exit 1
     ;;
 esac
@@ -119,7 +119,7 @@ run_backend_workflow() {
   [[ -z "$postgres_password" ]] && postgres_password='postgres'
   [[ -z "$postgres_test_db" ]] && postgres_test_db='streamgate_test'
 
-  ci_local_run_step "$workflow" 'Infra for backend' "$ROOT_DIR" './scripts/dev-up.sh' || { failed=1; reason='Falha ao subir a infra para backend-ci.'; }
+  ci_local_run_step "$workflow" 'Infra for backend' "$ROOT_DIR" './scripts/dev/dev-up.sh' || { failed=1; reason='Falha ao subir a infra para backend-ci.'; }
 
   if [[ $failed -eq 0 ]]; then
     ci_local_run_step "$workflow" 'API install dependencies' "$ROOT_DIR/apps/api" 'bundle install --jobs 4 --retry 3' || { failed=1; reason='Falha em API install dependencies.'; }
@@ -147,7 +147,7 @@ run_backend_workflow() {
     ci_local_run_step "$workflow" 'Worker RuboCop' "$ROOT_DIR/apps/worker" 'bundle exec rubocop' || { failed=1; reason='Falha em Worker RuboCop.'; }
   fi
 
-  ci_local_run_step "$workflow" 'Stop backend infra' "$ROOT_DIR" './scripts/dev-down.sh' >/dev/null 2>&1 || true
+  ci_local_run_step "$workflow" 'Stop backend infra' "$ROOT_DIR" './scripts/dev/dev-down.sh' >/dev/null 2>&1 || true
 
   if [[ $failed -eq 0 ]]; then
     ci_local_record_result "$workflow" 'PASS' "$reason"
@@ -172,7 +172,7 @@ run_docker_workflow() {
 
   ensure_env_file
 
-  if powershell_health_command="$(get_powershell_file_command './scripts/compose-health.tests.ps1')"; then
+  if powershell_health_command="$(get_powershell_file_command './scripts/compose/compose-health.tests.ps1')"; then
     :
   else
     powershell_health_command=''
@@ -183,7 +183,7 @@ run_docker_workflow() {
     ci_local_run_step "$workflow" 'Validate compose full profile' "$ROOT_DIR" 'docker compose -f compose.yaml --profile full config' || { failed=1; reason='Falha em Validate compose full profile.'; }
   fi
   if [[ $failed -eq 0 ]]; then
-    ci_local_run_step "$workflow" 'Validate WSL bash health helpers' "$ROOT_DIR" 'bash scripts/compose-health-tests.sh' || { failed=1; reason='Falha em Validate WSL bash health helpers.'; }
+    ci_local_run_step "$workflow" 'Validate WSL bash health helpers' "$ROOT_DIR" 'bash scripts/compose/compose-health-tests.sh' || { failed=1; reason='Falha em Validate WSL bash health helpers.'; }
   fi
   if [[ $failed -eq 0 ]]; then
     if [[ -n "$powershell_health_command" ]]; then
@@ -210,10 +210,10 @@ run_docker_workflow() {
     ci_local_run_step "$workflow" 'Build Worker development image' "$ROOT_DIR" 'docker build -f apps/worker/Dockerfile.dev -t streamgate-worker-dev:ci ./apps/worker' || { failed=1; reason='Falha em Build Worker development image.'; }
   fi
   if [[ $failed -eq 0 ]]; then
-    ci_local_run_step "$workflow" 'Smoke test infra profile' "$ROOT_DIR" 'docker compose up -d && python scripts/compose-smoke.py && docker compose ps' || { failed=1; reason='Falha em Smoke test infra profile.'; }
+    ci_local_run_step "$workflow" 'Smoke test infra profile' "$ROOT_DIR" 'docker compose up -d && python scripts/compose/compose-smoke.py && docker compose ps' || { failed=1; reason='Falha em Smoke test infra profile.'; }
   fi
 
-  ci_local_run_step "$workflow" 'Stop compose stack' "$ROOT_DIR" './scripts/dev-down.sh' >/dev/null 2>&1 || true
+  ci_local_run_step "$workflow" 'Stop compose stack' "$ROOT_DIR" './scripts/dev/dev-down.sh' >/dev/null 2>&1 || true
 
   if [[ $failed -eq 0 ]]; then
     ci_local_record_result "$workflow" 'PASS' "$reason"
@@ -244,3 +244,5 @@ if ci_local_print_summary; then
 else
   exit 1
 fi
+
+

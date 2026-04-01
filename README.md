@@ -64,10 +64,10 @@ Os servicos de aplicacao usam os profiles `app` e `full`, entao `app` e `full` f
 
 ## Primeiros passos
 
-1. Leia o guia de setup em [docs/setup.md](C:/estudos/StreamGate/docs/setup.md).
+1. Leia o guia de setup em [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md).
 2. Copie `.env.example` para `.env` e ajuste os valores locais.
-3. Rode `./scripts/check-prereqs.sh`.
-4. Suba apenas a infra com `./scripts/dev-up.sh` ou tudo com `./scripts/dev-up.sh full`.
+3. Rode `./scripts/bootstrap/check-prereqs.sh`.
+4. Suba apenas a infra com `./scripts/dev/dev-up.sh` ou tudo com `./scripts/dev/dev-up.sh full`.
 5. Se quiser usar apenas o compose diretamente, rode `docker compose up -d` para infra ou `docker compose --profile full up -d` para o ambiente completo.
 
 ## O que ja esta pronto
@@ -81,6 +81,7 @@ Os servicos de aplicacao usam os profiles `app` e `full`, entao `app` e `full` f
 - CI separado em tres workflows
 - scripts de bootstrap para `WSL/Linux` e `PowerShell`
 - profiles `infra` e `full` para desenvolvimento local
+- base inicial preparada para OpenAPI/Swagger no backend
 
 ## CI/CD
 
@@ -90,17 +91,17 @@ Os workflows atuais ficam em `.github/workflows`:
 - `backend-ci.yml`: testa `apps/api` e `apps/worker`
 - `docker-ci.yml`: valida o compose e builda as imagens Docker da API e do frontend
 
-
 Para reproduzir esses workflows localmente com um comando e um relatorio detalhado:
 
-- WSL/Linux: `./scripts/ci-local.sh`
-- PowerShell: `.\scripts\ci-local.ps1`
+- WSL/Linux: `./scripts/ci/ci-local.sh`
+- PowerShell: `.\scripts\ci\ci-local.ps1`
 
 Tambem e possivel rodar apenas um workflow:
 
-- `./scripts/ci-local.sh frontend`
-- `./scripts/ci-local.sh backend`
-- `./scripts/ci-local.sh docker`
+- `./scripts/ci/ci-local.sh frontend`
+- `./scripts/ci/ci-local.sh backend`
+- `./scripts/ci/ci-local.sh docker`
+
 ## Docker
 
 Imagens prontas para validacao no CI:
@@ -113,8 +114,11 @@ Imagens prontas para validacao no CI:
 
 ## Documentacao
 
-- [Arquitetura](C:/estudos/StreamGate/docs/architecture.md)
-- [Setup do ambiente](C:/estudos/StreamGate/docs/setup.md)
-- [Roadmap DevOps](C:/estudos/StreamGate/docs/devops-roadmap.md)
+A documentacao agora esta dividida em trilhas de produto, guias tecnicos e specs de discovery.
 
-
+- [Hub de documentacao](C:/estudos/StreamGate/docs/README.md)
+- [Visao do produto](C:/estudos/StreamGate/docs/product/vision.md)
+- [Arquitetura](C:/estudos/StreamGate/docs/guides/architecture.md)
+- [Setup do ambiente](C:/estudos/StreamGate/docs/guides/setup.md)
+- [Roadmap DevOps](C:/estudos/StreamGate/docs/guides/devops-roadmap.md)
+- [Swagger/OpenAPI da API](C:/estudos/StreamGate/docs/guides/api-docs.md)

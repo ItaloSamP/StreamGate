@@ -31,11 +31,11 @@ jobs:
         run: docker compose -f compose.yaml --profile full config
 
       - name: Validate WSL bash health helpers
-        run: bash scripts/compose-health-tests.sh
+        run: bash scripts/compose/compose-health-tests.sh
 
       - name: Validate PowerShell health helpers
         shell: pwsh
-        run: ./scripts/compose-health.tests.ps1
+        run: ./scripts/compose/compose-health.tests.ps1
 
       - name: Build API production image
         run: docker build -t streamgate-api:ci ./apps/api
@@ -55,10 +55,12 @@ jobs:
       - name: Smoke test infra profile
         run: |
           docker compose up -d
-          python scripts/compose-smoke.py
+          python scripts/compose/compose-smoke.py
           docker compose ps
 
       - name: Stop compose stack
         if: always()
         run: docker compose down -v
+
+
 

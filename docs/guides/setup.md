@@ -13,6 +13,8 @@ No Windows, a recomendacao pratica e:
 
 Os scripts `.ps1` continuam disponiveis apenas como fallback para Windows puro.
 
+A raiz de `scripts/` agora expoe apenas os comandos principais; helpers internos ficam organizados em `scripts/bootstrap`, `scripts/dev`, `scripts/ci` e `scripts/compose`.
+
 ## O que voce precisa instalar
 
 Instale nesta ordem:
@@ -97,8 +99,8 @@ Na raiz do projeto, dentro do Ubuntu:
 
 ```bash
 cp .env.example .env
-chmod +x scripts/*.sh
-./scripts/check-prereqs.sh
+find scripts -name '*.sh' -exec chmod +x {} +
+./scripts/bootstrap/check-prereqs.sh
 ```
 
 ## Perfis do compose
@@ -111,9 +113,9 @@ O fluxo principal agora e controlado por perfis:
 Comandos principais:
 
 ```bash
-./scripts/dev-up.sh
-./scripts/dev-up.sh full
-./scripts/dev-down.sh
+./scripts/dev/dev-up.sh
+./scripts/dev/dev-up.sh full
+./scripts/dev/dev-down.sh
 ```
 
 Ou diretamente com Docker Compose:
@@ -191,22 +193,22 @@ bundle exec rspec
 Na raiz do projeto:
 
 ```bash
-./scripts/check-prereqs.sh
-./scripts/dev-up.sh
-./scripts/dev-up.sh full
-./scripts/dev-down.sh
-./scripts/compose-health-tests.sh
-./scripts/ci-local.sh
+./scripts/bootstrap/check-prereqs.sh
+./scripts/dev/dev-up.sh
+./scripts/dev/dev-up.sh full
+./scripts/dev/dev-down.sh
+./scripts/compose/compose-health-tests.sh
+./scripts/ci/ci-local.sh
 ```
 
-O `./scripts/ci-local.sh` reproduz localmente os tres workflows do GitHub Actions com blocos separados por workflow, passos individuais e um resumo final mostrando claramente o que passou ou falhou.
+O `./scripts/ci/ci-local.sh` reproduz localmente os tres workflows do GitHub Actions com blocos separados por workflow, passos individuais e um resumo final mostrando claramente o que passou ou falhou.
 
 Se quiser validar apenas um workflow:
 
 ```bash
-./scripts/ci-local.sh frontend
-./scripts/ci-local.sh backend
-./scripts/ci-local.sh docker
+./scripts/ci/ci-local.sh frontend
+./scripts/ci/ci-local.sh backend
+./scripts/ci/ci-local.sh docker
 ```
 
 ## Fallback para Windows puro
@@ -214,11 +216,11 @@ Se quiser validar apenas um workflow:
 Se voce precisar rodar o projeto fora do WSL, ainda existem os scripts PowerShell:
 
 ```powershell
-.\scripts\check-prereqs.ps1
-.\scripts\dev-up.ps1
-.\scripts\dev-up.ps1 -Mode full
-.\scripts\dev-down.ps1
-.\scripts\ci-local.ps1
+.\\scripts\\bootstrap\\check-prereqs.ps1
+.\\scripts\\dev\\dev-up.ps1
+.\\scripts\\dev\\dev-up.ps1 -Mode full
+.\\scripts\\dev\\dev-down.ps1
+.\\scripts\\ci\\ci-local.ps1
 ```
 
 Mas o fluxo recomendado segue sendo o `WSL-first`.
@@ -259,3 +261,5 @@ Objetivo:
 - criar fluxo de jobs
 - processar arquivos e alimentar PostgreSQL e ClickHouse
 - construir painel operacional e analitico
+
+

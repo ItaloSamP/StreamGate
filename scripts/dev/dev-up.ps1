@@ -6,7 +6,8 @@ param(
 $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $false
 
-. "$PSScriptRoot/compose-health.ps1"
+$root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+. (Join-Path $root 'scripts/compose/compose-health.ps1')
 
 if (-not (Test-Path ".env")) {
   Write-Host "Arquivo .env nao encontrado. Copie .env.example para .env antes de subir o ambiente." -ForegroundColor Yellow
