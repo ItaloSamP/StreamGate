@@ -1,0 +1,22 @@
+openapi: 3.0.3
+info:
+  title: StreamGate API
+  version: v1
+  description: |
+    Base inicial da documentacao OpenAPI do StreamGate.
+    Os endpoints reais devem ser adicionados conforme a API for evoluindo.
+servers:
+  - url: http://localhost:3000
+    description: Desenvolvimento local
+paths:
+  /up:
+    get:
+      summary: Health check da API
+      operationId: healthCheck
+      tags:
+        - Health
+      responses:
+        '200':
+          description: API disponivel
+components:
+  schemas: {}
