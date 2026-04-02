@@ -1,73 +1,54 @@
-# React + TypeScript + Vite
+# StreamGate Web
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend React do StreamGate.
 
-Currently, two official plugins are available:
+## Papel do app
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+A aplicacao web e responsavel por:
 
-## React Compiler
+- apresentar a experiencia publica do produto
+- autenticar o usuario
+- iniciar uploads
+- acompanhar jobs, quarentena e dashboards
+- manter a linguagem visual oficial do projeto
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Estado atual
 
-## Expanding the ESLint configuration
+Hoje o frontend ja possui uma base relevante:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- landing page
+- login, cadastro e reset
+- route guard
+- dashboard shell
+- auth mock para viabilizar a experiencia inicial
+- testes basicos de UX/logica
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+A troca do auth mock por integracao real esta prevista no roadmap mestre.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Comandos locais
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm install
+pnpm dev --host
+pnpm lint
+pnpm build
+pnpm test:run
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Pilares de implementacao
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Toda evolucao do frontend deve respeitar estes principios:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- preservar o modelo visual ja aprovado
+- nao criar componentes paralelos sem necessidade
+- tratar loading, empty state e erro como parte da entrega
+- manter coerencia com `frontend-skill`, `web-design-guidelines`, `tailwind-design-system` e `vercel-react-best-practices`
+
+## Proximo passo esperado
+
+A evolucao planejada do frontend esta em [docs/planning/streamgate-full-sprints-roadmap.md](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md), com foco em:
+
+1. auth real
+2. fluxo real de upload
+3. dashboard operacional com dados reais
+4. dashboard analitico

@@ -55,33 +55,30 @@ Os scripts `.ps1` continuam no repositorio como fallback para Windows puro.
 
 ## Perfis Docker Compose
 
-O repositorio agora trabalha com dois modos principais:
+O repositorio trabalha com dois modos principais:
 
 - `infra`: sobe apenas PostgreSQL, Redis, RabbitMQ, MinIO, init do MinIO e ClickHouse
 - `full`: sobe infra + `api` + `web` + `worker`
 
-Os servicos de aplicacao usam os profiles `app` e `full`, entao `app` e `full` funcionam como aliases para desenvolvimento completo.
-
 ## Primeiros passos
 
 1. Leia o guia de setup em [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md).
-2. Copie `.env.example` para `.env` e ajuste os valores locais.
-3. Rode `./scripts/bootstrap/check-prereqs.sh`.
-4. Suba apenas a infra com `./scripts/dev/dev-up.sh` ou tudo com `./scripts/dev/dev-up.sh full`.
-5. Se quiser usar apenas o compose diretamente, rode `docker compose up -d` para infra ou `docker compose --profile full up -d` para o ambiente completo.
+2. Leia o roadmap executivo em [docs/planning/streamgate-full-sprints-roadmap.md](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md).
+3. Copie `.env.example` para `.env` e ajuste os valores locais.
+4. Rode `./scripts/bootstrap/check-prereqs.sh`.
+5. Suba apenas a infra com `./scripts/dev/dev-up.sh` ou tudo com `./scripts/dev/dev-up.sh full`.
 
 ## O que ja esta pronto
 
 - monorepo inicial organizado
-- frontend gerado e buildando
-- API Rails gerada e conectavel ao PostgreSQL via variaveis de ambiente
-- worker Ruby gerado com testes basicos
-- Dockerfiles independentes para frontend e backend
-- compose validado
+- frontend gerado, redesenhado e buildando
+- API Rails gerada e preparada para PostgreSQL e Swagger/OpenAPI base
+- worker Ruby isolado como app do monorepo
+- compose validado com perfis `infra` e `full`
 - CI separado em tres workflows
-- scripts de bootstrap para `WSL/Linux` e `PowerShell`
-- profiles `infra` e `full` para desenvolvimento local
-- base inicial preparada para OpenAPI/Swagger no backend
+- scripts de bootstrap, dev, ci e compose organizados por trilha
+- roadmap executivo e ADR inicial documentados
+- base de skills do projeto ampliada para backend, OpenAPI, CI/CD e infra
 
 ## CI/CD
 
@@ -91,34 +88,13 @@ Os workflows atuais ficam em `.github/workflows`:
 - `backend-ci.yml`: testa `apps/api` e `apps/worker`
 - `docker-ci.yml`: valida o compose e builda as imagens Docker da API e do frontend
 
-Para reproduzir esses workflows localmente com um comando e um relatorio detalhado:
-
-- WSL/Linux: `./scripts/ci/ci-local.sh`
-- PowerShell: `.\scripts\ci\ci-local.ps1`
-
-Tambem e possivel rodar apenas um workflow:
-
-- `./scripts/ci/ci-local.sh frontend`
-- `./scripts/ci/ci-local.sh backend`
-- `./scripts/ci/ci-local.sh docker`
-
-## Docker
-
-Imagens prontas para validacao no CI:
-
-- [apps/web/Dockerfile](C:/estudos/StreamGate/apps/web/Dockerfile)
-- [apps/api/Dockerfile](C:/estudos/StreamGate/apps/api/Dockerfile)
-- [apps/web/Dockerfile.dev](C:/estudos/StreamGate/apps/web/Dockerfile.dev)
-- [apps/api/Dockerfile.dev](C:/estudos/StreamGate/apps/api/Dockerfile.dev)
-- [apps/worker/Dockerfile.dev](C:/estudos/StreamGate/apps/worker/Dockerfile.dev)
-
 ## Documentacao
-
-A documentacao agora esta dividida em trilhas de produto, guias tecnicos e specs de discovery.
 
 - [Hub de documentacao](C:/estudos/StreamGate/docs/README.md)
 - [Visao do produto](C:/estudos/StreamGate/docs/product/vision.md)
 - [Arquitetura](C:/estudos/StreamGate/docs/guides/architecture.md)
 - [Setup do ambiente](C:/estudos/StreamGate/docs/guides/setup.md)
-- [Roadmap DevOps](C:/estudos/StreamGate/docs/guides/devops-roadmap.md)
 - [Swagger/OpenAPI da API](C:/estudos/StreamGate/docs/guides/api-docs.md)
+- [Roadmap mestre de sprints](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [ADR 0001 - Fundacoes de engenharia](C:/estudos/StreamGate/docs/adr/0001-engineering-foundations.md)
+- [Catalogo de skills do projeto](C:/estudos/StreamGate/.agents/skills/README.md)
