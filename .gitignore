@@ -8,7 +8,7 @@ Thumbs.db
 .idea/
 .vscode/
 
-/.agents/skills/
+# Skills do projeto sao versionadas em .agents/skills
 /.claude/
 /skills-lock.json
 
@@ -50,3 +50,7 @@ apps/worker/.bundle/
 apps/worker/vendor/bundle/
 
 infra/volumes/
+
+!/.agents/skills/
+!/.agents/skills/**
+
