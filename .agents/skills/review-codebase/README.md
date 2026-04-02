@@ -1,44 +1,28 @@
-# 查看代码库
+# Review Codebase
 
-**状态**：已验证
+**Status:** validated
 
-## 用途
+## Purpose
 
-查看指定文件、目录或存储库的当前状态。涵盖架构、设计、技术债务、模式、依赖性、安全性和性能。不依赖于 git diff。补充审查代码（以差异为中心）。
+Review the current state of a file set, directory, or the whole repository with emphasis on architecture, design quality, tech debt, maintainability, coupling, and testability. This is for current-state review, not diff-only review.
 
-## 何时使用
+## When to use
 
-- 新模块/服务：架构和实施审查
-- 遗留审计：路径或回购的质量和风险审查
-- 配对/采样：在没有当前差异的情况下检查指定路径
-- 教学：根据审查维度检查任意代码
+- auditing a backend slice after implementation
+- reviewing a directory before refactoring
+- checking whether a repo is ready to support the next sprint safely
+- looking for architectural drift, maintainability issues, and weak boundaries
 
-## 输入
+## Inputs
 
-- 路径（文件、目录或存储库根目录）
-- 可选：焦点（例如仅安全）
+- paths to review: file, directory, or repo root
+- optional focus area such as maintainability or testability
 
-## 输出
+## Outputs
 
-- 每个文件或每个模块的结论和建议以及文件：行引用
+- findings with concrete locations and actionable suggestions
+- summary of structural risks and recommended cleanup order
 
-## 评分 (ASQM)
+## Full definition
 
-| 维度 | 分数 |
-| ：-------------- | :---- |
-|agent_native | 5 |
-|cognitive| 4 |
-|composability | 4 |
-|stance| 5 |
-| **asqm_quality** | 18 | 18
-
-## 生态
-
-|领域|价值|
-| :------------------------------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-|overlaps_with（所有者/存储库：技能名称）| nesnilnehc/ai-cortex:审查代码、wshobson/agents:代码审查卓越、secondsky/claude-skills:代码审查、trailofbits/skills:差异审查、cxuu/golang-skills:go-code-review、obra/superpowers:请求代码审查、 Skillcreatorai/Ai-Agent-Skills：代码审查 |
-|市场地位 |商品 |
-
-## 完整定义
-
-请参阅 [SKILL.md](./SKILL.md) 了解完整的行为、限制和示例。
+See [SKILL.md](./SKILL.md) for the operating rules, scope, and output contract.

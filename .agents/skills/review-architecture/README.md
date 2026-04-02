@@ -1,42 +1,26 @@
-# 回顾架构
+# Review Architecture
 
-**状态**：已验证
+**Status:** validated
 
-## 用途
+## Purpose
 
-仅审查架构代码：模块和层边界、依赖方向、单一责任、循环依赖、接口稳定性、耦合和扩展点。以标准格式发出结果列表。不定义范围或执行语言/安全分析。
+Review only architecture concerns: module and layer boundaries, dependency direction, responsibility split, cyclic dependencies, interface stability, coupling, and extension points. This skill does not pick the scope for you and does not replace a broader codebase review.
 
-## 何时使用
+## When to use
 
-- 精心安排的审查：当审查代码运行整个管道时用作cognitive步骤。
-- 以架构为中心的审查：当用户只想检查边界和结构时。
-- 重构或入门：理解并批评当前结构。
+- validating backend boundaries before implementation
+- checking whether API, domain, worker, contracts, and infrastructure are separated cleanly
+- reviewing a refactor focused on structure and dependency flow
+- diagnosing why a design is hard to test or evolve
 
-## 输入
+## Inputs
 
-- 用户或范围技能提供的代码范围（文件、目录或差异）。
+- code scope provided by the user or a prior review step
 
-## 输出
+## Outputs
 
-- 结果列表：位置、类别=cognitive架构、严重性、标题、描述、可选建议。
+- findings list with location, severity, title, description, and suggestion
 
-## 评分 (ASQM)
+## Full definition
 
-| 维度 | 分数 |
-| ：-------------- | :---- |
-|agent_native | 5 |
-|cognitive| 4 |
-|composability | 5 |
-|stance| 5 |
-| **asqm_quality** | 19 | 19
-
-## 生态
-
-|领域|价值|
-| :------------------------------------ | :------------------------------------------------------------------------------------------------------------------------ |
-|overlaps_with（所有者/存储库：技能名称）| nesnilnehc/ai-cortex:审查代码库，nesnilnehc/ai-cortex:审查代码，nesnilnehc/ai-cortex:审查差异 |
-|市场地位 |商品 |
-
-## 完整定义
-
-请参阅 [SKILL.md](./SKILL.md) 查看清单和输出合同。
+See [SKILL.md](./SKILL.md) for the full checklist and output contract.
