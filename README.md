@@ -78,7 +78,7 @@ O repositorio trabalha com dois modos principais:
 - CI separado em tres workflows
 - scripts de bootstrap, dev, ci e compose organizados por trilha
 - roadmap executivo e ADR inicial documentados
-- base de skills do projeto ampliada para backend, OpenAPI, CI/CD e infra
+- base de skills do projeto ampliada para arquitetura e modelagem de backend, OpenAPI, estrategia de testes, testes de integracao/contrato, CI/CD e infra
 
 ## CI/CD
 

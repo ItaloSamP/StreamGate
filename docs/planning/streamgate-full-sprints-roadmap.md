@@ -133,6 +133,8 @@ Os comandos abaixo sao a base para checklist operacional. Quando um comando falh
 
 ### Skills externas trazidas para `.agents/skills`
 
+- `architecture-patterns`
+- `domain-modeling`
 - `review-codebase`
 - `review-architecture`
 - `readiness-report`
@@ -146,6 +148,9 @@ Os comandos abaixo sao a base para checklist operacional. Quando um comando falh
 - `generate-github-workflow`
 - `github-actions-expert`
 - `monitoring-observability`
+- `breakdown-test`
+- `integration-testing`
+- `api-contract-testing`
 - `vitest`
 
 O uso pratico e o racional de cada uma esta documentado em [`.agents/skills/README.md`](C:/estudos/StreamGate/.agents/skills/README.md).
@@ -185,9 +190,12 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 - [x] frontend com base visual ja convincente
 - [x] Swagger/OpenAPI inicial no backend
 - [x] skills externas prioritarias importadas para `.agents/skills`
+- [x] trilha de backend reforcada com skills de arquitetura e modelagem de dominio
+- [x] trilha de testes reforcada com skills de planejamento, integracao e contrato de API
 
 ### Back planning
 
+- Skills sugeridas: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
 - [x] Inventariar o estado real da API Rails e registrar que ela ainda e esqueleto tecnico.
 - [ ] Definir convencao arquitetural para controllers, services/use-cases, policies, serializers e jobs.
 - [ ] Definir envelope padrao de erro da API e envelope padrao de erro operacional do worker.
@@ -196,6 +204,7 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 
 ### Back execution
 
+- Skills sugeridas: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
 - [x] Reescrever [`apps/api/README.md`](C:/estudos/StreamGate/apps/api/README.md) para refletir o projeto real.
 - [ ] Remover placeholders de codigo realmente enganadores dentro da API quando atrapalharem onboarding.
 - [x] Criar ADR inicial explicando papel da API como orquestradora, nao como processadora pesada.
@@ -203,6 +212,7 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 
 ### Front planning
 
+- Skills sugeridas: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
 - [x] Reconhecer a UI atual como baseline oficial do projeto.
 - [ ] Definir regras objetivas de telas autenticadas vs publicas.
 - [ ] Definir comportamento padrao para loading, empty state, erro, sucesso e formularios.
@@ -210,6 +220,7 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 
 ### Front execution
 
+- Skills sugeridas: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
 - [x] Atualizar [`apps/web/README.md`](C:/estudos/StreamGate/apps/web/README.md) para refletir o estado real do frontend.
 - [ ] Consolidar em documentacao a biblioteca de componentes/layouts ja existente no dashboard e nas telas de auth.
 - [ ] Documentar quais estados de interface ainda sao mock.
@@ -217,6 +228,7 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 
 ### DevOps
 
+- Skills sugeridas: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
 - [x] Confirmar que `scripts/bootstrap`, `scripts/dev`, `scripts/ci` e `scripts/compose` sao os caminhos oficiais documentados.
 - [ ] Classificar a falha do Vitest entre problema de ambiente, permissao e compatibilidade de runner.
 - [ ] Classificar a falha do worker causada por `git ls-files` no gemspec.
@@ -225,6 +237,7 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 
 ### Documentation
 
+- Skills sugeridas: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
 - [x] Criar este roadmap mestre em `docs/planning/`.
 - [x] Criar ADR inicial em `docs/adr/`.
 - [x] Criar catalogo de skills em `.agents/skills/README.md`.
@@ -233,6 +246,7 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 
 ### Test planning
 
+- Skills sugeridas: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
 - [ ] Definir matriz oficial de testes por camada: unitario, request, integracao, contrato, E2E, docker smoke, seguranca.
 - [ ] Definir cobertura minima desejada por tipo de entrega.
 - [ ] Definir quais comandos sao fonte de verdade por stack.
@@ -240,6 +254,7 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 
 ### Test execution
 
+- Skills sugeridas: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
 - [x] Confirmar que existem testes basicos no frontend.
 - [ ] Registrar formalmente a falha atual do Vitest no ambiente Windows.
 - [ ] Registrar formalmente a falha atual do worker no ambiente Windows.
@@ -247,6 +262,7 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 
 ### Security
 
+- Skills sugeridas: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
 - [ ] Criar threat model inicial do repositorio inteiro.
 - [ ] Delimitar superficies de ataque: auth, upload, storage, broker, dashboard, analytics.
 - [ ] Definir scanners oficiais por camada.
@@ -256,6 +272,8 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 ### Skills da sprint
 
 - [x] Instalar skills externas prioritarias para backend, API docs, CI/CD, Kubernetes e observabilidade.
+- [x] Instalar skills de arquitetura e modelagem para pensar backend antes da implementacao.
+- [x] Instalar skills de teste para planejamento, integracao e contrato.
 - [x] Manter skills locais de frontend, testes, threat model e Postgres como baseline.
 - [ ] Documentar gatilhos de uso por trilha dentro do catalogo de skills.
 - [ ] Revisar, ao fim da sprint, se alguma skill importada nao agrega valor real e deve ser descontinuada.
@@ -307,6 +325,7 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 
 ### Back planning
 
+- Skills sugeridas: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
 - [ ] Definir entidades centrais: `User`, `Upload`, `Job`, `JobBatch`, `QuarantineRecord`, `AuditEvent`, `ProcessingAttempt`.
 - [ ] Definir estados oficiais de `Job` e `JobBatch`.
 - [ ] Definir invariantes de dominio que nunca podem ser violadas.
@@ -315,6 +334,7 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 
 ### Back execution
 
+- Skills sugeridas: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
 - [ ] Criar migrations iniciais do dominio operacional.
 - [ ] Criar models base com validacoes minimas e nomes definitivos.
 - [ ] Criar enums/constantes de estados.
@@ -323,6 +343,7 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 
 ### Front planning
 
+- Skills sugeridas: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
 - [ ] Mapear os modulos finais do dashboard operacional.
 - [ ] Mapear os modulos finais do dashboard analitico.
 - [ ] Definir quais estados reais de job precisam aparecer na UI.
@@ -330,12 +351,14 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 
 ### Front execution
 
+- Skills sugeridas: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
 - [ ] Ajustar arquitetura de rotas/layouts para acomodar `Jobs`, `Quarentena`, `Auditoria` e `Analytics`.
 - [ ] Reservar slots de navegacao e layout para modulos futuros.
 - [ ] Garantir que a estrutura de IA nao force retrabalho quando dados reais chegarem.
 
 ### DevOps
 
+- Skills sugeridas: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
 - [ ] Garantir que `db:prepare` seja reproduzivel num banco limpo.
 - [ ] Validar criacao/rollback de migrations em ambiente local.
 - [ ] Definir fixture minima para desenvolvimento sem dados manuais.
@@ -343,6 +366,7 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 
 ### Documentation
 
+- Skills sugeridas: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
 - [ ] Criar glossario de dominio.
 - [ ] Criar ADR de dominio e fronteiras.
 - [ ] Criar primeiros contratos em `packages/contracts`.
@@ -350,6 +374,7 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 
 ### Test planning
 
+- Skills sugeridas: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
 - [ ] Planejar testes de migration.
 - [ ] Planejar testes de model.
 - [ ] Planejar testes de transicao de estado.
@@ -357,18 +382,22 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 
 ### Test execution
 
+- Skills sugeridas: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
 - [ ] Rodar migrations em banco limpo.
 - [ ] Executar os primeiros testes de dominio.
 - [ ] Validar se os contratos versionados batem com exemplos reais.
 
 ### Security
 
+- Skills sugeridas: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
 - [ ] Classificar campos sensiveis do dominio.
 - [ ] Definir visibilidade minima por recurso.
 - [ ] Definir o que deve ou nao ir para logs, auditoria e payloads.
 
 ### Skills da sprint
 
+- [ ] Usar `architecture-patterns` para validar a forma do backend antes de abrir models, services e eventos.
+- [ ] Usar `domain-modeling` para desenhar entidades, invariantes e estados antes de escrever migrations.
 - [ ] Usar `review-architecture` para validar o desenho do dominio antes de abrir muitos arquivos.
 - [ ] Usar `review-codebase` ao final da sprint para checar coerencia estrutural.
 - [ ] Usar `supabase-postgres-best-practices` para revisar schema, indices e naming.
@@ -415,6 +444,7 @@ O frontend ja ensaiou a experiencia de acesso. Esta sprint faz o backend assumir
 
 ### Back planning
 
+- Skills sugeridas: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
 - [ ] Definir mecanismo de autenticacao e sessao.
 - [ ] Definir payloads de cadastro, login, logout e reset.
 - [ ] Definir politica de senha, expiracao e revogacao.
@@ -422,6 +452,7 @@ O frontend ja ensaiou a experiencia de acesso. Esta sprint faz o backend assumir
 
 ### Back execution
 
+- Skills sugeridas: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
 - [ ] Implementar persistencia de usuarios.
 - [ ] Implementar hashing de senha.
 - [ ] Implementar endpoints reais de auth.
@@ -430,12 +461,14 @@ O frontend ja ensaiou a experiencia de acesso. Esta sprint faz o backend assumir
 
 ### Front planning
 
+- Skills sugeridas: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
 - [ ] Mapear impacto da troca de mock para integracao real.
 - [ ] Definir estados de loading, erro e sessao expirada.
 - [ ] Confirmar que o design atual suporta erros reais sem gambiarras.
 
 ### Front execution
 
+- Skills sugeridas: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
 - [ ] Remover dependencia do auth mock do fluxo principal.
 - [ ] Conectar login/cadastro/reset/logout ao backend.
 - [ ] Exibir erros reais sem degradar a UX.
@@ -443,30 +476,35 @@ O frontend ja ensaiou a experiencia de acesso. Esta sprint faz o backend assumir
 
 ### DevOps
 
+- Skills sugeridas: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
 - [ ] Adicionar envs e segredos de auth.
 - [ ] Criar seeds minimas para desenvolvimento.
 - [ ] Ajustar CI para cobrir auth real.
 
 ### Documentation
 
+- Skills sugeridas: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
 - [ ] Atualizar setup para incluir auth real.
 - [ ] Atualizar API docs e guia de autenticacao.
 - [ ] Documentar contrato de erro de auth.
 
 ### Test planning
 
+- Skills sugeridas: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
 - [ ] Planejar unitarios e request specs de auth.
 - [ ] Planejar testes de sessao persistida e expirada.
 - [ ] Planejar E2E de login/logout/rota protegida.
 
 ### Test execution
 
+- Skills sugeridas: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
 - [ ] Executar request specs de auth.
 - [ ] Executar testes do frontend ligados ao backend real.
 - [ ] Executar E2E cobrindo fluxo completo de acesso.
 
 ### Security
 
+- Skills sugeridas: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
 - [ ] Revisar hashing e armazenamento de segredos.
 - [ ] Revisar enumeracao de usuario.
 - [ ] Revisar rate limit inicial.
@@ -520,6 +558,7 @@ Esta sprint fecha a porta de entrada real do produto. A API deve orquestrar o up
 
 ### Back planning
 
+- Skills sugeridas: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
 - [ ] Definir payload de solicitacao de upload.
 - [ ] Definir metadados obrigatorios e convencao de chave de objeto.
 - [ ] Definir endpoint de confirmacao pos-upload.
@@ -527,6 +566,7 @@ Esta sprint fecha a porta de entrada real do produto. A API deve orquestrar o up
 
 ### Back execution
 
+- Skills sugeridas: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
 - [ ] Implementar endpoint que emite URL assinada.
 - [ ] Implementar endpoint que confirma upload.
 - [ ] Criar registro de `Upload`.
@@ -535,12 +575,14 @@ Esta sprint fecha a porta de entrada real do produto. A API deve orquestrar o up
 
 ### Front planning
 
+- Skills sugeridas: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
 - [ ] Definir UX do upload no contexto do dashboard.
 - [ ] Definir estados `idle`, `uploading`, `confirming`, `failed`, `completed`.
 - [ ] Definir mensagens operacionais e retries.
 
 ### Front execution
 
+- Skills sugeridas: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
 - [ ] Construir fluxo real de upload.
 - [ ] Integrar URL assinada.
 - [ ] Integrar confirmacao de upload.
@@ -549,30 +591,37 @@ Esta sprint fecha a porta de entrada real do produto. A API deve orquestrar o up
 
 ### DevOps
 
+- Skills sugeridas: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
 - [ ] Validar bucket, policy e bootstrap do MinIO.
 - [ ] Garantir smoke do upload em compose.
 - [ ] Revisar variaveis de ambiente e credenciais do storage.
 
 ### Documentation
 
+- Skills sugeridas: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
 - [ ] Documentar fluxo de upload ponta a ponta.
 - [ ] Atualizar Swagger com request/response e exemplos.
 - [ ] Criar troubleshooting de falha de upload.
 
 ### Test planning
 
+- Skills sugeridas: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
+- [ ] Usar `breakdown-test` para explicitar cobertura funcional, risco e quality gates da sprint.
 - [ ] Planejar testes do endpoint de assinatura.
 - [ ] Planejar testes do endpoint de confirmacao.
 - [ ] Planejar cenarios de falha parcial e idempotencia inicial.
 
 ### Test execution
 
+- Skills sugeridas: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
+- [ ] Usar `integration-testing` para validar API, storage e criacao de job com dependencias reais.
 - [ ] Criar smoke automatizado `frontend -> api -> minio -> job`.
 - [ ] Cobrir payload invalido.
 - [ ] Cobrir falha de confirmacao.
 
 ### Security
 
+- Skills sugeridas: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
 - [ ] Validar extensao, MIME, tamanho e policy do bucket.
 - [ ] Revisar acesso indevido ao objeto bruto.
 - [ ] Revisar abuso de emissao de URL assinada.
@@ -580,6 +629,7 @@ Esta sprint fecha a porta de entrada real do produto. A API deve orquestrar o up
 ### Skills da sprint
 
 - [ ] Usar `playwright` para smoke do fluxo.
+- [ ] Usar `api-contract-testing` para validar contrato entre endpoint, Swagger e consumidores do upload.
 - [ ] Usar `security-best-practices` para validar superficie de upload.
 - [ ] Usar `openapi` para schema preciso do fluxo.
 
@@ -625,6 +675,7 @@ O produto so deixa de ser prototipo quando o worker deixa de ser placeholder. Es
 
 ### Back planning
 
+- Skills sugeridas: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
 - [ ] Definir payload de evento consumido pelo worker.
 - [ ] Definir batch size inicial.
 - [ ] Definir retries, falha recuperavel e falha terminal.
@@ -632,12 +683,14 @@ O produto so deixa de ser prototipo quando o worker deixa de ser placeholder. Es
 
 ### Back execution
 
+- Skills sugeridas: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
 - [ ] Implementar atualizacao consistente de estados do `Job`.
 - [ ] Registrar tentativas de processamento.
 - [ ] Persistir progresso por lote.
 
 ### Worker execution
 
+- Skills sugeridas: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `integration-testing`, `docker`, `monitoring-observability`, `review-codebase`.
 - [ ] Corrigir estrutura do worker para runtime real.
 - [ ] Implementar consumidor RabbitMQ.
 - [ ] Implementar leitura do arquivo no MinIO.
@@ -647,36 +700,44 @@ O produto so deixa de ser prototipo quando o worker deixa de ser placeholder. Es
 
 ### Front planning
 
+- Skills sugeridas: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
 - [ ] Definir como a UI representa `pending`, `processing`, `failed` e `completed`.
 - [ ] Definir frequencia de refresh inicial.
 - [ ] Definir estado intermediario de processando.
 
 ### Front execution
 
+- Skills sugeridas: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
 - [ ] Exibir progresso real no dashboard.
 - [ ] Exibir transicao de estados em tempo util.
 - [ ] Exibir erro terminal com contexto suficiente.
 
 ### DevOps
 
+- Skills sugeridas: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
 - [ ] Alterar container do worker para runtime real.
 - [ ] Criar healthcheck do worker baseado em operacao.
 - [ ] Garantir reproducao local e em CI.
 
 ### Documentation
 
+- Skills sugeridas: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
 - [ ] Criar runbook do worker.
 - [ ] Documentar eventos e fluxo de processamento.
 - [ ] Documentar estados de job.
 
 ### Test planning
 
+- Skills sugeridas: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
+- [ ] Usar `breakdown-test` para definir cobertura do fluxo assincrono por risco.
 - [ ] Planejar testes unitarios de parsing.
 - [ ] Planejar testes de consumidor e fila.
 - [ ] Planejar reinicio sem perda de estado.
 
 ### Test execution
 
+- Skills sugeridas: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
+- [ ] Usar `integration-testing` para validar broker, storage e persistencia do job com infraestrutura real.
 - [ ] Cobrir arquivo valido.
 - [ ] Cobrir parsing com erro.
 - [ ] Cobrir reinicio do worker.
@@ -684,6 +745,7 @@ O produto so deixa de ser prototipo quando o worker deixa de ser placeholder. Es
 
 ### Security
 
+- Skills sugeridas: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
 - [ ] Revisar poison messages.
 - [ ] Revisar replay indevido.
 - [ ] Revisar limites de uso do worker.
@@ -735,6 +797,7 @@ Sem quarentena, o pipeline so distingue sucesso bruto e fracasso bruto. Esta spr
 
 ### Back planning
 
+- Skills sugeridas: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
 - [ ] Definir modelo de `QuarantineRecord`.
 - [ ] Definir formato de motivo, severidade e contexto.
 - [ ] Definir relacao com `Job`, `Upload` e `Batch`.
@@ -742,53 +805,62 @@ Sem quarentena, o pipeline so distingue sucesso bruto e fracasso bruto. Esta spr
 
 ### Back execution
 
+- Skills sugeridas: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
 - [ ] Persistir registros invalidos.
 - [ ] Criar endpoints de leitura de quarentena.
 - [ ] Criar endpoints de detalhe de erro.
 
 ### Worker execution
 
+- Skills sugeridas: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `integration-testing`, `docker`, `monitoring-observability`, `review-codebase`.
 - [ ] Classificar invalidos corretamente.
 - [ ] Registrar motivo e contexto.
 - [ ] Garantir que invalidos nao derrubem o job inteiro quando nao devem.
 
 ### Front planning
 
+- Skills sugeridas: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
 - [ ] Desenhar visao de quarentena.
 - [ ] Desenhar detalhe do erro.
 - [ ] Desenhar filtros, severidade e empty states.
 
 ### Front execution
 
+- Skills sugeridas: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
 - [ ] Implementar telas de quarentena e detalhe.
 - [ ] Implementar filtros, busca e estados de erro.
 - [ ] Exibir contexto suficiente para o operador agir.
 
 ### DevOps
 
+- Skills sugeridas: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
 - [ ] Adicionar logs estruturados por `job_id`, `batch_id` e `upload_id`.
 - [ ] Preparar metricas basicas de erro e falha.
 
 ### Documentation
 
+- Skills sugeridas: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
 - [ ] Documentar taxonomia de erro.
 - [ ] Documentar quarentena.
 - [ ] Criar runbook de investigacao.
 
 ### Test planning
 
+- Skills sugeridas: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
 - [ ] Planejar linhas invalidas.
 - [ ] Planejar lotes mistos.
 - [ ] Planejar sucesso parcial e falha parcial.
 
 ### Test execution
 
+- Skills sugeridas: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
 - [ ] Cobrir registros invalidos.
 - [ ] Cobrir job misto.
 - [ ] Cobrir leitura de quarentena pelo dashboard.
 
 ### Security
 
+- Skills sugeridas: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
 - [ ] Revisar dados sensiveis em logs e erros.
 - [ ] Revisar payload exposto ao frontend.
 - [ ] Revisar auditoria de falha.
@@ -840,6 +912,7 @@ O dashboard atual ainda e mais demonstracao do que operacao. Esta sprint o trans
 
 ### Back planning
 
+- Skills sugeridas: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
 - [ ] Definir endpoints de listagem de jobs.
 - [ ] Definir endpoint de detalhe do job.
 - [ ] Definir endpoint de auditoria operacional.
@@ -847,18 +920,21 @@ O dashboard atual ainda e mais demonstracao do que operacao. Esta sprint o trans
 
 ### Back execution
 
+- Skills sugeridas: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
 - [ ] Implementar endpoints operacionais reais.
 - [ ] Padronizar payloads para o frontend.
 - [ ] Garantir consistencia de nomes e erro.
 
 ### Front planning
 
+- Skills sugeridas: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
 - [ ] Mapear componentes mock reaproveitaveis.
 - [ ] Mapear blocos que precisam virar dados reais.
 - [ ] Definir loading/empty/error por area do dashboard.
 
 ### Front execution
 
+- Skills sugeridas: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
 - [ ] Integrar dashboard com API real.
 - [ ] Implementar filtros e navegacao operacional.
 - [ ] Implementar refresh periodico.
@@ -866,29 +942,35 @@ O dashboard atual ainda e mais demonstracao do que operacao. Esta sprint o trans
 
 ### DevOps
 
+- Skills sugeridas: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
 - [ ] Instrumentar logs basicos e metricas de endpoint.
 - [ ] Adicionar smoke funcional do dashboard no fluxo E2E.
 
 ### Documentation
 
+- Skills sugeridas: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
 - [ ] Atualizar catalogo de telas.
 - [ ] Atualizar contrato operacional.
 - [ ] Atualizar Swagger dos endpoints operacionais.
 
 ### Test planning
 
+- Skills sugeridas: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
+- [ ] Usar `breakdown-test` para fechar a matriz de testes do dashboard operacional.
 - [ ] Planejar request specs dos endpoints operacionais.
 - [ ] Planejar testes de componentes criticos.
 - [ ] Planejar smoke E2E do dashboard.
 
 ### Test execution
 
+- Skills sugeridas: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
 - [ ] Executar regressao `login + upload + visualizacao do job`.
 - [ ] Executar regressao da area de quarentena.
 - [ ] Executar smoke visual do dashboard.
 
 ### Security
 
+- Skills sugeridas: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
 - [ ] Validar autorizacao por recurso.
 - [ ] Validar vazamento de dados operacionais.
 - [ ] Revisar mensagens de erro exibidas ao usuario.
@@ -941,6 +1023,7 @@ A proposta do produto depende da separacao entre leitura operacional e leitura a
 
 ### Back planning
 
+- Skills sugeridas: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
 - [ ] Definir estrutura analitica.
 - [ ] Definir KPIs, metricas e janelas temporais.
 - [ ] Definir latencia aceitavel de atualizacao.
@@ -948,53 +1031,63 @@ A proposta do produto depende da separacao entre leitura operacional e leitura a
 
 ### Back execution
 
+- Skills sugeridas: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
 - [ ] Implementar carga para ClickHouse.
 - [ ] Implementar endpoints de metricas analiticas.
 - [ ] Implementar filtros temporais e agregacoes principais.
 
 ### Worker execution
 
+- Skills sugeridas: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `integration-testing`, `docker`, `monitoring-observability`, `review-codebase`.
 - [ ] Enviar dados preparados ao ClickHouse.
 - [ ] Garantir consistencia entre estado operacional e carga analitica.
 
 ### Front planning
 
+- Skills sugeridas: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
 - [ ] Definir modulos analiticos do dashboard.
 - [ ] Definir cards, tabelas e graficos necessarios.
 - [ ] Definir narrativa visual dos indicadores.
 
 ### Front execution
 
+- Skills sugeridas: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
 - [ ] Implementar paineis analiticos reais.
 - [ ] Integrar filtros e janelas temporais.
 - [ ] Tratar ausencia de dados e atualizacao.
 
 ### DevOps
 
+- Skills sugeridas: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
 - [ ] Preparar schema analitico.
 - [ ] Criar smoke de carga e consulta.
 - [ ] Monitorar performance basica de ingestao e leitura.
 
 ### Documentation
 
+- Skills sugeridas: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
 - [ ] Documentar origem de cada metrica.
 - [ ] Documentar diferenca entre OLTP e OLAP.
 - [ ] Atualizar Swagger para analytics.
 
 ### Test planning
 
+- Skills sugeridas: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
+- [ ] Usar `breakdown-test` para definir cobertura de metricas, agregacoes e regressao analitica.
 - [ ] Planejar consistencia de metricas.
 - [ ] Planejar testes de agregacao.
 - [ ] Planejar testes de consultas temporais.
 
 ### Test execution
 
+- Skills sugeridas: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
 - [ ] Validar atualizacao apos processamento.
 - [ ] Validar leitura analitica no dashboard.
 - [ ] Validar payloads e agregacoes.
 
 ### Security
 
+- Skills sugeridas: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
 - [ ] Revisar abuso de query e custo/performance.
 - [ ] Revisar exposicao de dados analiticos.
 - [ ] Revisar limites de acesso e janelas de consulta.
@@ -1003,6 +1096,7 @@ A proposta do produto depende da separacao entre leitura operacional e leitura a
 
 - [ ] Usar `supabase-postgres-best-practices` na fronteira OLTP.
 - [ ] Usar `review-codebase` para checar separacao entre camadas operacional e analitica.
+- [ ] Usar `api-contract-testing` para proteger os endpoints analiticos e seus schemas.
 - [ ] Usar `openapi` para os endpoints analiticos.
 
 ### Checklist de saida
@@ -1044,6 +1138,7 @@ Um produto operacional maduro precisa permitir correcao e reprocessamento com tr
 
 ### Back planning
 
+- Skills sugeridas: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
 - [ ] Definir regras de reprocessamento.
 - [ ] Definir permissoes.
 - [ ] Definir escopos de replay.
@@ -1051,42 +1146,49 @@ Um produto operacional maduro precisa permitir correcao e reprocessamento com tr
 
 ### Back execution
 
+- Skills sugeridas: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
 - [ ] Implementar reprocessamento por upload/job/lote.
 - [ ] Registrar tentativas e historico.
 - [ ] Garantir idempotencia.
 
 ### Worker execution
 
+- Skills sugeridas: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `integration-testing`, `docker`, `monitoring-observability`, `review-codebase`.
 - [ ] Implementar replay seguro.
 - [ ] Garantir ausencia de duplicacao.
 - [ ] Garantir historico rastreavel.
 
 ### Front planning
 
+- Skills sugeridas: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
 - [ ] Desenhar fluxo de reprocessamento.
 - [ ] Desenhar confirmacoes e warnings.
 - [ ] Desenhar historico de execucoes.
 
 ### Front execution
 
+- Skills sugeridas: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
 - [ ] Implementar acao de reprocessar.
 - [ ] Implementar visualizacao de historico.
 - [ ] Implementar feedback operacional claro.
 
 ### DevOps
 
+- Skills sugeridas: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
 - [ ] Instrumentar alertas basicos.
 - [ ] Exibir metricas de falha, atraso e replay.
 - [ ] Criar smoke de incidente e recuperacao.
 
 ### Documentation
 
+- Skills sugeridas: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
 - [ ] Criar runbook de incidente.
 - [ ] Criar runbook de replay.
 - [ ] Criar manual de operacao assistida.
 
 ### Test planning
 
+- Skills sugeridas: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
 - [ ] Planejar cenarios de replay.
 - [ ] Planejar concorrencia.
 - [ ] Planejar idempotencia.
@@ -1094,12 +1196,14 @@ Um produto operacional maduro precisa permitir correcao e reprocessamento com tr
 
 ### Test execution
 
+- Skills sugeridas: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
 - [ ] Validar replay sem duplicacao.
 - [ ] Validar auditoria do replay.
 - [ ] Validar efeito no dashboard.
 
 ### Security
 
+- Skills sugeridas: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
 - [ ] Revisar privilegios operacionais.
 - [ ] Revisar abuso de replay.
 - [ ] Revisar integridade da auditoria.
@@ -1151,30 +1255,35 @@ Esta sprint consolida o que foi entregue e remove a fragilidade residual. O foco
 
 ### Back planning
 
+- Skills sugeridas: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
 - [ ] Mapear debt tecnica restante.
 - [ ] Mapear gargalos de performance.
 - [ ] Mapear inconsistencias de contratos, erros e naming.
 
 ### Back execution
 
+- Skills sugeridas: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
 - [ ] Fechar inconsistencias da API e do worker.
 - [ ] Revisar performance e erros.
 - [ ] Eliminar pontos de acoplamento desnecessarios.
 
 ### Front planning
 
+- Skills sugeridas: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
 - [ ] Revisar consistencia visual final.
 - [ ] Revisar acessibilidade.
 - [ ] Revisar performance e usabilidade.
 
 ### Front execution
 
+- Skills sugeridas: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
 - [ ] Corrigir problemas de UX.
 - [ ] Melhorar loading/erro/vazio.
 - [ ] Revisar responsividade, teclado e contraste.
 
 ### DevOps
 
+- Skills sugeridas: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
 - [ ] Ampliar CI com scans obrigatorios.
 - [ ] Adicionar gates de cobertura.
 - [ ] Adicionar scans de imagem/container e dependencia.
@@ -1182,6 +1291,7 @@ Esta sprint consolida o que foi entregue e remove a fragilidade residual. O foco
 
 ### Documentation
 
+- Skills sugeridas: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
 - [ ] Consolidar changelog.
 - [ ] Consolidar runbooks.
 - [ ] Consolidar API docs finais.
@@ -1189,18 +1299,21 @@ Esta sprint consolida o que foi entregue e remove a fragilidade residual. O foco
 
 ### Test planning
 
+- Skills sugeridas: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
 - [ ] Definir suite regressiva oficial.
 - [ ] Definir cobertura minima por camada.
 - [ ] Definir smoke oficial de release.
 
 ### Test execution
 
+- Skills sugeridas: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
 - [ ] Executar regressao completa.
 - [ ] Executar scans de seguranca.
 - [ ] Executar smoke Docker completo.
 
 ### Security
 
+- Skills sugeridas: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
 - [ ] Rodar revisao formal com `security-best-practices`.
 - [ ] Revisar supply chain.
 - [ ] Revisar segredos.
@@ -1255,6 +1368,7 @@ O produto fecha aqui o ciclo de operacao madura: local, CI, Docker e cluster. Na
 
 ### Back planning
 
+- Skills sugeridas: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
 - [ ] Revisar comportamento stateless.
 - [ ] Revisar readiness e liveness.
 - [ ] Revisar configuracao externa e uso de segredos.
@@ -1262,18 +1376,21 @@ O produto fecha aqui o ciclo de operacao madura: local, CI, Docker e cluster. Na
 
 ### Back execution
 
+- Skills sugeridas: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
 - [ ] Ajustar API e worker para cluster.
 - [ ] Garantir comportamento seguro em escala horizontal.
 - [ ] Garantir compatibilidade com deploy progressivo.
 
 ### Front execution
 
+- Skills sugeridas: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
 - [ ] Validar ambiente publicado.
 - [ ] Validar consumo da API em ambiente orquestrado.
 - [ ] Validar smoke ponta a ponta.
 
 ### DevOps
 
+- Skills sugeridas: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
 - [ ] Criar manifests ou charts.
 - [ ] Criar pipeline de deploy.
 - [ ] Definir namespaces, ingress, requests/limits e probes.
@@ -1283,6 +1400,7 @@ O produto fecha aqui o ciclo de operacao madura: local, CI, Docker e cluster. Na
 
 ### Documentation
 
+- Skills sugeridas: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
 - [ ] Documentar deploy.
 - [ ] Documentar rollback.
 - [ ] Documentar suporte.
@@ -1291,6 +1409,7 @@ O produto fecha aqui o ciclo de operacao madura: local, CI, Docker e cluster. Na
 
 ### Test planning
 
+- Skills sugeridas: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
 - [ ] Planejar smoke pos-deploy.
 - [ ] Planejar falha controlada.
 - [ ] Planejar teste de readiness/health.
@@ -1298,6 +1417,7 @@ O produto fecha aqui o ciclo de operacao madura: local, CI, Docker e cluster. Na
 
 ### Test execution
 
+- Skills sugeridas: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
 - [ ] Validar upload em cluster.
 - [ ] Validar processamento em cluster.
 - [ ] Validar dashboard e analytics em cluster.
@@ -1306,6 +1426,7 @@ O produto fecha aqui o ciclo de operacao madura: local, CI, Docker e cluster. Na
 
 ### Security
 
+- Skills sugeridas: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
 - [ ] Revisar network policies.
 - [ ] Revisar exposicao externa.
 - [ ] Revisar segredos do cluster.

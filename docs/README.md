@@ -16,6 +16,7 @@ Este diretorio esta organizado por finalidade:
 4. [Swagger/OpenAPI da API](C:/estudos/StreamGate/docs/guides/api-docs.md)
 5. [Roadmap mestre de sprints](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
 6. [ADR 0001 - Fundacoes de engenharia](C:/estudos/StreamGate/docs/adr/0001-engineering-foundations.md)
+7. [Catalogo de skills do projeto](C:/estudos/StreamGate/.agents/skills/README.md)
 
 ## Observacao
 
