@@ -9,6 +9,8 @@ Criar uma base que permita:
 - evitar acoplamento entre servicos
 - evoluir para deploy em cluster sem reescrever tudo
 
+A baseline operacional consolidada da Sprint 0 esta registrada em [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md).
+
 ## Fase 0: fundacao
 
 Entregas:
@@ -18,10 +20,11 @@ Entregas:
 - `compose.yaml`
 - scripts de bootstrap para `WSL/Linux` e `PowerShell`
 - documentacao de onboarding
+- matriz de ambientes suportados e classificacao de falhas conhecidas
 
 ## Fase 1: padrao de desenvolvimento
 
-Entregas sugeridas:
+Entregas esperadas:
 
 - `apps/web` gerado com Vite
 - `apps/api` gerado com Rails API-only
@@ -31,17 +34,18 @@ Entregas sugeridas:
 
 ## Fase 2: qualidade automatizada
 
-Entregas sugeridas:
+Entregas esperadas:
 
 - lint frontend
 - lint Ruby
 - testes unitarios
 - testes de integracao com compose
 - pipeline de pull request no GitHub Actions
+- registro claro de falha por ambiente vs falha de implementacao
 
 ## Fase 3: observabilidade
 
-Entregas sugeridas:
+Entregas esperadas:
 
 - health endpoints
 - metricas de fila
@@ -51,7 +55,7 @@ Entregas sugeridas:
 
 ## Fase 4: entrega continua
 
-Entregas sugeridas:
+Entregas esperadas:
 
 - build de imagens Docker
 - publicacao em registry
@@ -61,9 +65,10 @@ Entregas sugeridas:
 
 ## Fase 5: preparacao para Kubernetes
 
-Entregas sugeridas:
+Entregas esperadas:
 
 - manifests por servico
 - readiness e liveness probes
 - autoscaling de workers
 - segregacao de workloads stateful e stateless
+

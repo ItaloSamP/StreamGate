@@ -12,11 +12,18 @@ Este diretorio esta organizado por finalidade:
 
 1. [Visao do produto](C:/estudos/StreamGate/docs/product/vision.md)
 2. [Arquitetura base](C:/estudos/StreamGate/docs/guides/architecture.md)
-3. [Setup do ambiente](C:/estudos/StreamGate/docs/guides/setup.md)
-4. [Swagger/OpenAPI da API](C:/estudos/StreamGate/docs/guides/api-docs.md)
-5. [Roadmap mestre de sprints](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
-6. [ADR 0001 - Fundacoes de engenharia](C:/estudos/StreamGate/docs/adr/0001-engineering-foundations.md)
-7. [Catalogo de skills do projeto](C:/estudos/StreamGate/.agents/skills/README.md)
+3. [Fundacoes do backend](C:/estudos/StreamGate/docs/guides/backend-foundations.md)
+4. [Fundacoes do frontend](C:/estudos/StreamGate/docs/guides/frontend-foundations.md)
+5. [Definition of Done](C:/estudos/StreamGate/docs/guides/definition-of-done.md)
+6. [Baseline DevOps da Sprint 0](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md)
+7. [Baseline de Testes da Sprint 0](C:/estudos/StreamGate/docs/guides/testing-baseline-sprint-0.md)
+8. [Baseline de Seguranca da Sprint 0](C:/estudos/StreamGate/docs/guides/security-baseline-sprint-0.md)
+9. [Threat model inicial do repositorio](C:/estudos/StreamGate/docs/guides/streamgate-threat-model.md)
+10. [Setup do ambiente](C:/estudos/StreamGate/docs/guides/setup.md)
+11. [Swagger/OpenAPI da API](C:/estudos/StreamGate/docs/guides/api-docs.md)
+12. [Roadmap mestre de sprints](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+13. [ADR 0001 - Fundacoes de engenharia](C:/estudos/StreamGate/docs/adr/0001-engineering-foundations.md)
+14. [Catalogo de skills do projeto](C:/estudos/StreamGate/.agents/skills/README.md)
 
 ## Observacao
 

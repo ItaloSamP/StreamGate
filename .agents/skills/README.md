@@ -1,23 +1,25 @@
-﻿# Catalogo de Skills do Projeto
+# Catalogo de Skills do Projeto
 
-Este arquivo registra todas as skills versionadas no repositorio do StreamGate, o que cada uma faz e quando entram no fluxo de trabalho.
+Este arquivo registra as skills usadas de forma recorrente no StreamGate, o papel de cada uma no fluxo de trabalho e quando elas devem entrar obrigatoriamente em cada trilha.
+
+Ele funciona como catalogo operacional do projeto. Parte das skills esta versionada em `.agents/skills`, e parte pode vir do ambiente do agente quando o roadmap exigir uma capacidade especifica, como seguranca.
 
 ## Principio de curadoria
 
-Uma skill so permanece neste repositorio se cumprir pelo menos um destes papeis:
+Uma skill so permanece como parte do metodo oficial se cumprir pelo menos um destes papeis:
 
 - apoiar diretamente a stack atual do projeto
 - apoiar uma fase do roadmap ja planejada
-- evitar retrabalho recorrente em backend, frontend, testes, CI/CD ou infra
+- evitar retrabalho recorrente em backend, frontend, testes, CI/CD, infra ou seguranca
 
-Skills sem encaixe real na stack atual ou no roadmap foram removidas para evitar poluicao do repo.
+Skills sem encaixe real na stack atual ou no roadmap devem sair do fluxo para evitar poluicao metodologica.
 
-## Skills mantidas no repositorio
+## Skills mantidas no fluxo do projeto
 
 ### Descoberta e planejamento
 
 - `find-skills`
-  Descobre e instala novas skills quando surge uma necessidade especializada.
+  Descobre e instala novas skills quando surge uma necessidade especializada fora do baseline atual.
   Usar quando faltar uma capacidade nova no projeto.
 
 - `brainstorming`
@@ -132,7 +134,19 @@ Skills sem encaixe real na stack atual ou no roadmap foram removidas para evitar
   Ajuda a estruturar GitOps com reconciliacao declarativa.
   Usar quando a trilha de deploy em cluster chegar ao ponto de promocao automatizada.
 
-## Gatilhos recomendados por trilha
+### Seguranca
+
+- `security-best-practices`
+  Faz revisao secure-by-default para frontend, backend e fluxos web com foco em configuracao, auth, storage, renderizacao e segredos.
+  Usar sempre que a task tocar superficie web, auth, upload, tokens, cookies, storage local ou dados sensiveis.
+
+- `security-threat-model`
+  Apoia threat modeling repo-grounded, fronteiras de confianca, ativos e abuse paths.
+  Usar em sprints que abrem novas superficies ou consolidam fronteiras criticas, como auth, upload, broker e analytics.
+
+## Gatilhos obrigatorios por trilha
+
+A partir da Sprint 0, estes gatilhos deixam de ser recomendacao e passam a ser regra de execucao.
 
 ### Backend
 
@@ -149,6 +163,7 @@ Skills sem encaixe real na stack atual ou no roadmap foram removidas para evitar
 - Componentes e sistema visual: `shadcn` + `tailwind-design-system`
 - Revisao de React: `vercel-react-best-practices`
 - Revisao de UX/acessibilidade: `web-design-guidelines`
+- Revisao de seguranca quando houver auth, rotas protegidas, browser storage ou integracao com API: `security-best-practices`
 
 ### Testes
 
@@ -164,6 +179,44 @@ Skills sem encaixe real na stack atual ou no roadmap foram removidas para evitar
 - CI/CD: `github-actions-expert` + `generate-github-workflow`
 - Observabilidade: `monitoring-observability`
 - Kubernetes: `kubernetes` + `helm-chart-scaffolding` + `gitops-workflow`
+- Revisao de seguranca quando houver envs, portas, imagens, segredos ou servicos administrativos: `security-best-practices`
+
+### Seguranca
+
+- Revisao estrutural: `review-architecture` + `review-codebase`
+- Interface e contrato: `openapi`
+- Infra e topologia: `docker` + `kubernetes`
+- Revisao secure-by-default: `security-best-practices`
+- Threat model e abuso por fronteira: `security-threat-model`
+
+### Documentacao
+
+- Revisao de consistencia do repo e impactos cruzados: `review-codebase`
+- APIs e contratos: `api-documenter` + `openapi` quando houver interface publica
+- Trilha nova sem skill adequada: `find-skills`
+
+## Revisao de valor das skills ao fim da Sprint 0
+
+### Skills que continuam agregando valor real
+
+Todas as skills hoje mantidas no fluxo continuam justificadas pelo roadmap ativo.
+
+Em especial:
+
+- backend e dominio ainda vao depender fortemente de `architecture-patterns`, `domain-modeling`, `api-designer` e `review-architecture`
+- frontend ainda depende de `shadcn`, `tailwind-design-system`, `vercel-react-best-practices` e `web-design-guidelines`
+- testes ainda dependem de `breakdown-test`, `integration-testing`, `api-contract-testing`, `vitest` e `test-driven-development`
+- DevOps e seguranca ainda dependem de `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`, `security-best-practices` e `security-threat-model`
+
+### Skills sem valor real neste fechamento
+
+Nenhuma skill importada precisa ser descontinuada no fechamento da Sprint 0.
+
+O criterio para remocao futura continua sendo:
+
+- a skill nao apoiar mais nenhuma sprint planejada
+- a skill duplicar completamente outra sem ganho metodologico
+- a skill empurrar um fluxo que o projeto nao usa na pratica
 
 ## Skills removidas na curadoria
 
@@ -181,13 +234,14 @@ Skills sem encaixe real na stack atual ou no roadmap foram removidas para evitar
 Sempre que uma tarefa importante comecar, a skill apropriada deve entrar antes da implementacao. No StreamGate, a ordem preferencial e:
 
 1. pensar e desenhar
-2. implementar
-3. validar
-4. documentar
+2. revisar risco e seguranca quando houver superficie sensivel
+3. implementar
+4. validar
+5. documentar
 
 Na pratica:
 
-- backend novo: `architecture-patterns` + `domain-modeling` -> `test-driven-development` -> `review-architecture`/`review-codebase`
-- endpoint novo: `api-designer` -> `openapi`/`api-documenter` -> `api-contract-testing`
-- fluxo com infraestrutura real: `breakdown-test` -> `integration-testing` -> `docker`/`monitoring-observability`
-- frontend novo: `brainstorming` + `shadcn` + `tailwind-design-system` -> `vercel-react-best-practices` -> `web-design-guidelines` + `vitest`
+- backend novo: `architecture-patterns` + `domain-modeling` -> `security-threat-model` quando abrir superficie critica -> `test-driven-development` -> `review-architecture`/`review-codebase`
+- endpoint novo: `api-designer` -> `openapi`/`api-documenter` -> `api-contract-testing` -> `security-best-practices`
+- fluxo com infraestrutura real: `breakdown-test` -> `integration-testing` -> `docker`/`monitoring-observability` -> `security-best-practices`
+- frontend novo: `brainstorming` + `shadcn` + `tailwind-design-system` -> `vercel-react-best-practices` -> `web-design-guidelines` + `vitest` -> `security-best-practices` quando houver auth, storage ou consumo de API

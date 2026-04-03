@@ -78,7 +78,7 @@ O repositorio trabalha com dois modos principais:
 - CI separado em tres workflows
 - scripts de bootstrap, dev, ci e compose organizados por trilha
 - roadmap executivo e ADR inicial documentados
-- base de skills do projeto ampliada para arquitetura e modelagem de backend, OpenAPI, estrategia de testes, testes de integracao/contrato, CI/CD e infra
+- base de skills do projeto ampliada para arquitetura e modelagem de backend, OpenAPI, estrategia de testes, testes de integracao/contrato, CI/CD, infra e seguranca
 
 ## CI/CD
 
@@ -93,6 +93,10 @@ Os workflows atuais ficam em `.github/workflows`:
 - [Hub de documentacao](C:/estudos/StreamGate/docs/README.md)
 - [Visao do produto](C:/estudos/StreamGate/docs/product/vision.md)
 - [Arquitetura](C:/estudos/StreamGate/docs/guides/architecture.md)
+- [Definition of Done](C:/estudos/StreamGate/docs/guides/definition-of-done.md)
+- [Baseline de testes da Sprint 0](C:/estudos/StreamGate/docs/guides/testing-baseline-sprint-0.md)
+- [Baseline de seguranca da Sprint 0](C:/estudos/StreamGate/docs/guides/security-baseline-sprint-0.md)
+- [Threat model inicial do repositorio](C:/estudos/StreamGate/docs/guides/streamgate-threat-model.md)
 - [Setup do ambiente](C:/estudos/StreamGate/docs/guides/setup.md)
 - [Swagger/OpenAPI da API](C:/estudos/StreamGate/docs/guides/api-docs.md)
 - [Roadmap mestre de sprints](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
