@@ -15,6 +15,8 @@ Os scripts `.ps1` continuam disponiveis apenas como fallback para Windows puro.
 
 A raiz de `scripts/` agora expoe apenas os comandos principais; helpers internos ficam organizados em `scripts/bootstrap`, `scripts/dev`, `scripts/ci` e `scripts/compose`.
 
+A classificacao operacional real da Sprint 0 para ambientes, checks e falhas conhecidas esta em [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md).
+
 ## O que voce precisa instalar
 
 Instale nesta ordem:
@@ -261,5 +263,4 @@ Objetivo:
 - criar fluxo de jobs
 - processar arquivos e alimentar PostgreSQL e ClickHouse
 - construir painel operacional e analitico
-
 
