@@ -245,7 +245,7 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 - [x] Criar ADR inicial em `docs/adr/`.
 - [x] Criar catalogo de skills em `.agents/skills/README.md`.
 - [x] Atualizar hub de documentacao para incluir roadmap e ADRs.
-- [ ] Registrar Definition of Done global de forma referenciavel por PR e sprint.
+- [x] Registrar Definition of Done global de forma referenciavel por PR e sprint.
 
 ### Test planning
 
