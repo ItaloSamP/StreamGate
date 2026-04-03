@@ -12,6 +12,8 @@ O StreamGate foi desenhado para ingestao de arquivos grandes com processamento a
 - o ClickHouse guarda a camada analitica
 - o MinIO guarda os arquivos brutos
 
+As convencoes detalhadas de backend, envelopes de erro, nomenclatura oficial e rastreabilidade foram consolidadas em [Fundacoes do backend](C:/estudos/StreamGate/docs/guides/backend-foundations.md).
+
 ## Fluxo principal
 
 1. O usuario solicita upload na SPA.

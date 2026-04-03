@@ -12,11 +12,12 @@ Este diretorio esta organizado por finalidade:
 
 1. [Visao do produto](C:/estudos/StreamGate/docs/product/vision.md)
 2. [Arquitetura base](C:/estudos/StreamGate/docs/guides/architecture.md)
-3. [Setup do ambiente](C:/estudos/StreamGate/docs/guides/setup.md)
-4. [Swagger/OpenAPI da API](C:/estudos/StreamGate/docs/guides/api-docs.md)
-5. [Roadmap mestre de sprints](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
-6. [ADR 0001 - Fundacoes de engenharia](C:/estudos/StreamGate/docs/adr/0001-engineering-foundations.md)
-7. [Catalogo de skills do projeto](C:/estudos/StreamGate/.agents/skills/README.md)
+3. [Fundacoes do backend](C:/estudos/StreamGate/docs/guides/backend-foundations.md)
+4. [Setup do ambiente](C:/estudos/StreamGate/docs/guides/setup.md)
+5. [Swagger/OpenAPI da API](C:/estudos/StreamGate/docs/guides/api-docs.md)
+6. [Roadmap mestre de sprints](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+7. [ADR 0001 - Fundacoes de engenharia](C:/estudos/StreamGate/docs/adr/0001-engineering-foundations.md)
+8. [Catalogo de skills do projeto](C:/estudos/StreamGate/.agents/skills/README.md)
 
 ## Observacao
 

@@ -197,18 +197,18 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 
 - Skills sugeridas: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
 - [x] Inventariar o estado real da API Rails e registrar que ela ainda e esqueleto tecnico.
-- [ ] Definir convencao arquitetural para controllers, services/use-cases, policies, serializers e jobs.
-- [ ] Definir envelope padrao de erro da API e envelope padrao de erro operacional do worker.
-- [ ] Definir nomenclatura oficial de entidades operacionais e analiticas.
-- [ ] Definir campos obrigatorios de rastreabilidade em logs, auditoria e eventos.
+- [x] Definir convencao arquitetural para controllers, services/use-cases, policies, serializers e jobs.
+- [x] Definir envelope padrao de erro da API e envelope padrao de erro operacional do worker.
+- [x] Definir nomenclatura oficial de entidades operacionais e analiticas.
+- [x] Definir campos obrigatorios de rastreabilidade em logs, auditoria e eventos.
 
 ### Back execution
 
 - Skills sugeridas: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
 - [x] Reescrever [`apps/api/README.md`](C:/estudos/StreamGate/apps/api/README.md) para refletir o projeto real.
-- [ ] Remover placeholders de codigo realmente enganadores dentro da API quando atrapalharem onboarding.
+- [x] Remover placeholders de codigo realmente enganadores dentro da API quando atrapalharem onboarding.
 - [x] Criar ADR inicial explicando papel da API como orquestradora, nao como processadora pesada.
-- [ ] Formalizar, em documentacao, responsabilidades do backend por camada.
+- [x] Formalizar, em documentacao, responsabilidades do backend por camada.
 
 ### Front planning
 
@@ -1471,3 +1471,4 @@ Se houver pressao para pular etapas, usar esta sequencia como trava racional:
 ## Fechamento
 
 Se este documento for seguido com disciplina, o projeto deixa de evoluir por intuicao e passa a evoluir por capacidade comprovada. A regra e simples: nenhuma sprint e pronta porque o codigo parece bom; ela so e pronta quando o escopo implementado roda, esta testado, esta documentado, esta coberto por CI e nao abre uma divida invisivel para a sprint seguinte.
+

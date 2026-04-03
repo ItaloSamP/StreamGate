@@ -1,6 +1,6 @@
 # StreamGate API
 
-API Rails do StreamGate. Esta aplicacao sera o centro de orquestracao do produto.
+API Rails do StreamGate. Esta aplicacao e o centro de orquestracao do produto.
 
 ## Papel da API
 
@@ -22,6 +22,20 @@ Hoje a API ainda esta em fase de fundacao:
 - Swagger/OpenAPI inicial preparado em `/api-docs`
 - conexao planejada para PostgreSQL via variaveis de ambiente
 - dominio de negocio ainda nao implementado
+
+As convencoes oficiais da camada backend nesta fase estao em [docs/guides/backend-foundations.md](C:/estudos/StreamGate/docs/guides/backend-foundations.md).
+
+## Convencao arquitetural adotada
+
+Na Sprint 0, a API passa a assumir estas fronteiras:
+
+- `controllers` traduzem HTTP e delegam fluxo
+- `services` ou `use-cases` concentram orquestracao de aplicacao
+- `policies` concentram autorizacao
+- `serializers` controlam o contrato de saida
+- `jobs` da API sao auxiliares leves e nao substituem o worker
+
+O detalhamento completo de envelopes de erro, nomenclatura e rastreabilidade tambem esta no guia de fundacoes do backend.
 
 ## Arquivos importantes
 
