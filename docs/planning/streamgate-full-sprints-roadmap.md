@@ -214,17 +214,17 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 
 - Skills sugeridas: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
 - [x] Reconhecer a UI atual como baseline oficial do projeto.
-- [ ] Definir regras objetivas de telas autenticadas vs publicas.
-- [ ] Definir comportamento padrao para loading, empty state, erro, sucesso e formularios.
-- [ ] Registrar o conjunto minimo de componentes que devem ser reaproveitados antes de criar novos.
+- [x] Definir regras objetivas de telas autenticadas vs publicas.
+- [x] Definir comportamento padrao para loading, empty state, erro, sucesso e formularios.
+- [x] Registrar o conjunto minimo de componentes que devem ser reaproveitados antes de criar novos.
 
 ### Front execution
 
 - Skills sugeridas: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
 - [x] Atualizar [`apps/web/README.md`](C:/estudos/StreamGate/apps/web/README.md) para refletir o estado real do frontend.
-- [ ] Consolidar em documentacao a biblioteca de componentes/layouts ja existente no dashboard e nas telas de auth.
-- [ ] Documentar quais estados de interface ainda sao mock.
-- [ ] Fechar uma UI rules section para evitar regressao visual futura.
+- [x] Consolidar em documentacao a biblioteca de componentes/layouts ja existente no dashboard e nas telas de auth.
+- [x] Documentar quais estados de interface ainda sao mock.
+- [x] Fechar uma UI rules section para evitar regressao visual futura.
 
 ### DevOps
 
@@ -1471,4 +1471,5 @@ Se houver pressao para pular etapas, usar esta sequencia como trava racional:
 ## Fechamento
 
 Se este documento for seguido com disciplina, o projeto deixa de evoluir por intuicao e passa a evoluir por capacidade comprovada. A regra e simples: nenhuma sprint e pronta porque o codigo parece bom; ela so e pronta quando o escopo implementado roda, esta testado, esta documentado, esta coberto por CI e nao abre uma divida invisivel para a sprint seguinte.
+
 

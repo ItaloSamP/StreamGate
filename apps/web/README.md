@@ -25,6 +25,33 @@ Hoje o frontend ja possui uma base relevante:
 
 A troca do auth mock por integracao real esta prevista no roadmap mestre.
 
+As convencoes oficiais do frontend nesta fase estao em [docs/guides/frontend-foundations.md](C:/estudos/StreamGate/docs/guides/frontend-foundations.md).
+
+## Superficies oficiais da Sprint 0
+
+A UI do projeto passa a assumir estas superficies como baseline oficial:
+
+- `LandingPage` como superficie publica de produto
+- `AuthShell` como casca oficial de login, cadastro e reset
+- `DashboardPage` + `DashboardSurface` como workspace autenticado
+
+Antes de criar novas variacoes, o app deve reaproveitar:
+
+- `StreamGateMark`, `SectionLabel`, `ShellPanel`
+- `Button`, `Input`, `Label`
+- `ProtectedRoute` e `AuthProvider`
+
+## O que ainda e mock
+
+Nesta fase, ainda sao mockados no cliente:
+
+- sessao e perfil do usuario via storage local
+- login, cadastro e reset sem backend real
+- dados operacionais exibidos no dashboard
+- graficos, filas, jobs e alertas do workspace
+
+A estrutura visual dessas telas, porem, nao e provisoria. O mock atual substitui dados, nao a linguagem de interface.
+
 ## Comandos locais
 
 ```bash
