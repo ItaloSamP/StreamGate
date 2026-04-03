@@ -266,11 +266,12 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 ### Security
 
 - Skills obrigatorias para todas as tasks desta trilha: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
-- [ ] Criar threat model inicial do repositorio inteiro.
-- [ ] Delimitar superficies de ataque: auth, upload, storage, broker, dashboard, analytics.
-- [ ] Definir scanners oficiais por camada.
-- [ ] Definir politica minima de segredos, `.env` e arquivos sensiveis.
-- [ ] Tornar obrigatoria revisao de seguranca proporcional ao escopo da sprint.
+- Documentos de apoio: [docs/guides/security-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/security-baseline-sprint-0.md), [docs/guides/streamgate-threat-model.md](C:/estudos/StreamGate/docs/guides/streamgate-threat-model.md) e [docs/guides/definition-of-done.md](C:/estudos/StreamGate/docs/guides/definition-of-done.md).
+- [x] Criar threat model inicial do repositorio inteiro.
+- [x] Delimitar superficies de ataque: auth, upload, storage, broker, dashboard, analytics.
+- [x] Definir scanners oficiais por camada.
+- [x] Definir politica minima de segredos, `.env` e arquivos sensiveis.
+- [x] Tornar obrigatoria revisao de seguranca proporcional ao escopo da sprint.
 
 ### Skills da sprint
 
@@ -278,8 +279,8 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 - [x] Instalar skills de arquitetura e modelagem para pensar backend antes da implementacao.
 - [x] Instalar skills de teste para planejamento, integracao e contrato.
 - [x] Manter skills locais de frontend, testes, threat model e Postgres como baseline.
-- [ ] Documentar gatilhos de uso por trilha dentro do catalogo de skills.
-- [ ] Revisar, ao fim da sprint, se alguma skill importada nao agrega valor real e deve ser descontinuada.
+- [x] Documentar gatilhos de uso por trilha dentro do catalogo de skills.
+- [x] Revisar, ao fim da sprint, se alguma skill importada nao agrega valor real e deve ser descontinuada.
 
 ### Checklist de saida
 
@@ -291,8 +292,8 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 - [x] `apps/worker/README.md` refeito.
 - [x] Falha do Vitest classificada e documentada.
 - [x] Falha do worker classificada e documentada.
-- [ ] Matriz de testes criada e validada.
-- [ ] Threat model inicial criado.
+- [x] Matriz de testes criada e validada.
+- [x] Threat model inicial criado.
 
 ---
 
@@ -1484,5 +1485,6 @@ Se houver pressao para pular etapas, usar esta sequencia como trava racional:
 ## Fechamento
 
 Se este documento for seguido com disciplina, o projeto deixa de evoluir por intuicao e passa a evoluir por capacidade comprovada. A regra e simples: nenhuma sprint e pronta porque o codigo parece bom; ela so e pronta quando o escopo implementado roda, esta testado, esta documentado, esta coberto por CI e nao abre uma divida invisivel para a sprint seguinte.
+
 
 

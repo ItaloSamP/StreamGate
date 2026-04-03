@@ -33,7 +33,9 @@ bundle exec rspec
 
 ## Observacao importante
 
-No ambiente Windows atual, o worker ainda possui um gap tecnico conhecido no gemspec relacionado ao uso de `git ls-files`. Esse ponto esta registrado no roadmap e deve ser corrigido na Sprint 0 antes da fundacao operacional do worker.
+O gap antigo do `gemspec` baseado em `git ls-files` ja foi removido na Sprint 0.
+
+No ambiente Windows atual, o principal cuidado do worker passa a ser a validacao do setup Ruby local e a evolucao segura do runtime real de fila, nao mais o placeholder do gemspec.
 
 ## Proximo passo esperado
 

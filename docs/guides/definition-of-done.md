@@ -55,7 +55,14 @@ Uma task, PR ou sprint so pode ser tratada como concluida quando os criterios ab
 - a entrega nao depende apenas da maquina de quem implementou
 - impactos de setup, envs, scripts ou fluxo operacional foram documentados
 
-## 8. Evidencias registradas
+## 8. Revisao de seguranca proporcional ao escopo
+
+- toda task revisou se abriu ou alterou auth, upload, storage, broker, dashboard, analytics, envs ou segredos
+- mudancas de frontend com auth, browser storage ou consumo de API passaram por `security-best-practices`
+- mudancas de backend, infra ou novas superficies sensiveis passaram por revisao de seguranca proporcional e threat modeling quando aplicavel
+- segredos, arquivos sensiveis e defaults de ambiente nao foram promovidos sem documentacao e controle explicitos
+
+## 9. Evidencias registradas
 
 Sempre que aplicavel, a entrega deve deixar rastros claros de validacao:
 
@@ -74,6 +81,7 @@ Ao abrir ou revisar um PR, confirmar pelo menos:
 - quais documentos foram atualizados
 - quais checks foram executados
 - se houve falha de ambiente ou falha real de implementacao
+- se houve revisao de seguranca proporcional ao escopo
 - quais riscos ou pendencias ficaram para depois
 
 ## Uso por sprint
@@ -91,4 +99,6 @@ Ao encerrar uma sprint, confirmar:
 - [Fundacoes do backend](C:/estudos/StreamGate/docs/guides/backend-foundations.md)
 - [Fundacoes do frontend](C:/estudos/StreamGate/docs/guides/frontend-foundations.md)
 - [Baseline DevOps da Sprint 0](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md)
-
+- [Baseline de Testes da Sprint 0](C:/estudos/StreamGate/docs/guides/testing-baseline-sprint-0.md)
+- [Baseline de Seguranca da Sprint 0](C:/estudos/StreamGate/docs/guides/security-baseline-sprint-0.md)
+- [Threat model inicial do repositorio](C:/estudos/StreamGate/docs/guides/streamgate-threat-model.md)

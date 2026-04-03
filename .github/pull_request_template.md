@@ -16,6 +16,7 @@ Reference: [docs/guides/definition-of-done.md](C:/estudos/StreamGate/docs/guides
 - [ ] Relevant CI/checks are green or the exception was explicitly documented
 - [ ] Contracts, OpenAPI, UI states, or shared terminology were updated when applicable
 - [ ] Environment and operational impact were reviewed
+- [ ] Security review proportional to the scope was completed
 - [ ] Risks, trade-offs, and remaining follow-ups were recorded
 
 ## Validation Evidence
@@ -23,10 +24,10 @@ Reference: [docs/guides/definition-of-done.md](C:/estudos/StreamGate/docs/guides
 - Commands executed:
 - Tests/checks executed:
 - Screens/routes/flows validated:
+- Security review executed:
 - Environment notes:
 
 ## Risks and Follow-ups
 
 - Risks accepted:
 - Follow-ups intentionally left for later:
-
