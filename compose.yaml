@@ -18,6 +18,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    networks:
+      - streamgate
 
   redis:
     image: redis:7-alpine
@@ -32,6 +34,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    networks:
+      - streamgate
 
   rabbitmq:
     image: rabbitmq:3.13-management
@@ -50,6 +54,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    networks:
+      - streamgate
 
   minio:
     image: minio/minio:RELEASE.2025-02-18T16-25-55Z
@@ -69,6 +75,8 @@ services:
       interval: 20s
       timeout: 10s
       retries: 5
+    networks:
+      - streamgate
 
   minio-init:
     image: minio/mc:RELEASE.2025-03-12T17-29-24Z
@@ -82,6 +90,8 @@ services:
       mc mb --ignore-existing local/${MINIO_BUCKET_RAW};
       mc anonymous set private local/${MINIO_BUCKET_RAW};
       "
+    networks:
+      - streamgate
 
   clickhouse:
     image: clickhouse/clickhouse-server:25.3
@@ -102,6 +112,8 @@ services:
       interval: 20s
       timeout: 10s
       retries: 10
+    networks:
+      - streamgate
 
   api:
     profiles: ["app", "full"]
@@ -110,12 +122,12 @@ services:
       dockerfile: Dockerfile.dev
     container_name: streamgate-api
     restart: unless-stopped
+    init: true
     working_dir: /app
     command: >
       bash -lc "
-      bundle install &&
       bundle exec rails db:prepare &&
-      bundle exec rails server -b 0.0.0.0 -p 3000
+      exec bundle exec rails server -b 0.0.0.0 -p 3000
       "
     environment:
       RAILS_ENV: development
@@ -147,6 +159,8 @@ services:
       interval: 15s
       timeout: 5s
       retries: 10
+    networks:
+      - streamgate
 
   web:
     profiles: ["app", "full"]
@@ -155,11 +169,11 @@ services:
       dockerfile: Dockerfile.dev
     container_name: streamgate-web
     restart: unless-stopped
+    init: true
     working_dir: /app
     command: >
       sh -lc "
-      pnpm install &&
-      pnpm dev --host 0.0.0.0 --port 5173
+      exec pnpm dev --host 0.0.0.0 --port 5173
       "
     environment:
       CHOKIDAR_USEPOLLING: "true"
@@ -176,19 +190,22 @@ services:
       interval: 15s
       timeout: 5s
       retries: 10
+    networks:
+      - streamgate
 
   worker:
-    profiles: ["app", "full"]
+    profiles: ["full", "worker"]
     build:
       context: ./apps/worker
       dockerfile: Dockerfile.dev
     container_name: streamgate-worker
     restart: unless-stopped
+    init: true
     working_dir: /app
     command: >
       bash -lc "
-      bundle install &&
-      bundle exec ruby -e \"require 'worker'; puts 'streamgate worker dev container ready'; loop { sleep 3600 }\"
+      echo 'worker runtime ainda nao implementado; container mantido para smoke checks de dependencia' &&
+      exec sleep infinity
       "
     volumes:
       - ./apps/worker:/app
@@ -205,10 +222,12 @@ services:
       clickhouse:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "ruby -e \"require 'worker'\""]
+      test: ["CMD-SHELL", "bundle exec ruby -e \"require 'worker'\""]
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - streamgate
 
 volumes:
   postgres_data:
@@ -219,3 +238,7 @@ volumes:
   api_bundle:
   worker_bundle:
   web_node_modules:
+
+networks:
+  streamgate:
+    driver: bridge

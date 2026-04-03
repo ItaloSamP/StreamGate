@@ -17,19 +17,23 @@ Gem::Specification.new do |spec|
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "TODO: Put your gem's public repo URL here."
-  spec.metadata["changelog_uri"] = "TODO: Put your gem's CHANGELOG.md URL here."
+  spec.metadata["changelog_uri"] = "TODO: Put your changelog URL here."
 
-  # Specify which files should be added to the gem when it is released.
-  # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
   gemspec = File.basename(__FILE__)
-  spec.files = IO.popen(%w[git ls-files -z], chdir: __dir__, err: IO::NULL) do |ls|
-    ls.readlines("\x0", chomp: true).reject do |f|
-      (f == gemspec) ||
-        f.start_with?(*%w[bin/ test/ spec/ features/ .git .github appveyor Gemfile])
-    end
+  tracked_files = IO.popen(%w[git ls-files -z], chdir: __dir__, err: IO::NULL, &:read)
+  tracked_files = tracked_files.to_s.split("\x0")
+
+  if tracked_files.empty?
+    tracked_files = Dir.glob("{bin,exe,lib,sig,spec}/**/*", base: __dir__)
+  end
+
+  spec.files = tracked_files.reject do |file|
+    file == gemspec ||
+      file.start_with?(*%w[bin/ test/ spec/ features/ .git .github appveyor Gemfile]) ||
+      File.directory?(File.join(__dir__, file))
   end
   spec.bindir = "exe"
-  spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
+  spec.executables = spec.files.grep(%r{\Aexe/}) { |file| File.basename(file) }
   spec.require_paths = ["lib"]
 
   # Uncomment to register a new dependency of your gem
