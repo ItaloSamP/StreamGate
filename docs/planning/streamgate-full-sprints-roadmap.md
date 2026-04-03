@@ -12,16 +12,20 @@ Este documento e o backlog executivo do projeto. Ele existe para responder, com 
 
 O tom aqui e deliberadamente de engenharia. A ideia nao e listar desejos. A ideia e deixar o caminho de entrega visivel, verificavel e dificil de deturpar.
 
-## Estado real do projeto em 2026-04-01
+## Estado real do projeto em 2026-04-03
 
 - `Frontend`: base visual forte ja existe em `apps/web`, com landing page, login, cadastro, reset, dashboard shell, auth mock, route guard e alguns testes de UX/logica.
-- `API Rails`: continua em estado de esqueleto tecnico; hoje ha health check e infraestrutura inicial de Swagger/OpenAPI, mas nao ha dominio de negocio implementado.
-- `Worker`: ainda esta mais perto de um template de gem do que de um runtime real de filas/processamento.
+- `Frontend stack`: hoje o app roda em React 19, React Router 7, Vite 8, Tailwind 4 e Vitest 4; isso ja muda a trilha futura de integracao, testes e ergonomia do dashboard.
+- `Frontend navegavel`: existe apenas a rota protegida `/dashboard`; os modulos `Upload`, `Jobs`, `Analytics`, `ClickHouse`, `Quarentena`, `Event Log`, `Auditoria` e `Configuracoes` ja aparecem como informacao mock na IA do dashboard, mas ainda nao existem como superficies reais.
+- `API Rails`: continua em estado de esqueleto tecnico; hoje ha apenas `GET /up` e infraestrutura inicial de Swagger/OpenAPI em `/api-docs`, sem dominio, sem endpoints de negocio, sem migrations e sem estrutura materializada de services/use-cases/policies/serializers.
+- `Worker`: ainda esta mais perto de um template de gem do que de um runtime real de filas/processamento; no `compose` o container continua em `sleep infinity` para smoke de dependencia.
 - `Contracts`: `packages/contracts` segue como placeholder.
 - `Infra local`: `compose.yaml` esta bem montado, com servicos relevantes, profiles e health checks.
-- `CI`: existem workflows separados para frontend, backend e docker.
+- `CI`: existem workflows separados para frontend, backend e docker, mas o pipeline do frontend ainda nao roda `vitest` e a trilha de contrato/integracao ainda nao entrou como gate real.
+- `Governanca`: existe template de PR, mas ainda nao existem `CODEOWNERS`, `dependabot.yml`, issue templates, sistema de labels, `AGENTS.md` raiz e guias formais de contribuicao.
 - `Swagger/OpenAPI`: a base existe e `/api-docs` ja foi preparado, mas ainda sem recursos reais de negocio.
-- `Gaps conhecidos`: no ambiente Windows atual, Vitest falha com `spawn EPERM`; o worker falha por dependencia de `git ls-files` no gemspec; READMEs de app ainda estavam desalinhados com o estado real do projeto.
+- `Readiness operacional`: uma leitura rapida com a skill `readiness-report` mostrou maturidade baixa para desenvolvimento autonomo assistido, com gaps mais fortes em observabilidade, seguranca automatizada, descoberta de tarefas e governanca do repositorio.
+- `Gaps conhecidos`: no ambiente Windows atual, Vitest falha com `spawn EPERM`; o worker ja nao sofre mais com `git ls-files`, mas ainda nao possui runtime; scripts de automacao precisam continuar atentos a diferencas de encoding/WSL/PowerShell no host atual.
 
 ## Assumptions Fechados
 
@@ -78,6 +82,41 @@ Ao encerrar uma sprint, o time deve anexar ou registrar:
 - servicos `healthy`;
 - arquivos de documentacao alterados;
 - riscos aceitos explicitamente.
+
+### Regra obrigatoria de transicao entre sprints
+
+Nenhuma sprint nova deve comecar apenas porque a sprint anterior terminou no calendario.
+
+Antes de iniciar a sprint seguinte, passa a ser obrigatorio executar uma reavaliacao do produto e do repositorio, com o mesmo espirito desta revisao de roadmap:
+
+- revisar o estado real do codigo, da infra, da documentacao e da UX ja entregues;
+- comparar o que estava planejado com o que de fato foi implementado;
+- identificar o que ficou faltando, o que mudou de prioridade e o que apareceu de novo no caminho;
+- registrar debitos, gaps operacionais, lacunas de contrato, logica, teste, seguranca, observabilidade e documentacao;
+- atualizar este roadmap mestre e todos os documentos relacionados tocados pela evolucao da sprint.
+
+Essa reavaliacao nao e opcional nem burocratica. Ela existe para impedir estagnacao, backlog invisivel e crescimento desordenado.
+
+Objetivo pratico:
+
+- garantir evolucao continua do produto;
+- impedir que funcionalidades novas nascam sem entrar no plano oficial;
+- impedir que lacunas tecnicas ou de regra de negocio fiquem escondidas entre sprints;
+- manter o roadmap sempre coerente com o estado real do projeto, e nao com uma fotografia antiga.
+
+Documentos que devem ser revistos e atualizados sempre que a sprint tiver impacto neles:
+
+- este roadmap mestre;
+- `docs/product/vision.md`;
+- `docs/guides/architecture.md`;
+- `docs/guides/backend-foundations.md`;
+- `docs/guides/frontend-foundations.md`;
+- `docs/guides/testing-baseline-sprint-0.md` ou o documento de testes vigente;
+- `docs/guides/security-baseline-sprint-0.md` ou o documento de seguranca vigente;
+- `docs/guides/devops-roadmap.md` e runbooks/ADRs afetados;
+- `apps/web/README.md`, `apps/api/README.md` e `apps/worker/README.md`;
+- contratos e especificacoes vivas em `packages/contracts` e `apps/api/openapi/v1/openapi.yaml`.
+- o checklist operacional em `docs/guides/sprint-reassessment-checklist.md`.
 
 ### Matriz minima de documentacao por sprint
 
@@ -156,6 +195,47 @@ A partir deste roadmap, o uso de skills nao deve ser tratado como sugestao. Toda
 - `vitest`
 
 O uso pratico e o racional de cada uma esta documentado em [`.agents/skills/README.md`](C:/estudos/StreamGate/.agents/skills/README.md).
+
+## Frentes transversais que entraram no roadmap nesta revisao
+
+Estas frentes nao pertencem a uma unica sprint. Elas apareceram pelo estado real do repositorio e precisam ser distribuidas ao longo da v1.
+
+### 1. Contratos compartilhados executaveis
+
+`packages/contracts` ja deixou de ser apenas uma boa ideia e virou dependencia critica do sequenciamento. A partir de agora o roadmap assume explicitamente:
+
+- estrutura real do pacote com schemas, exemplos e convencoes versionadas;
+- estrategia de reutilizacao entre Ruby e TypeScript;
+- validacao automatica de compatibilidade entre OpenAPI, eventos e consumidores;
+- geracao ou distribuicao de tipos utilitarios para frontend, API e worker.
+
+### 2. Camada de dados do frontend
+
+O dashboard atual tem uma IA rica, mas ainda nao tem uma camada de dados real. Antes de plugar muitos endpoints, o projeto precisa:
+
+- definir cliente HTTP oficial do frontend;
+- padronizar tratamento de auth, erro, loading, refresh e sessao expirada;
+- decidir como filtros, paginacao e polling vao viver na URL e no estado da app;
+- evitar que cada tela implemente fetch, retry e parsing do seu proprio jeito.
+
+### 3. Governanca de repositorio e agent-readiness
+
+Conforme o projeto crescer, itens de governanca deixam de ser detalhe e passam a proteger a entrega:
+
+- `CODEOWNERS`;
+- `dependabot.yml`;
+- issue templates, labels e guias de contribuicao;
+- `AGENTS.md` raiz com comandos, fluxos e restricoes oficiais;
+- padroes minimos para automacoes e scripts funcionarem tanto em WSL quanto no host Windows atual.
+
+### 4. Observabilidade e operacao por rastreabilidade
+
+O guia de backend ja congelou `trace_id`, `request_id`, `upload_id`, `job_id` e `batch_id`; o roadmap passa a assumir que isso nao e opcional:
+
+- logs estruturados precisam existir antes da operacao ficar real;
+- runbooks e sinais minimos entram antes de cluster;
+- replay, auditoria e analytics dependem dessa rastreabilidade estar viva desde as primeiras features reais.
+
 
 ---
 
@@ -335,6 +415,9 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 - [ ] Definir invariantes de dominio que nunca podem ser violadas.
 - [ ] Definir quais atributos vivem no PostgreSQL e quais sao derivados para ClickHouse.
 - [ ] Definir taxonomia de erro operacional vs erro de validacao.
+- [ ] Definir estrategia oficial de identificadores (`user_id`, `upload_id`, `job_id`, `batch_id`, `audit_event_id`) e padrao de geracao.
+- [ ] Definir envelope de sucesso, paginacao e filtros da API antes da proliferacao de endpoints.
+- [ ] Definir estrutura real de `packages/contracts` com schemas, exemplos, versionamento e estrategia de reutilizacao entre Ruby e TypeScript.
 
 ### Back execution
 
@@ -344,6 +427,8 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 - [ ] Criar enums/constantes de estados.
 - [ ] Criar estrutura minima de auditoria.
 - [ ] Adicionar seeds/fixtures minimas para desenvolvimento e testes.
+- [ ] Materializar esqueleto de `services`, `policies`, `serializers` e contratos para impedir que a API cresca direto em controllers.
+- [ ] Criar constraints e indices minimos que suportem idempotencia, rastreabilidade e consultas operacionais futuras.
 
 ### Front planning
 
@@ -352,6 +437,7 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 - [ ] Mapear os modulos finais do dashboard analitico.
 - [ ] Definir quais estados reais de job precisam aparecer na UI.
 - [ ] Definir como a navegacao do shell atual vai crescer sem reescrita estrutural.
+- [ ] Definir a segmentacao oficial de rotas protegidas (`/dashboard`, `/jobs`, `/quarantine`, `/analytics`, `/audit`, `/settings`) mesmo que algumas ainda nascam como cascas.
 
 ### Front execution
 
@@ -359,6 +445,7 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 - [ ] Ajustar arquitetura de rotas/layouts para acomodar `Jobs`, `Quarentena`, `Auditoria` e `Analytics`.
 - [ ] Reservar slots de navegacao e layout para modulos futuros.
 - [ ] Garantir que a estrutura de IA nao force retrabalho quando dados reais chegarem.
+- [ ] Introduzir a primeira camada oficial de cliente/adapter HTTP do frontend para preparar a troca de mocks por contratos reais.
 
 ### DevOps
 
@@ -368,6 +455,7 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 - [ ] Validar criacao/rollback de migrations em ambiente local.
 - [ ] Definir fixture minima para desenvolvimento sem dados manuais.
 - [ ] Revisar nomes de servicos e variaveis que os contratos vao depender.
+- [ ] Garantir que scripts de suporte e automacao rodem com encoding previsivel em WSL e PowerShell.
 
 ### Documentation
 
@@ -376,6 +464,7 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 - [ ] Criar ADR de dominio e fronteiras.
 - [ ] Criar primeiros contratos em `packages/contracts`.
 - [ ] Documentar versionamento de contratos e regras de compatibilidade.
+- [ ] Registrar convencao de ids, envelopes, paginacao e filtros como parte do contrato publico do projeto.
 
 ### Test planning
 
@@ -398,6 +487,7 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 - [ ] Classificar campos sensiveis do dominio.
 - [ ] Definir visibilidade minima por recurso.
 - [ ] Definir o que deve ou nao ir para logs, auditoria e payloads.
+- [ ] Definir classificacao inicial de dados e estrategia minima de redacao/sanitizacao para campos sensiveis.
 
 ### Skills da sprint
 
@@ -454,6 +544,8 @@ O frontend ja ensaiou a experiencia de acesso. Esta sprint faz o backend assumir
 - [ ] Definir payloads de cadastro, login, logout e reset.
 - [ ] Definir politica de senha, expiracao e revogacao.
 - [ ] Definir modelo de `User` e perfil minimo.
+- [ ] Definir papeis iniciais de acesso e a fronteira entre autenticacao e autorizacao da v1.
+- [ ] Definir endpoints minimos de sessao atual, expiracao e renovacao/revalidacao quando aplicavel.
 
 ### Back execution
 
@@ -462,6 +554,8 @@ O frontend ja ensaiou a experiencia de acesso. Esta sprint faz o backend assumir
 - [ ] Implementar hashing de senha.
 - [ ] Implementar endpoints reais de auth.
 - [ ] Implementar sessao/token e logout.
+- [ ] Implementar endpoint `me` ou equivalente para bootstrap da sessao no frontend.
+- [ ] Implementar contrato de erro para sessao expirada, credencial invalida e acesso negado.
 - [ ] Documentar tudo em Swagger/OpenAPI.
 
 ### Front planning
@@ -478,6 +572,8 @@ O frontend ja ensaiou a experiencia de acesso. Esta sprint faz o backend assumir
 - [ ] Conectar login/cadastro/reset/logout ao backend.
 - [ ] Exibir erros reais sem degradar a UX.
 - [ ] Validar persistencia de sessao conforme politica definida.
+- [ ] Substituir `auth.ts`/storage mock por adapter de sessao real preservando a UX atual.
+- [ ] Centralizar consumo de auth em cliente HTTP unico para evitar acoplamento de pagina com transporte.
 
 ### DevOps
 
@@ -486,6 +582,8 @@ O frontend ja ensaiou a experiencia de acesso. Esta sprint faz o backend assumir
 - [ ] Adicionar envs e segredos de auth.
 - [ ] Criar seeds minimas para desenvolvimento.
 - [ ] Ajustar CI para cobrir auth real.
+- [ ] Configurar envs de CORS/CSRF/cookies conforme a estrategia de sessao escolhida.
+- [ ] Garantir seeds e fixtures de auth reproduziveis em ambiente local e CI.
 
 ### Documentation
 
@@ -493,6 +591,7 @@ O frontend ja ensaiou a experiencia de acesso. Esta sprint faz o backend assumir
 - [ ] Atualizar setup para incluir auth real.
 - [ ] Atualizar API docs e guia de autenticacao.
 - [ ] Documentar contrato de erro de auth.
+- [ ] Criar ADR curto da estrategia de autenticacao da SPA.
 
 ### Test planning
 
@@ -515,6 +614,7 @@ O frontend ja ensaiou a experiencia de acesso. Esta sprint faz o backend assumir
 - [ ] Revisar enumeracao de usuario.
 - [ ] Revisar rate limit inicial.
 - [ ] Revisar mensagens de erro e logs de auth.
+- [ ] Revisar CORS, CSRF, cookies `httpOnly`, `sameSite` e armazenamento de sessao no browser conforme a estrategia adotada.
 
 ### Skills da sprint
 
@@ -569,6 +669,8 @@ Esta sprint fecha a porta de entrada real do produto. A API deve orquestrar o up
 - [ ] Definir metadados obrigatorios e convencao de chave de objeto.
 - [ ] Definir endpoint de confirmacao pos-upload.
 - [ ] Definir limites de tamanho, extensao e MIME.
+- [ ] Definir se a v1 usa upload simples ou multipart/resumivel e quais metadados/checksums entram no contrato inicial.
+- [ ] Definir prazo de expiracao, reconciliacao e limpeza para uploads iniciados e nao confirmados.
 
 ### Back execution
 
@@ -578,6 +680,7 @@ Esta sprint fecha a porta de entrada real do produto. A API deve orquestrar o up
 - [ ] Criar registro de `Upload`.
 - [ ] Criar `Job` associado.
 - [ ] Publicar evento inicial de ingestao.
+- [ ] Registrar checksum, tamanho, chave final do objeto e metadados minimos de rastreabilidade no `Upload`.
 
 ### Front planning
 
@@ -585,6 +688,7 @@ Esta sprint fecha a porta de entrada real do produto. A API deve orquestrar o up
 - [ ] Definir UX do upload no contexto do dashboard.
 - [ ] Definir estados `idle`, `uploading`, `confirming`, `failed`, `completed`.
 - [ ] Definir mensagens operacionais e retries.
+- [ ] Definir se a UI inicial de upload ja precisa suportar cancelar, retomar ou reenviar sem corromper o fluxo.
 
 ### Front execution
 
@@ -602,6 +706,7 @@ Esta sprint fecha a porta de entrada real do produto. A API deve orquestrar o up
 - [ ] Validar bucket, policy e bootstrap do MinIO.
 - [ ] Garantir smoke do upload em compose.
 - [ ] Revisar variaveis de ambiente e credenciais do storage.
+- [ ] Definir politica de retencao e limpeza do bucket bruto para arquivos expirados ou abandonados.
 
 ### Documentation
 
@@ -609,6 +714,7 @@ Esta sprint fecha a porta de entrada real do produto. A API deve orquestrar o up
 - [ ] Documentar fluxo de upload ponta a ponta.
 - [ ] Atualizar Swagger com request/response e exemplos.
 - [ ] Criar troubleshooting de falha de upload.
+- [ ] Documentar ciclo de vida do objeto bruto entre emissao da URL, confirmacao, consumo e retencao.
 
 ### Test planning
 
@@ -687,6 +793,8 @@ O produto so deixa de ser prototipo quando o worker deixa de ser placeholder. Es
 - [ ] Definir batch size inicial.
 - [ ] Definir retries, falha recuperavel e falha terminal.
 - [ ] Definir estrategia de idempotencia.
+- [ ] Definir fila de rejeicao/DLQ, estrategia de ack/nack e tratamento de poison message.
+- [ ] Definir propagacao obrigatoria de `trace_id`, `request_id`, `event_id`, `upload_id` e `job_id` da API ate o worker.
 
 ### Back execution
 
@@ -704,6 +812,7 @@ O produto so deixa de ser prototipo quando o worker deixa de ser placeholder. Es
 - [ ] Implementar parsing inicial por lote.
 - [ ] Implementar atualizacao de progresso.
 - [ ] Implementar retries minimos.
+- [ ] Implementar encerramento gracioso do consumidor e comportamento seguro em restart/deploy.
 
 ### Front planning
 
@@ -726,6 +835,7 @@ O produto so deixa de ser prototipo quando o worker deixa de ser placeholder. Es
 - [ ] Alterar container do worker para runtime real.
 - [ ] Criar healthcheck do worker baseado em operacao.
 - [ ] Garantir reproducao local e em CI.
+- [ ] Subir broker com topologia minima versionada para filas principais, retry e rejeicao.
 
 ### Documentation
 
@@ -733,6 +843,7 @@ O produto so deixa de ser prototipo quando o worker deixa de ser placeholder. Es
 - [ ] Criar runbook do worker.
 - [ ] Documentar eventos e fluxo de processamento.
 - [ ] Documentar estados de job.
+- [ ] Documentar contratos reais de evento com exemplos aceitos e rejeitados.
 
 ### Test planning
 
@@ -757,6 +868,7 @@ O produto so deixa de ser prototipo quando o worker deixa de ser placeholder. Es
 - [ ] Revisar poison messages.
 - [ ] Revisar replay indevido.
 - [ ] Revisar limites de uso do worker.
+- [ ] Revisar autenticidade, replay e rejeicao de eventos invalidos na borda do consumidor.
 
 ### Skills da sprint
 
@@ -810,6 +922,7 @@ Sem quarentena, o pipeline so distingue sucesso bruto e fracasso bruto. Esta spr
 - [ ] Definir formato de motivo, severidade e contexto.
 - [ ] Definir relacao com `Job`, `Upload` e `Batch`.
 - [ ] Definir criterio de falha parcial vs falha total.
+- [ ] Definir acao operacional esperada para cada categoria de erro e cada severidade.
 
 ### Back execution
 
@@ -845,6 +958,7 @@ Sem quarentena, o pipeline so distingue sucesso bruto e fracasso bruto. Esta spr
 - Documentos de apoio: [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md), [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md) e [docs/guides/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/devops-roadmap.md).
 - [ ] Adicionar logs estruturados por `job_id`, `batch_id` e `upload_id`.
 - [ ] Preparar metricas basicas de erro e falha.
+- [ ] Garantir consulta rastreavel por `upload_id`, `job_id`, `batch_id` e categoria de erro.
 
 ### Documentation
 
@@ -926,6 +1040,8 @@ O dashboard atual ainda e mais demonstracao do que operacao. Esta sprint o trans
 - [ ] Definir endpoint de detalhe do job.
 - [ ] Definir endpoint de auditoria operacional.
 - [ ] Definir paginacao, filtros e ordenacao.
+- [ ] Definir endpoint agregado de resumo operacional separado dos endpoints de listagem detalhada.
+- [ ] Definir politica inicial de polling e criterios futuros para migrar para SSE ou WebSocket.
 
 ### Back execution
 
@@ -947,6 +1063,8 @@ O dashboard atual ainda e mais demonstracao do que operacao. Esta sprint o trans
 - [ ] Integrar dashboard com API real.
 - [ ] Implementar filtros e navegacao operacional.
 - [ ] Implementar refresh periodico.
+- [ ] Materializar camada de query/state do dashboard para evitar fetch espalhado por componente.
+- [ ] Refletir filtros e pagina atual na URL quando fizer sentido operacional.
 - [ ] Preservar fidelidade estetica ao baseline.
 
 ### DevOps
@@ -955,6 +1073,7 @@ O dashboard atual ainda e mais demonstracao do que operacao. Esta sprint o trans
 - Documentos de apoio: [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md), [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md) e [docs/guides/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/devops-roadmap.md).
 - [ ] Instrumentar logs basicos e metricas de endpoint.
 - [ ] Adicionar smoke funcional do dashboard no fluxo E2E.
+- [ ] Instrumentar tempos basicos de resposta, polling e latencia percebida do dashboard.
 
 ### Documentation
 
@@ -1038,6 +1157,8 @@ A proposta do produto depende da separacao entre leitura operacional e leitura a
 - [ ] Definir KPIs, metricas e janelas temporais.
 - [ ] Definir latencia aceitavel de atualizacao.
 - [ ] Definir responsabilidade de cada tabela/agregacao.
+- [ ] Definir estrategia de backfill/rebuild das agregacoes sem corromper a leitura operacional.
+- [ ] Definir contrato de frescor das metricas e como isso sera exposto na UI.
 
 ### Back execution
 
@@ -1051,6 +1172,7 @@ A proposta do produto depende da separacao entre leitura operacional e leitura a
 - Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `integration-testing`, `docker`, `monitoring-observability`, `review-codebase`.
 - [ ] Enviar dados preparados ao ClickHouse.
 - [ ] Garantir consistencia entre estado operacional e carga analitica.
+- [ ] Garantir que replays e reprocessamentos nao produzam contagem analitica duplicada.
 
 ### Front planning
 
@@ -1065,6 +1187,7 @@ A proposta do produto depende da separacao entre leitura operacional e leitura a
 - [ ] Implementar paineis analiticos reais.
 - [ ] Integrar filtros e janelas temporais.
 - [ ] Tratar ausencia de dados e atualizacao.
+- [ ] Exibir frescor/ultima atualizacao dos KPIs e deixar clara a origem operacional vs analitica de cada bloco.
 
 ### DevOps
 
@@ -1079,6 +1202,7 @@ A proposta do produto depende da separacao entre leitura operacional e leitura a
 - Skills obrigatorias para todas as tasks desta trilha: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
 - [ ] Documentar origem de cada metrica.
 - [ ] Documentar diferenca entre OLTP e OLAP.
+- [ ] Criar catalogo de metricas com definicao, origem, atraso esperado e dono de cada indicador.
 - [ ] Atualizar Swagger para analytics.
 
 ### Test planning
@@ -1154,6 +1278,7 @@ Um produto operacional maduro precisa permitir correcao e reprocessamento com tr
 - [ ] Definir permissoes.
 - [ ] Definir escopos de replay.
 - [ ] Definir trilha de auditoria obrigatoria.
+- [ ] Definir como uma tentativa de replay referencia a tentativa anterior e como isso aparece para operacao.
 
 ### Back execution
 
@@ -1161,6 +1286,7 @@ Um produto operacional maduro precisa permitir correcao e reprocessamento com tr
 - [ ] Implementar reprocessamento por upload/job/lote.
 - [ ] Registrar tentativas e historico.
 - [ ] Garantir idempotencia.
+- [ ] Garantir trilha imutavel de quem pediu replay, quando pediu, por qual motivo e qual foi o efeito.
 
 ### Worker execution
 
@@ -1190,6 +1316,7 @@ Um produto operacional maduro precisa permitir correcao e reprocessamento com tr
 - [ ] Instrumentar alertas basicos.
 - [ ] Exibir metricas de falha, atraso e replay.
 - [ ] Criar smoke de incidente e recuperacao.
+- [ ] Exercitar o efeito de replay sobre a camada analitica e sobre o historico operacional.
 
 ### Documentation
 
@@ -1300,6 +1427,9 @@ Esta sprint consolida o que foi entregue e remove a fragilidade residual. O foco
 - [ ] Ampliar CI com scans obrigatorios.
 - [ ] Adicionar gates de cobertura.
 - [ ] Adicionar scans de imagem/container e dependencia.
+- [ ] Colocar `vitest`, smoke E2E principal e verificacoes de contrato no CI oficial.
+- [ ] Introduzir `CODEOWNERS`, `dependabot.yml`, issue templates, labels e `AGENTS.md` raiz como parte da governanca minima do repo.
+- [ ] Adicionar secret scanning e scanners de supply chain proporcionais a cada stack.
 - [ ] Definir fluxo de release e rollback.
 
 ### Documentation
@@ -1309,6 +1439,7 @@ Esta sprint consolida o que foi entregue e remove a fragilidade residual. O foco
 - [ ] Consolidar runbooks.
 - [ ] Consolidar API docs finais.
 - [ ] Consolidar guias de release.
+- [ ] Consolidar guia de contribuicao, onboarding tecnico e automacoes recorrentes do repositorio.
 
 ### Test planning
 
@@ -1331,6 +1462,7 @@ Esta sprint consolida o que foi entregue e remove a fragilidade residual. O foco
 - [ ] Revisar supply chain.
 - [ ] Revisar segredos.
 - [ ] Revisar OWASP basico do sistema.
+- [ ] Revisar segredos, ownership, branch protection e automacao de atualizacao de dependencias como parte da seguranca operacional do repositorio.
 
 ### Skills da sprint
 
@@ -1386,6 +1518,7 @@ O produto fecha aqui o ciclo de operacao madura: local, CI, Docker e cluster. Na
 - [ ] Revisar readiness e liveness.
 - [ ] Revisar configuracao externa e uso de segredos.
 - [ ] Revisar comportamento com multiplas replicas.
+- [ ] Decidir explicitamente quais dependencias de dados irao para cluster, quais permanecem externas/gerenciadas e qual e a estrategia de backup/restore de cada uma.
 
 ### Back execution
 
@@ -1411,6 +1544,8 @@ O produto fecha aqui o ciclo de operacao madura: local, CI, Docker e cluster. Na
 - [ ] Definir autoscaling do worker.
 - [ ] Definir rollout, rollback e GitOps.
 - [ ] Definir observabilidade com logs, metricas e tracing quando fizer sentido.
+- [ ] Definir politica de backup, restore drill, retention e segregacao para PostgreSQL, MinIO, RabbitMQ e ClickHouse conforme a estrategia de deploy escolhida.
+- [ ] Definir PDB, network policies, secrets externos e fronteiras entre workloads stateful e stateless.
 
 ### Documentation
 
@@ -1420,6 +1555,7 @@ O produto fecha aqui o ciclo de operacao madura: local, CI, Docker e cluster. Na
 - [ ] Documentar suporte.
 - [ ] Documentar arquitetura final de producao.
 - [ ] Documentar troubleshooting em cluster.
+- [ ] Documentar a decisao final do data plane: self-hosted no cluster, servicos gerenciados ou modelo hibrido.
 
 ### Test planning
 
@@ -1465,6 +1601,31 @@ O produto fecha aqui o ciclo de operacao madura: local, CI, Docker e cluster. Na
 - [ ] Documentacao final de producao esta fechada.
 
 ---
+
+## Pos-v1 e backlog estrategico
+
+Os itens abaixo nao entram na trilha critica da v1, mas ja estao visiveis pelo estado atual do produto e devem permanecer no horizonte oficial para evitar reinvencao desordenada depois do cluster.
+
+### Evolucoes funcionais naturais
+
+- SSE ou WebSocket para reduzir polling quando o dashboard operacional ja estiver estavel.
+- RBAC mais fino por modulo, recurso e acao operacional.
+- Suporte a novos tipos de pipeline alem do fluxo principal de ingestao de arquivos.
+- Ferramentas de investigacao mais profundas no dashboard, como diff entre tentativas e comparacao de replays.
+
+### Evolucoes de plataforma
+
+- tracing distribuido de ponta a ponta;
+- product analytics e error-to-issue pipeline;
+- feature flags para rollout de modulos sensiveis;
+- bundle/perf tracking do frontend e debt tracking mais formal do repositorio.
+
+### Evolucoes de produto e arquitetura
+
+- multi-tenant e segregacao mais forte de dados;
+- politicas de retencao por cliente ou por pipeline;
+- enriquecimento da camada analitica com backfills, jobs agendados e metricas historicas mais ricas.
+
 
 ## Ordem recomendada de execucao
 

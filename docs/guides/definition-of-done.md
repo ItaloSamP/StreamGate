@@ -93,6 +93,42 @@ Ao encerrar uma sprint, confirmar:
 - evidencias registradas
 - pendencias remanescentes visiveis para a sprint seguinte
 
+## Regra de reavaliacao antes da proxima sprint
+
+Encerrar uma sprint nao autoriza iniciar a seguinte automaticamente.
+
+Antes de abrir a proxima sprint, passa a ser obrigatorio executar uma reavaliacao formal do produto e do repositorio para revisar o estado real da entrega e atualizar o plano vivo do projeto.
+
+Essa reavaliacao deve sempre:
+
+- revisar o que foi planejado versus o que foi realmente entregue;
+- revisar codigo, infraestrutura, contratos, UX, testes, seguranca, observabilidade e documentacao impactados;
+- identificar gaps, dividas, retrabalho evitavel, mudancas de prioridade e funcionalidades novas surgidas durante a sprint;
+- atualizar o roadmap mestre e toda documentacao relacionada ao estado atual do projeto.
+
+## Skills obrigatorias nessa reavaliacao
+
+Essa reavaliacao nao deve ser feita sem metodo. Ela deve sempre usar skills para apoiar a leitura do estado atual e a atualizacao do plano.
+
+Skills minimas obrigatorias:
+
+- `review-codebase` para revisar o estado estrutural real do repositorio;
+- `breakdown-test` para revisar cobertura, lacunas e qualidade esperada das proximas entregas;
+- `readiness-report` para identificar gaps de maturidade operacional, governanca, feedback loop e prontidao do repositorio.
+
+Skills adicionais devem entrar quando a sprint tocar temas especificos, por exemplo:
+
+- `review-architecture`, `architecture-patterns` e `domain-modeling` para mudancas fortes de backend e dominio;
+- `api-documenter`, `api-designer`, `openapi` e `api-contract-testing` para API e contratos;
+- `frontend-skill`, `web-design-guidelines`, `tailwind-design-system` e `vercel-react-best-practices` para evolucao relevante de frontend;
+- `integration-testing`, `vitest` e `playwright` para revisar estrategia real de testes;
+- `security-best-practices` e `security-threat-model` para superfices sensiveis;
+- `docker`, `github-actions-expert`, `monitoring-observability`, `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow` para trilhas operacionais e de plataforma.
+
+A transicao entre sprints so deve ser considerada pronta quando essa reavaliacao tiver sido executada e refletida na documentacao viva do projeto.
+
+Checklist operacional oficial: `docs/guides/sprint-reassessment-checklist.md`.
+
 ## Referencias relacionadas
 
 - [Roadmap mestre de sprints](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
@@ -102,3 +138,4 @@ Ao encerrar uma sprint, confirmar:
 - [Baseline de Testes da Sprint 0](C:/estudos/StreamGate/docs/guides/testing-baseline-sprint-0.md)
 - [Baseline de Seguranca da Sprint 0](C:/estudos/StreamGate/docs/guides/security-baseline-sprint-0.md)
 - [Threat model inicial do repositorio](C:/estudos/StreamGate/docs/guides/streamgate-threat-model.md)
+- [Checklist de reavaliacao entre sprints](C:/estudos/StreamGate/docs/guides/sprint-reassessment-checklist.md)
