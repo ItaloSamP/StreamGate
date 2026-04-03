@@ -250,10 +250,10 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 ### Test planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Definir matriz oficial de testes por camada: unitario, request, integracao, contrato, E2E, docker smoke, seguranca.
-- [ ] Definir cobertura minima desejada por tipo de entrega.
-- [ ] Definir quais comandos sao fonte de verdade por stack.
-- [ ] Definir criterio para aceitar falha causada exclusivamente por ambiente.
+- [x] Definir matriz oficial de testes por camada: unitario, request, integracao, contrato, E2E, docker smoke, seguranca.
+- [x] Definir cobertura minima desejada por tipo de entrega.
+- [x] Definir quais comandos sao fonte de verdade por stack.
+- [x] Definir criterio para aceitar falha causada exclusivamente por ambiente.
 
 ### Test execution
 
@@ -261,7 +261,7 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 - [x] Confirmar que existem testes basicos no frontend.
 - [x] Registrar formalmente a falha atual do Vitest no ambiente Windows.
 - [x] Registrar formalmente a falha atual do worker no ambiente Windows.
-- [ ] Executar e registrar o estado atual da API, worker, frontend e compose smoke.
+- [x] Executar e registrar o estado atual da API, worker, frontend e compose smoke.
 
 ### Security
 
@@ -1484,4 +1484,5 @@ Se houver pressao para pular etapas, usar esta sequencia como trava racional:
 ## Fechamento
 
 Se este documento for seguido com disciplina, o projeto deixa de evoluir por intuicao e passa a evoluir por capacidade comprovada. A regra e simples: nenhuma sprint e pronta porque o codigo parece bom; ela so e pronta quando o escopo implementado roda, esta testado, esta documentado, esta coberto por CI e nao abre uma divida invisivel para a sprint seguinte.
+
 

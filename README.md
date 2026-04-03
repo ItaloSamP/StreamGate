@@ -94,9 +94,9 @@ Os workflows atuais ficam em `.github/workflows`:
 - [Visao do produto](C:/estudos/StreamGate/docs/product/vision.md)
 - [Arquitetura](C:/estudos/StreamGate/docs/guides/architecture.md)
 - [Definition of Done](C:/estudos/StreamGate/docs/guides/definition-of-done.md)
+- [Baseline de testes da Sprint 0](C:/estudos/StreamGate/docs/guides/testing-baseline-sprint-0.md)
 - [Setup do ambiente](C:/estudos/StreamGate/docs/guides/setup.md)
 - [Swagger/OpenAPI da API](C:/estudos/StreamGate/docs/guides/api-docs.md)
 - [Roadmap mestre de sprints](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
 - [ADR 0001 - Fundacoes de engenharia](C:/estudos/StreamGate/docs/adr/0001-engineering-foundations.md)
 - [Catalogo de skills do projeto](C:/estudos/StreamGate/.agents/skills/README.md)
-
