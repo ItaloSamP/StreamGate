@@ -1,12 +1,21 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { ApiClientError, buildQueryString, createApiClient } from '@/lib/api-client'
+import {
+  ApiClientError,
+  buildQueryString,
+  configureApiClientAuth,
+  createApiClient,
+} from '@/lib/api-client'
 
 const originalFetch = global.fetch
 
 afterEach(() => {
   vi.restoreAllMocks()
   global.fetch = originalFetch
+  configureApiClientAuth({
+    getAccessToken: undefined,
+    onAuthFailure: undefined,
+  })
 })
 
 describe('buildQueryString', () => {
@@ -42,6 +51,31 @@ describe('createApiClient', () => {
     )
   })
 
+  it('injects bearer token when auth config provides one', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({ data: { id: 'user_1' } }),
+    })
+    global.fetch = fetchMock as typeof fetch
+
+    configureApiClientAuth({
+      getAccessToken: () => 'token_123',
+    })
+
+    const client = createApiClient('http://localhost:3000')
+    await client.get('/api/v1/auth/me')
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:3000/api/v1/auth/me',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer token_123',
+        }),
+      }),
+    )
+  })
+
   it('raises a typed client error for api failures', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: false,
@@ -66,6 +100,40 @@ describe('createApiClient', () => {
         code: 'validation_failed',
         requestId: 'req_front_test',
         traceId: 'trace_front_test',
+      }),
+    )
+  })
+
+  it('calls auth failure callback on expired session errors', async () => {
+    const onAuthFailure = vi.fn()
+
+    configureApiClientAuth({
+      getAccessToken: () => 'expired_token',
+      onAuthFailure,
+    })
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({
+        error: {
+          code: 'session_expired',
+          message: 'Sessao expirada.',
+          request_id: 'req_expired',
+          trace_id: 'trace_expired',
+        },
+      }),
+    }) as typeof fetch
+
+    const client = createApiClient('http://localhost:3000')
+
+    await expect(client.get('/api/v1/auth/me')).rejects.toBeInstanceOf(ApiClientError)
+    expect(onAuthFailure).toHaveBeenCalledTimes(1)
+    expect(onAuthFailure).toHaveBeenCalledWith(
+      expect.objectContaining<ApiClientError>({
+        code: 'session_expired',
+        status: 401,
       }),
     )
   })

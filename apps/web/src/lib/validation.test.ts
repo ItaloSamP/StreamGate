@@ -7,26 +7,36 @@ import {
 } from '@/lib/validation'
 
 describe('password validation', () => {
-  it('accepts passwords with at least one uppercase letter, one number, and up to 8 chars', () => {
-    expect(validatePassword('Abc123')).toEqual([])
-    expect(validatePassword('A1b2c3d4')).toEqual([])
+  it('accepts passwords with min length and required complexity', () => {
+    expect(validatePassword('StrongPass123!')).toEqual([])
+    expect(validatePassword('UltraSecure456@')).toEqual([])
   })
 
-  it('rejects passwords longer than 8 characters', () => {
-    expect(validatePassword('Abcd12345')).toContain(
-      'A senha deve ter no maximo 8 caracteres.',
-    )
+  it('rejects passwords shorter than 12 characters', () => {
+    expect(validatePassword('Abc123!')).toContain('A senha deve ter entre 12 e 128 caracteres.')
   })
 
   it('rejects passwords without uppercase letters', () => {
-    expect(validatePassword('abc123')).toContain(
-      'A senha deve conter pelo menos 1 letra maiuscula.',
+    expect(validatePassword('strongpass123!')).toContain(
+      'A senha deve incluir letra maiuscula, minuscula, numero e simbolo.',
+    )
+  })
+
+  it('rejects passwords without lowercase letters', () => {
+    expect(validatePassword('STRONGPASS123!')).toContain(
+      'A senha deve incluir letra maiuscula, minuscula, numero e simbolo.',
     )
   })
 
   it('rejects passwords without numbers', () => {
-    expect(validatePassword('Abcdef')).toContain(
-      'A senha deve conter pelo menos 1 numero.',
+    expect(validatePassword('StrongPassOnly!')).toContain(
+      'A senha deve incluir letra maiuscula, minuscula, numero e simbolo.',
+    )
+  })
+
+  it('rejects passwords without symbols', () => {
+    expect(validatePassword('StrongPass1234')).toContain(
+      'A senha deve incluir letra maiuscula, minuscula, numero e simbolo.',
     )
   })
 })
@@ -56,8 +66,8 @@ describe('registration validation', () => {
     name: 'Ana Costa',
     birthDate: '1994-04-02',
     email: 'ana@empresa.com',
-    password: 'Abc123',
-    confirmPassword: 'Abc123',
+    password: 'StrongPass123!',
+    confirmPassword: 'StrongPass123!',
   }
 
   it('returns no errors for valid registration input', () => {
@@ -77,9 +87,8 @@ describe('registration validation', () => {
       'Informe seu nome completo.',
       'Informe sua data de nascimento.',
       'Informe um e-mail valido.',
-      'A senha deve ter no maximo 8 caracteres.',
-      'A senha deve conter pelo menos 1 numero.',
-      'A senha deve conter pelo menos 1 letra maiuscula.',
+      'A senha deve ter entre 12 e 128 caracteres.',
+      'A senha deve incluir letra maiuscula, minuscula, numero e simbolo.',
       'A confirmacao de senha deve ser igual a senha.',
     ])
   })
@@ -90,8 +99,8 @@ describe('reset password validation', () => {
     expect(
       validateResetPasswordInput({
         email: 'operacao@empresa.com',
-        password: 'Abc123',
-        confirmPassword: 'Abc999',
+        password: 'StrongPass123!',
+        confirmPassword: 'StrongPass999!',
       }),
     ).toEqual(['A confirmacao de senha deve ser igual a senha.'])
   })
