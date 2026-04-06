@@ -1,0 +1,13 @@
+operator:
+  id: user_fixture_operator
+  email: operator@example.com
+  full_name: Fixture Operator
+  role: operator
+  status: active
+
+admin:
+  id: user_fixture_admin
+  email: admin@example.com
+  full_name: Fixture Admin
+  role: admin
+  status: active

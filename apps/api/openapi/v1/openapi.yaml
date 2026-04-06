@@ -4,7 +4,8 @@ info:
   version: v1
   description: |
     Base inicial da documentacao OpenAPI do StreamGate.
-    Os endpoints reais devem ser adicionados conforme a API for evoluindo.
+    A Sprint 1 fecha os envelopes, recursos iniciais e convencoes de paginacao e filtros
+    antes da proliferacao de endpoints de negocio.
 servers:
   - url: http://localhost:3000
     description: Desenvolvimento local
@@ -18,5 +19,216 @@ paths:
       responses:
         '200':
           description: API disponivel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
 components:
-  schemas: {}
+  schemas:
+    HealthCheckResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          example: ok
+    SuccessEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          description: Payload principal do recurso ou colecao.
+        meta:
+          $ref: '#/components/schemas/EnvelopeMeta'
+    ErrorEnvelope:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+            - request_id
+            - trace_id
+          properties:
+            code:
+              type: string
+              example: validation_failed
+            message:
+              type: string
+              example: Nao foi possivel concluir a operacao solicitada.
+            details:
+              type: array
+              items:
+                $ref: '#/components/schemas/ErrorDetail'
+            request_id:
+              type: string
+              example: req_12cbaf4c14bb49cf8f6497a38e8d673b
+            trace_id:
+              type: string
+              example: trace_3c3b72fe95be45e48dcc9f944d5fb6d8
+    ErrorDetail:
+      type: object
+      required:
+        - reason
+      properties:
+        field:
+          type: string
+          example: upload_id
+        reason:
+          type: string
+          example: already_processed
+    EnvelopeMeta:
+      type: object
+      properties:
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'
+        filters:
+          $ref: '#/components/schemas/FilterMeta'
+    PaginationMeta:
+      type: object
+      required:
+        - page
+        - per_page
+        - total_count
+        - total_pages
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          example: 1
+        per_page:
+          type: integer
+          minimum: 1
+          example: 20
+        total_count:
+          type: integer
+          minimum: 0
+          example: 48
+        total_pages:
+          type: integer
+          minimum: 0
+          example: 3
+    FilterMeta:
+      type: object
+      additionalProperties:
+        oneOf:
+          - type: string
+          - type: number
+          - type: boolean
+          - type: array
+            items:
+              type: string
+          - type: 'null'
+    Upload:
+      type: object
+      required:
+        - id
+        - filename
+        - content_type
+        - byte_size
+        - checksum_sha256
+        - storage_key
+        - status
+        - sensitivity_level
+        - user_id
+        - trace_id
+      properties:
+        id:
+          type: string
+          example: upload_52dc1cd9d40c472ebd63408d8d7b866f
+        filename:
+          type: string
+          example: sample-import.csv
+        content_type:
+          type: string
+          example: text/csv
+        byte_size:
+          type: integer
+          minimum: 1
+          example: 2048
+        checksum_sha256:
+          type: string
+          example: 4f16e1f2e91c3b6b8fdd8d4ac6b6ac1ac3d6f68b0c4d9843791d7c7f7c6b5a3a
+        storage_key:
+          type: string
+          example: uploads/sample-import.csv
+        status:
+          type: string
+          enum:
+            - registered
+            - stored
+            - processing
+            - completed
+            - failed
+            - quarantined
+        sensitivity_level:
+          type: string
+          enum:
+            - internal
+            - restricted
+        user_id:
+          type: string
+          example: user_6c561be0f4f24b2db15c0ddfd4e0d3c2
+        trace_id:
+          type: string
+          example: trace_3c3b72fe95be45e48dcc9f944d5fb6d8
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Job:
+      type: object
+      required:
+        - id
+        - upload_id
+        - requested_by_id
+        - source_type
+        - status
+        - quarantined_records_count
+        - trace_id
+      properties:
+        id:
+          type: string
+          example: job_6f51b476d7274d6d94c7943ee6d88515
+        upload_id:
+          type: string
+          example: upload_52dc1cd9d40c472ebd63408d8d7b866f
+        requested_by_id:
+          type: string
+          example: user_6c561be0f4f24b2db15c0ddfd4e0d3c2
+        source_type:
+          type: string
+          example: upload
+        status:
+          type: string
+          enum:
+            - pending
+            - processing
+            - completed
+            - failed
+            - quarantined_with_warnings
+        error_code:
+          type: string
+          nullable: true
+        error_category:
+          type: string
+          nullable: true
+        quarantined_records_count:
+          type: integer
+          minimum: 0
+        trace_id:
+          type: string
+          example: trace_3c3b72fe95be45e48dcc9f944d5fb6d8
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time

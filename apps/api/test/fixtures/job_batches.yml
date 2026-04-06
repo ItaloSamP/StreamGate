@@ -1,0 +1,9 @@
+first_batch:
+  id: batch_fixture_first
+  job_id: job_fixture_pending
+  batch_number: 1
+  status: pending
+  input_rows: 25
+  valid_rows: 0
+  invalid_rows: 0
+  trace_id: trace_fixture_1

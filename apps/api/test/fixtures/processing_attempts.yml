@@ -1,0 +1,11 @@
+first_attempt:
+  id: attempt_fixture_first
+  job_id: job_fixture_pending
+  initiated_by_id: user_fixture_operator
+  attempt_number: 1
+  status: started
+  operation: worker.process_upload
+  request_id: req_fixture_1
+  trace_id: trace_fixture_1
+  started_at: 2026-04-05 10:00:00
+  metadata: {}

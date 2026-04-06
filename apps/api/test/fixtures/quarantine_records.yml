@@ -1,0 +1,10 @@
+warning_record:
+  id: quarantine_fixture_warning
+  job_id: job_fixture_pending
+  job_batch_id: batch_fixture_first
+  row_number: 3
+  code: missing_cpf
+  message: CPF ausente na linha importada.
+  severity: warning
+  trace_id: trace_fixture_1
+  payload: {}
