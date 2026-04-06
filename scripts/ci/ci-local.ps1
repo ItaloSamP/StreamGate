@@ -1,5 +1,5 @@
 param(
-  [ValidateSet('all', 'frontend', 'backend', 'docker')]
+  [ValidateSet('all', 'frontend', 'backend', 'docker', 'e2e')]
   [string]$Workflow = 'all'
 )
 
@@ -233,6 +233,53 @@ function Run-BackendWorkflow {
   Add-WorkflowResult -Name $workflowName -Status ($(if ($failed) { 'FAIL' } else { 'PASS' })) -Detail $reason
 }
 
+function Run-E2EWorkflow {
+  $workflowName = 'e2e-auth'
+  Write-WorkflowHeader $workflowName
+
+  foreach ($commandName in @('pnpm', 'docker')) {
+    if (-not (Test-CommandAvailable $commandName)) {
+      Add-WorkflowResult -Name $workflowName -Status 'FAIL' -Detail "Comando obrigatorio nao encontrado: $commandName"
+      return
+    }
+  }
+
+  Ensure-EnvFile
+
+  $seedOperatorPassword = Get-DotEnvValue -Path (Join-Path $root '.env') -Key 'SEED_OPERATOR_PASSWORD'
+  if ([string]::IsNullOrWhiteSpace($seedOperatorPassword)) { $seedOperatorPassword = 'ChangeMe123!' }
+
+  $integrationCommand = 'set "AUTH_INTEGRATION_BASE_URL=http://localhost:3000" && set "SEED_OPERATOR_PASSWORD=' + $seedOperatorPassword + '" && pnpm test:integration'
+  $e2eCommand = 'set "E2E_BASE_URL=http://localhost:5173" && set "SEED_OPERATOR_PASSWORD=' + $seedOperatorPassword + '" && pnpm test:e2e'
+
+  $failed = $false
+  $reason = 'Todos os passos passaram.'
+  $steps = @(
+    @{ Name = 'Install web dependencies'; Dir = (Join-Path $root 'apps/web'); Command = 'pnpm install --frozen-lockfile'; Reason = 'Falha em Install web dependencies.' },
+    @{ Name = 'Install Playwright browsers'; Dir = (Join-Path $root 'apps/web'); Command = 'pnpm exec playwright install chromium firefox'; Reason = 'Falha em Install Playwright browsers.' },
+    @{ Name = 'Start auth app stack'; Dir = $root; Command = 'powershell -ExecutionPolicy Bypass -File .\scripts\dev\dev-up.ps1 -Mode app'; Reason = 'Falha ao subir stack de aplicacao para e2e-auth.' },
+    @{ Name = 'Seed auth fixtures'; Dir = $root; Command = 'docker compose exec -T api bundle exec rails db:seed && docker compose exec -T api bundle exec rails runner "abort(''operator seed missing'') unless User.exists?(email: ''operator@streamgate.local'')"'; Reason = 'Falha em Seed auth fixtures.' },
+    @{ Name = 'Run web integration auth tests'; Dir = (Join-Path $root 'apps/web'); Command = $integrationCommand; Reason = 'Falha em Run web integration auth tests.' },
+    @{ Name = 'Run auth e2e tests'; Dir = (Join-Path $root 'apps/web'); Command = $e2eCommand; Reason = 'Falha em Run auth e2e tests.' }
+  )
+
+  foreach ($step in $steps) {
+    if ($failed) { break }
+    $result = Invoke-WorkflowStep -WorkflowName $workflowName -StepName $step.Name -WorkingDirectory $step.Dir -Command $step.Command
+    if ($result.ExitCode -ne 0) {
+      $failed = $true
+      $reason = $step.Reason
+    }
+  }
+
+  try {
+    Invoke-WorkflowStep -WorkflowName $workflowName -StepName 'Stop auth app stack' -WorkingDirectory $root -Command 'powershell -ExecutionPolicy Bypass -File .\scripts\dev\dev-down.ps1' | Out-Null
+  }
+  catch {
+  }
+
+  Add-WorkflowResult -Name $workflowName -Status ($(if ($failed) { 'FAIL' } else { 'PASS' })) -Detail $reason
+}
 function Run-DockerWorkflow {
   $workflowName = 'docker-ci'
   Write-WorkflowHeader $workflowName
@@ -283,10 +330,12 @@ switch ($Workflow) {
   'all' {
     Run-FrontendWorkflow
     Run-BackendWorkflow
+    Run-E2EWorkflow
     Run-DockerWorkflow
   }
   'frontend' { Run-FrontendWorkflow }
   'backend' { Run-BackendWorkflow }
+  'e2e' { Run-E2EWorkflow }
   'docker' { Run-DockerWorkflow }
 }
 
@@ -318,7 +367,4 @@ if ($createdEnv -and (Test-Path (Join-Path $root '.env'))) {
 if ($failureCount -gt 0) {
   exit 1
 }
-
-
-
 

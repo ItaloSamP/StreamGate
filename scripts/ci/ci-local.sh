@@ -8,9 +8,9 @@ source "$SCRIPT_DIR/ci-local-lib.sh"
 
 mode="${1:-all}"
 case "$mode" in
-  all|frontend|backend|docker) ;;
+  all|frontend|backend|docker|e2e) ;;
   *)
-    echo "Uso: ./scripts/ci/ci-local.sh [all|frontend|backend|docker]" >&2
+    echo "Uso: ./scripts/ci/ci-local.sh [all|frontend|backend|docker|e2e]" >&2
     exit 1
     ;;
 esac
@@ -203,6 +203,61 @@ run_backend_workflow() {
   fi
 }
 
+run_e2e_workflow() {
+  local workflow='e2e-auth'
+  ci_local_print_workflow_header "$workflow"
+
+  local failed=0
+  local reason='Todos os passos passaram.'
+
+  if ! ci_local_require_command pnpm; then
+    echo "$CI_LOCAL_STEP_OUTPUT"
+    ci_local_record_result "$workflow" 'FAIL' "$CI_LOCAL_STEP_OUTPUT"
+    return 0
+  fi
+
+  if ! ci_local_require_command docker; then
+    echo "$CI_LOCAL_STEP_OUTPUT"
+    ci_local_record_result "$workflow" 'FAIL' "$CI_LOCAL_STEP_OUTPUT"
+    return 0
+  fi
+
+  ensure_env_file
+
+  local seed_operator_password
+  seed_operator_password="$(get_dotenv_value "$ROOT_DIR/.env" 'SEED_OPERATOR_PASSWORD')"
+  [[ -z "$seed_operator_password" ]] && seed_operator_password='ChangeMe123!'
+
+  ci_local_run_step "$workflow" 'Install web dependencies' "$ROOT_DIR/apps/web" 'pnpm install --frozen-lockfile' || { failed=1; reason='Falha em Install web dependencies.'; }
+
+  if [[ $failed -eq 0 ]]; then
+    ci_local_run_step "$workflow" 'Install Playwright browsers' "$ROOT_DIR/apps/web" 'pnpm exec playwright install chromium firefox' || { failed=1; reason='Falha em Install Playwright browsers.'; }
+  fi
+
+  if [[ $failed -eq 0 ]]; then
+    ci_local_run_step "$workflow" 'Start auth app stack' "$ROOT_DIR" './scripts/dev/dev-up.sh app' || { failed=1; reason='Falha ao subir stack de aplicacao para e2e-auth.'; }
+  fi
+
+  if [[ $failed -eq 0 ]]; then
+    ci_local_run_step "$workflow" 'Seed auth fixtures' "$ROOT_DIR" "docker compose exec -T api bundle exec rails db:seed && docker compose exec -T api bundle exec rails runner \"abort('operator seed missing') unless User.exists?(email: 'operator@streamgate.local')\"" || { failed=1; reason='Falha em Seed auth fixtures.'; }
+  fi
+
+  if [[ $failed -eq 0 ]]; then
+    ci_local_run_step "$workflow" 'Run web integration auth tests' "$ROOT_DIR/apps/web" "AUTH_INTEGRATION_BASE_URL=http://localhost:3000 SEED_OPERATOR_PASSWORD=$seed_operator_password pnpm test:integration" || { failed=1; reason='Falha em Run web integration auth tests.'; }
+  fi
+
+  if [[ $failed -eq 0 ]]; then
+    ci_local_run_step "$workflow" 'Run auth e2e tests' "$ROOT_DIR/apps/web" "E2E_BASE_URL=http://localhost:5173 SEED_OPERATOR_PASSWORD=$seed_operator_password pnpm test:e2e" || { failed=1; reason='Falha em Run auth e2e tests.'; }
+  fi
+
+  ci_local_run_step "$workflow" 'Stop auth app stack' "$ROOT_DIR" './scripts/dev/dev-down.sh' >/dev/null 2>&1 || true
+
+  if [[ $failed -eq 0 ]]; then
+    ci_local_record_result "$workflow" 'PASS' "$reason"
+  else
+    ci_local_record_result "$workflow" 'FAIL' "$reason"
+  fi
+}
 run_docker_workflow() {
   local workflow='docker-ci'
   ci_local_print_workflow_header "$workflow"
@@ -273,6 +328,7 @@ case "$mode" in
   all)
     run_frontend_workflow
     run_backend_workflow
+    run_e2e_workflow
     run_docker_workflow
     ;;
   frontend)
@@ -280,6 +336,9 @@ case "$mode" in
     ;;
   backend)
     run_backend_workflow
+    ;;
+  e2e)
+    run_e2e_workflow
     ;;
   docker)
     run_docker_workflow
