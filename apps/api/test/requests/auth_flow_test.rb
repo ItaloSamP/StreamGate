@@ -77,6 +77,23 @@ class AuthFlowTest < ActionDispatch::IntegrationTest
     assert_response :ok
   end
 
+  test "me returns session_expired when token session is expired" do
+    user = create_auth_user(email: "expired@example.com", password: "StrongPass123!")
+    login = login_as(user.email, "StrongPass123!")
+    token = login.dig("data", "session", "access_token")
+
+    session = AuthSession.find_by!(token_digest: Auth::TokenService.digest(token))
+    session.update!(
+      created_at: 2.hours.ago,
+      expires_at: 1.hour.ago
+    )
+
+    get "/api/v1/auth/me", headers: auth_header(token)
+
+    assert_response :unauthorized
+    assert_equal "session_expired", parsed_json.dig("error", "code")
+  end
+
   test "password reset request and confirm updates password" do
     user = create_auth_user(email: "reset@example.com", password: "StrongPass123!")
 
