@@ -20,17 +20,15 @@ Hoje o frontend ja possui uma base relevante:
 - login, cadastro e reset
 - route guard
 - workspace autenticado segmentado por modulos
-- auth mock para viabilizar a experiencia inicial
+- auth real integrado a API (`register`, `login`, `logout`, `me`, `session/refresh`, reset)
 - camada HTTP oficial para a API
 - testes de UX, navegacao e adapter
 
-A troca do auth mock por integracao real continua prevista para a Sprint 2, mas a malha principal de rotas e a estrutura do workspace ja sao oficiais na Sprint 1.
-
 As convencoes oficiais do frontend nesta fase estao em [docs/guides/frontend-foundations.md](C:/estudos/StreamGate/docs/guides/frontend-foundations.md) e [docs/guides/frontend-workspace-map.md](C:/estudos/StreamGate/docs/guides/frontend-workspace-map.md).
 
-## Superficies oficiais da Sprint 1
+## Superficies oficiais
 
-A UI do projeto passa a assumir estas superficies como baseline oficial:
+A UI do projeto assume estas superficies como baseline oficial:
 
 - `LandingPage` como superficie publica de produto
 - `AuthShell` como casca oficial de login, cadastro e reset
@@ -48,17 +46,15 @@ Antes de criar novas variacoes, o app deve reaproveitar:
 
 Nesta fase, ainda sao mockados no cliente:
 
-- sessao e perfil do usuario via storage local
-- login, cadastro e reset sem backend real
 - dados operacionais exibidos no dashboard
 - leituras de jobs, analytics, quarentena e auditoria
-- a chamada HTTP oficial ainda aponta para endpoints que serao materializados nas sprints seguintes
+- algumas superficies de modulo que ainda servem como scaffold visual
 
-A estrutura visual dessas telas, porem, nao e provisoria. O mock atual substitui dados e auth, nao a linguagem de interface, a segmentacao do workspace nem a camada adapter.
+A estrutura visual dessas telas nao e provisoria. O mock atual substitui dados de dominio, nao a linguagem de interface, a segmentacao do workspace nem a camada adapter.
 
 ## Rotas protegidas oficiais
 
-A Sprint 1 fecha a navegacao autenticada com estas rotas:
+A navegacao autenticada oficial contem estas rotas:
 
 - `/dashboard`
 - `/upload`
@@ -73,7 +69,7 @@ Essa malha existe para evitar que o dashboard vire uma unica tela monolitica con
 
 ## Camada HTTP oficial
 
-O frontend agora passa a ter uma base de integracao oficial em `src/lib/api-client.ts` e `src/lib/streamgate-api.ts`.
+O frontend tem uma base de integracao oficial em `src/lib/api-client.ts` e `src/lib/streamgate-api.ts`.
 
 Responsabilidades desta camada:
 
@@ -81,6 +77,8 @@ Responsabilidades desta camada:
 - serializar query params
 - padronizar envelopes de sucesso e erro
 - carregar `request_id` e `trace_id` em erros da API
+- aplicar `Authorization` de sessao de forma centralizada
+- tratar expiracao/negacao de sessao sem acoplamento de pagina
 - evitar fetch ad hoc por tela
 
 Toda integracao futura deve partir dessa camada antes de introduzir caches, query libraries ou polling mais sofisticado.
@@ -105,11 +103,11 @@ Toda evolucao do frontend deve respeitar estes principios:
 - manter coerencia com `frontend-skill`, `web-design-guidelines`, `tailwind-design-system` e `vercel-react-best-practices`
 - ampliar o workspace por modulos e adapters, nao por telas isoladas com fetch proprio
 
-## Proximo passo esperado
+## Proximos passos esperados
 
 A evolucao planejada do frontend esta em [docs/planning/streamgate-full-sprints-roadmap.md](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md), com foco em:
 
-1. auth real
-2. fluxo real de upload
-3. dashboard operacional com dados reais
-4. dashboard analitico conectado
+1. fluxo real de upload
+2. dashboard operacional com dados reais
+3. dashboard analitico conectado
+4. refinamento de estados de modulo (loading/empty/error por dominio)

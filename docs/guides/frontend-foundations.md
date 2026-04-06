@@ -62,11 +62,11 @@ Regras:
 A fronteira oficial entre publico e autenticado hoje e:
 
 - `ProtectedRoute` controla o acesso ao workspace
-- `auth-context` controla a sessao local atual
+- `auth-context` controla a sessao real da API no frontend
 - login concluido envia o usuario para `/dashboard`
 - logout retorna para a landing page
 
-Enquanto o auth real nao existe, essa transicao continua mockada no cliente, mas o comportamento de navegacao ja e a referencia oficial.
+Com a Sprint 2, essa transicao passou a usar auth real via API (`register`, `login`, `logout`, `me`, `session/refresh` e reset). O comportamento de navegacao segue a mesma referencia visual, agora com estados reais de sessao expirada e acesso negado.
 
 ## Biblioteca minima de componentes e layouts
 
@@ -216,21 +216,24 @@ Regras oficiais:
 
 ## O que ainda e mock no frontend atual
 
-### Auth mock
+### Auth real (Sprint 2)
 
-Ainda esta mockado no cliente:
+A autenticacao do frontend deixou de ser mock e passou a operar com backend real:
 
-- armazenamento de sessao em `localStorage` e `sessionStorage`
-- perfil registrado salvo localmente por `saveRegisteredProfile`
-- redirecionamento apos login sem backend real
-- redefinicao de senha sem integracao externa
+- login, cadastro, logout e bootstrap de sessao via endpoint me
+- persistencia de sessao no browser respeitando a opcao de remember
+- tratamento centralizado de token Bearer no api-client
+- fallback central para session_expired e access_denied
+- fluxo de reset conectado aos endpoints request e confirm
 
 Arquivos principais:
 
-- `src/lib/auth.ts`
-- `src/features/auth/auth-context.tsx`
-- `src/features/auth/protected-route.tsx`
-- paginas de auth em `src/pages`
+- src/lib/auth.ts
+- src/lib/api-client.ts
+- src/lib/streamgate-api.ts
+- src/features/auth/auth-context.tsx
+- src/features/auth/protected-route.tsx
+- paginas de auth em src/pages
 
 ### Workspace mock
 
@@ -306,3 +309,6 @@ Uma entrega de frontend so e considerada pronta quando:
 - deixa claro o que ainda esta mock e o que ja esta integrado
 - preserva a linguagem visual oficial do projeto
 - cresce o workspace por modulos oficiais e por adapter compartilhado, nao por excecoes locais
+
+
+

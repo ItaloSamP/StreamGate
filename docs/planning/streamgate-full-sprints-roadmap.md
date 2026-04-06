@@ -550,9 +550,9 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 
 **Bloqueadores conhecidos**
 
-- frontend ainda depende de auth mock
-- backend ainda nao possui recurso real de usuario/sessao
-- Swagger ainda nao cobre fluxo de auth real
+- frontend ja opera com auth real; proxima lacuna e conectar dados reais dos modulos do workspace
+- backend e frontend ja possuem auth real; lacunas remanescentes estao em trilhas de DevOps, Documentation, Security e E2E
+- Swagger ja cobre auth real; proximas iteracoes cobrem recursos de negocio da API
 
 **O que nao pode ficar para depois**
 
@@ -594,19 +594,19 @@ O frontend ja ensaiou a experiencia de acesso. Esta sprint faz o backend assumir
 ### Front planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
-- [ ] Mapear impacto da troca de mock para integracao real.
-- [ ] Definir estados de loading, erro e sessao expirada.
-- [ ] Confirmar que o design atual suporta erros reais sem gambiarras.
+- [x] Mapear impacto da troca de mock para integracao real.
+- [x] Definir estados de loading, erro e sessao expirada.
+- [x] Confirmar que o design atual suporta erros reais sem gambiarras.
 
 ### Front execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
-- [ ] Remover dependencia do auth mock do fluxo principal.
-- [ ] Conectar login/cadastro/reset/logout ao backend.
-- [ ] Exibir erros reais sem degradar a UX.
-- [ ] Validar persistencia de sessao conforme politica definida.
-- [ ] Substituir `auth.ts`/storage mock por adapter de sessao real preservando a UX atual.
-- [ ] Centralizar consumo de auth em cliente HTTP unico para evitar acoplamento de pagina com transporte.
+- [x] Remover dependencia do auth mock do fluxo principal.
+- [x] Conectar login/cadastro/reset/logout ao backend.
+- [x] Exibir erros reais sem degradar a UX.
+- [x] Validar persistencia de sessao conforme politica definida.
+- [x] Substituir `auth.ts`/storage mock por adapter de sessao real preservando a UX atual.
+- [x] Centralizar consumo de auth em cliente HTTP unico para evitar acoplamento de pagina com transporte.
 
 ### DevOps
 
@@ -722,3 +722,5 @@ Se houver pressao para pular etapas, usar esta sequencia como trava racional:
 ## Fechamento
 
 Se este documento for seguido com disciplina, o projeto deixa de evoluir por intuicao e passa a evoluir por capacidade comprovada. A regra e simples: nenhuma sprint e pronta porque o codigo parece bom; ela so e pronta quando o escopo implementado roda, esta testado, esta documentado, esta coberto por CI e nao abre uma divida invisivel para a sprint seguinte.
+
+
