@@ -1,3 +1,7 @@
+$utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+[Console]::InputEncoding = $utf8NoBom
+[Console]::OutputEncoding = $utf8NoBom
+$OutputEncoding = $utf8NoBom
 function Test-ComposeProjectNameValue {
   param(
     [AllowEmptyString()]
@@ -197,6 +201,3 @@ function Get-ComposeServices {
 
   return @($lines | ForEach-Object { $_ | ConvertFrom-Json })
 }
-
-
-
