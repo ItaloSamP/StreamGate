@@ -1,7 +1,15 @@
+default_operator_password = ENV.fetch("SEED_OPERATOR_PASSWORD", "ChangeMe123!")
+
 operator = User.find_or_create_by!(email: "operator@streamgate.local") do |user|
   user.full_name = "StreamGate Operator"
   user.role = :operator
   user.status = :active
+  user.password = default_operator_password
+  user.password_confirmation = default_operator_password
+end
+
+if operator.password_digest.blank?
+  operator.update!(password: default_operator_password, password_confirmation: default_operator_password)
 end
 
 result = Uploads::RegisterUploadService.call(

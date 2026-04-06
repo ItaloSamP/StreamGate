@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_05_000100) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_06_000100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -29,6 +29,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_05_000100) do
     t.index ["actor_id"], name: "index_audit_events_on_actor_id"
     t.index ["auditable_type", "auditable_id"], name: "index_audit_events_on_auditable_type_and_auditable_id"
     t.index ["trace_id"], name: "index_audit_events_on_trace_id"
+  end
+
+  create_table "auth_sessions", id: :string, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "ip_address"
+    t.datetime "last_seen_at"
+    t.string "request_id"
+    t.datetime "revoked_at"
+    t.string "token_digest", null: false
+    t.string "trace_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "user_agent"
+    t.string "user_id", null: false
+    t.index ["expires_at"], name: "index_auth_sessions_on_expires_at"
+    t.index ["token_digest"], name: "index_auth_sessions_on_token_digest", unique: true
+    t.index ["trace_id"], name: "index_auth_sessions_on_trace_id"
+    t.index ["user_id", "created_at"], name: "index_auth_sessions_on_user_id_and_created_at"
+    t.index ["user_id"], name: "index_auth_sessions_on_user_id"
+    t.check_constraint "expires_at > created_at", name: "auth_sessions_expires_after_create"
   end
 
   create_table "job_batches", id: :string, force: :cascade do |t|
@@ -134,13 +154,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_05_000100) do
     t.datetime "created_at", null: false
     t.string "email", null: false
     t.string "full_name", null: false
+    t.string "password_digest"
+    t.datetime "password_reset_sent_at"
+    t.string "password_reset_token_digest"
     t.string "role", default: "operator", null: false
     t.string "status", default: "invited", null: false
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["password_reset_token_digest"], name: "index_users_on_password_reset_token_digest", unique: true
   end
 
   add_foreign_key "audit_events", "users", column: "actor_id"
+  add_foreign_key "auth_sessions", "users"
   add_foreign_key "job_batches", "jobs"
   add_foreign_key "jobs", "uploads"
   add_foreign_key "jobs", "users", column: "requested_by_id"
