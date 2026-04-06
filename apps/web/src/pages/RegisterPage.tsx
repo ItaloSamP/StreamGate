@@ -127,10 +127,11 @@ export function RegisterPage() {
         </div>
       }
     >
-      <form onSubmit={handleSubmit} className="grid gap-5 sm:grid-cols-2">
+      <form data-testid="register-form" onSubmit={handleSubmit} className="grid gap-5 sm:grid-cols-2">
         <div className="flex flex-col gap-2 sm:col-span-2">
           <Label htmlFor="name">Nome completo</Label>
           <Input
+            data-testid="register-name"
             id="name"
             placeholder="Ana Costa"
             autoComplete="name"
@@ -144,6 +145,7 @@ export function RegisterPage() {
         <div className="flex flex-col gap-2">
           <Label htmlFor="birthDate">Data de nascimento</Label>
           <Input
+            data-testid="register-birthdate"
             id="birthDate"
             type="date"
             value={form.birthDate}
@@ -156,6 +158,7 @@ export function RegisterPage() {
         <div className="flex flex-col gap-2">
           <Label htmlFor="email">E-mail corporativo</Label>
           <Input
+            data-testid="register-email"
             id="email"
             type="email"
             placeholder="time@empresa.com"
@@ -170,6 +173,7 @@ export function RegisterPage() {
         <div className="flex flex-col gap-2">
           <Label htmlFor="password">Senha</Label>
           <Input
+            data-testid="register-password"
             id="password"
             type="password"
             placeholder="Senha forte"
@@ -187,6 +191,7 @@ export function RegisterPage() {
         <div className="flex flex-col gap-2">
           <Label htmlFor="confirmPassword">Confirmar senha</Label>
           <Input
+            data-testid="register-confirm-password"
             id="confirmPassword"
             type="password"
             placeholder="Repita sua senha"
@@ -202,6 +207,7 @@ export function RegisterPage() {
 
         <div className="sm:col-span-2 flex items-center gap-3 text-sm text-[var(--text-soft)]">
           <input
+            data-testid="register-remember"
             id="remember"
             type="checkbox"
             checked={remember}
@@ -212,10 +218,10 @@ export function RegisterPage() {
         </div>
 
         <div className="sm:col-span-2 flex flex-col gap-3 pt-2">
-          <Button type="submit" variant="inverted" size="xl" disabled={isSubmitting}>
+          <Button data-testid="register-submit" type="submit" variant="inverted" size="xl" disabled={isSubmitting}>
             {isSubmitting ? 'Criando acesso...' : 'Concluir cadastro'}
           </Button>
-          <Button asChild type="button" variant="panel" size="xl">
+          <Button data-testid="register-login-link" asChild type="button" variant="panel" size="xl">
             <Link to="/login">Ja tenho conta</Link>
           </Button>
         </div>

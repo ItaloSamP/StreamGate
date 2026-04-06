@@ -47,7 +47,12 @@ function SidebarUser({
 
   return (
     <div className="dash-user-menu">
-      <button type="button" className="dash-user-row dash-user-row--button" onClick={() => setOpen((value) => !value)}>
+      <button
+        data-testid="dashboard-user-menu-toggle"
+        type="button"
+        className="dash-user-row dash-user-row--button"
+        onClick={() => setOpen((value) => !value)}
+      >
         <div className="dash-avatar">{initials}</div>
         <div className="dash-user-copy">
           <div className="dash-user-name">{profileName}</div>
@@ -57,12 +62,17 @@ function SidebarUser({
       </button>
 
       {open ? (
-        <div className="dash-user-popover">
+        <div data-testid="dashboard-user-popover" className="dash-user-popover">
           <div className="dash-user-popover-head">
             <div className="dash-user-name">{profileName}</div>
             <div className="dash-user-role">{role}</div>
           </div>
-          <button type="button" className="dash-user-popover-action" onClick={onLogout}>
+          <button
+            data-testid="dashboard-logout-action"
+            type="button"
+            className="dash-user-popover-action"
+            onClick={onLogout}
+          >
             <span>Sair da plataforma</span>
             <LogOut size={14} />
           </button>

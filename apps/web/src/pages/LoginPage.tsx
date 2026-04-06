@@ -111,6 +111,7 @@ export function LoginPage() {
       eyebrow="Login"
       title="Entrar no workspace."
       description={helperCopy}
+      descriptionTestId="login-helper-copy"
       footer={
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--text-dim)]">
           <span>Novo por aqui? Crie uma conta e mantenha a mesma identidade do produto.</span>
@@ -120,10 +121,11 @@ export function LoginPage() {
         </div>
       }
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <form data-testid="login-form" onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div className="flex flex-col gap-2">
           <Label htmlFor="email">E-mail corporativo</Label>
           <Input
+            data-testid="login-email"
             id="email"
             type="email"
             placeholder="time@empresa.com"
@@ -138,6 +140,7 @@ export function LoginPage() {
         <div className="flex flex-col gap-2">
           <Label htmlFor="password">Senha</Label>
           <Input
+            data-testid="login-password"
             id="password"
             type="password"
             placeholder="Sua senha"
@@ -152,6 +155,7 @@ export function LoginPage() {
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
           <label className="flex items-center gap-3 text-[var(--text-soft)]">
             <input
+              data-testid="login-remember"
               type="checkbox"
               checked={remember}
               onChange={(event) => setRemember(event.target.checked)}
@@ -160,16 +164,20 @@ export function LoginPage() {
             Relembrar login
           </label>
 
-          <Link to="/reset-password" className="text-[var(--signal-teal)] transition hover:text-white">
+          <Link
+            data-testid="login-reset-link"
+            to="/reset-password"
+            className="text-[var(--signal-teal)] transition hover:text-white"
+          >
             Redefinir senha
           </Link>
         </div>
 
-        <Button type="submit" variant="inverted" size="xl" disabled={isSubmitting}>
+        <Button data-testid="login-submit" type="submit" variant="inverted" size="xl" disabled={isSubmitting}>
           {isSubmitting ? 'Entrando...' : 'Entrar na dashboard'}
         </Button>
 
-        <Button asChild type="button" variant="panel" size="xl">
+        <Button data-testid="login-create-account" asChild type="button" variant="panel" size="xl">
           <Link to="/register">Criar conta</Link>
         </Button>
       </form>

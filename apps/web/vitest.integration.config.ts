@@ -9,13 +9,14 @@ export default defineConfig({
     },
   },
   test: {
-    environment: 'jsdom',
+    environment: 'node',
     globals: true,
-    setupFiles: ['./src/test/setup.ts'],
     pool: 'vmThreads',
     fileParallelism: false,
     maxWorkers: 1,
-    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
-    exclude: [...configDefaults.exclude, 'src/**/*.integration.test.ts'],
+    include: ['src/**/*.integration.test.ts'],
+    exclude: [...configDefaults.exclude],
+    testTimeout: 60000,
+    hookTimeout: 60000,
   },
 })

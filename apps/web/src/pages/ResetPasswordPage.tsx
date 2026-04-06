@@ -134,6 +134,7 @@ export function ResetPasswordPage() {
       eyebrow="Redefinicao"
       title="Atualize sua senha."
       description={description}
+      descriptionTestId="reset-helper-copy"
       footer={
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--text-dim)]">
           <span>Se lembrou da senha atual, volte para o login e entre normalmente.</span>
@@ -143,10 +144,11 @@ export function ResetPasswordPage() {
         </div>
       }
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <form data-testid="reset-form" onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div className="flex flex-col gap-2">
           <Label htmlFor="email">E-mail corporativo</Label>
           <Input
+            data-testid="reset-email"
             id="email"
             type="email"
             placeholder="time@empresa.com"
@@ -163,6 +165,7 @@ export function ResetPasswordPage() {
             <div className="flex flex-col gap-2">
               <Label htmlFor="token">Token de redefinicao</Label>
               <Input
+                data-testid="reset-token"
                 id="token"
                 placeholder="Cole o token recebido"
                 value={form.token}
@@ -175,6 +178,7 @@ export function ResetPasswordPage() {
             <div className="flex flex-col gap-2">
               <Label htmlFor="password">Nova senha</Label>
               <Input
+                data-testid="reset-password"
                 id="password"
                 type="password"
                 placeholder="Senha forte"
@@ -192,6 +196,7 @@ export function ResetPasswordPage() {
             <div className="flex flex-col gap-2">
               <Label htmlFor="confirmPassword">Confirmar nova senha</Label>
               <Input
+                data-testid="reset-confirm-password"
                 id="confirmPassword"
                 type="password"
                 placeholder="Repita sua nova senha"
@@ -209,7 +214,13 @@ export function ResetPasswordPage() {
           </>
         ) : null}
 
-        <Button type="submit" variant="inverted" size="xl" disabled={isSubmitting}>
+        <Button
+          data-testid={mode === 'request' ? 'reset-request-submit' : 'reset-confirm-submit'}
+          type="submit"
+          variant="inverted"
+          size="xl"
+          disabled={isSubmitting}
+        >
           {isSubmitting
             ? mode === 'request'
               ? 'Solicitando token...'
@@ -221,6 +232,7 @@ export function ResetPasswordPage() {
 
         {mode === 'confirm' ? (
           <Button
+            data-testid="reset-request-new-token"
             type="button"
             variant="panel"
             size="xl"
