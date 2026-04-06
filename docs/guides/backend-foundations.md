@@ -440,3 +440,68 @@ Fica derivado para ClickHouse depois:
 - taxas historicas de falha;
 - throughput por origem e periodo;
 - metricas do dashboard analitico.
+
+## Decisoes materializadas na Sprint 2
+
+### Mecanismo de autenticacao e sessao da v1
+
+A API passa a adotar token Bearer com sessao persistida no banco (`auth_sessions`).
+
+Regras:
+
+- o cliente recebe `access_token` e envia em `Authorization: Bearer <token>`;
+- o banco armazena apenas `token_digest`;
+- sessao e validada por `revoked_at` e `expires_at`;
+- `refresh` aplica rotacao de token e revoga a sessao anterior;
+- `me` e o bootstrap oficial da sessao para o frontend.
+
+### Payloads minimos de auth
+
+- cadastro: `full_name`, `email`, `password`, `password_confirmation`;
+- login: `email`, `password`;
+- logout: sem payload, depende da sessao autenticada;
+- reset request: `email`;
+- reset confirm: `token`, `password`, `password_confirmation`.
+
+### Politica de senha, expiracao e revogacao
+
+- senha com minimo de 12 caracteres e complexidade obrigatoria;
+- sessao com TTL configuravel (`AUTH_SESSION_TTL_HOURS`);
+- revogacao explicita no logout;
+- token de reset com TTL configuravel (`AUTH_PASSWORD_RESET_TTL_MINUTES`).
+
+### Modelo minimo de User e fronteira auth/autorizacao
+
+Perfil minimo de `User` para v1:
+
+- `id`
+- `email`
+- `full_name`
+- `role`
+- `status`
+- `password_digest`
+
+Papeis iniciais: `operator`, `admin`, `service_account`.
+
+Fronteira:
+
+- autenticacao valida identidade e sessao;
+- autorizacao continua concentrada em policies por recurso/acao.
+
+### Endpoints minimos de sessao
+
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
+- `POST /api/v1/auth/logout`
+- `POST /api/v1/auth/session/refresh`
+- `GET /api/v1/auth/me`
+- `POST /api/v1/auth/password/reset/request`
+- `POST /api/v1/auth/password/reset/confirm`
+
+### Contrato de erro de auth na v1
+
+Codigos obrigatorios:
+
+- `invalid_credentials`
+- `session_expired`
+- `access_denied`

@@ -21,10 +21,12 @@ Depois da primeira execucao de backend da Sprint 1, a API ja saiu do esqueleto p
 - health check disponivel em `GET /up`
 - OpenAPI inicial preparado em `/api-docs`
 - dominio operacional base materializado com `User`, `Upload`, `Job`, `JobBatch`, `QuarantineRecord`, `ProcessingAttempt` e `AuditEvent`
+- autenticacao real da Sprint 2 com `register`, `login`, `logout`, `me`, `session/refresh` e reset de senha
+- tabela de sessao persistida (`auth_sessions`) com expiracao e revogacao
 - migration inicial com constraints, indices e rastreabilidade
 - esqueleto de `services`, `policies` e `serializers`
 - seeds e fixtures minimas para desenvolvimento e testes
-- suite inicial de Minitest cobrindo validacoes, transicoes de estado e service de registro de upload
+- suite de Minitest cobrindo validacoes de dominio e fluxo de auth
 
 As convencoes oficiais da camada backend nesta fase estao em [docs/guides/backend-foundations.md](C:/estudos/StreamGate/docs/guides/backend-foundations.md), [docs/guides/domain-glossary.md](C:/estudos/StreamGate/docs/guides/domain-glossary.md) e [docs/adr/0002-domain-boundaries-identifiers-and-contracts.md](C:/estudos/StreamGate/docs/adr/0002-domain-boundaries-identifiers-and-contracts.md).
 
@@ -79,9 +81,8 @@ No ambiente local atual, a validacao da Sprint 1 foi executada com PostgreSQL vi
 
 A API deve evoluir nesta ordem:
 
-1. consolidar auth real e `me`
-2. abrir upload assinado e criacao de job sobre o dominio ja materializado
-3. conectar worker real aos contratos versionados
-4. expor leitura operacional e, depois, leitura analitica
+1. abrir upload assinado e criacao de job sobre o dominio ja materializado
+2. conectar worker real aos contratos versionados
+3. expor leitura operacional e, depois, leitura analitica
 
 O backlog executivo detalhado dessa evolucao esta em [docs/planning/streamgate-full-sprints-roadmap.md](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md).

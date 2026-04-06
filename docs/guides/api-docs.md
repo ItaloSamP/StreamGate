@@ -8,7 +8,7 @@ A API Rails do StreamGate agora esta preparada para servir documentacao OpenAPI/
 - rota de documentacao montada em `/api-docs` quando as gems estiverem disponiveis
 - configuracao de `openapi_root` apontando para `apps/api/openapi`
 - arquivo inicial `apps/api/openapi/v1/openapi.yaml`
-- primeiro endpoint documentado: `GET /up`
+- endpoints de auth da Sprint 2 documentados: `register`, `login`, `logout`, `me`, `session/refresh` e reset de senha`
 
 ## Como ativar localmente
 
