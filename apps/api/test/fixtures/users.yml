@@ -2,6 +2,7 @@ operator:
   id: user_fixture_operator
   email: operator@example.com
   full_name: Fixture Operator
+  password_digest: <%= BCrypt::Password.create('StrongPass123!') %>
   role: operator
   status: active
 
@@ -9,5 +10,6 @@ admin:
   id: user_fixture_admin
   email: admin@example.com
   full_name: Fixture Admin
+  password_digest: <%= BCrypt::Password.create('StrongPass123!') %>
   role: admin
   status: active
