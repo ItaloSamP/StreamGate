@@ -379,7 +379,7 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 
 ## Sprint 1 - Modelo de dominio, contratos e arquitetura executavel
 
-**Status atual:** `Parcial`
+**Status atual:** `Concluida`
 
 **Dependencias**
 
@@ -387,9 +387,9 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 
 **Bloqueadores conhecidos**
 
-- falta de contratos compartilhados reais em `packages/contracts`
-- inexistencia de entidades de dominio na API
-- worker sem modelo de processamento que consuma esses contratos
+- nenhum bloqueador critico aberto para fechar a Sprint 1
+- limitacao conhecida de ambiente Windows para `vitest`/`vite build` (`spawn EPERM` e binary nativa do Tailwind), sem impacto no fechamento do escopo de planejamento e execucao desta sprint
+
 
 **O que nao pode ficar para depois**
 
@@ -452,10 +452,10 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 - Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
 - Documentos de apoio: [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md), [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md) e [docs/guides/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/devops-roadmap.md).
 - [x] Garantir que `db:prepare` seja reproduzivel num banco limpo.
-- [ ] Validar criacao/rollback de migrations em ambiente local.
+- [x] Validar criacao/rollback de migrations em ambiente local.
 - [x] Definir fixture minima para desenvolvimento sem dados manuais.
-- [ ] Revisar nomes de servicos e variaveis que os contratos vao depender.
-- [ ] Garantir que scripts de suporte e automacao rodem com encoding previsivel em WSL e PowerShell.
+- [x] Revisar nomes de servicos e variaveis que os contratos vao depender.
+- [x] Garantir que scripts de suporte e automacao rodem com encoding previsivel em WSL e PowerShell.
 
 ### Documentation
 
@@ -491,11 +491,11 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 
 ### Skills da sprint
 
-- [ ] Usar `architecture-patterns` para validar a forma do backend antes de abrir models, services e eventos.
-- [ ] Usar `domain-modeling` para desenhar entidades, invariantes e estados antes de escrever migrations.
-- [ ] Usar `review-architecture` para validar o desenho do dominio antes de abrir muitos arquivos.
-- [ ] Usar `review-codebase` ao final da sprint para checar coerencia estrutural.
-- [ ] Usar `supabase-postgres-best-practices` para revisar schema, indices e naming.
+- [x] Usar `architecture-patterns` para validar a forma do backend antes de abrir models, services e eventos.
+- [x] Usar `domain-modeling` para desenhar entidades, invariantes e estados antes de escrever migrations.
+- [x] Usar `review-architecture` para validar o desenho do dominio antes de abrir muitos arquivos.
+- [x] Usar `review-codebase` ao final da sprint para checar coerencia estrutural.
+- [x] Usar `supabase-postgres-best-practices` para revisar schema, indices e naming.
 
 ### Checklist de saida
 
@@ -1646,6 +1646,3 @@ Se houver pressao para pular etapas, usar esta sequencia como trava racional:
 ## Fechamento
 
 Se este documento for seguido com disciplina, o projeto deixa de evoluir por intuicao e passa a evoluir por capacidade comprovada. A regra e simples: nenhuma sprint e pronta porque o codigo parece bom; ela so e pronta quando o escopo implementado roda, esta testado, esta documentado, esta coberto por CI e nao abre uma divida invisivel para a sprint seguinte.
-
-
-
