@@ -114,6 +114,42 @@ Skills adicionais usadas nesta sprint:
 - [x] `docker`
 - [x] `supabase-postgres-best-practices`
 
+## Delta por trilha (obrigatorio)
+
+- `Back planning`:
+  - Status (`concluida`, `parcial`, `nao tocada`): `concluida`
+  - Delta para a proxima sprint: manter contrato e dominio como base obrigatoria para auth real.
+- `Back execution`:
+  - Status (`concluida`, `parcial`, `nao tocada`): `concluida`
+  - Delta para a proxima sprint: reaproveitar services/policies/serializers sem regressao de naming ou ids.
+- `Worker execution` (quando houver):
+  - Status (`concluida`, `parcial`, `nao tocada`): `nao tocada`
+  - Delta para a proxima sprint: iniciar somente na sprint prevista para runtime real de processamento.
+- `Front planning`:
+  - Status (`concluida`, `parcial`, `nao tocada`): `concluida`
+  - Delta para a proxima sprint: usar o mapa de modulos para substituir auth mock sem quebrar navegacao.
+- `Front execution`:
+  - Status (`concluida`, `parcial`, `nao tocada`): `concluida`
+  - Delta para a proxima sprint: plugar auth/sessao reais no shell e nas rotas protegidas.
+- `DevOps`:
+  - Status (`concluida`, `parcial`, `nao tocada`): `parcial`
+  - Delta para a proxima sprint: manter cobertura local/CI e registrar limitacao do host Windows para testes frontend.
+- `Documentation`:
+  - Status (`concluida`, `parcial`, `nao tocada`): `concluida`
+  - Delta para a proxima sprint: seguir atualizando roadmap, ADRs e OpenAPI junto com cada endpoint novo.
+- `Test planning`:
+  - Status (`concluida`, `parcial`, `nao tocada`): `concluida`
+  - Delta para a proxima sprint: manter foco em auth, sessao e contratos HTTP.
+- `Test execution`:
+  - Status (`concluida`, `parcial`, `nao tocada`): `parcial`
+  - Delta para a proxima sprint: fechar execucao de `vitest`/`vite build` no ambiente recomendado (WSL/Linux).
+- `Security`:
+  - Status (`concluida`, `parcial`, `nao tocada`): `concluida`
+  - Delta para a proxima sprint: endurecer fronteiras de auth e visibilidade de dados por recurso.
+- `Skills da sprint`:
+  - Status (`concluida`, `parcial`, `nao tocada`): `concluida`
+  - Delta para a proxima sprint: manter stack de skills aplicado no ciclo de auth real.
+
 ## Reavaliacao para a proxima sprint
 
 - O roadmap foi revisado com base no estado real do projeto?: `sim`
@@ -131,6 +167,7 @@ Skills adicionais usadas nesta sprint:
 
 ## Decisao de transicao
 
+- Existe alguma trilha com gap critico sem plano, responsavel e sprint alvo?: `nao`
 - Proxima sprint pode ser aberta?: `sim`
 - Condicoes para abertura: manter o ritual de reavaliacao com skills ao fim da Sprint 2
 - Ajustes obrigatorios antes de iniciar: nenhum ajuste bloqueante adicional

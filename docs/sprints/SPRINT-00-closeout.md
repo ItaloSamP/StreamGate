@@ -134,6 +134,42 @@ Skills adicionais usadas nesta sprint:
 - [ ] `gitops-workflow`
 - [x] Outras: `brainstorming` foi considerada na trilha de metodo do projeto, mas a Sprint 0 teve peso maior de consolidacao e revisao documental do que de feature design nova
 
+## Delta por trilha (obrigatorio)
+
+- `Back planning`:
+  - Status (`concluida`, `parcial`, `nao tocada`): `concluida`
+  - Delta para a proxima sprint: congelar dominio, ids e contratos antes de abrir endpoints reais.
+- `Back execution`:
+  - Status (`concluida`, `parcial`, `nao tocada`): `concluida`
+  - Delta para a proxima sprint: sair de esqueleto tecnico para estruturas reais de dominio, services e contratos.
+- `Worker execution` (quando houver):
+  - Status (`concluida`, `parcial`, `nao tocada`): `nao tocada`
+  - Delta para a proxima sprint: manter como trilha futura ate Sprint 4, sem abrir escopo prematuro.
+- `Front planning`:
+  - Status (`concluida`, `parcial`, `nao tocada`): `concluida`
+  - Delta para a proxima sprint: preservar shell e rotas enquanto auth e dados reais entram.
+- `Front execution`:
+  - Status (`concluida`, `parcial`, `nao tocada`): `concluida`
+  - Delta para a proxima sprint: trocar mocks por contratos reais sem regressao de UX.
+- `DevOps`:
+  - Status (`concluida`, `parcial`, `nao tocada`): `concluida`
+  - Delta para a proxima sprint: manter `WSL-first` e separar falha de ambiente de falha de implementacao.
+- `Documentation`:
+  - Status (`concluida`, `parcial`, `nao tocada`): `concluida`
+  - Delta para a proxima sprint: continuar atualizando roadmap e docs vivas a cada entrega real.
+- `Test planning`:
+  - Status (`concluida`, `parcial`, `nao tocada`): `concluida`
+  - Delta para a proxima sprint: priorizar cobertura de dominio, contrato e auth.
+- `Test execution`:
+  - Status (`concluida`, `parcial`, `nao tocada`): `concluida`
+  - Delta para a proxima sprint: continuar registrando a limitacao de ambiente Windows sem mascarar falhas reais.
+- `Security`:
+  - Status (`concluida`, `parcial`, `nao tocada`): `concluida`
+  - Delta para a proxima sprint: evoluir de baseline para controles aplicados em auth e contratos.
+- `Skills da sprint`:
+  - Status (`concluida`, `parcial`, `nao tocada`): `concluida`
+  - Delta para a proxima sprint: ampliar uso das skills de dominio, API e testes na execucao da Sprint 1.
+
 ## Reavaliacao para a proxima sprint
 
 - O roadmap foi revisado com base no estado real do projeto?: `sim`
@@ -145,6 +181,7 @@ Skills adicionais usadas nesta sprint:
 
 ## Decisao de transicao
 
+- Existe alguma trilha com gap critico sem plano, responsavel e sprint alvo?: `nao`
 - Proxima sprint pode ser aberta?: `sim`
 - Condicoes para abertura: usar o roadmap revisado e partir do estado real do repositorio, nao do plano original anterior a esta revisao
 - Ajustes obrigatorios antes de iniciar: executar a Sprint 1 com as skills da trilha, manter o ritual de reavaliacao entre sprints e continuar atualizando roadmap e docs relacionadas conforme a evolucao real do produto

@@ -108,6 +108,44 @@ Skills adicionais usadas nesta sprint:
 - [ ] `gitops-workflow`
 - [ ] Outras:
 
+## Delta por trilha (obrigatorio)
+
+Para cada trilha, registrar status e delta para a sprint seguinte. Se nao foi tocada, preencher com `nao tocada nesta sprint`.
+
+- `Back planning`:
+  - Status (`concluida`, `parcial`, `nao tocada`):
+  - Delta para a proxima sprint:
+- `Back execution`:
+  - Status (`concluida`, `parcial`, `nao tocada`):
+  - Delta para a proxima sprint:
+- `Worker execution` (quando houver):
+  - Status (`concluida`, `parcial`, `nao tocada`):
+  - Delta para a proxima sprint:
+- `Front planning`:
+  - Status (`concluida`, `parcial`, `nao tocada`):
+  - Delta para a proxima sprint:
+- `Front execution`:
+  - Status (`concluida`, `parcial`, `nao tocada`):
+  - Delta para a proxima sprint:
+- `DevOps`:
+  - Status (`concluida`, `parcial`, `nao tocada`):
+  - Delta para a proxima sprint:
+- `Documentation`:
+  - Status (`concluida`, `parcial`, `nao tocada`):
+  - Delta para a proxima sprint:
+- `Test planning`:
+  - Status (`concluida`, `parcial`, `nao tocada`):
+  - Delta para a proxima sprint:
+- `Test execution`:
+  - Status (`concluida`, `parcial`, `nao tocada`):
+  - Delta para a proxima sprint:
+- `Security`:
+  - Status (`concluida`, `parcial`, `nao tocada`):
+  - Delta para a proxima sprint:
+- `Skills da sprint`:
+  - Status (`concluida`, `parcial`, `nao tocada`):
+  - Delta para a proxima sprint:
+
 ## Reavaliacao para a proxima sprint
 
 - O roadmap foi revisado com base no estado real do projeto?: `sim` ou `nao`
@@ -119,6 +157,7 @@ Skills adicionais usadas nesta sprint:
 
 ## Decisao de transicao
 
+- Existe alguma trilha com gap critico sem plano, responsavel e sprint alvo?: `sim` ou `nao`
 - Proxima sprint pode ser aberta?: `sim` ou `nao`
 - Condicoes para abertura:
 - Ajustes obrigatorios antes de iniciar:

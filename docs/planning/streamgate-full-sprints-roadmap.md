@@ -59,6 +59,7 @@ Cada sprint abaixo contem, no minimo:
 - `Security`
 - `Skills da sprint`
 - `Checklist de saida`
+- `Reavaliacao de transicao por trilha`
 
 ### Definition of Done global do projeto
 
@@ -117,6 +118,32 @@ Documentos que devem ser revistos e atualizados sempre que a sprint tiver impact
 - `apps/web/README.md`, `apps/api/README.md` e `apps/worker/README.md`;
 - contratos e especificacoes vivas em `packages/contracts` e `apps/api/openapi/v1/openapi.yaml`.
 - o checklist operacional em `docs/guides/sprint-reassessment-checklist.md`.
+
+### Regra transversal de reavaliacao por trilha
+
+A reavaliacao entre sprints so e considerada completa quando existir um delta explicito por trilha.
+
+Regra de preenchimento:
+
+- se a trilha foi tocada na sprint, registrar entregue, lacunas, riscos e impacto na sprint seguinte;
+- se a trilha nao foi tocada, registrar explicitamente `nao tocada nesta sprint`;
+- se houver gap critico sem plano com prioridade, responsavel e sprint alvo, a proxima sprint nao deve ser aberta.
+
+Matriz minima obrigatoria para todas as sprints:
+
+| Trilha | Reavaliacao minima obrigatoria |
+| --- | --- |
+| `Back planning` | escopo planejado vs escopo entregue, novos requisitos e repriorizacao de backlog |
+| `Back execution` | dominio, regras, contrato HTTP/eventos, OpenAPI e debitos tecnicos transferidos |
+| `Worker execution` (quando houver) | fila, retries, idempotencia, observabilidade e efeito em operacao/analytics |
+| `Front planning` | jornadas, prioridades de UX e estados obrigatorios por tela/modulo |
+| `Front execution` | fidelidade do fluxo real, estados de UI, acessibilidade, performance e regressao visual |
+| `DevOps` | CI/gates, scripts oficiais, ambientes, smoke operacional e gaps de automacao |
+| `Documentation` | docs atualizados, ADRs/runbooks alterados e inconsistencias documentais abertas |
+| `Test planning` | matriz de testes da proxima sprint, novas coberturas obrigatorias e riscos de qualidade |
+| `Test execution` | comandos rodados, resultados, falhas de ambiente vs implementacao e riscos residuais |
+| `Security` | novas superficies sensiveis, controles faltantes, riscos aceitos e hardening priorizado |
+| `Skills da sprint` | skills usadas, skills faltantes e ajustes no stack de skills da proxima sprint |
 
 ### Matriz minima de documentacao por sprint
 
@@ -364,6 +391,9 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 
 ### Checklist de saida
 
+- [x] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
+- [x] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
+- [x] Trilha nao tocada registrada: `Worker execution` (nao aplicavel nesta sprint).
 - [x] Roadmap mestre criado.
 - [x] ADR inicial criada.
 - [x] Catalogo de skills criado.
@@ -499,6 +529,9 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 
 ### Checklist de saida
 
+- [x] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
+- [x] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
+- [x] Trilha nao tocada registrada: `Worker execution` (nao aplicavel nesta sprint).
 - [x] Entidades principais modeladas.
 - [x] Contratos versionados criados.
 - [x] Banco sobe e migra do zero sem acao manual obscura.
@@ -624,6 +657,9 @@ O frontend ja ensaiou a experiencia de acesso. Esta sprint faz o backend assumir
 
 ### Checklist de saida
 
+- [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
+- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
+
 - [ ] Login real funciona ponta a ponta.
 - [ ] Dashboard deixa de depender do mock no fluxo principal.
 - [ ] Swagger cobre auth.
@@ -747,6 +783,9 @@ Esta sprint fecha a porta de entrada real do produto. A API deve orquestrar o up
 - [ ] Usar `openapi` para schema preciso do fluxo.
 
 ### Checklist de saida
+
+- [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
+- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
 
 - [ ] Upload real funcionando.
 - [ ] Job criado com rastreabilidade.
@@ -878,6 +917,9 @@ O produto so deixa de ser prototipo quando o worker deixa de ser placeholder. Es
 
 ### Checklist de saida
 
+- [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
+- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
+
 - [ ] Worker consome evento real.
 - [ ] Job atualiza status.
 - [ ] Runtime do worker nao e mais placeholder.
@@ -996,6 +1038,9 @@ Sem quarentena, o pipeline so distingue sucesso bruto e fracasso bruto. Esta spr
 
 ### Checklist de saida
 
+- [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
+- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
+
 - [ ] Quarentena funcionando.
 - [ ] Dashboard mostra erro com contexto.
 - [ ] Logs e docs operacionais atualizados.
@@ -1111,6 +1156,9 @@ O dashboard atual ainda e mais demonstracao do que operacao. Esta sprint o trans
 - [ ] Usar `monitoring-observability` para fechar a primeira camada de sinais operacionais.
 
 ### Checklist de saida
+
+- [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
+- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
 
 - [ ] Dashboard consome dados reais.
 - [ ] Jobs, detalhes e quarentena sao navegaveis.
@@ -1236,6 +1284,9 @@ A proposta do produto depende da separacao entre leitura operacional e leitura a
 
 ### Checklist de saida
 
+- [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
+- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
+
 - [ ] ClickHouse recebe carga real.
 - [ ] Dashboard analitico mostra metricas reais.
 - [ ] Docs e Swagger atualizados.
@@ -1355,6 +1406,9 @@ Um produto operacional maduro precisa permitir correcao e reprocessamento com tr
 
 ### Checklist de saida
 
+- [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
+- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
+
 - [ ] Replay funciona.
 - [ ] Auditoria e confiavel.
 - [ ] Operacao consegue investigar e agir.
@@ -1472,6 +1526,9 @@ Esta sprint consolida o que foi entregue e remove a fragilidade residual. O foco
 - [ ] Avaliar uma skill futura de release notes quando o processo estiver maduro.
 
 ### Checklist de saida
+
+- [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
+- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
 
 - [ ] CI mais completo e verde.
 - [ ] Scanners integrados.
@@ -1592,6 +1649,9 @@ O produto fecha aqui o ciclo de operacao madura: local, CI, Docker e cluster. Na
 - [ ] Usar `monitoring-observability` para fechamento da camada operacional.
 
 ### Checklist de saida
+
+- [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
+- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
 
 - [ ] App funciona em Kubernetes.
 - [ ] Deploy e repetivel.

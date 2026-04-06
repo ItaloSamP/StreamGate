@@ -72,7 +72,22 @@ Adicionar tambem as skills da trilha afetada pela sprint que terminou, por exemp
 - [ ] Atualizar arquitetura, ADRs, runbooks, OpenAPI, contratos e READMEs impactados.
 - [ ] Registrar explicitamente lacunas tecnicas, logicas, operacionais e documentais que precisem entrar na proxima sprint.
 
-### 7. Validar a transicao para a proxima sprint
+### 7. Registrar delta por trilha (obrigatorio em todas as sprints)
+
+- [ ] `Back planning`: registrar escopo planejado vs entregue e repriorizacao.
+- [ ] `Back execution`: registrar mudancas de dominio, contratos e debitos tecnicos.
+- [ ] `Worker execution` (quando houver): registrar retries, idempotencia e rastreabilidade operacional.
+- [ ] `Front planning`: registrar ajustes de jornada, UX e prioridades.
+- [ ] `Front execution`: registrar fluxo validado, estados de UI, a11y e performance.
+- [ ] `DevOps`: registrar gates, automacoes, ambientes, smoke e lacunas operacionais.
+- [ ] `Documentation`: registrar docs/ADRs/runbooks atualizados e pendencias.
+- [ ] `Test planning`: registrar cobertura obrigatoria da proxima sprint.
+- [ ] `Test execution`: registrar resultados, falhas de ambiente vs implementacao e risco residual.
+- [ ] `Security`: registrar superficies sensiveis, controles faltantes e hardening.
+- [ ] `Skills da sprint`: registrar skills usadas, faltantes e ajustes recomendados.
+- [ ] Para qualquer trilha nao tocada, registrar explicitamente `nao tocada nesta sprint`.
+
+### 8. Validar a transicao para a proxima sprint
 
 - [ ] Confirmar o que entra como prioridade alta da proxima sprint.
 - [ ] Confirmar o que permanece bloqueador e o que deixou de ser bloqueador.
@@ -87,7 +102,8 @@ Ao final da reavaliacao entre sprints, deve existir pelo menos:
 - documentacao relacionada atualizada;
 - lista explicita do que foi concluido, do que ficou parcial e do que apareceu de novo;
 - registro das lacunas que entraram na proxima sprint;
-- registro das skills usadas nessa reavaliacao.
+- registro das skills usadas nessa reavaliacao;
+- registro do delta por trilha (incluindo `nao tocada nesta sprint` quando aplicavel).
 
 ## Documentos que normalmente precisam ser revisitados
 
