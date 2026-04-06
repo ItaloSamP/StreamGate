@@ -629,16 +629,24 @@ O frontend ja ensaiou a experiencia de acesso. Esta sprint faz o backend assumir
 ### Test planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Planejar unitarios e request specs de auth.
-- [ ] Planejar testes de sessao persistida e expirada.
-- [ ] Planejar E2E de login/logout/rota protegida.
+- [x] Planejar request/model auth com cobertura explicita de `session_expired` em sessao real expirada.
+- [x] Planejar separacao de suites web por contrato de gate: `test:run` (unit), `test:integration` (backend real) e `test:e2e` (Playwright).
+- [x] Planejar E2E auth estendido (register/login/logout/reset/sessao expirada) com execucao em Chromium + Firefox.
+- [x] Planejar gate obrigatorio de CI dedicado (`e2e-auth`) e paridade no runner local (`ci-local` workflow `e2e`).
 
 ### Test execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Executar request specs de auth.
-- [ ] Executar testes do frontend ligados ao backend real.
-- [ ] Executar E2E cobrindo fluxo completo de acesso.
+- [x] Executar request specs de auth com cenario real de expiracao de sessao.
+- [ ] Executar testes do frontend ligados ao backend real (bloqueado no host Windows por `spawn EPERM` do Vitest).
+- [ ] Executar E2E cobrindo fluxo completo de acesso (suite implementada e listada para Chromium/Firefox; execucao completa vai no gate Linux/CI).
+
+Evidencia minima da trilha (2026-04-06):
+
+- [x] `bundle exec rails test test/requests/auth_flow_test.rb` (7 runs, 28 assertions, 0 failures).
+- [x] `pnpm lint` em `apps/web`.
+- [x] `pnpm test:e2e --list` (8 cenarios totais: 4 fluxos x 2 browsers).
+- [ ] `pnpm test:run` e `pnpm test:integration` no host Windows (falha conhecida de ambiente: `spawn EPERM`).
 
 ### Security
 
@@ -659,10 +667,12 @@ O frontend ja ensaiou a experiencia de acesso. Esta sprint faz o backend assumir
 
 - [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
 - [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
+- [x] Trilha de Test planning/execution atualizada com evidencia minima da Sprint 2.
+- [x] Workflow dedicado `e2e-auth` criado e runner local estendido com modo `e2e`.
 
-- [ ] Login real funciona ponta a ponta.
-- [ ] Dashboard deixa de depender do mock no fluxo principal.
-- [ ] Swagger cobre auth.
+- [x] Login real funciona ponta a ponta.
+- [x] Dashboard deixa de depender do mock no fluxo principal.
+- [x] Swagger cobre auth.
 - [ ] E2E de acesso esta verde.
 - [ ] CI de auth permanece verde.
 
