@@ -39,6 +39,9 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Run tests
+        run: pnpm test:run
+
       - name: TypeScript build
         run: ./node_modules/.bin/tsc -b
 

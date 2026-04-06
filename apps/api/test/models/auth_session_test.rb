@@ -11,7 +11,7 @@ class AuthSessionTest < ActiveSupport::TestCase
       trace_id: "trace_active"
     )
 
-    AuthSession.create!(
+    expired = AuthSession.create!(
       user: user,
       token_digest: "tok_expired",
       created_at: 2.hours.ago,
@@ -20,7 +20,7 @@ class AuthSessionTest < ActiveSupport::TestCase
       trace_id: "trace_expired"
     )
 
-    AuthSession.create!(
+    revoked = AuthSession.create!(
       user: user,
       token_digest: "tok_revoked",
       expires_at: 1.hour.from_now,
@@ -28,7 +28,10 @@ class AuthSessionTest < ActiveSupport::TestCase
       revoked_at: Time.current
     )
 
-    assert_equal [active.id], AuthSession.active.pluck(:id)
+    active_ids = AuthSession.active.pluck(:id)
+
+    assert_includes active_ids, active.id
+    assert_not_includes active_ids, expired.id
+    assert_not_includes active_ids, revoked.id
   end
 end
-

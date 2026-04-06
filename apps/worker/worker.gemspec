@@ -9,7 +9,8 @@ Gem::Specification.new do |spec|
   spec.email = [" italosampaio466@gmail.com "]
 
   spec.summary = "Worker do StreamGate para consumo de eventos e processamento assincrono."
-  spec.description = "Runtime Ruby do StreamGate responsavel por consumir eventos, processar arquivos em lotes e alimentar as camadas operacional e analitica."
+  spec.description = "Runtime Ruby do StreamGate responsavel por consumir eventos, " \
+                     "processar arquivos em lotes e alimentar as camadas operacional e analitica."
   spec.homepage = "https://github.com/italoalves/StreamGate"
   spec.required_ruby_version = ">= 3.1.0"
 

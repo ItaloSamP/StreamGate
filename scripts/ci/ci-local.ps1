@@ -129,6 +129,7 @@ function Run-FrontendWorkflow {
   $steps = @(
     @{ Name = 'Install dependencies'; Dir = (Join-Path $root 'apps/web'); Command = 'set CI=true && pnpm install --frozen-lockfile'; Reason = 'Falha em Install dependencies.' },
     @{ Name = 'Lint'; Dir = (Join-Path $root 'apps/web'); Command = 'pnpm lint'; Reason = 'Falha em Lint.' },
+    @{ Name = 'Run tests'; Dir = (Join-Path $root 'apps/web'); Command = 'pnpm test:run'; Reason = 'Falha em Run tests.' },
     @{ Name = 'TypeScript build'; Dir = (Join-Path $root 'apps/web'); Command = '.\node_modules\.bin\tsc -b'; Reason = 'Falha em TypeScript build.' },
     @{ Name = 'Production build'; Dir = (Join-Path $root 'apps/web'); Command = 'pnpm build'; Reason = 'Falha em Production build.' }
   )
@@ -158,7 +159,7 @@ function Run-BackendWorkflow {
 
   Ensure-EnvFile
 
-  $postgresHost = Get-DotEnvValue -Path (Join-Path $root '.env') -Key 'POSTGRES_HOST'
+    $postgresHost = Get-DotEnvValue -Path (Join-Path $root '.env') -Key 'POSTGRES_HOST'
   if ([string]::IsNullOrWhiteSpace($postgresHost)) { $postgresHost = 'localhost' }
   $postgresPort = Get-DotEnvValue -Path (Join-Path $root '.env') -Key 'POSTGRES_PORT'
   if ([string]::IsNullOrWhiteSpace($postgresPort)) { $postgresPort = '5432' }
@@ -169,15 +170,43 @@ function Run-BackendWorkflow {
   $postgresTestDb = Get-DotEnvValue -Path (Join-Path $root '.env') -Key 'POSTGRES_TEST_DB'
   if ([string]::IsNullOrWhiteSpace($postgresTestDb)) { $postgresTestDb = 'streamgate_test' }
 
-  $apiPrepareCommand = 'set "RAILS_ENV=test" && set "POSTGRES_HOST=' + $postgresHost + '" && set "POSTGRES_PORT=' + $postgresPort + '" && set "POSTGRES_TEST_DB=' + $postgresTestDb + '" && set "POSTGRES_USER=' + $postgresUser + '" && set "POSTGRES_PASSWORD=' + $postgresPassword + '" && set "BUNDLE_WITHOUT=production" && bundle exec rails db:prepare'
-  $apiTestCommand = 'set "RAILS_ENV=test" && set "POSTGRES_HOST=' + $postgresHost + '" && set "POSTGRES_PORT=' + $postgresPort + '" && set "POSTGRES_TEST_DB=' + $postgresTestDb + '" && set "POSTGRES_USER=' + $postgresUser + '" && set "POSTGRES_PASSWORD=' + $postgresPassword + '" && set "BUNDLE_WITHOUT=production" && bundle exec rails test'
+  $authSessionTtlHours = Get-DotEnvValue -Path (Join-Path $root '.env') -Key 'AUTH_SESSION_TTL_HOURS'
+  if ([string]::IsNullOrWhiteSpace($authSessionTtlHours)) { $authSessionTtlHours = '24' }
+  $authPasswordResetTtlMinutes = Get-DotEnvValue -Path (Join-Path $root '.env') -Key 'AUTH_PASSWORD_RESET_TTL_MINUTES'
+  if ([string]::IsNullOrWhiteSpace($authPasswordResetTtlMinutes)) { $authPasswordResetTtlMinutes = '30' }
+  $authTokenPepper = Get-DotEnvValue -Path (Join-Path $root '.env') -Key 'AUTH_TOKEN_PEPPER'
+  if ([string]::IsNullOrWhiteSpace($authTokenPepper)) { $authTokenPepper = 'streamgate-ci-local-pepper' }
+  $authSessionTransport = Get-DotEnvValue -Path (Join-Path $root '.env') -Key 'AUTH_SESSION_TRANSPORT'
+  if ([string]::IsNullOrWhiteSpace($authSessionTransport)) { $authSessionTransport = 'bearer' }
+  $authCookieEnabled = Get-DotEnvValue -Path (Join-Path $root '.env') -Key 'AUTH_COOKIE_ENABLED'
+  if ([string]::IsNullOrWhiteSpace($authCookieEnabled)) { $authCookieEnabled = 'false' }
+  $authCsrfMode = Get-DotEnvValue -Path (Join-Path $root '.env') -Key 'AUTH_CSRF_MODE'
+  if ([string]::IsNullOrWhiteSpace($authCsrfMode)) { $authCsrfMode = 'token' }
+  $apiCorsAllowedOrigins = Get-DotEnvValue -Path (Join-Path $root '.env') -Key 'API_CORS_ALLOWED_ORIGINS'
+  if ([string]::IsNullOrWhiteSpace($apiCorsAllowedOrigins)) { $apiCorsAllowedOrigins = 'http://localhost:5173' }
+  $apiCorsAllowCredentials = Get-DotEnvValue -Path (Join-Path $root '.env') -Key 'API_CORS_ALLOW_CREDENTIALS'
+  if ([string]::IsNullOrWhiteSpace($apiCorsAllowCredentials)) { $apiCorsAllowCredentials = 'false' }
+  $seedOperatorPassword = Get-DotEnvValue -Path (Join-Path $root '.env') -Key 'SEED_OPERATOR_PASSWORD'
+  if ([string]::IsNullOrWhiteSpace($seedOperatorPassword)) { $seedOperatorPassword = 'StrongPass123!' }
+  $seedAdminPassword = Get-DotEnvValue -Path (Join-Path $root '.env') -Key 'SEED_ADMIN_PASSWORD'
+  if ([string]::IsNullOrWhiteSpace($seedAdminPassword)) { $seedAdminPassword = $seedOperatorPassword }
+
+  $apiEnvPrefix = 'set "RAILS_ENV=test" && set "POSTGRES_HOST=' + $postgresHost + '" && set "POSTGRES_PORT=' + $postgresPort + '" && set "POSTGRES_TEST_DB=' + $postgresTestDb + '" && set "POSTGRES_USER=' + $postgresUser + '" && set "POSTGRES_PASSWORD=' + $postgresPassword + '" && set "AUTH_SESSION_TTL_HOURS=' + $authSessionTtlHours + '" && set "AUTH_PASSWORD_RESET_TTL_MINUTES=' + $authPasswordResetTtlMinutes + '" && set "AUTH_TOKEN_PEPPER=' + $authTokenPepper + '" && set "AUTH_SESSION_TRANSPORT=' + $authSessionTransport + '" && set "AUTH_COOKIE_ENABLED=' + $authCookieEnabled + '" && set "AUTH_CSRF_MODE=' + $authCsrfMode + '" && set "API_CORS_ALLOWED_ORIGINS=' + $apiCorsAllowedOrigins + '" && set "API_CORS_ALLOW_CREDENTIALS=' + $apiCorsAllowCredentials + '" && set "BUNDLE_WITHOUT=production"'
+
+  $apiPrepareCommand = $apiEnvPrefix + ' && bundle exec rails db:prepare'
+  $apiSeedIdempotencyChecks = ' && bundle exec rails runner "abort(''operator seed missing'') unless User.exists?(email: ''operator@streamgate.local'')" && bundle exec rails runner "abort(''admin seed missing'') unless User.exists?(email: ''admin@streamgate.local'')"'
+  $apiSeedIdempotencyCommand = $apiEnvPrefix + ' && set "SEED_OPERATOR_PASSWORD=' + $seedOperatorPassword + '" && set "SEED_ADMIN_PASSWORD=' + $seedAdminPassword + '" && bundle exec rails db:seed && bundle exec rails db:seed' + $apiSeedIdempotencyChecks
+  $apiAuthFlowCommand = $apiEnvPrefix + ' && bundle exec rails test test/requests/auth_flow_test.rb'
+  $apiTestCommand = $apiEnvPrefix + ' && bundle exec rails test'
 
   $failed = $false
   $reason = 'Todos os jobs passaram.'
   $steps = @(
-    @{ Name = 'Infra for backend'; Dir = $root; Command = 'powershell -ExecutionPolicy Bypass -File .\\scripts\\dev\\dev-up.ps1'; Reason = 'Falha ao subir a infra para backend-ci.' },
+    @{ Name = 'Infra for backend'; Dir = $root; Command = 'powershell -ExecutionPolicy Bypass -File .\scripts\dev\dev-up.ps1'; Reason = 'Falha ao subir a infra para backend-ci.' },
     @{ Name = 'API install dependencies'; Dir = (Join-Path $root 'apps/api'); Command = 'bundle install --jobs 4 --retry 3'; Reason = 'Falha em API install dependencies.' },
     @{ Name = 'API prepare database'; Dir = (Join-Path $root 'apps/api'); Command = $apiPrepareCommand; Reason = 'Falha em API prepare database.' },
+    @{ Name = 'API validate auth seeds idempotency'; Dir = (Join-Path $root 'apps/api'); Command = $apiSeedIdempotencyCommand; Reason = 'Falha em API validate auth seeds idempotency.' },
+    @{ Name = 'API auth flow tests'; Dir = (Join-Path $root 'apps/api'); Command = $apiAuthFlowCommand; Reason = 'Falha em API auth flow tests.' },
     @{ Name = 'API tests'; Dir = (Join-Path $root 'apps/api'); Command = $apiTestCommand; Reason = 'Falha em API tests.' },
     @{ Name = 'API RuboCop'; Dir = (Join-Path $root 'apps/api'); Command = 'bundle exec rubocop'; Reason = 'Falha em API RuboCop.' },
     @{ Name = 'API Brakeman'; Dir = (Join-Path $root 'apps/api'); Command = 'bundle exec brakeman -q'; Reason = 'Falha em API Brakeman.' },
@@ -289,5 +318,7 @@ if ($createdEnv -and (Test-Path (Join-Path $root '.env'))) {
 if ($failureCount -gt 0) {
   exit 1
 }
+
+
 
 

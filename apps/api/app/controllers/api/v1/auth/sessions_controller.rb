@@ -2,7 +2,7 @@ module Api
   module V1
     module Auth
       class SessionsController < ApplicationController
-        before_action :authenticate_request!, only: [:destroy, :refresh]
+        before_action :authenticate_request!, only: [ :destroy, :refresh ]
 
         def create
           result = ::Auth::LoginService.call(

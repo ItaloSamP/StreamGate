@@ -33,8 +33,19 @@ jobs:
       POSTGRES_HOST: localhost
       POSTGRES_PORT: 5432
       POSTGRES_DB: streamgate_test
+      POSTGRES_TEST_DB: streamgate_test
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      AUTH_SESSION_TTL_HOURS: 24
+      AUTH_PASSWORD_RESET_TTL_MINUTES: 30
+      AUTH_TOKEN_PEPPER: streamgate-ci-pepper
+      AUTH_SESSION_TRANSPORT: bearer
+      AUTH_COOKIE_ENABLED: false
+      AUTH_CSRF_MODE: token
+      API_CORS_ALLOWED_ORIGINS: http://localhost:5173
+      API_CORS_ALLOW_CREDENTIALS: false
+      SEED_OPERATOR_PASSWORD: StrongPass123!
+      SEED_ADMIN_PASSWORD: StrongPass123!
       BUNDLE_WITHOUT: production
 
     defaults:
@@ -55,6 +66,16 @@ jobs:
 
       - name: Prepare database
         run: bundle exec rails db:prepare
+
+      - name: Validate auth seeds idempotency
+        run: |
+          bundle exec rails db:seed
+          bundle exec rails db:seed
+          bundle exec rails runner "abort('operator seed missing') unless User.exists?(email: 'operator@streamgate.local')"
+          bundle exec rails runner "abort('admin seed missing') unless User.exists?(email: 'admin@streamgate.local')"
+
+      - name: Run auth flow tests
+        run: bundle exec rails test test/requests/auth_flow_test.rb
 
       - name: Run tests
         run: bundle exec rails test

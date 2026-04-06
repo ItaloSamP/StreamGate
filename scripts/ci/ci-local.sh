@@ -72,6 +72,9 @@ run_frontend_workflow() {
     ci_local_run_step "$workflow" 'Lint' "$ROOT_DIR/apps/web" 'pnpm lint' || { failed=1; reason='Falha em Lint.'; }
   fi
   if [[ $failed -eq 0 ]]; then
+    ci_local_run_step "$workflow" 'Run tests' "$ROOT_DIR/apps/web" 'pnpm test:run' || { failed=1; reason='Falha em Run tests.'; }
+  fi
+  if [[ $failed -eq 0 ]]; then
     ci_local_run_step "$workflow" 'TypeScript build' "$ROOT_DIR/apps/web" './node_modules/.bin/tsc -b' || { failed=1; reason='Falha em TypeScript build.'; }
   fi
   if [[ $failed -eq 0 ]]; then
@@ -107,11 +110,28 @@ run_backend_workflow() {
   ensure_env_file
 
   local postgres_host postgres_port postgres_user postgres_password postgres_test_db
+  local auth_session_ttl_hours auth_password_reset_ttl_minutes auth_token_pepper
+  local auth_session_transport auth_cookie_enabled auth_csrf_mode
+  local api_cors_allowed_origins api_cors_allow_credentials
+  local seed_operator_password seed_admin_password
+
   postgres_host="$(get_dotenv_value "$ROOT_DIR/.env" 'POSTGRES_HOST')"
   postgres_port="$(get_dotenv_value "$ROOT_DIR/.env" 'POSTGRES_PORT')"
   postgres_user="$(get_dotenv_value "$ROOT_DIR/.env" 'POSTGRES_USER')"
   postgres_password="$(get_dotenv_value "$ROOT_DIR/.env" 'POSTGRES_PASSWORD')"
   postgres_test_db="$(get_dotenv_value "$ROOT_DIR/.env" 'POSTGRES_TEST_DB')"
+
+  auth_session_ttl_hours="$(get_dotenv_value "$ROOT_DIR/.env" 'AUTH_SESSION_TTL_HOURS')"
+  auth_password_reset_ttl_minutes="$(get_dotenv_value "$ROOT_DIR/.env" 'AUTH_PASSWORD_RESET_TTL_MINUTES')"
+  auth_token_pepper="$(get_dotenv_value "$ROOT_DIR/.env" 'AUTH_TOKEN_PEPPER')"
+  auth_session_transport="$(get_dotenv_value "$ROOT_DIR/.env" 'AUTH_SESSION_TRANSPORT')"
+  auth_cookie_enabled="$(get_dotenv_value "$ROOT_DIR/.env" 'AUTH_COOKIE_ENABLED')"
+  auth_csrf_mode="$(get_dotenv_value "$ROOT_DIR/.env" 'AUTH_CSRF_MODE')"
+  api_cors_allowed_origins="$(get_dotenv_value "$ROOT_DIR/.env" 'API_CORS_ALLOWED_ORIGINS')"
+  api_cors_allow_credentials="$(get_dotenv_value "$ROOT_DIR/.env" 'API_CORS_ALLOW_CREDENTIALS')"
+
+  seed_operator_password="$(get_dotenv_value "$ROOT_DIR/.env" 'SEED_OPERATOR_PASSWORD')"
+  seed_admin_password="$(get_dotenv_value "$ROOT_DIR/.env" 'SEED_ADMIN_PASSWORD')"
 
   [[ -z "$postgres_host" ]] && postgres_host='localhost'
   [[ -z "$postgres_port" ]] && postgres_port='5432'
@@ -119,16 +139,43 @@ run_backend_workflow() {
   [[ -z "$postgres_password" ]] && postgres_password='postgres'
   [[ -z "$postgres_test_db" ]] && postgres_test_db='streamgate_test'
 
+  [[ -z "$auth_session_ttl_hours" ]] && auth_session_ttl_hours='24'
+  [[ -z "$auth_password_reset_ttl_minutes" ]] && auth_password_reset_ttl_minutes='30'
+  [[ -z "$auth_token_pepper" ]] && auth_token_pepper='streamgate-ci-local-pepper'
+  [[ -z "$auth_session_transport" ]] && auth_session_transport='bearer'
+  [[ -z "$auth_cookie_enabled" ]] && auth_cookie_enabled='false'
+  [[ -z "$auth_csrf_mode" ]] && auth_csrf_mode='token'
+  [[ -z "$api_cors_allowed_origins" ]] && api_cors_allowed_origins='http://localhost:5173'
+  [[ -z "$api_cors_allow_credentials" ]] && api_cors_allow_credentials='false'
+  [[ -z "$seed_operator_password" ]] && seed_operator_password='StrongPass123!'
+  [[ -z "$seed_admin_password" ]] && seed_admin_password="$seed_operator_password"
+
+  local api_env_prefix
+  api_env_prefix="RAILS_ENV=test POSTGRES_HOST=$postgres_host POSTGRES_PORT=$postgres_port POSTGRES_TEST_DB=$postgres_test_db POSTGRES_USER=$postgres_user POSTGRES_PASSWORD=$postgres_password AUTH_SESSION_TTL_HOURS=$auth_session_ttl_hours AUTH_PASSWORD_RESET_TTL_MINUTES=$auth_password_reset_ttl_minutes AUTH_TOKEN_PEPPER=$auth_token_pepper AUTH_SESSION_TRANSPORT=$auth_session_transport AUTH_COOKIE_ENABLED=$auth_cookie_enabled AUTH_CSRF_MODE=$auth_csrf_mode API_CORS_ALLOWED_ORIGINS=$api_cors_allowed_origins API_CORS_ALLOW_CREDENTIALS=$api_cors_allow_credentials BUNDLE_WITHOUT=production"
+
+  local api_prepare_command api_auth_flow_tests_command api_test_command api_seed_idempotency_command
+
+  api_prepare_command="$api_env_prefix bundle exec rails db:prepare"
+  api_auth_flow_tests_command="$api_env_prefix bundle exec rails test test/requests/auth_flow_test.rb"
+  api_test_command="$api_env_prefix bundle exec rails test"
+  api_seed_idempotency_command="$api_env_prefix SEED_OPERATOR_PASSWORD=$seed_operator_password SEED_ADMIN_PASSWORD=$seed_admin_password bundle exec rails db:seed && $api_env_prefix SEED_OPERATOR_PASSWORD=$seed_operator_password SEED_ADMIN_PASSWORD=$seed_admin_password bundle exec rails db:seed && $api_env_prefix bundle exec rails runner \"abort('operator seed missing') unless User.exists?(email: 'operator@streamgate.local')\" && $api_env_prefix bundle exec rails runner \"abort('admin seed missing') unless User.exists?(email: 'admin@streamgate.local')\""
+
   ci_local_run_step "$workflow" 'Infra for backend' "$ROOT_DIR" './scripts/dev/dev-up.sh' || { failed=1; reason='Falha ao subir a infra para backend-ci.'; }
 
   if [[ $failed -eq 0 ]]; then
     ci_local_run_step "$workflow" 'API install dependencies' "$ROOT_DIR/apps/api" 'bundle install --jobs 4 --retry 3' || { failed=1; reason='Falha em API install dependencies.'; }
   fi
   if [[ $failed -eq 0 ]]; then
-    ci_local_run_step "$workflow" 'API prepare database' "$ROOT_DIR/apps/api" "RAILS_ENV=test POSTGRES_HOST=$postgres_host POSTGRES_PORT=$postgres_port POSTGRES_TEST_DB=$postgres_test_db POSTGRES_USER=$postgres_user POSTGRES_PASSWORD=$postgres_password BUNDLE_WITHOUT=production bundle exec rails db:prepare" || { failed=1; reason='Falha em API prepare database.'; }
+    ci_local_run_step "$workflow" 'API prepare database' "$ROOT_DIR/apps/api" "$api_prepare_command" || { failed=1; reason='Falha em API prepare database.'; }
   fi
   if [[ $failed -eq 0 ]]; then
-    ci_local_run_step "$workflow" 'API tests' "$ROOT_DIR/apps/api" "RAILS_ENV=test POSTGRES_HOST=$postgres_host POSTGRES_PORT=$postgres_port POSTGRES_TEST_DB=$postgres_test_db POSTGRES_USER=$postgres_user POSTGRES_PASSWORD=$postgres_password BUNDLE_WITHOUT=production bundle exec rails test" || { failed=1; reason='Falha em API tests.'; }
+    ci_local_run_step "$workflow" 'API validate auth seeds idempotency' "$ROOT_DIR/apps/api" "$api_seed_idempotency_command" || { failed=1; reason='Falha em API validate auth seeds idempotency.'; }
+  fi
+  if [[ $failed -eq 0 ]]; then
+    ci_local_run_step "$workflow" 'API auth flow tests' "$ROOT_DIR/apps/api" "$api_auth_flow_tests_command" || { failed=1; reason='Falha em API auth flow tests.'; }
+  fi
+  if [[ $failed -eq 0 ]]; then
+    ci_local_run_step "$workflow" 'API tests' "$ROOT_DIR/apps/api" "$api_test_command" || { failed=1; reason='Falha em API tests.'; }
   fi
   if [[ $failed -eq 0 ]]; then
     ci_local_run_step "$workflow" 'API RuboCop' "$ROOT_DIR/apps/api" 'bundle exec rubocop' || { failed=1; reason='Falha em API RuboCop.'; }
@@ -244,5 +291,3 @@ if ci_local_print_summary; then
 else
   exit 1
 fi
-
-

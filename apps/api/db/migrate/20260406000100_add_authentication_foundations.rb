@@ -23,7 +23,7 @@ class AddAuthenticationFoundations < ActiveRecord::Migration[8.1]
     end
 
     add_index :auth_sessions, :token_digest, unique: true
-    add_index :auth_sessions, [:user_id, :created_at]
+    add_index :auth_sessions, [ :user_id, :created_at ]
     add_index :auth_sessions, :expires_at
     add_index :auth_sessions, :trace_id
     add_check_constraint :auth_sessions, "expires_at > created_at", name: "auth_sessions_expires_after_create"

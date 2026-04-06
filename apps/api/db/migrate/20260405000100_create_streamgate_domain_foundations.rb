@@ -98,19 +98,19 @@ class CreateStreamgateDomainFoundations < ActiveRecord::Migration[8.1]
     add_index :users, :email, unique: true
     add_index :uploads, :storage_key, unique: true
     add_index :uploads, :trace_id
-    add_index :uploads, [:user_id, :created_at]
+    add_index :uploads, [ :user_id, :created_at ]
     add_index :jobs, :trace_id
-    add_index :jobs, [:upload_id, :status]
-    add_index :jobs, [:requested_by_id, :created_at]
-    add_index :job_batches, [:job_id, :batch_number], unique: true
+    add_index :jobs, [ :upload_id, :status ]
+    add_index :jobs, [ :requested_by_id, :created_at ]
+    add_index :job_batches, [ :job_id, :batch_number ], unique: true
     add_index :job_batches, :trace_id
-    add_index :quarantine_records, [:job_id, :severity]
+    add_index :quarantine_records, [ :job_id, :severity ]
     add_index :quarantine_records, :trace_id
-    add_index :processing_attempts, [:job_id, :attempt_number], unique: true
+    add_index :processing_attempts, [ :job_id, :attempt_number ], unique: true
     add_index :processing_attempts, :trace_id
-    add_index :audit_events, [:auditable_type, :auditable_id]
+    add_index :audit_events, [ :auditable_type, :auditable_id ]
     add_index :audit_events, :trace_id
-    add_index :audit_events, [:actor_id, :occurred_at]
+    add_index :audit_events, [ :actor_id, :occurred_at ]
 
     add_check_constraint :uploads, "byte_size > 0", name: "uploads_byte_size_positive"
     add_check_constraint :job_batches, "batch_number > 0", name: "job_batches_batch_number_positive"
