@@ -2,15 +2,15 @@
 
 ## Objetivo
 
-Este guia fixa as decisoes de interface da Sprint 0 para o `apps/web`. Ele existe para preservar a baseline visual ja aprovada e evitar que novas telas reaprendam do zero como o StreamGate deve parecer e se comportar.
+Este guia fixa as decisoes de interface da Sprint 0 e da Sprint 1 para o `apps/web`. Ele existe para preservar a baseline visual ja aprovada e evitar que novas telas reaprendam do zero como o StreamGate deve parecer, se comportar e crescer.
 
 O frontend atual do projeto ja possui tres grupos de superficie:
 
 - `publica`: landing page
 - `auth`: login, cadastro e redefinicao de senha
-- `autenticada`: dashboard protegido
+- `autenticada`: workspace protegido segmentado por modulos
 
-A Sprint 0 nao existe para redesenhar essa base. Ela existe para transformar essa base em referencia oficial.
+A Sprint 0 reconheceu a baseline visual. A Sprint 1 fechou a primeira malha oficial do workspace e a camada HTTP inicial.
 
 ## Regras objetivas de telas publicas vs autenticadas
 
@@ -40,6 +40,13 @@ Telas autenticadas existem para operar, monitorar ou consultar o produto apos a 
 Entram nesta categoria:
 
 - `DashboardPage`
+- `UploadPage`
+- `JobsPage`
+- `AnalyticsPage`
+- `QuarantinePage`
+- `EventLogPage`
+- `AuditPage`
+- `SettingsPage`
 - qualquer superficie futura protegida por `ProtectedRoute`
 
 Regras:
@@ -68,13 +75,16 @@ Antes de criar novos componentes, o frontend deve reaproveitar esta base minima 
 ### Identidade e blocos estruturais
 
 - `StreamGateMark`: marca visual base
-- `SectionLabel`: eyebrow/rotulo de secao
+- `SectionLabel`: eyebrow e rotulo de secao
 - `ShellPanel`: superficie visual reutilizavel para blocos e paineis
 
 ### Layouts e superficies de app
 
 - `AuthShell`: casca oficial para login, cadastro e reset
-- `DashboardSurface`: superficie oficial do workspace autenticado
+- `DashboardSurface`: shell oficial do workspace autenticado
+- `WorkspacePageFrame`: wrapper padrao das rotas protegidas
+- `WorkspaceOverview`: conteudo da visao geral do dashboard
+- `WorkspaceModule`: scaffold oficial das superficies de modulo
 - `DashboardGraphics`: apoio visual dos graficos do dashboard
 - `dashboard-surface.css`: linguagem visual do workspace autenticado
 
@@ -82,6 +92,7 @@ Antes de criar novos componentes, o frontend deve reaproveitar esta base minima 
 
 - `ProtectedRoute`: fronteira de acesso autenticado
 - `AuthProvider` e `useAuth`: sessao do frontend atual
+- `workspace-config.ts`: mapa oficial de navegacao, modulos e estados de job
 
 ### Primitives de formulario
 
@@ -92,9 +103,51 @@ Antes de criar novos componentes, o frontend deve reaproveitar esta base minima 
 ### Regras de reaproveitamento
 
 - telas de auth novas devem nascer de `AuthShell`
-- superficies autenticadas novas devem reutilizar a linguagem de `DashboardSurface` antes de inventar um shell paralelo
+- superficies autenticadas novas devem reutilizar a linguagem de `DashboardSurface` e `WorkspacePageFrame` antes de inventar um shell paralelo
 - novas secoes devem tentar compor `ShellPanel`, `SectionLabel` e `Button` antes de criar wrappers equivalentes
 - um novo componente so deve nascer quando o componente existente falhar estruturalmente para o caso de uso, e nao apenas por preferencia local
+
+## Mapa oficial do workspace
+
+A Sprint 1 congela a primeira navegacao autenticada oficial do produto:
+
+- `/dashboard`: visao geral operacional
+- `/upload`: entrada e validacao de ingestao
+- `/jobs`: leitura e acompanhamento de execucao
+- `/analytics`: leitura analitica e metricas
+- `/quarantine`: tratamento de registros rejeitados
+- `/events`: event log e trilha de automacao
+- `/audit`: auditoria e governanca operacional
+- `/settings`: configuracoes e defaults do workspace
+
+Essa divisao existe para impedir que o dashboard central concentre todas as responsabilidades futuras do produto.
+
+## Camada de dados do frontend
+
+A Sprint 1 tambem fecha a primeira camada HTTP oficial em:
+
+- `src/lib/api-client.ts`
+- `src/lib/streamgate-api.ts`
+
+Regras oficiais daqui em diante:
+
+- toda chamada HTTP nova deve partir do adapter oficial antes de qualquer fetch local na pagina
+- envelopes de sucesso e erro devem seguir o contrato da API
+- erro de integracao deve preservar `request_id`, `trace_id`, `code` e `details` quando existirem
+- serializacao de query params deve ficar centralizada
+- a decisao sobre cache, polling e query state pode evoluir depois, mas nao deve quebrar a camada adapter
+
+## Estados oficiais de job na UI
+
+A primeira tabela oficial de estados de job no frontend passa a ser:
+
+- `pending`
+- `processing`
+- `completed`
+- `failed`
+- `quarantined_with_warnings`
+
+Esses estados devem ser a referencia visual e semantica da UI ate que o backend amplie ou refine a maquina de estados.
 
 ## Estados padrao de interface
 
@@ -115,7 +168,7 @@ Regra para evolucao:
 
 Regra atual:
 
-- a base atual ainda nao possui empty states dedicados no dashboard
+- a base atual ainda nao possui empty states dedicados nos modulos do workspace
 
 Regra oficial daqui em diante:
 
@@ -129,6 +182,7 @@ Regra atual:
 
 - erros de formulario aparecem inline por campo e tambem via toast singleton
 - erros de acesso sao tratados por redirecionamento de rota protegida
+- erros de integracao passam a ter tipo proprio via `ApiClientError`
 
 Regra oficial daqui em diante:
 
@@ -178,7 +232,7 @@ Arquivos principais:
 - `src/features/auth/protected-route.tsx`
 - paginas de auth em `src/pages`
 
-### Dashboard mock
+### Workspace mock
 
 Ainda esta mockado no cliente:
 
@@ -188,30 +242,35 @@ Ainda esta mockado no cliente:
 - workers
 - eventos
 - uploads
+- analytics
+- quarentena
+- auditoria
 - chips e alertas de status
 - graficos e distribuicoes do workspace
 
 Arquivos principais:
 
 - `src/components/app/dashboard-data.tsx`
-- `src/components/app/dashboard-surface.tsx`
-- `src/components/app/dashboard-graphics.tsx`
+- `src/components/app/workspace-overview.tsx`
+- `src/components/app/workspace-config.ts`
+- paginas de modulo em `src/pages`
 
 ### Baseline oficial vs mock
 
-Mesmo quando os dados ainda sao mock, a estrutura visual nao e provisoria. Nesta sprint, o projeto passa a assumir:
+Mesmo quando os dados ainda sao mock, a estrutura visual nao e provisoria. Nesta fase, o projeto passa a assumir:
 
-- landing, auth shell e dashboard shell como baseline oficial
+- landing, auth shell e workspace shell como baseline oficial
 - mocks apenas como substituicao temporaria da camada de dados e autenticacao
 - substituicao de mock por dado real sem resetar a linguagem visual
+- substituicao de fetch mock por adapter real sem multiplicar clientes HTTP pela app
 
 ## UI rules para evitar regressao visual futura
 
 ### Hierarquia e composicao
 
 - manter a landing page como superficie publica premium, com narrativa de produto e preview do workspace
-- manter o dashboard como superficie operacional densa e contida, sem virar mosaico generico de cards SaaS
-- evitar criar shells paralelos quando `AuthShell` ou `DashboardSurface` ja resolverem a estrutura
+- manter o workspace como superficie operacional densa e contida, sem virar mosaico generico de cards SaaS
+- evitar criar shells paralelos quando `AuthShell`, `DashboardSurface` ou `WorkspacePageFrame` ja resolverem a estrutura
 
 ### Tipografia e copy
 
@@ -229,12 +288,12 @@ Mesmo quando os dados ainda sao mock, a estrutura visual nao e provisoria. Nesta
 
 - nao criar novo botao, input, label, panel ou shell por variacao superficial
 - primeiro tentar estender variantes dos componentes existentes
-- quando uma nova abstração surgir, ela deve representar um padrao recorrente, nao uma tela isolada
+- quando uma nova abstracao surgir, ela deve representar um padrao recorrente, nao uma tela isolada
 
 ### Superficies autenticadas
 
 - workspace autenticado deve priorizar leitura, status, acao e contexto
-- charts, tabelas e paines futuros devem parecer parte da mesma familia visual do dashboard atual
+- charts, tabelas e paineis futuros devem parecer parte da mesma familia visual do dashboard atual
 - evitar banners promocionais, hero copy e excesso de ornamento dentro da area protegida
 
 ## Criterio de pronto para mudancas de frontend
@@ -246,5 +305,4 @@ Uma entrega de frontend so e considerada pronta quando:
 - trata loading, empty, error e success de forma explicita
 - deixa claro o que ainda esta mock e o que ja esta integrado
 - preserva a linguagem visual oficial do projeto
-
-
+- cresce o workspace por modulos oficiais e por adapter compartilhado, nao por excecoes locais

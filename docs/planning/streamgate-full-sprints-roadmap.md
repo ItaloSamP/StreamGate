@@ -15,8 +15,8 @@ O tom aqui e deliberadamente de engenharia. A ideia nao e listar desejos. A idei
 ## Estado real do projeto em 2026-04-03
 
 - `Frontend`: base visual forte ja existe em `apps/web`, com landing page, login, cadastro, reset, dashboard shell, auth mock, route guard e alguns testes de UX/logica.
-- `Frontend stack`: hoje o app roda em React 19, React Router 7, Vite 8, Tailwind 4 e Vitest 4; isso ja muda a trilha futura de integracao, testes e ergonomia do dashboard.
-- `Frontend navegavel`: existe apenas a rota protegida `/dashboard`; os modulos `Upload`, `Jobs`, `Analytics`, `ClickHouse`, `Quarentena`, `Event Log`, `Auditoria` e `Configuracoes` ja aparecem como informacao mock na IA do dashboard, mas ainda nao existem como superficies reais.
+- `Frontend stack`: hoje o app roda em React 19, React Router 7, Vite 8, Tailwind 4 e Vitest 4; a Sprint 1 tambem materializou a primeira camada HTTP oficial em `api-client` e `streamgate-api`.
+- `Frontend navegavel`: a Sprint 1 ja abriu a malha protegida real com `/dashboard`, `/upload`, `/jobs`, `/analytics`, `/quarantine`, `/events`, `/audit` e `/settings`, todas sustentadas por shell compartilhado de workspace e scaffold de modulo.
 - `API Rails`: continua em estado de esqueleto tecnico; hoje ha apenas `GET /up` e infraestrutura inicial de Swagger/OpenAPI em `/api-docs`, sem dominio, sem endpoints de negocio, sem migrations e sem estrutura materializada de services/use-cases/policies/serializers.
 - `Worker`: ainda esta mais perto de um template de gem do que de um runtime real de filas/processamento; no `compose` o container continua em `sleep infinity` para smoke de dependencia.
 - `Contracts`: `packages/contracts` segue como placeholder.
@@ -433,19 +433,19 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 ### Front planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
-- [ ] Mapear os modulos finais do dashboard operacional.
-- [ ] Mapear os modulos finais do dashboard analitico.
-- [ ] Definir quais estados reais de job precisam aparecer na UI.
-- [ ] Definir como a navegacao do shell atual vai crescer sem reescrita estrutural.
-- [ ] Definir a segmentacao oficial de rotas protegidas (`/dashboard`, `/jobs`, `/quarantine`, `/analytics`, `/audit`, `/settings`) mesmo que algumas ainda nascam como cascas.
+- [x] Mapear os modulos finais do dashboard operacional.
+- [x] Mapear os modulos finais do dashboard analitico.
+- [x] Definir quais estados reais de job precisam aparecer na UI.
+- [x] Definir como a navegacao do shell atual vai crescer sem reescrita estrutural.
+- [x] Definir a segmentacao oficial de rotas protegidas (`/dashboard`, `/jobs`, `/quarantine`, `/analytics`, `/audit`, `/settings`) mesmo que algumas ainda nascam como cascas.
 
 ### Front execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
-- [ ] Ajustar arquitetura de rotas/layouts para acomodar `Jobs`, `Quarentena`, `Auditoria` e `Analytics`.
-- [ ] Reservar slots de navegacao e layout para modulos futuros.
-- [ ] Garantir que a estrutura de IA nao force retrabalho quando dados reais chegarem.
-- [ ] Introduzir a primeira camada oficial de cliente/adapter HTTP do frontend para preparar a troca de mocks por contratos reais.
+- [x] Ajustar arquitetura de rotas/layouts para acomodar `Jobs`, `Quarentena`, `Auditoria` e `Analytics`.
+- [x] Reservar slots de navegacao e layout para modulos futuros.
+- [x] Garantir que a estrutura de IA nao force retrabalho quando dados reais chegarem.
+- [x] Introduzir a primeira camada oficial de cliente/adapter HTTP do frontend para preparar a troca de mocks por contratos reais.
 
 ### DevOps
 
