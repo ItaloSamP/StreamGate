@@ -410,25 +410,25 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 ### Back planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
-- [ ] Definir entidades centrais: `User`, `Upload`, `Job`, `JobBatch`, `QuarantineRecord`, `AuditEvent`, `ProcessingAttempt`.
-- [ ] Definir estados oficiais de `Job` e `JobBatch`.
-- [ ] Definir invariantes de dominio que nunca podem ser violadas.
-- [ ] Definir quais atributos vivem no PostgreSQL e quais sao derivados para ClickHouse.
-- [ ] Definir taxonomia de erro operacional vs erro de validacao.
-- [ ] Definir estrategia oficial de identificadores (`user_id`, `upload_id`, `job_id`, `batch_id`, `audit_event_id`) e padrao de geracao.
-- [ ] Definir envelope de sucesso, paginacao e filtros da API antes da proliferacao de endpoints.
-- [ ] Definir estrutura real de `packages/contracts` com schemas, exemplos, versionamento e estrategia de reutilizacao entre Ruby e TypeScript.
+- [x] Definir entidades centrais: `User`, `Upload`, `Job`, `JobBatch`, `QuarantineRecord`, `AuditEvent`, `ProcessingAttempt`.
+- [x] Definir estados oficiais de `Job` e `JobBatch`.
+- [x] Definir invariantes de dominio que nunca podem ser violadas.
+- [x] Definir quais atributos vivem no PostgreSQL e quais sao derivados para ClickHouse.
+- [x] Definir taxonomia de erro operacional vs erro de validacao.
+- [x] Definir estrategia oficial de identificadores (`user_id`, `upload_id`, `job_id`, `batch_id`, `audit_event_id`) e padrao de geracao.
+- [x] Definir envelope de sucesso, paginacao e filtros da API antes da proliferacao de endpoints.
+- [x] Definir estrutura real de `packages/contracts` com schemas, exemplos, versionamento e estrategia de reutilizacao entre Ruby e TypeScript.
 
 ### Back execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
-- [ ] Criar migrations iniciais do dominio operacional.
-- [ ] Criar models base com validacoes minimas e nomes definitivos.
-- [ ] Criar enums/constantes de estados.
-- [ ] Criar estrutura minima de auditoria.
-- [ ] Adicionar seeds/fixtures minimas para desenvolvimento e testes.
-- [ ] Materializar esqueleto de `services`, `policies`, `serializers` e contratos para impedir que a API cresca direto em controllers.
-- [ ] Criar constraints e indices minimos que suportem idempotencia, rastreabilidade e consultas operacionais futuras.
+- [x] Criar migrations iniciais do dominio operacional.
+- [x] Criar models base com validacoes minimas e nomes definitivos.
+- [x] Criar enums/constantes de estados.
+- [x] Criar estrutura minima de auditoria.
+- [x] Adicionar seeds/fixtures minimas para desenvolvimento e testes.
+- [x] Materializar esqueleto de `services`, `policies`, `serializers` e contratos para impedir que a API cresca direto em controllers.
+- [x] Criar constraints e indices minimos que suportem idempotencia, rastreabilidade e consultas operacionais futuras.
 
 ### Front planning
 
@@ -451,43 +451,43 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 
 - Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
 - Documentos de apoio: [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md), [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md) e [docs/guides/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/devops-roadmap.md).
-- [ ] Garantir que `db:prepare` seja reproduzivel num banco limpo.
+- [x] Garantir que `db:prepare` seja reproduzivel num banco limpo.
 - [ ] Validar criacao/rollback de migrations em ambiente local.
-- [ ] Definir fixture minima para desenvolvimento sem dados manuais.
+- [x] Definir fixture minima para desenvolvimento sem dados manuais.
 - [ ] Revisar nomes de servicos e variaveis que os contratos vao depender.
 - [ ] Garantir que scripts de suporte e automacao rodem com encoding previsivel em WSL e PowerShell.
 
 ### Documentation
 
 - Skills obrigatorias para todas as tasks desta trilha: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
-- [ ] Criar glossario de dominio.
-- [ ] Criar ADR de dominio e fronteiras.
-- [ ] Criar primeiros contratos em `packages/contracts`.
-- [ ] Documentar versionamento de contratos e regras de compatibilidade.
-- [ ] Registrar convencao de ids, envelopes, paginacao e filtros como parte do contrato publico do projeto.
+- [x] Criar glossario de dominio.
+- [x] Criar ADR de dominio e fronteiras.
+- [x] Criar primeiros contratos em `packages/contracts`.
+- [x] Documentar versionamento de contratos e regras de compatibilidade.
+- [x] Registrar convencao de ids, envelopes, paginacao e filtros como parte do contrato publico do projeto.
 
 ### Test planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Planejar testes de migration.
-- [ ] Planejar testes de model.
-- [ ] Planejar testes de transicao de estado.
-- [ ] Planejar validacao de contratos/eventos.
+- [x] Planejar testes de migration.
+- [x] Planejar testes de model.
+- [x] Planejar testes de transicao de estado.
+- [x] Planejar validacao de contratos/eventos.
 
 ### Test execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Rodar migrations em banco limpo.
-- [ ] Executar os primeiros testes de dominio.
-- [ ] Validar se os contratos versionados batem com exemplos reais.
+- [x] Rodar migrations em banco limpo.
+- [x] Executar os primeiros testes de dominio.
+- [x] Validar se os contratos versionados batem com exemplos reais.
 
 ### Security
 
 - Skills obrigatorias para todas as tasks desta trilha: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
-- [ ] Classificar campos sensiveis do dominio.
-- [ ] Definir visibilidade minima por recurso.
-- [ ] Definir o que deve ou nao ir para logs, auditoria e payloads.
-- [ ] Definir classificacao inicial de dados e estrategia minima de redacao/sanitizacao para campos sensiveis.
+- [x] Classificar campos sensiveis do dominio.
+- [x] Definir visibilidade minima por recurso.
+- [x] Definir o que deve ou nao ir para logs, auditoria e payloads.
+- [x] Definir classificacao inicial de dados e estrategia minima de redacao/sanitizacao para campos sensiveis.
 
 ### Skills da sprint
 
@@ -499,11 +499,11 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 
 ### Checklist de saida
 
-- [ ] Entidades principais modeladas.
-- [ ] Contratos versionados criados.
-- [ ] Banco sobe e migra do zero sem acao manual obscura.
-- [ ] Glossario e ADR de dominio publicados.
-- [ ] Testes de dominio e migration verdes.
+- [x] Entidades principais modeladas.
+- [x] Contratos versionados criados.
+- [x] Banco sobe e migra do zero sem acao manual obscura.
+- [x] Glossario e ADR de dominio publicados.
+- [x] Testes de dominio e migration verdes.
 
 ---
 

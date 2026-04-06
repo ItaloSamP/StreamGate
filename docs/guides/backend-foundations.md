@@ -364,3 +364,79 @@ Uma entrega de backend so e considerada pronta quando:
 - atualiza OpenAPI quando houver endpoint publico
 - deixa claro o impacto em logs, auditoria e contratos
 - registra qualquer excecao de ambiente ou risco remanescente
+
+## Decisoes materializadas na Sprint 1
+
+### Estrategia oficial de identificadores
+
+A partir da Sprint 1, o backend adota IDs string prefixados como identificadores oficiais do dominio operacional.
+
+Regras:
+
+- formato base: `<prefixo>_<32 hex>`;
+- o mesmo ID aparece em payloads HTTP, eventos, logs, auditoria e trilhas internas;
+- prefixos aprovados inicialmente: `user`, `upload`, `job`, `batch`, `quarantine`, `attempt`, `audit`, `trace`, `req`.
+
+### Envelope de sucesso, paginacao e filtros
+
+Antes da API ganhar muitos endpoints, o contrato publico ja reserva um envelope de sucesso consistente:
+
+```json
+{
+  "data": [],
+  "meta": {
+    "pagination": {
+      "page": 1,
+      "per_page": 20,
+      "total_count": 48,
+      "total_pages": 3
+    },
+    "filters": {
+      "status": "pending"
+    }
+  }
+}
+```
+
+Regras:
+
+- `data` e obrigatorio;
+- `meta.pagination` aparece em respostas paginadas;
+- `meta.filters` reflete os filtros aplicados no servidor;
+- filtros devem usar a mesma linguagem do dominio.
+
+### Classificacao inicial de dados e redacao
+
+Classificacao minima inicial:
+
+- `public`: nao adotado para o dominio operacional da Sprint 1;
+- `internal`: metadados operacionais que podem aparecer em respostas autenticadas e logs estruturados controlados;
+- `restricted`: campos sensiveis cujo conteudo nao deve ir para logs e deve ser minimizado em auditoria e payloads.
+
+Regras iniciais:
+
+- `email` de usuario e dado `restricted`;
+- `metadata` de upload e `payload` de quarentena devem ser tratados como potencialmente `restricted`;
+- `checksum_sha256`, `storage_key`, `trace_id` e IDs operacionais podem aparecer em logs estruturados;
+- payloads e logs nao devem carregar o conteudo bruto do arquivo importado.
+
+### Separacao OLTP e OLAP
+
+Na Sprint 1, o PostgreSQL e a fonte de verdade do estado operacional. ClickHouse continua reservado para leitura derivada e agregada das proximas sprints.
+
+Vai para PostgreSQL agora:
+
+- `users`
+- `uploads`
+- `jobs`
+- `job_batches`
+- `quarantine_records`
+- `processing_attempts`
+- `audit_events`
+
+Fica derivado para ClickHouse depois:
+
+- tempos de processamento agregados;
+- taxas historicas de falha;
+- throughput por origem e periodo;
+- metricas do dashboard analitico.
