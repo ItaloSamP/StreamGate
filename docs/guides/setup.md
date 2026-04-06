@@ -265,7 +265,7 @@ Objetivo:
 - construir painel operacional e analitico
 
 
-## Mapa oficial de servicos e variaveis (Sprint 1)
+## Mapa oficial de servicos e variaveis (Sprint 2)
 
 Para evitar drift entre frontend, backend, compose e contratos, este projeto passa a assumir estes nomes como oficiais:
 
@@ -290,11 +290,29 @@ Para evitar drift entre frontend, backend, compose e contratos, este projeto pas
 
 - `VITE_API_BASE_URL`
 
+### Variaveis de auth e sessao usadas pela API
+
+- `AUTH_SESSION_TTL_HOURS`
+- `AUTH_PASSWORD_RESET_TTL_MINUTES`
+- `AUTH_TOKEN_PEPPER`
+- `AUTH_SESSION_TRANSPORT`
+- `AUTH_COOKIE_ENABLED`
+- `AUTH_CSRF_MODE`
+
+### Variaveis de CORS da API
+
+- `API_CORS_ALLOWED_ORIGINS`
+- `API_CORS_ALLOW_CREDENTIALS`
+
 Esses nomes estao alinhados com:
 
 - `apps/api/config/database.yml`
+- `apps/api/config/initializers/auth_runtime.rb`
+- `apps/api/config/initializers/cors.rb`
 - `apps/web/src/lib/api-client.ts`
 - scripts de CI e compose em `scripts/`
+
+No `compose.yaml`, essas variaveis de auth/CORS/frontend tambem tem valores default para evitar quebra de `docker compose` quando o `.env` local estiver desatualizado.
 
 ## Padrao de encoding para scripts locais
 
@@ -304,3 +322,5 @@ Para previsibilidade entre WSL e PowerShell, os scripts oficiais da raiz agora s
 - scripts `.ps1` inicializam `InputEncoding`, `OutputEncoding` e `$OutputEncoding` em UTF-8 sem BOM
 
 Isso reduz problemas de caracteres em logs, parsing de saida e execucao de automacoes em ambientes mistos.
+
+

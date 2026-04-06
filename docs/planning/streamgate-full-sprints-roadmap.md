@@ -21,7 +21,7 @@ O tom aqui e deliberadamente de engenharia. A ideia nao e listar desejos. A idei
 - `Worker`: ainda esta mais perto de um template de gem do que de um runtime real de filas/processamento; no `compose` o container continua em `sleep infinity` para smoke de dependencia.
 - `Contracts`: `packages/contracts` segue como placeholder.
 - `Infra local`: `compose.yaml` esta bem montado, com servicos relevantes, profiles e health checks.
-- `CI`: existem workflows separados para frontend, backend e docker, mas o pipeline do frontend ainda nao roda `vitest` e a trilha de contrato/integracao ainda nao entrou como gate real.
+- `CI`: existem workflows separados para frontend, backend e docker; o frontend agora roda `vitest` no workflow e a trilha de contrato/integracao segue como gate pendente.
 - `Governanca`: existe template de PR, mas ainda nao existem `CODEOWNERS`, `dependabot.yml`, issue templates, sistema de labels, `AGENTS.md` raiz e guias formais de contribuicao.
 - `Swagger/OpenAPI`: a base existe e `/api-docs` ja foi preparado, mas ainda sem recursos reais de negocio.
 - `Readiness operacional`: uma leitura rapida com a skill `readiness-report` mostrou maturidade baixa para desenvolvimento autonomo assistido, com gaps mais fortes em observabilidade, seguranca automatizada, descoberta de tarefas e governanca do repositorio.
@@ -551,7 +551,7 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 **Bloqueadores conhecidos**
 
 - frontend ja opera com auth real; proxima lacuna e conectar dados reais dos modulos do workspace
-- backend e frontend ja possuem auth real; lacunas remanescentes estao em trilhas de DevOps, Documentation, Security e E2E
+- backend e frontend ja possuem auth real; lacunas remanescentes estao em trilhas de Documentation, Security e E2E
 - Swagger ja cobre auth real; proximas iteracoes cobrem recursos de negocio da API
 
 **O que nao pode ficar para depois**
@@ -612,11 +612,11 @@ O frontend ja ensaiou a experiencia de acesso. Esta sprint faz o backend assumir
 
 - Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
 - Documentos de apoio: [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md), [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md) e [docs/guides/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/devops-roadmap.md).
-- [ ] Adicionar envs e segredos de auth.
-- [ ] Criar seeds minimas para desenvolvimento.
-- [ ] Ajustar CI para cobrir auth real.
-- [ ] Configurar envs de CORS/CSRF/cookies conforme a estrategia de sessao escolhida.
-- [ ] Garantir seeds e fixtures de auth reproduziveis em ambiente local e CI.
+- [x] Adicionar envs e segredos de auth.
+- [x] Criar seeds minimas para desenvolvimento.
+- [x] Ajustar CI para cobrir auth real.
+- [x] Configurar envs de CORS/CSRF/cookies conforme a estrategia de sessao escolhida.
+- [x] Garantir seeds e fixtures de auth reproduziveis em ambiente local e CI.
 
 ### Documentation
 
@@ -722,5 +722,4 @@ Se houver pressao para pular etapas, usar esta sequencia como trava racional:
 ## Fechamento
 
 Se este documento for seguido com disciplina, o projeto deixa de evoluir por intuicao e passa a evoluir por capacidade comprovada. A regra e simples: nenhuma sprint e pronta porque o codigo parece bom; ela so e pronta quando o escopo implementado roda, esta testado, esta documentado, esta coberto por CI e nao abre uma divida invisivel para a sprint seguinte.
-
 
