@@ -1,39 +1,27 @@
 # packages/contracts
 
-Espaco reservado para contratos compartilhados entre frontend, API e worker.
+Fonte compartilhada dos contratos do StreamGate entre API, worker e frontend.
 
-## Papel no projeto
+## Estrutura da Sprint 1
 
-Este pacote vai concentrar:
+- `version.json`: versao publicada do pacote e politica de compatibilidade.
+- `schemas/http`: envelopes e recursos HTTP.
+- `schemas/events`: contratos de eventos assincronos.
+- `examples/http`: exemplos concretos de respostas HTTP.
+- `examples/events`: exemplos concretos de eventos.
+- `COMPATIBILITY.md`: regra oficial de evolucao de contratos.
 
-- eventos de dominio
-- schemas JSON
-- nomes de filas, exchanges e routing keys
-- payloads de exemplo
-- versao de contratos publicada
-
-Enquanto os contratos concretos ainda nao foram materializados em arquivos, a referencia oficial de linguagem e:
-
-- [Fundacoes do backend](C:/estudos/StreamGate/docs/guides/backend-foundations.md)
-- [Visao do produto](C:/estudos/StreamGate/docs/product/vision.md)
-
-## Convencoes iniciais
+## Convencoes oficiais
 
 ### Entidades operacionais
 
+- `user`
 - `upload`
 - `job`
-- `batch`
-- `quarantine_entry`
+- `job_batch`
+- `quarantine_record`
 - `audit_event`
 - `processing_attempt`
-
-### Entidades analiticas
-
-- `fact_ingestion_record`
-- `dim_source_file`
-- `dim_processing_time`
-- `analytic_metric`
 
 ### Eventos iniciais
 
@@ -56,3 +44,9 @@ Todo contrato de evento deve prever, quando aplicavel:
 - `upload_id`
 - `job_id`
 - `batch_id`
+
+## Fonte de verdade complementar
+
+- [Glossario de dominio](C:/estudos/StreamGate/docs/guides/domain-glossary.md)
+- [Fundacoes do backend](C:/estudos/StreamGate/docs/guides/backend-foundations.md)
+- [ADR 0002](C:/estudos/StreamGate/docs/adr/0002-domain-boundaries-identifiers-and-contracts.md)

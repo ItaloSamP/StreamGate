@@ -1,24 +1,6 @@
 import type { ReactElement } from 'react'
 
-export type NavItemData = {
-  label: string
-  icon:
-    | 'dashboard'
-    | 'upload'
-    | 'jobs'
-    | 'analytics'
-    | 'clickhouse'
-    | 'quarantine'
-    | 'etl'
-    | 'events'
-    | 'audit'
-    | 'settings'
-  active?: boolean
-  badge?: {
-    tone?: 'default' | 'info' | 'alert'
-    text: string
-  }
-}
+import type { WorkspaceIcon } from '@/components/app/workspace-config'
 
 type JobData = {
   id: string
@@ -48,46 +30,11 @@ type WorkerData = {
   delay?: string
 }
 
-export const navGroups: { label: string; items: NavItemData[] }[] = [
-  {
-    label: 'Principal',
-    items: [
-      { label: 'Dashboard', icon: 'dashboard', active: true },
-      { label: 'Upload', icon: 'upload' },
-      { label: 'Jobs', icon: 'jobs', badge: { tone: 'info', text: '9' } },
-    ],
-  },
-  {
-    label: 'Analise',
-    items: [
-      { label: 'Analytics', icon: 'analytics' },
-      { label: 'ClickHouse', icon: 'clickhouse' },
-      { label: 'Quarentena', icon: 'quarantine', badge: { tone: 'alert', text: '7' } },
-      { label: 'ETL Explorer', icon: 'etl' },
-    ],
-  },
-  {
-    label: 'Sistema',
-    items: [
-      { label: 'Event Log', icon: 'events', badge: { text: '3' } },
-      { label: 'Auditoria', icon: 'audit' },
-      { label: 'Configuracoes', icon: 'settings' },
-    ],
-  },
-]
-
-export const topChips = [
-  { label: 'Workers 4/4', tone: 'ok' },
-  { label: 'RabbitMQ', tone: 'ok' },
-  { label: 'ClickHouse', tone: 'ok' },
-  { label: 'MinIO 72%', tone: 'warn' },
-] as const
-
 export const kpis = [
-  { label: 'Jobs hoje', value: '148', sub: 'total do dia', tag: '↑ +23', className: 'k1', tagTone: 'up' },
+  { label: 'Jobs hoje', value: '148', sub: 'total do dia', tag: '+23', className: 'k1', tagTone: 'up' },
   { label: 'Concluidos', value: '131', sub: 'taxa de sucesso', tag: '88.5%', className: 'k2', tagTone: 'up' },
-  { label: 'Em processo', value: '9', sub: 'ao vivo', tag: '↻ live', className: 'k3', tagTone: 'info' },
-  { label: 'Falhos', value: '8', sub: 'requer atencao', tag: '↑ +2', className: 'k4', tagTone: 'down' },
+  { label: 'Em processo', value: '9', sub: 'ao vivo', tag: 'live', className: 'k3', tagTone: 'info' },
+  { label: 'Falhos', value: '8', sub: 'requer atencao', tag: '+2', className: 'k4', tagTone: 'down' },
   { label: 'Quarentena', value: '7', sub: '43 registros', tag: 'revisar', className: 'k5', tagTone: 'warn' },
 ] as const
 
@@ -99,20 +46,20 @@ export const jobs: JobData[] = [
   { id: '#0437', ext: 'json', file: 'users_export.json', progress: '100%', duration: '3m 44s', status: 'quarantined', tone: 'quarantined' },
   { id: '#0436', ext: 'csv', file: 'pedidos_batch.csv', progress: '34%', duration: '1m 58s', status: 'failed', tone: 'failed' },
   { id: '#0435', ext: 'parq', file: 'dados_raw.parquet', progress: '81%', duration: '5m 32s', status: 'processing', tone: 'processing', animated: true },
-] as const
+]
 
 export const formatRows = [
   { label: 'CSV', jobs: '84', width: '72%', tone: 'var(--signal-blue)', pct: '56.8%' },
   { label: 'JSON', jobs: '38', width: '40%', tone: 'var(--signal-teal)', pct: '25.7%' },
   { label: 'Parquet', jobs: '18', width: '20%', tone: 'var(--signal-purple)', pct: '12.2%' },
   { label: 'NDJSON', jobs: '5', width: '7%', tone: 'var(--signal-yellow)', pct: '3.4%' },
-  { label: 'XLSX', jobs: '3', width: '4%', tone: 'var(--signal-orange)', pct: '2.0%' },
+  { label: 'XLSX', jobs: '3', width: '4%', tone: 'var(--signal-red)', pct: '2.0%' },
 ] as const
 
 export const uploads: UploadData[] = [
   { name: 'vendas_q4_2024_full.csv', pct: '67%', width: '67%', animated: true },
   { name: 'clientes_export_marco.json', pct: '100%', width: '100%' },
-] as const
+]
 
 export const queue = [
   { pos: '1', name: 'transacoes_raw.parquet', size: '812 MB', eta: '~4m' },
@@ -121,22 +68,22 @@ export const queue = [
 ] as const
 
 export const eventRows = [
-  { time: '14:32:07', tone: 'up', tag: 'upload.received', msg: 'JB-0441 · vendas_q4_2024_full.csv · 234 MB · MinIO OK' },
-  { time: '14:31:52', tone: 'ok', tag: 'etl.batch.loaded', msg: 'JB-0438 · 18,432 records → ClickHouse · batch 4/4' },
-  { time: '14:31:40', tone: 'ok', tag: 'etl.job.completed', msg: 'JB-0438 · financeiro_q3.xlsx · 0 erros · 6m 11s' },
-  { time: '14:30:11', tone: 'warn', tag: 'etl.validation.failed', msg: 'JB-0437 · 7 records → quarentena · schema col[3]' },
-  { time: '14:29:55', tone: 'up', tag: 'upload.received', msg: 'JB-0440 · logs_app_mar.json · 88 MB · MinIO OK' },
-  { time: '14:28:03', tone: 'error', tag: 'etl.job.failed', msg: 'JB-0436 · network timeout · retry 3/3 exhausted' },
-  { time: '14:26:44', tone: 'teal', tag: 'etl.batch.loaded', msg: 'JB-0435 · 44,100 records → ClickHouse · batch 2/3' },
-  { time: '14:25:30', tone: 'ok', tag: 'etl.job.completed', msg: 'JB-0434 · catalog_sku_v2.csv · 3m 12s · idempotente' },
+  { time: '14:32:07', tone: 'up', tag: 'upload.received', msg: 'JB-0441 - vendas_q4_2024_full.csv - 234 MB - MinIO OK' },
+  { time: '14:31:52', tone: 'ok', tag: 'etl.batch.loaded', msg: 'JB-0438 - 18,432 records to ClickHouse - batch 4/4' },
+  { time: '14:31:40', tone: 'ok', tag: 'etl.job.completed', msg: 'JB-0438 - financeiro_q3.xlsx - 0 erros - 6m 11s' },
+  { time: '14:30:11', tone: 'warn', tag: 'etl.validation.failed', msg: 'JB-0437 - 7 records to quarentena - schema col[3]' },
+  { time: '14:29:55', tone: 'up', tag: 'upload.received', msg: 'JB-0440 - logs_app_mar.json - 88 MB - MinIO OK' },
+  { time: '14:28:03', tone: 'error', tag: 'etl.job.failed', msg: 'JB-0436 - network timeout - retry 3/3 exhausted' },
+  { time: '14:26:44', tone: 'teal', tag: 'etl.batch.loaded', msg: 'JB-0435 - 44,100 records to ClickHouse - batch 2/3' },
+  { time: '14:25:30', tone: 'ok', tag: 'etl.job.completed', msg: 'JB-0434 - catalog_sku_v2.csv - 3m 12s - idempotente' },
 ] as const
 
 export const workers: WorkerData[] = [
-  { name: 'worker-01', badge: 'ativo', tone: 'processing', job: 'JB-0441 · vendas_q4.csv · batch 3/7', width: '43%', active: true, delay: '.0s' },
-  { name: 'worker-02', badge: 'ativo', tone: 'processing', job: 'JB-0440 · logs_app.json · batch 1/3', width: '28%', active: true, delay: '.4s' },
-  { name: 'worker-03', badge: 'ativo', tone: 'processing', job: 'JB-0435 · dados_raw.parquet · batch 2/3', width: '67%', active: true, delay: '.8s' },
+  { name: 'worker-01', badge: 'ativo', tone: 'processing', job: 'JB-0441 - vendas_q4.csv - batch 3/7', width: '43%', active: true, delay: '.0s' },
+  { name: 'worker-02', badge: 'ativo', tone: 'processing', job: 'JB-0440 - logs_app.json - batch 1/3', width: '28%', active: true, delay: '.4s' },
+  { name: 'worker-03', badge: 'ativo', tone: 'processing', job: 'JB-0435 - dados_raw.parquet - batch 2/3', width: '67%', active: true, delay: '.8s' },
   { name: 'worker-04', badge: 'idle', tone: 'idle', job: 'Aguardando proximo job da fila', active: false },
-] as const
+]
 
 export const heatmapRows = [
   ['rgba(77,157,224,.07)', 'rgba(77,157,224,.10)', 'rgba(77,157,224,.06)', 'rgba(77,157,224,.13)', 'rgba(77,157,224,.08)', 'rgba(77,157,224,.03)', 'rgba(77,157,224,.02)'],
@@ -151,7 +98,7 @@ export const heatmapRows = [
 
 export const heatmapLabels = ['00-03', '03-06', '06-09', '09-12', '12-15', '15-18', '18-21', '21-24'] as const
 
-export function dashboardNavIcon(icon: NavItemData['icon']): ReactElement {
+export function dashboardNavIcon(icon: WorkspaceIcon): ReactElement {
   switch (icon) {
     case 'dashboard':
       return (

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+export LANG="${LANG:-C.UTF-8}"
+export LC_CTYPE="${LC_CTYPE:-$LANG}"
 checks=(
   "git:git --version"
   "docker:docker --version"

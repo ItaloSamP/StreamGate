@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/http/resources/job.v1.json",
+  "title": "JobResourceV1",
+  "type": "object",
+  "required": ["id", "upload_id", "requested_by_id", "source_type", "status", "quarantined_records_count", "trace_id"],
+  "properties": {
+    "id": { "type": "string" },
+    "upload_id": { "type": "string" },
+    "requested_by_id": { "type": "string" },
+    "source_type": { "type": "string" },
+    "status": { "type": "string" },
+    "error_code": { "type": ["string", "null"] },
+    "error_category": { "type": ["string", "null"] },
+    "quarantined_records_count": { "type": "integer", "minimum": 0 },
+    "trace_id": { "type": "string" },
+    "created_at": { "type": ["string", "null"], "format": "date-time" },
+    "updated_at": { "type": ["string", "null"], "format": "date-time" }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,10 @@
+upload_registered:
+  id: audit_fixture_registered
+  actor_id: user_fixture_operator
+  auditable_type: Upload
+  auditable_id: upload_fixture_registered
+  action: upload.registered
+  request_id: req_fixture_1
+  trace_id: trace_fixture_1
+  occurred_at: 2026-04-05 10:00:00
+  metadata: {}

@@ -264,3 +264,43 @@ Objetivo:
 - processar arquivos e alimentar PostgreSQL e ClickHouse
 - construir painel operacional e analitico
 
+
+## Mapa oficial de servicos e variaveis (Sprint 1)
+
+Para evitar drift entre frontend, backend, compose e contratos, este projeto passa a assumir estes nomes como oficiais:
+
+### Servicos de infraestrutura no `compose.yaml`
+
+- `postgres`
+- `redis`
+- `rabbitmq`
+- `minio`
+- `clickhouse`
+
+### Variaveis de ambiente de banco usadas pela API
+
+- `POSTGRES_HOST`
+- `POSTGRES_PORT`
+- `POSTGRES_DB`
+- `POSTGRES_TEST_DB`
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+
+### Variavel de integracao frontend -> API
+
+- `VITE_API_BASE_URL`
+
+Esses nomes estao alinhados com:
+
+- `apps/api/config/database.yml`
+- `apps/web/src/lib/api-client.ts`
+- scripts de CI e compose em `scripts/`
+
+## Padrao de encoding para scripts locais
+
+Para previsibilidade entre WSL e PowerShell, os scripts oficiais da raiz agora seguem estas regras:
+
+- scripts `.sh` exportam locale UTF-8 de forma explicita (`LANG` e `LC_CTYPE`)
+- scripts `.ps1` inicializam `InputEncoding`, `OutputEncoding` e `$OutputEncoding` em UTF-8 sem BOM
+
+Isso reduz problemas de caracteres em logs, parsing de saida e execucao de automacoes em ambientes mistos.

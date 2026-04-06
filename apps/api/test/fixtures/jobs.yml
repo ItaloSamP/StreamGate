@@ -1,0 +1,9 @@
+pending_job:
+  id: job_fixture_pending
+  upload_id: upload_fixture_registered
+  requested_by_id: user_fixture_operator
+  source_type: upload
+  status: pending
+  request_id: req_fixture_1
+  trace_id: trace_fixture_1
+  quarantined_records_count: 0

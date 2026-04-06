@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+export LANG="${LANG:-C.UTF-8}"
+export LC_CTYPE="${LC_CTYPE:-$LANG}"
 test_compose_project_name_value() {
   local project_name="${1:-}"
 

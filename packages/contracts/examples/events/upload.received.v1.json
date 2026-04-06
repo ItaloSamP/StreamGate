@@ -1,0 +1,17 @@
+{
+  "event_id": "event_8cf97fd58a08413ca04f9d2420ab4a1d",
+  "event_name": "upload.received",
+  "occurred_at": "2026-04-05T12:00:00Z",
+  "producer": "apps/api",
+  "payload_version": 1,
+  "trace_id": "trace_3c3b72fe95be45e48dcc9f944d5fb6d8",
+  "request_id": "req_12cbaf4c14bb49cf8f6497a38e8d673b",
+  "upload_id": "upload_52dc1cd9d40c472ebd63408d8d7b866f",
+  "job_id": "job_6f51b476d7274d6d94c7943ee6d88515",
+  "payload": {
+    "storage_key": "uploads/sample-import.csv",
+    "checksum_sha256": "4f16e1f2e91c3b6b8fdd8d4ac6b6ac1ac3d6f68b0c4d9843791d7c7f7c6b5a3a",
+    "content_type": "text/csv",
+    "byte_size": 2048
+  }
+}
