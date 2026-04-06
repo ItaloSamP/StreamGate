@@ -1,5 +1,8 @@
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+const PASSWORD_MIN_LENGTH = 12
+const PASSWORD_MAX_LENGTH = 128
+
 export type LoginInput = {
   email: string
   password: string
@@ -26,16 +29,15 @@ export function validateEmail(email: string) {
 export function validatePassword(password: string) {
   const errors: string[] = []
 
-  if (password.length > 8) {
-    errors.push('A senha deve ter no maximo 8 caracteres.')
+  if (password.length < PASSWORD_MIN_LENGTH || password.length > PASSWORD_MAX_LENGTH) {
+    errors.push('A senha deve ter entre 12 e 128 caracteres.')
   }
 
-  if (!/\d/.test(password)) {
-    errors.push('A senha deve conter pelo menos 1 numero.')
-  }
+  const hasRequiredComplexity =
+    /[A-Z]/.test(password) && /[a-z]/.test(password) && /\d/.test(password) && /[^A-Za-z\d]/.test(password)
 
-  if (!/[A-Z]/.test(password)) {
-    errors.push('A senha deve conter pelo menos 1 letra maiuscula.')
+  if (!hasRequiredComplexity) {
+    errors.push('A senha deve incluir letra maiuscula, minuscula, numero e simbolo.')
   }
 
   return errors

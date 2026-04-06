@@ -24,8 +24,8 @@ export function WorkspacePageFrame({
   const navigate = useNavigate()
   const { session, logout } = useAuth()
 
-  function handleLogout() {
-    logout()
+  async function handleLogout() {
+    await logout()
     showSingletonToast('info', 'Sessao encerrada. Voce voltou para a landpage.')
     navigate('/', { replace: true })
   }
@@ -38,8 +38,8 @@ export function WorkspacePageFrame({
 
         <section className="mx-auto max-w-[1440px] px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
           <DashboardSurface
-            profileName={session?.name ?? 'Ana Lima'}
-            email={session?.email ?? 'ana.lima@streamgate.io'}
+            profileName={session?.user.full_name ?? 'Operator'}
+            email={session?.user.email ?? 'operator@streamgate.local'}
             onLogout={handleLogout}
             pathname={pathname}
             eyebrow={eyebrow}

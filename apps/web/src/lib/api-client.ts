@@ -65,6 +65,28 @@ export type RequestOptions = Omit<RequestInit, 'body'> & {
   traceId?: string
 }
 
+export type ApiClientAuthConfig = {
+  getAccessToken?: () => string | null
+  onAuthFailure?: (error: ApiClientError) => void
+}
+
+let authConfig: ApiClientAuthConfig = {}
+
+export function configureApiClientAuth(config: ApiClientAuthConfig) {
+  authConfig = {
+    getAccessToken: config.getAccessToken,
+    onAuthFailure: config.onAuthFailure,
+  }
+}
+
+function shouldHandleAuthFailure(error: ApiClientError) {
+  if (error.status !== 401 && error.status !== 403) {
+    return false
+  }
+
+  return error.code === 'session_expired' || error.code === 'access_denied'
+}
+
 export function buildQueryString(query?: RequestOptions['query']) {
   if (!query) return ''
 
@@ -94,12 +116,16 @@ export function createApiClient(baseUrl = resolveApiBaseUrl()) {
   async function request<T>(path: string, options: RequestOptions = {}) {
     const { query, body, headers, traceId, ...rest } = options
     const url = `${baseUrl}${path}${buildQueryString(query)}`
+
+    const accessToken = authConfig.getAccessToken?.()
+
     const response = await fetch(url, {
       ...rest,
       headers: {
         Accept: 'application/json',
         ...(body ? { 'Content-Type': 'application/json' } : {}),
         ...(traceId ? { 'X-Trace-Id': traceId } : {}),
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         ...headers,
       },
       body: body ? JSON.stringify(body) : undefined,
@@ -110,7 +136,7 @@ export function createApiClient(baseUrl = resolveApiBaseUrl()) {
 
     if (!response.ok) {
       const errorPayload = (payload as ApiErrorEnvelope | null)?.error
-      throw new ApiClientError({
+      const error = new ApiClientError({
         status: response.status,
         message: errorPayload?.message ?? 'Nao foi possivel concluir a requisicao.',
         code: errorPayload?.code ?? 'unknown_error',
@@ -118,6 +144,12 @@ export function createApiClient(baseUrl = resolveApiBaseUrl()) {
         traceId: errorPayload?.trace_id ?? null,
         details: errorPayload?.details ?? [],
       })
+
+      if (shouldHandleAuthFailure(error)) {
+        authConfig.onAuthFailure?.(error)
+      }
+
+      throw error
     }
 
     return (payload as ApiSuccessEnvelope<T>).data
