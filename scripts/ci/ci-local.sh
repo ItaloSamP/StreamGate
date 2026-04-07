@@ -228,14 +228,14 @@ run_e2e_workflow() {
   seed_operator_password="$(get_dotenv_value "$ROOT_DIR/.env" 'SEED_OPERATOR_PASSWORD')"
   [[ -z "$seed_operator_password" ]] && seed_operator_password='ChangeMe123!'
 
-  ci_local_run_step "$workflow" 'Install web dependencies' "$ROOT_DIR/apps/web" 'pnpm install --frozen-lockfile' || { failed=1; reason='Falha em Install web dependencies.'; }
+  ci_local_run_step "$workflow" 'Install web dependencies' "$ROOT_DIR/apps/web" 'CI=true pnpm install --frozen-lockfile --config.confirmModulesPurge=false' || { failed=1; reason='Falha em Install web dependencies.'; }
 
   if [[ $failed -eq 0 ]]; then
     ci_local_run_step "$workflow" 'Install Playwright browsers' "$ROOT_DIR/apps/web" 'pnpm exec playwright install chromium firefox' || { failed=1; reason='Falha em Install Playwright browsers.'; }
   fi
 
   if [[ $failed -eq 0 ]]; then
-    ci_local_run_step "$workflow" 'Start auth app stack' "$ROOT_DIR" './scripts/dev/dev-up.sh app' || { failed=1; reason='Falha ao subir stack de aplicacao para e2e-auth.'; }
+    ci_local_run_step "$workflow" 'Start auth app stack' "$ROOT_DIR" './scripts/dev/dev-up.sh app 480' || { failed=1; reason='Falha ao subir stack de aplicacao para e2e-auth.'; }
   fi
 
   if [[ $failed -eq 0 ]]; then

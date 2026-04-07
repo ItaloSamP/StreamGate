@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+﻿#!/usr/bin/env bash
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
@@ -18,6 +18,16 @@ case "$mode" in
     ;;
 esac
 
+raw_timeout="${2:-180}"
+if [[ ! "$raw_timeout" =~ ^[0-9]+$ || "$raw_timeout" -lt 30 || "$raw_timeout" -gt 3600 ]]; then
+  echo "Timeout invalido: '$raw_timeout'. Use um inteiro entre 30 e 3600 segundos." >&2
+  exit 1
+fi
+
+timeout_seconds="$raw_timeout"
+poll_interval_seconds=5
+deadline=$((SECONDS + timeout_seconds))
+
 if [[ ! -f ".env" ]]; then
   echo "Arquivo .env nao encontrado. Copie .env.example para .env antes de subir o ambiente." >&2
   exit 1
@@ -30,10 +40,6 @@ if [[ -n "$project_name_validation" ]]; then
   echo "$project_name_validation" >&2
   exit 1
 fi
-
-timeout_seconds=180
-poll_interval_seconds=5
-deadline=$((SECONDS + timeout_seconds))
 
 compose_args=()
 if [[ "$mode" != "infra" ]]; then

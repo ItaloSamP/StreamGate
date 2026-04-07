@@ -255,9 +255,9 @@ function Run-E2EWorkflow {
   $failed = $false
   $reason = 'Todos os passos passaram.'
   $steps = @(
-    @{ Name = 'Install web dependencies'; Dir = (Join-Path $root 'apps/web'); Command = 'pnpm install --frozen-lockfile'; Reason = 'Falha em Install web dependencies.' },
+    @{ Name = 'Install web dependencies'; Dir = (Join-Path $root 'apps/web'); Command = 'set CI=true && pnpm install --frozen-lockfile --config.confirmModulesPurge=false'; Reason = 'Falha em Install web dependencies.' },
     @{ Name = 'Install Playwright browsers'; Dir = (Join-Path $root 'apps/web'); Command = 'pnpm exec playwright install chromium firefox'; Reason = 'Falha em Install Playwright browsers.' },
-    @{ Name = 'Start auth app stack'; Dir = $root; Command = 'powershell -ExecutionPolicy Bypass -File .\scripts\dev\dev-up.ps1 -Mode app'; Reason = 'Falha ao subir stack de aplicacao para e2e-auth.' },
+    @{ Name = 'Start auth app stack'; Dir = $root; Command = 'powershell -ExecutionPolicy Bypass -File .\scripts\dev\dev-up.ps1 -Mode app -TimeoutSeconds 480'; Reason = 'Falha ao subir stack de aplicacao para e2e-auth.' },
     @{ Name = 'Seed auth fixtures'; Dir = $root; Command = 'docker compose exec -T api bundle exec rails db:seed && docker compose exec -T api bundle exec rails runner "abort(''operator seed missing'') unless User.exists?(email: ''operator@streamgate.local'')"'; Reason = 'Falha em Seed auth fixtures.' },
     @{ Name = 'Run web integration auth tests'; Dir = (Join-Path $root 'apps/web'); Command = $integrationCommand; Reason = 'Falha em Run web integration auth tests.' },
     @{ Name = 'Run auth e2e tests'; Dir = (Join-Path $root 'apps/web'); Command = $e2eCommand; Reason = 'Falha em Run auth e2e tests.' }
