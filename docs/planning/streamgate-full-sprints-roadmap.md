@@ -643,7 +643,7 @@ O frontend ja ensaiou a experiencia de acesso. Esta sprint faz o backend assumir
 
 Evidencia minima da trilha (2026-04-07):
 
-- [x] `bundle exec rails test test/requests/auth_flow_test.rb` (7 runs, 28 assertions, 0 failures).
+- [x] `docker compose exec -T api bundle exec rails test test/requests/auth_flow_test.rb` (8 runs, 32 assertions, 0 failures).
 - [x] `pnpm lint` em `apps/web`.
 - [x] `pnpm test:run` em `apps/web` (7 files, 30 tests, 0 failures).
 - [x] `pnpm test:integration` em `apps/web` com backend real (1 file, 3 tests, 0 failures).
@@ -652,22 +652,29 @@ Evidencia minima da trilha (2026-04-07):
 ### Security
 
 - Skills obrigatorias para todas as tasks desta trilha: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
-- [ ] Revisar hashing e armazenamento de segredos.
-- [ ] Revisar enumeracao de usuario.
-- [ ] Revisar rate limit inicial.
-- [ ] Revisar mensagens de erro e logs de auth.
-- [ ] Revisar CORS, CSRF, cookies `httpOnly`, `sameSite` e armazenamento de sessao no browser conforme a estrategia adotada.
+- [x] Revisar hashing e armazenamento de segredos.
+- [x] Revisar enumeracao de usuario.
+- [x] Revisar rate limit inicial.
+- [x] Revisar mensagens de erro e logs de auth.
+- [x] Revisar CORS, CSRF, cookies `httpOnly`, `sameSite` e armazenamento de sessao no browser conforme a estrategia adotada.
+
+Evidencia minima da trilha (2026-04-07):
+
+- [x] `docker compose exec -T api bundle exec rails test test/requests/auth_flow_test.rb` (8 runs, 32 assertions, 0 failures), incluindo cobertura de `session_expired` e `rate_limited`.
+- [x] `AuthRuntime` com limites configuraveis por ENV para login, registro e reset de senha, com janela de throttle centralizada.
+- [x] Controllers de auth com `enforce_rate_limit!` por IP/identificador e log estruturado de falha sem vazamento de segredo.
 
 ### Skills da sprint
 
-- [ ] Usar `test-driven-development` antes da implementacao do backend de auth.
-- [ ] Usar `security-best-practices` como checklist de fechamento.
-- [ ] Usar `api-documenter`, `api-designer` e `openapi` para manter contrato forte.
+- [x] Usar `test-driven-development` antes da implementacao do backend de auth.
+- [x] Usar `security-best-practices` como checklist de fechamento.
+- [x] Usar `api-documenter`, `api-designer` e `openapi` para manter contrato forte.
 
 ### Checklist de saida
 
-- [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
-- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
+- [x] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
+- [x] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
+- [x] Trilha nao tocada registrada: `Documentation` (nao tocada nesta sprint; fechamento no fim da sprint).
 - [x] Trilha de Test planning/execution atualizada com evidencia minima da Sprint 2.
 - [x] Workflow dedicado `e2e-auth` criado e runner local estendido com modo `e2e`.
 
@@ -677,6 +684,18 @@ Evidencia minima da trilha (2026-04-07):
 - [x] E2E de acesso esta verde.
 - [x] CI de auth permanece verde (gate local `ci-local e2e` e workflow dedicado `e2e-auth` preparados).
 
+### Delta por trilha (2026-04-07)
+
+- Back planning: concluida; arquitetura, contratos e politica de sessao definidos para auth real.
+- Back execution: concluida; endpoints, sessao, refresh, logout, `me` e erros contratuais implementados.
+- Front planning: concluida; estados de loading/erro/sessao expirada mapeados para integracao real.
+- Front execution: concluida; fluxo auth conectado ao backend real sem dependencia de mock.
+- DevOps: concluida; envs/seeds/CI para auth real estabilizados e reproduziveis.
+- Documentation: nao tocada nesta sprint; trilha reservada para fechamento final da sprint.
+- Test planning: concluida; matriz unit/integration/e2e e gate dedicado definidos.
+- Test execution: concluida; request/integration/e2e executados com evidencia minima registrada.
+- Security: concluida; hardening inicial (throttle, logs, contratos e superficie de sessao) aplicado e validado.
+- Skills da sprint: concluida; uso das skills obrigatorias registrado por trilha.
 ---
 ## Fluxo de planejamento incremental apos a Sprint 2
 
