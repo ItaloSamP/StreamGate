@@ -1,6 +1,8 @@
-param(
+﻿param(
   [ValidateSet('infra', 'app', 'full')]
-  [string]$Mode = 'infra'
+  [string]$Mode = 'infra',
+  [ValidateRange(30, 3600)]
+  [int]$TimeoutSeconds = 180
 )
 
 $ErrorActionPreference = "Stop"
@@ -22,7 +24,7 @@ if (-not $projectNameValidation.IsValid) {
   exit 1
 }
 
-$timeoutSeconds = 180
+$timeoutSeconds = $TimeoutSeconds
 $pollIntervalSeconds = 5
 $deadline = (Get-Date).AddSeconds($timeoutSeconds)
 

@@ -21,11 +21,11 @@ O tom aqui e deliberadamente de engenharia. A ideia nao e listar desejos. A idei
 - `Worker`: ainda esta mais perto de um template de gem do que de um runtime real de filas/processamento; no `compose` o container continua em `sleep infinity` para smoke de dependencia.
 - `Contracts`: `packages/contracts` segue como placeholder.
 - `Infra local`: `compose.yaml` esta bem montado, com servicos relevantes, profiles e health checks.
-- `CI`: existem workflows separados para frontend, backend e docker, mas o pipeline do frontend ainda nao roda `vitest` e a trilha de contrato/integracao ainda nao entrou como gate real.
+- `CI`: existem workflows separados para frontend, backend e docker; o frontend agora roda `vitest` no workflow e a trilha de contrato/integracao segue como gate pendente.
 - `Governanca`: existe template de PR, mas ainda nao existem `CODEOWNERS`, `dependabot.yml`, issue templates, sistema de labels, `AGENTS.md` raiz e guias formais de contribuicao.
 - `Swagger/OpenAPI`: a base existe e `/api-docs` ja foi preparado, mas ainda sem recursos reais de negocio.
 - `Readiness operacional`: uma leitura rapida com a skill `readiness-report` mostrou maturidade baixa para desenvolvimento autonomo assistido, com gaps mais fortes em observabilidade, seguranca automatizada, descoberta de tarefas e governanca do repositorio.
-- `Gaps conhecidos`: no ambiente Windows atual, Vitest falha com `spawn EPERM`; o worker ja nao sofre mais com `git ls-files`, mas ainda nao possui runtime; scripts de automacao precisam continuar atentos a diferencas de encoding/WSL/PowerShell no host atual.
+- `Gaps conhecidos`: no host Windows, fluxos locais com Docker ainda exigem execucao elevada; o worker ja nao sofre mais com `git ls-files`, mas ainda nao possui runtime; scripts de automacao precisam continuar atentos a diferencas de encoding/WSL/PowerShell no host atual.
 
 ## Assumptions Fechados
 
@@ -268,7 +268,7 @@ O guia de backend ja congelou `trace_id`, `request_id`, `upload_id`, `job_id` e 
 
 ## Sprint 0 - Fundacao do metodo, baseline tecnica e limpeza do terreno
 
-**Status atual:** `Parcial`
+**Status atual:** `Concluida`
 
 **Dependencias**
 
@@ -542,7 +542,7 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 
 ## Sprint 2 - Autenticacao real e sessao
 
-**Status atual:** `Parcial`
+**Status atual:** `Concluida`
 
 **Dependencias**
 
@@ -550,9 +550,9 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 
 **Bloqueadores conhecidos**
 
-- frontend ainda depende de auth mock
-- backend ainda nao possui recurso real de usuario/sessao
-- Swagger ainda nao cobre fluxo de auth real
+- frontend ja opera com auth real; proxima lacuna e conectar dados reais dos modulos do workspace
+- backend e frontend ja possuem auth real; fechamento documental e hardening da Sprint 2 foram concluidos em 2026-04-07
+- Swagger ja cobre auth real; proximas iteracoes cobrem recursos de negocio da API
 
 **O que nao pode ficar para depois**
 
@@ -573,1094 +573,147 @@ O frontend ja ensaiou a experiencia de acesso. Esta sprint faz o backend assumir
 ### Back planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
-- [ ] Definir mecanismo de autenticacao e sessao.
-- [ ] Definir payloads de cadastro, login, logout e reset.
-- [ ] Definir politica de senha, expiracao e revogacao.
-- [ ] Definir modelo de `User` e perfil minimo.
-- [ ] Definir papeis iniciais de acesso e a fronteira entre autenticacao e autorizacao da v1.
-- [ ] Definir endpoints minimos de sessao atual, expiracao e renovacao/revalidacao quando aplicavel.
+- [x] Definir mecanismo de autenticacao e sessao.
+- [x] Definir payloads de cadastro, login, logout e reset.
+- [x] Definir politica de senha, expiracao e revogacao.
+- [x] Definir modelo de `User` e perfil minimo.
+- [x] Definir papeis iniciais de acesso e a fronteira entre autenticacao e autorizacao da v1.
+- [x] Definir endpoints minimos de sessao atual, expiracao e renovacao/revalidacao quando aplicavel.
 
 ### Back execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
-- [ ] Implementar persistencia de usuarios.
-- [ ] Implementar hashing de senha.
-- [ ] Implementar endpoints reais de auth.
-- [ ] Implementar sessao/token e logout.
-- [ ] Implementar endpoint `me` ou equivalente para bootstrap da sessao no frontend.
-- [ ] Implementar contrato de erro para sessao expirada, credencial invalida e acesso negado.
-- [ ] Documentar tudo em Swagger/OpenAPI.
+- [x] Implementar persistencia de usuarios.
+- [x] Implementar hashing de senha.
+- [x] Implementar endpoints reais de auth.
+- [x] Implementar sessao/token e logout.
+- [x] Implementar endpoint `me` ou equivalente para bootstrap da sessao no frontend.
+- [x] Implementar contrato de erro para sessao expirada, credencial invalida e acesso negado.
+- [x] Documentar tudo em Swagger/OpenAPI.
 
 ### Front planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
-- [ ] Mapear impacto da troca de mock para integracao real.
-- [ ] Definir estados de loading, erro e sessao expirada.
-- [ ] Confirmar que o design atual suporta erros reais sem gambiarras.
+- [x] Mapear impacto da troca de mock para integracao real.
+- [x] Definir estados de loading, erro e sessao expirada.
+- [x] Confirmar que o design atual suporta erros reais sem gambiarras.
 
 ### Front execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
-- [ ] Remover dependencia do auth mock do fluxo principal.
-- [ ] Conectar login/cadastro/reset/logout ao backend.
-- [ ] Exibir erros reais sem degradar a UX.
-- [ ] Validar persistencia de sessao conforme politica definida.
-- [ ] Substituir `auth.ts`/storage mock por adapter de sessao real preservando a UX atual.
-- [ ] Centralizar consumo de auth em cliente HTTP unico para evitar acoplamento de pagina com transporte.
+- [x] Remover dependencia do auth mock do fluxo principal.
+- [x] Conectar login/cadastro/reset/logout ao backend.
+- [x] Exibir erros reais sem degradar a UX.
+- [x] Validar persistencia de sessao conforme politica definida.
+- [x] Substituir `auth.ts`/storage mock por adapter de sessao real preservando a UX atual.
+- [x] Centralizar consumo de auth em cliente HTTP unico para evitar acoplamento de pagina com transporte.
 
 ### DevOps
 
 - Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
 - Documentos de apoio: [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md), [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md) e [docs/guides/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/devops-roadmap.md).
-- [ ] Adicionar envs e segredos de auth.
-- [ ] Criar seeds minimas para desenvolvimento.
-- [ ] Ajustar CI para cobrir auth real.
-- [ ] Configurar envs de CORS/CSRF/cookies conforme a estrategia de sessao escolhida.
-- [ ] Garantir seeds e fixtures de auth reproduziveis em ambiente local e CI.
+- [x] Adicionar envs e segredos de auth.
+- [x] Criar seeds minimas para desenvolvimento.
+- [x] Ajustar CI para cobrir auth real.
+- [x] Configurar envs de CORS/CSRF/cookies conforme a estrategia de sessao escolhida.
+- [x] Garantir seeds e fixtures de auth reproduziveis em ambiente local e CI.
 
 ### Documentation
 
 - Skills obrigatorias para todas as tasks desta trilha: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
-- [ ] Atualizar setup para incluir auth real.
-- [ ] Atualizar API docs e guia de autenticacao.
-- [ ] Documentar contrato de erro de auth.
-- [ ] Criar ADR curto da estrategia de autenticacao da SPA.
+- [x] Atualizar setup para incluir auth real.
+- [x] Atualizar API docs e guia de autenticacao.
+- [x] Documentar contrato de erro de auth.
+- [x] Criar ADR curto da estrategia de autenticacao da SPA.
 
+Evidencia minima da trilha (2026-04-07):
+
+- [x] `docs/guides/setup.md` atualizado com workflow `e2e-auth` e envs de hardening de auth.
+- [x] `docs/guides/api-docs.md` atualizado com contrato de erro (`invalid_credentials`, `access_denied`, `session_expired`, `rate_limited`) e status HTTP.
+- [x] `docs/guides/authentication-guide.md` criado como guia operacional de auth da Sprint 2.
+- [x] `docs/adr/0003-authentication-and-session-strategy.md` atualizado com decisoes de hardening.
+- [x] `docs/sprints/SPRINT-02-closeout.md` publicado com checklist e evidencias da sprint.
 ### Test planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Planejar unitarios e request specs de auth.
-- [ ] Planejar testes de sessao persistida e expirada.
-- [ ] Planejar E2E de login/logout/rota protegida.
+- [x] Planejar request/model auth com cobertura explicita de `session_expired` em sessao real expirada.
+- [x] Planejar separacao de suites web por contrato de gate: `test:run` (unit), `test:integration` (backend real) e `test:e2e` (Playwright).
+- [x] Planejar E2E auth estendido (register/login/logout/reset/sessao expirada) com execucao em Chromium + Firefox.
+- [x] Planejar gate obrigatorio de CI dedicado (`e2e-auth`) e paridade no runner local (`ci-local` workflow `e2e`).
 
 ### Test execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Executar request specs de auth.
-- [ ] Executar testes do frontend ligados ao backend real.
-- [ ] Executar E2E cobrindo fluxo completo de acesso.
+- [x] Executar request specs de auth com cenario real de expiracao de sessao.
+- [x] Executar testes do frontend ligados ao backend real.
+- [x] Executar E2E cobrindo fluxo completo de acesso (Chromium + Firefox).
+
+Evidencia minima da trilha (2026-04-07):
+
+- [x] `docker compose exec -T api bundle exec rails test test/requests/auth_flow_test.rb` (8 runs, 32 assertions, 0 failures).
+- [x] `pnpm lint` em `apps/web`.
+- [x] `pnpm test:run` em `apps/web` (7 files, 30 tests, 0 failures).
+- [x] `pnpm test:integration` em `apps/web` com backend real (1 file, 3 tests, 0 failures).
+- [x] `.\scripts\ci\ci-local.ps1 -Workflow e2e` (stack app + seed + integration + Playwright: 8 passed).
 
 ### Security
 
 - Skills obrigatorias para todas as tasks desta trilha: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
-- [ ] Revisar hashing e armazenamento de segredos.
-- [ ] Revisar enumeracao de usuario.
-- [ ] Revisar rate limit inicial.
-- [ ] Revisar mensagens de erro e logs de auth.
-- [ ] Revisar CORS, CSRF, cookies `httpOnly`, `sameSite` e armazenamento de sessao no browser conforme a estrategia adotada.
+- [x] Revisar hashing e armazenamento de segredos.
+- [x] Revisar enumeracao de usuario.
+- [x] Revisar rate limit inicial.
+- [x] Revisar mensagens de erro e logs de auth.
+- [x] Revisar CORS, CSRF, cookies `httpOnly`, `sameSite` e armazenamento de sessao no browser conforme a estrategia adotada.
+
+Evidencia minima da trilha (2026-04-07):
+
+- [x] `docker compose exec -T api bundle exec rails test test/requests/auth_flow_test.rb` (8 runs, 32 assertions, 0 failures), incluindo cobertura de `session_expired` e `rate_limited`.
+- [x] `AuthRuntime` com limites configuraveis por ENV para login, registro e reset de senha, com janela de throttle centralizada.
+- [x] Controllers de auth com `enforce_rate_limit!` por IP/identificador e log estruturado de falha sem vazamento de segredo.
 
 ### Skills da sprint
 
-- [ ] Usar `test-driven-development` antes da implementacao do backend de auth.
-- [ ] Usar `security-best-practices` como checklist de fechamento.
-- [ ] Usar `api-documenter`, `api-designer` e `openapi` para manter contrato forte.
+- [x] Usar `test-driven-development` antes da implementacao do backend de auth.
+- [x] Usar `security-best-practices` como checklist de fechamento.
+- [x] Usar `api-documenter`, `api-designer` e `openapi` para manter contrato forte.
 
 ### Checklist de saida
 
-- [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
-- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
+- [x] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
+- [x] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
+- [x] Trilha de Documentation concluida com setup, API docs, auth guide, ADR e closeout da sprint.
+- [x] Trilha de Test planning/execution atualizada com evidencia minima da Sprint 2.
+- [x] Workflow dedicado `e2e-auth` criado e runner local estendido com modo `e2e`.
 
-- [ ] Login real funciona ponta a ponta.
-- [ ] Dashboard deixa de depender do mock no fluxo principal.
-- [ ] Swagger cobre auth.
-- [ ] E2E de acesso esta verde.
-- [ ] CI de auth permanece verde.
+- [x] Login real funciona ponta a ponta.
+- [x] Dashboard deixa de depender do mock no fluxo principal.
+- [x] Swagger cobre auth.
+- [x] E2E de acesso esta verde.
+- [x] CI de auth permanece verde (gate local `ci-local e2e` e workflow dedicado `e2e-auth` preparados).
 
+### Delta por trilha (2026-04-07)
+
+- Back planning: concluida; arquitetura, contratos e politica de sessao definidos para auth real.
+- Back execution: concluida; endpoints, sessao, refresh, logout, `me` e erros contratuais implementados.
+- Front planning: concluida; estados de loading/erro/sessao expirada mapeados para integracao real.
+- Front execution: concluida; fluxo auth conectado ao backend real sem dependencia de mock.
+- DevOps: concluida; envs/seeds/CI para auth real estabilizados e reproduziveis.
+- Documentation: concluida; setup, guia de auth, OpenAPI, ADR e closeout da sprint sincronizados.
+- Test planning: concluida; matriz unit/integration/e2e e gate dedicado definidos.
+- Test execution: concluida; request/integration/e2e executados com evidencia minima registrada.
+- Security: concluida; hardening inicial (throttle, logs, contratos e superficie de sessao) aplicado e validado.
+- Skills da sprint: concluida; uso das skills obrigatorias registrado por trilha.
 ---
+## Fluxo de planejamento incremental apos a Sprint 2
 
-## Sprint 3 - Upload assinado, MinIO e criacao de job
+A partir desta revisao, os escopos detalhados de sprints futuras deixam de ficar pre-definidos neste documento.
 
-**Status atual:** `Pendente`
+Regra de operacao:
 
-**Dependencias**
-
-- Sprint 2 fechada com auth real
-
-**Bloqueadores conhecidos**
-
-- nao ha endpoints de upload real
-- frontend ainda nao possui fluxo real de upload
-- MinIO esta disponivel, mas o produto nao o usa ainda
-
-**O que nao pode ficar para depois**
-
-- definir limites e contrato de upload antes da UI
-- registrar rastreabilidade do upload desde o primeiro endpoint
-- impedir que a API receba arquivo pesado diretamente
-
-**Contexto e intencao**
-
-Esta sprint fecha a porta de entrada real do produto. A API deve orquestrar o upload, emitir URL assinada, registrar metadados e disparar o inicio do job.
-
-**Ja existe hoje**
-
-- [x] MinIO no compose
-- [x] arquitetura documentada prevendo URL assinada
-- [x] dashboard com espaco natural para o fluxo de ingestao
-
-### Back planning
-
-- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
-- [ ] Definir payload de solicitacao de upload.
-- [ ] Definir metadados obrigatorios e convencao de chave de objeto.
-- [ ] Definir endpoint de confirmacao pos-upload.
-- [ ] Definir limites de tamanho, extensao e MIME.
-- [ ] Definir se a v1 usa upload simples ou multipart/resumivel e quais metadados/checksums entram no contrato inicial.
-- [ ] Definir prazo de expiracao, reconciliacao e limpeza para uploads iniciados e nao confirmados.
-
-### Back execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
-- [ ] Implementar endpoint que emite URL assinada.
-- [ ] Implementar endpoint que confirma upload.
-- [ ] Criar registro de `Upload`.
-- [ ] Criar `Job` associado.
-- [ ] Publicar evento inicial de ingestao.
-- [ ] Registrar checksum, tamanho, chave final do objeto e metadados minimos de rastreabilidade no `Upload`.
-
-### Front planning
-
-- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
-- [ ] Definir UX do upload no contexto do dashboard.
-- [ ] Definir estados `idle`, `uploading`, `confirming`, `failed`, `completed`.
-- [ ] Definir mensagens operacionais e retries.
-- [ ] Definir se a UI inicial de upload ja precisa suportar cancelar, retomar ou reenviar sem corromper o fluxo.
-
-### Front execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
-- [ ] Construir fluxo real de upload.
-- [ ] Integrar URL assinada.
-- [ ] Integrar confirmacao de upload.
-- [ ] Exibir progresso, erro e sucesso com clareza.
-- [ ] Validar responsividade e comportamento em rede lenta.
-
-### DevOps
-
-- Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
-- Documentos de apoio: [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md), [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md) e [docs/guides/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/devops-roadmap.md).
-- [ ] Validar bucket, policy e bootstrap do MinIO.
-- [ ] Garantir smoke do upload em compose.
-- [ ] Revisar variaveis de ambiente e credenciais do storage.
-- [ ] Definir politica de retencao e limpeza do bucket bruto para arquivos expirados ou abandonados.
-
-### Documentation
-
-- Skills obrigatorias para todas as tasks desta trilha: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
-- [ ] Documentar fluxo de upload ponta a ponta.
-- [ ] Atualizar Swagger com request/response e exemplos.
-- [ ] Criar troubleshooting de falha de upload.
-- [ ] Documentar ciclo de vida do objeto bruto entre emissao da URL, confirmacao, consumo e retencao.
-
-### Test planning
-
-- Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Usar `breakdown-test` para explicitar cobertura funcional, risco e quality gates da sprint.
-- [ ] Planejar testes do endpoint de assinatura.
-- [ ] Planejar testes do endpoint de confirmacao.
-- [ ] Planejar cenarios de falha parcial e idempotencia inicial.
-
-### Test execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Usar `integration-testing` para validar API, storage e criacao de job com dependencias reais.
-- [ ] Criar smoke automatizado `frontend -> api -> minio -> job`.
-- [ ] Cobrir payload invalido.
-- [ ] Cobrir falha de confirmacao.
-
-### Security
-
-- Skills obrigatorias para todas as tasks desta trilha: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
-- [ ] Validar extensao, MIME, tamanho e policy do bucket.
-- [ ] Revisar acesso indevido ao objeto bruto.
-- [ ] Revisar abuso de emissao de URL assinada.
-
-### Skills da sprint
-
-- [ ] Usar `playwright` para smoke do fluxo.
-- [ ] Usar `api-contract-testing` para validar contrato entre endpoint, Swagger e consumidores do upload.
-- [ ] Usar `security-best-practices` para validar superficie de upload.
-- [ ] Usar `openapi` para schema preciso do fluxo.
-
-### Checklist de saida
-
-- [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
-- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
-
-- [ ] Upload real funcionando.
-- [ ] Job criado com rastreabilidade.
-- [ ] Swagger atualizado.
-- [ ] Smoke Docker verde.
-- [ ] Fluxo documentado ponta a ponta.
-
----
-
-## Sprint 4 - Worker real, broker e processamento base
-
-**Status atual:** `Pendente`
-
-**Dependencias**
-
-- Sprint 3 com upload e job reais
-
-**Bloqueadores conhecidos**
-
-- worker ainda e template
-- container do worker nao consome fila real
-- nao existe contrato operacional entre API, broker e worker
-
-**O que nao pode ficar para depois**
-
-- definir evento consumido antes do runtime
-- registrar tentativas e estados desde a primeira execucao
-- tratar idempotencia antes de pensar em reprocessamento
-
-**Contexto e intencao**
-
-O produto so deixa de ser prototipo quando o worker deixa de ser placeholder. Esta sprint transforma RabbitMQ e worker em parte real da aplicacao.
-
-**Ja existe hoje**
-
-- [x] RabbitMQ no compose
-- [x] worker separado como app do monorepo
-- [x] fluxo arquitetural ja documentado
-
-### Back planning
-
-- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
-- [ ] Definir payload de evento consumido pelo worker.
-- [ ] Definir batch size inicial.
-- [ ] Definir retries, falha recuperavel e falha terminal.
-- [ ] Definir estrategia de idempotencia.
-- [ ] Definir fila de rejeicao/DLQ, estrategia de ack/nack e tratamento de poison message.
-- [ ] Definir propagacao obrigatoria de `trace_id`, `request_id`, `event_id`, `upload_id` e `job_id` da API ate o worker.
-
-### Back execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
-- [ ] Implementar atualizacao consistente de estados do `Job`.
-- [ ] Registrar tentativas de processamento.
-- [ ] Persistir progresso por lote.
-
-### Worker execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `integration-testing`, `docker`, `monitoring-observability`, `review-codebase`.
-- [ ] Corrigir estrutura do worker para runtime real.
-- [ ] Implementar consumidor RabbitMQ.
-- [ ] Implementar leitura do arquivo no MinIO.
-- [ ] Implementar parsing inicial por lote.
-- [ ] Implementar atualizacao de progresso.
-- [ ] Implementar retries minimos.
-- [ ] Implementar encerramento gracioso do consumidor e comportamento seguro em restart/deploy.
-
-### Front planning
-
-- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
-- [ ] Definir como a UI representa `pending`, `processing`, `failed` e `completed`.
-- [ ] Definir frequencia de refresh inicial.
-- [ ] Definir estado intermediario de processando.
-
-### Front execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
-- [ ] Exibir progresso real no dashboard.
-- [ ] Exibir transicao de estados em tempo util.
-- [ ] Exibir erro terminal com contexto suficiente.
-
-### DevOps
-
-- Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
-- Documentos de apoio: [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md), [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md) e [docs/guides/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/devops-roadmap.md).
-- [ ] Alterar container do worker para runtime real.
-- [ ] Criar healthcheck do worker baseado em operacao.
-- [ ] Garantir reproducao local e em CI.
-- [ ] Subir broker com topologia minima versionada para filas principais, retry e rejeicao.
-
-### Documentation
-
-- Skills obrigatorias para todas as tasks desta trilha: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
-- [ ] Criar runbook do worker.
-- [ ] Documentar eventos e fluxo de processamento.
-- [ ] Documentar estados de job.
-- [ ] Documentar contratos reais de evento com exemplos aceitos e rejeitados.
-
-### Test planning
-
-- Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Usar `breakdown-test` para definir cobertura do fluxo assincrono por risco.
-- [ ] Planejar testes unitarios de parsing.
-- [ ] Planejar testes de consumidor e fila.
-- [ ] Planejar reinicio sem perda de estado.
-
-### Test execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Usar `integration-testing` para validar broker, storage e persistencia do job com infraestrutura real.
-- [ ] Cobrir arquivo valido.
-- [ ] Cobrir parsing com erro.
-- [ ] Cobrir reinicio do worker.
-- [ ] Cobrir atualizacao de estado do job.
-
-### Security
-
-- Skills obrigatorias para todas as tasks desta trilha: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
-- [ ] Revisar poison messages.
-- [ ] Revisar replay indevido.
-- [ ] Revisar limites de uso do worker.
-- [ ] Revisar autenticidade, replay e rejeicao de eventos invalidos na borda do consumidor.
-
-### Skills da sprint
-
-- [ ] Usar `test-driven-development` no worker e nos estados do job.
-- [ ] Usar `review-codebase` ao final para checar qualidade estrutural.
-- [ ] Usar `security-threat-model` para revisar malha `api -> broker -> worker -> storage`.
-
-### Checklist de saida
-
-- [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
-- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
-
-- [ ] Worker consome evento real.
-- [ ] Job atualiza status.
-- [ ] Runtime do worker nao e mais placeholder.
-- [ ] Testes e docs de processamento estao fechados.
-- [ ] Compose continua saudavel.
-
----
-
-## Sprint 5 - Quarentena e erros operacionais
-
-**Status atual:** `Pendente`
-
-**Dependencias**
-
-- Sprint 4 com processamento real
-
-**Bloqueadores conhecidos**
-
-- pipeline ainda nao separa falha parcial de falha total
-- nao existe modelo de quarentena
-- nao existe leitura operacional de erro
-
-**O que nao pode ficar para depois**
-
-- taxonomia de erro
-- diferenciacao entre invalido de negocio e falha tecnica
-- rastreabilidade de contexto para investigacao
-
-**Contexto e intencao**
-
-Sem quarentena, o pipeline so distingue sucesso bruto e fracasso bruto. Esta sprint entrega maturidade operacional minima.
-
-**Ja existe hoje**
-
-- [x] visao de produto e arquitetura ja preveem quarentena
-- [x] dashboard shell tem espaco para evoluir para visao operacional
-
-### Back planning
-
-- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
-- [ ] Definir modelo de `QuarantineRecord`.
-- [ ] Definir formato de motivo, severidade e contexto.
-- [ ] Definir relacao com `Job`, `Upload` e `Batch`.
-- [ ] Definir criterio de falha parcial vs falha total.
-- [ ] Definir acao operacional esperada para cada categoria de erro e cada severidade.
-
-### Back execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
-- [ ] Persistir registros invalidos.
-- [ ] Criar endpoints de leitura de quarentena.
-- [ ] Criar endpoints de detalhe de erro.
-
-### Worker execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `integration-testing`, `docker`, `monitoring-observability`, `review-codebase`.
-- [ ] Classificar invalidos corretamente.
-- [ ] Registrar motivo e contexto.
-- [ ] Garantir que invalidos nao derrubem o job inteiro quando nao devem.
-
-### Front planning
-
-- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
-- [ ] Desenhar visao de quarentena.
-- [ ] Desenhar detalhe do erro.
-- [ ] Desenhar filtros, severidade e empty states.
-
-### Front execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
-- [ ] Implementar telas de quarentena e detalhe.
-- [ ] Implementar filtros, busca e estados de erro.
-- [ ] Exibir contexto suficiente para o operador agir.
-
-### DevOps
-
-- Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
-- Documentos de apoio: [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md), [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md) e [docs/guides/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/devops-roadmap.md).
-- [ ] Adicionar logs estruturados por `job_id`, `batch_id` e `upload_id`.
-- [ ] Preparar metricas basicas de erro e falha.
-- [ ] Garantir consulta rastreavel por `upload_id`, `job_id`, `batch_id` e categoria de erro.
-
-### Documentation
-
-- Skills obrigatorias para todas as tasks desta trilha: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
-- [ ] Documentar taxonomia de erro.
-- [ ] Documentar quarentena.
-- [ ] Criar runbook de investigacao.
-
-### Test planning
-
-- Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Planejar linhas invalidas.
-- [ ] Planejar lotes mistos.
-- [ ] Planejar sucesso parcial e falha parcial.
-
-### Test execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Cobrir registros invalidos.
-- [ ] Cobrir job misto.
-- [ ] Cobrir leitura de quarentena pelo dashboard.
-
-### Security
-
-- Skills obrigatorias para todas as tasks desta trilha: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
-- [ ] Revisar dados sensiveis em logs e erros.
-- [ ] Revisar payload exposto ao frontend.
-- [ ] Revisar auditoria de falha.
-
-### Skills da sprint
-
-- [ ] Usar `frontend-skill` para manter qualidade da UI operacional.
-- [ ] Usar `review-architecture` para checar o modelo de erro.
-- [ ] Usar `security-best-practices` nas respostas da API.
-
-### Checklist de saida
-
-- [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
-- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
-
-- [ ] Quarentena funcionando.
-- [ ] Dashboard mostra erro com contexto.
-- [ ] Logs e docs operacionais atualizados.
-- [ ] Testes cobrem cenarios principais.
-
----
-
-## Sprint 6 - Dashboard operacional real e observabilidade inicial
-
-**Status atual:** `Parcial`
-
-**Dependencias**
-
-- Sprint 5 com quarentena e leitura operacional
-
-**Bloqueadores conhecidos**
-
-- dashboard ainda consome estado mock
-- nao ha endpoints operacionais reais suficientes
-- nao ha metricas basicas de uso/latencia
-
-**O que nao pode ficar para depois**
-
-- fechar payloads operacionais antes de polir UI
-- manter fidelidade ao modelo visual ja aprovado
-- garantir navegacao, filtros e feedbacks reais
-
-**Contexto e intencao**
-
-O dashboard atual ainda e mais demonstracao do que operacao. Esta sprint o transforma em superficie real de trabalho.
-
-**Ja existe hoje**
-
-- [x] dashboard shell visualmente forte
-- [x] auth e navegacao base
-- [x] linguagem visual consistente nas telas principais
-
-### Back planning
-
-- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
-- [ ] Definir endpoints de listagem de jobs.
-- [ ] Definir endpoint de detalhe do job.
-- [ ] Definir endpoint de auditoria operacional.
-- [ ] Definir paginacao, filtros e ordenacao.
-- [ ] Definir endpoint agregado de resumo operacional separado dos endpoints de listagem detalhada.
-- [ ] Definir politica inicial de polling e criterios futuros para migrar para SSE ou WebSocket.
-
-### Back execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
-- [ ] Implementar endpoints operacionais reais.
-- [ ] Padronizar payloads para o frontend.
-- [ ] Garantir consistencia de nomes e erro.
-
-### Front planning
-
-- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
-- [ ] Mapear componentes mock reaproveitaveis.
-- [ ] Mapear blocos que precisam virar dados reais.
-- [ ] Definir loading/empty/error por area do dashboard.
-
-### Front execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
-- [ ] Integrar dashboard com API real.
-- [ ] Implementar filtros e navegacao operacional.
-- [ ] Implementar refresh periodico.
-- [ ] Materializar camada de query/state do dashboard para evitar fetch espalhado por componente.
-- [ ] Refletir filtros e pagina atual na URL quando fizer sentido operacional.
-- [ ] Preservar fidelidade estetica ao baseline.
-
-### DevOps
-
-- Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
-- Documentos de apoio: [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md), [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md) e [docs/guides/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/devops-roadmap.md).
-- [ ] Instrumentar logs basicos e metricas de endpoint.
-- [ ] Adicionar smoke funcional do dashboard no fluxo E2E.
-- [ ] Instrumentar tempos basicos de resposta, polling e latencia percebida do dashboard.
-
-### Documentation
-
-- Skills obrigatorias para todas as tasks desta trilha: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
-- [ ] Atualizar catalogo de telas.
-- [ ] Atualizar contrato operacional.
-- [ ] Atualizar Swagger dos endpoints operacionais.
-
-### Test planning
-
-- Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Usar `breakdown-test` para fechar a matriz de testes do dashboard operacional.
-- [ ] Planejar request specs dos endpoints operacionais.
-- [ ] Planejar testes de componentes criticos.
-- [ ] Planejar smoke E2E do dashboard.
-
-### Test execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Executar regressao `login + upload + visualizacao do job`.
-- [ ] Executar regressao da area de quarentena.
-- [ ] Executar smoke visual do dashboard.
-
-### Security
-
-- Skills obrigatorias para todas as tasks desta trilha: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
-- [ ] Validar autorizacao por recurso.
-- [ ] Validar vazamento de dados operacionais.
-- [ ] Revisar mensagens de erro exibidas ao usuario.
-
-### Skills da sprint
-
-- [ ] Usar `frontend-skill`, `web-design-guidelines` e `vercel-react-best-practices`.
-- [ ] Usar `playwright` nos fluxos criticos do dashboard.
-- [ ] Usar `monitoring-observability` para fechar a primeira camada de sinais operacionais.
-
-### Checklist de saida
-
-- [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
-- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
-
-- [ ] Dashboard consome dados reais.
-- [ ] Jobs, detalhes e quarentena sao navegaveis.
-- [ ] Swagger atualizado.
-- [ ] Smoke E2E principal verde.
-- [ ] UX continua fiel ao padrao visual.
-
----
-
-## Sprint 7 - Analytics real com ClickHouse
-
-**Status atual:** `Pendente`
-
-**Dependencias**
-
-- Sprint 6 com dashboard operacional real
-
-**Bloqueadores conhecidos**
-
-- ClickHouse existe na infra, mas nao recebe carga de negocio
-- nao ha KPIs definidos com contrato
-- nao ha endpoints analiticos reais
-
-**O que nao pode ficar para depois**
-
-- definir fonte de verdade de cada indicador
-- separar claramente leitura operacional de leitura analitica
-- impedir que dashboard analitico vire consulta direta ad-hoc sem contrato
-
-**Contexto e intencao**
-
-A proposta do produto depende da separacao entre leitura operacional e leitura analitica. Esta sprint entrega a camada analitica real.
-
-**Ja existe hoje**
-
-- [x] ClickHouse no compose
-- [x] visao do produto preve metricas operacionais e analiticas
-- [x] shell visual do dashboard ja aponta para essa evolucao
-
-### Back planning
-
-- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
-- [ ] Definir estrutura analitica.
-- [ ] Definir KPIs, metricas e janelas temporais.
-- [ ] Definir latencia aceitavel de atualizacao.
-- [ ] Definir responsabilidade de cada tabela/agregacao.
-- [ ] Definir estrategia de backfill/rebuild das agregacoes sem corromper a leitura operacional.
-- [ ] Definir contrato de frescor das metricas e como isso sera exposto na UI.
-
-### Back execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
-- [ ] Implementar carga para ClickHouse.
-- [ ] Implementar endpoints de metricas analiticas.
-- [ ] Implementar filtros temporais e agregacoes principais.
-
-### Worker execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `integration-testing`, `docker`, `monitoring-observability`, `review-codebase`.
-- [ ] Enviar dados preparados ao ClickHouse.
-- [ ] Garantir consistencia entre estado operacional e carga analitica.
-- [ ] Garantir que replays e reprocessamentos nao produzam contagem analitica duplicada.
-
-### Front planning
-
-- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
-- [ ] Definir modulos analiticos do dashboard.
-- [ ] Definir cards, tabelas e graficos necessarios.
-- [ ] Definir narrativa visual dos indicadores.
-
-### Front execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
-- [ ] Implementar paineis analiticos reais.
-- [ ] Integrar filtros e janelas temporais.
-- [ ] Tratar ausencia de dados e atualizacao.
-- [ ] Exibir frescor/ultima atualizacao dos KPIs e deixar clara a origem operacional vs analitica de cada bloco.
-
-### DevOps
-
-- Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
-- Documentos de apoio: [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md), [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md) e [docs/guides/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/devops-roadmap.md).
-- [ ] Preparar schema analitico.
-- [ ] Criar smoke de carga e consulta.
-- [ ] Monitorar performance basica de ingestao e leitura.
-
-### Documentation
-
-- Skills obrigatorias para todas as tasks desta trilha: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
-- [ ] Documentar origem de cada metrica.
-- [ ] Documentar diferenca entre OLTP e OLAP.
-- [ ] Criar catalogo de metricas com definicao, origem, atraso esperado e dono de cada indicador.
-- [ ] Atualizar Swagger para analytics.
-
-### Test planning
-
-- Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Usar `breakdown-test` para definir cobertura de metricas, agregacoes e regressao analitica.
-- [ ] Planejar consistencia de metricas.
-- [ ] Planejar testes de agregacao.
-- [ ] Planejar testes de consultas temporais.
-
-### Test execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Validar atualizacao apos processamento.
-- [ ] Validar leitura analitica no dashboard.
-- [ ] Validar payloads e agregacoes.
-
-### Security
-
-- Skills obrigatorias para todas as tasks desta trilha: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
-- [ ] Revisar abuso de query e custo/performance.
-- [ ] Revisar exposicao de dados analiticos.
-- [ ] Revisar limites de acesso e janelas de consulta.
-
-### Skills da sprint
-
-- [ ] Usar `supabase-postgres-best-practices` na fronteira OLTP.
-- [ ] Usar `review-codebase` para checar separacao entre camadas operacional e analitica.
-- [ ] Usar `api-contract-testing` para proteger os endpoints analiticos e seus schemas.
-- [ ] Usar `openapi` para os endpoints analiticos.
-
-### Checklist de saida
-
-- [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
-- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
-
-- [ ] ClickHouse recebe carga real.
-- [ ] Dashboard analitico mostra metricas reais.
-- [ ] Docs e Swagger atualizados.
-- [ ] Smoke de analytics verde.
-
----
-
-## Sprint 8 - Reprocessamento, auditoria forte e operacao assistida
-
-**Status atual:** `Pendente`
-
-**Dependencias**
-
-- Sprint 7 com leitura operacional e analitica reais
-
-**Bloqueadores conhecidos**
-
-- ainda nao ha replay/reprocessamento
-- auditoria ainda nao cobre a trilha operacional completa
-- operacao ainda nao consegue corrigir e repetir fluxo com seguranca
-
-**O que nao pode ficar para depois**
-
-- regras de permissao para replay
-- idempotencia real do reprocessamento
-- historico completo de tentativas
-
-**Contexto e intencao**
-
-Um produto operacional maduro precisa permitir correcao e reprocessamento com trilha clara. Esta sprint fecha o ciclo de operacao assistida.
-
-**Ja existe hoje**
-
-- [x] arquitetura e visao de produto ja preveem trilha de jobs, quarentena e dashboards
-
-### Back planning
-
-- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
-- [ ] Definir regras de reprocessamento.
-- [ ] Definir permissoes.
-- [ ] Definir escopos de replay.
-- [ ] Definir trilha de auditoria obrigatoria.
-- [ ] Definir como uma tentativa de replay referencia a tentativa anterior e como isso aparece para operacao.
-
-### Back execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
-- [ ] Implementar reprocessamento por upload/job/lote.
-- [ ] Registrar tentativas e historico.
-- [ ] Garantir idempotencia.
-- [ ] Garantir trilha imutavel de quem pediu replay, quando pediu, por qual motivo e qual foi o efeito.
-
-### Worker execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `integration-testing`, `docker`, `monitoring-observability`, `review-codebase`.
-- [ ] Implementar replay seguro.
-- [ ] Garantir ausencia de duplicacao.
-- [ ] Garantir historico rastreavel.
-
-### Front planning
-
-- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
-- [ ] Desenhar fluxo de reprocessamento.
-- [ ] Desenhar confirmacoes e warnings.
-- [ ] Desenhar historico de execucoes.
-
-### Front execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
-- [ ] Implementar acao de reprocessar.
-- [ ] Implementar visualizacao de historico.
-- [ ] Implementar feedback operacional claro.
-
-### DevOps
-
-- Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
-- Documentos de apoio: [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md), [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md) e [docs/guides/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/devops-roadmap.md).
-- [ ] Instrumentar alertas basicos.
-- [ ] Exibir metricas de falha, atraso e replay.
-- [ ] Criar smoke de incidente e recuperacao.
-- [ ] Exercitar o efeito de replay sobre a camada analitica e sobre o historico operacional.
-
-### Documentation
-
-- Skills obrigatorias para todas as tasks desta trilha: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
-- [ ] Criar runbook de incidente.
-- [ ] Criar runbook de replay.
-- [ ] Criar manual de operacao assistida.
-
-### Test planning
-
-- Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Planejar cenarios de replay.
-- [ ] Planejar concorrencia.
-- [ ] Planejar idempotencia.
-- [ ] Planejar erro durante replay.
-
-### Test execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Validar replay sem duplicacao.
-- [ ] Validar auditoria do replay.
-- [ ] Validar efeito no dashboard.
-
-### Security
-
-- Skills obrigatorias para todas as tasks desta trilha: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
-- [ ] Revisar privilegios operacionais.
-- [ ] Revisar abuso de replay.
-- [ ] Revisar integridade da auditoria.
-
-### Skills da sprint
-
-- [ ] Usar `security-threat-model`.
-- [ ] Usar `review-architecture`.
-- [ ] Usar `playwright` para o cenario operacional completo.
-
-### Checklist de saida
-
-- [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
-- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
-
-- [ ] Replay funciona.
-- [ ] Auditoria e confiavel.
-- [ ] Operacao consegue investigar e agir.
-- [ ] Documentacao operacional esta completa.
-
----
-
-## Sprint 9 - Hardening de qualidade, seguranca e release
-
-**Status atual:** `Parcial`
-
-**Dependencias**
-
-- Sprint 8 com operacao assistida funcional
-
-**Bloqueadores conhecidos**
-
-- suite regressiva ainda nao esta fechada
-- quality gates ainda medem mais o esqueleto do que o produto real
-- scanners e cobertura ainda nao compoem um gate completo
-
-**O que nao pode ficar para depois**
-
-- suite regressiva oficial
-- cobertura minima por camada
-- release checklist e rollback
-
-**Contexto e intencao**
-
-Esta sprint consolida o que foi entregue e remove a fragilidade residual. O foco deixa de ser feature e vira robustez, seguranca e previsibilidade de release.
-
-**Ja existe hoje**
-
-- [x] backend CI com RuboCop e Brakeman
-- [x] frontend CI com lint/build
-- [x] docker CI com compose e build
-
-### Back planning
-
-- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
-- [ ] Mapear debt tecnica restante.
-- [ ] Mapear gargalos de performance.
-- [ ] Mapear inconsistencias de contratos, erros e naming.
-
-### Back execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
-- [ ] Fechar inconsistencias da API e do worker.
-- [ ] Revisar performance e erros.
-- [ ] Eliminar pontos de acoplamento desnecessarios.
-
-### Front planning
-
-- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
-- [ ] Revisar consistencia visual final.
-- [ ] Revisar acessibilidade.
-- [ ] Revisar performance e usabilidade.
-
-### Front execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
-- [ ] Corrigir problemas de UX.
-- [ ] Melhorar loading/erro/vazio.
-- [ ] Revisar responsividade, teclado e contraste.
-
-### DevOps
-
-- Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
-- Documentos de apoio: [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md), [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md) e [docs/guides/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/devops-roadmap.md).
-- [ ] Ampliar CI com scans obrigatorios.
-- [ ] Adicionar gates de cobertura.
-- [ ] Adicionar scans de imagem/container e dependencia.
-- [ ] Colocar `vitest`, smoke E2E principal e verificacoes de contrato no CI oficial.
-- [ ] Introduzir `CODEOWNERS`, `dependabot.yml`, issue templates, labels e `AGENTS.md` raiz como parte da governanca minima do repo.
-- [ ] Adicionar secret scanning e scanners de supply chain proporcionais a cada stack.
-- [ ] Definir fluxo de release e rollback.
-
-### Documentation
-
-- Skills obrigatorias para todas as tasks desta trilha: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
-- [ ] Consolidar changelog.
-- [ ] Consolidar runbooks.
-- [ ] Consolidar API docs finais.
-- [ ] Consolidar guias de release.
-- [ ] Consolidar guia de contribuicao, onboarding tecnico e automacoes recorrentes do repositorio.
-
-### Test planning
-
-- Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Definir suite regressiva oficial.
-- [ ] Definir cobertura minima por camada.
-- [ ] Definir smoke oficial de release.
-
-### Test execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Executar regressao completa.
-- [ ] Executar scans de seguranca.
-- [ ] Executar smoke Docker completo.
-
-### Security
-
-- Skills obrigatorias para todas as tasks desta trilha: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
-- [ ] Rodar revisao formal com `security-best-practices`.
-- [ ] Revisar supply chain.
-- [ ] Revisar segredos.
-- [ ] Revisar OWASP basico do sistema.
-- [ ] Revisar segredos, ownership, branch protection e automacao de atualizacao de dependencias como parte da seguranca operacional do repositorio.
-
-### Skills da sprint
-
-- [ ] Usar `github-actions-expert`.
-- [ ] Usar `generate-github-workflow`.
-- [ ] Usar `security-best-practices`.
-- [ ] Avaliar uma skill futura de release notes quando o processo estiver maduro.
-
-### Checklist de saida
-
-- [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
-- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
-
-- [ ] CI mais completo e verde.
-- [ ] Scanners integrados.
-- [ ] Regressao oficial definida e executada.
-- [ ] Swagger e docs finais de release atualizados.
-- [ ] Projeto pronto para release estavel em Docker.
-
----
-
-## Sprint 10 - Kubernetes, GitOps e estado final de operacao
-
-**Status atual:** `Pendente`
-
-**Dependencias**
-
-- Sprint 9 com stack endurecida e release repetivel
-
-**Bloqueadores conhecidos**
-
-- `infra/k8s` ainda e placeholder
-- nao ha pipeline de deploy em cluster
-- nao ha observabilidade de producao definida
-
-**O que nao pode ficar para depois**
-
-- readiness/liveness reais
-- estrategia de rollout e rollback
-- segregacao de workloads e segredos
-
-**Contexto e intencao**
-
-O produto fecha aqui o ciclo de operacao madura: local, CI, Docker e cluster. Nao basta subir em K8s; precisa ficar operavel, observavel e recuperavel.
-
-**Ja existe hoje**
-
-- [x] a estrutura `infra/k8s/` ja existe no monorepo
-- [x] compose ja separa bem responsabilidades locais
-- [x] skills de Docker, Kubernetes, Helm e GitHub Actions ja foram importadas
-
-### Back planning
-
-- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
-- [ ] Revisar comportamento stateless.
-- [ ] Revisar readiness e liveness.
-- [ ] Revisar configuracao externa e uso de segredos.
-- [ ] Revisar comportamento com multiplas replicas.
-- [ ] Decidir explicitamente quais dependencias de dados irao para cluster, quais permanecem externas/gerenciadas e qual e a estrategia de backup/restore de cada uma.
-
-### Back execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
-- [ ] Ajustar API e worker para cluster.
-- [ ] Garantir comportamento seguro em escala horizontal.
-- [ ] Garantir compatibilidade com deploy progressivo.
-
-### Front execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
-- [ ] Validar ambiente publicado.
-- [ ] Validar consumo da API em ambiente orquestrado.
-- [ ] Validar smoke ponta a ponta.
-
-### DevOps
-
-- Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
-- Documentos de apoio: [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md), [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md) e [docs/guides/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/devops-roadmap.md).
-- [ ] Criar manifests ou charts.
-- [ ] Criar pipeline de deploy.
-- [ ] Definir namespaces, ingress, requests/limits e probes.
-- [ ] Definir autoscaling do worker.
-- [ ] Definir rollout, rollback e GitOps.
-- [ ] Definir observabilidade com logs, metricas e tracing quando fizer sentido.
-- [ ] Definir politica de backup, restore drill, retention e segregacao para PostgreSQL, MinIO, RabbitMQ e ClickHouse conforme a estrategia de deploy escolhida.
-- [ ] Definir PDB, network policies, secrets externos e fronteiras entre workloads stateful e stateless.
-
-### Documentation
-
-- Skills obrigatorias para todas as tasks desta trilha: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
-- [ ] Documentar deploy.
-- [ ] Documentar rollback.
-- [ ] Documentar suporte.
-- [ ] Documentar arquitetura final de producao.
-- [ ] Documentar troubleshooting em cluster.
-- [ ] Documentar a decisao final do data plane: self-hosted no cluster, servicos gerenciados ou modelo hibrido.
-
-### Test planning
-
-- Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Planejar smoke pos-deploy.
-- [ ] Planejar falha controlada.
-- [ ] Planejar teste de readiness/health.
-- [ ] Planejar checklist de producao.
-
-### Test execution
-
-- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Validar upload em cluster.
-- [ ] Validar processamento em cluster.
-- [ ] Validar dashboard e analytics em cluster.
-- [ ] Validar rollback.
-- [ ] Validar observabilidade minima.
-
-### Security
-
-- Skills obrigatorias para todas as tasks desta trilha: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
-- [ ] Revisar network policies.
-- [ ] Revisar exposicao externa.
-- [ ] Revisar segredos do cluster.
-- [ ] Revisar segregacao de workloads.
-- [ ] Revisar privilege boundaries de infra.
-
-### Skills da sprint
-
-- [ ] Usar `kubernetes`.
-- [ ] Usar `helm-chart-scaffolding`.
-- [ ] Usar `gitops-workflow`.
-- [ ] Usar `github-actions-expert` e `generate-github-workflow`.
-- [ ] Usar `monitoring-observability` para fechamento da camada operacional.
-
-### Checklist de saida
-
-- [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
-- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
-
-- [ ] App funciona em Kubernetes.
-- [ ] Deploy e repetivel.
-- [ ] Rollback e testado.
-- [ ] Observabilidade e util.
-- [ ] Seguranca de cluster foi revisada.
-- [ ] Documentacao final de producao esta fechada.
-
----
+- manter concluido e historico de `Sprint 0` e `Sprint 1`;
+- executar `Sprint 2` com o escopo atual;
+- ao fechar cada sprint, criar do zero o escopo da sprint seguinte usando o mesmo modelo deste roadmap (trilhas, skills, checklist de saida e reavaliacao);
+- planejar somente uma sprint a frente, com base no estado real do repositorio e no que surgiu na reavaliacao.
 
 ## Pos-v1 e backlog estrategico
 
@@ -1706,3 +759,7 @@ Se houver pressao para pular etapas, usar esta sequencia como trava racional:
 ## Fechamento
 
 Se este documento for seguido com disciplina, o projeto deixa de evoluir por intuicao e passa a evoluir por capacidade comprovada. A regra e simples: nenhuma sprint e pronta porque o codigo parece bom; ela so e pronta quando o escopo implementado roda, esta testado, esta documentado, esta coberto por CI e nao abre uma divida invisivel para a sprint seguinte.
+
+
+
+

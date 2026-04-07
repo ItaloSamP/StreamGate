@@ -83,17 +83,17 @@ Se o backend ampliar a maquina de estados, este documento e `workspace-config.ts
 
 ## O que esta pronto vs o que ainda falta
 
-Ja pronto na Sprint 1:
+Ja pronto ate a Sprint 2:
 
 - shell compartilhado do workspace
 - malha de rotas protegidas
 - scaffold de modulos
 - camada HTTP inicial
+- auth real integrado (login/cadastro/logout/me/refresh/reset)
 - testes basicos de navegacao e adapter
 
 Ainda faltando para as proximas sprints:
 
-- auth real
 - dados reais por modulo
 - estados de loading, empty e erro conectados a dados reais
 - filtros, paginacao e query state conectados a URL
@@ -114,3 +114,5 @@ Quando a mudanca tocar integracao real, adicionar tambem:
 - `breakdown-test`
 - `api-contract-testing`
 - `playwright`
+
+

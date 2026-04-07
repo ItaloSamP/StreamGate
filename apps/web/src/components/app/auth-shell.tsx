@@ -8,12 +8,14 @@ export function AuthShell({
   eyebrow,
   title,
   description,
+  descriptionTestId,
   children,
   footer,
 }: {
   eyebrow: string
   title: string
   description: string
+  descriptionTestId?: string
   children: ReactNode
   footer?: ReactNode
 }) {
@@ -53,7 +55,10 @@ export function AuthShell({
                 <h1 className="mt-5 text-4xl font-semibold tracking-[-0.07em] sm:text-5xl">
                   {title}
                 </h1>
-                <p className="mt-4 max-w-[44ch] text-sm leading-7 text-[var(--text-dim)] sm:text-base">
+                <p
+                  data-testid={descriptionTestId}
+                  className="mt-4 max-w-[44ch] text-sm leading-7 text-[var(--text-dim)] sm:text-base"
+                >
                   {description}
                 </p>
               </div>

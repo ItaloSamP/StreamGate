@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+﻿#!/usr/bin/env bash
 set -euo pipefail
 
 export LANG="${LANG:-C.UTF-8}"
@@ -8,6 +8,6 @@ ROOT_DIR="$(cd -- "$SCRIPT_DIR/../.." && pwd)"
 
 cd "$ROOT_DIR"
 
-docker compose down
+docker compose --profile app --profile full --profile worker down --remove-orphans
 
 echo "Infraestrutura local do StreamGate finalizada."

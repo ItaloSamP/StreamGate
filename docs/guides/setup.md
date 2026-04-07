@@ -203,14 +203,15 @@ Na raiz do projeto:
 ./scripts/ci/ci-local.sh
 ```
 
-O `./scripts/ci/ci-local.sh` reproduz localmente os tres workflows do GitHub Actions com blocos separados por workflow, passos individuais e um resumo final mostrando claramente o que passou ou falhou.
+O `./scripts/ci/ci-local.sh` reproduz localmente os workflows oficiais com blocos separados por workflow, passos individuais e um resumo final mostrando claramente o que passou ou falhou.
 
-Se quiser validar apenas um workflow:
+Workflows disponiveis:
 
 ```bash
 ./scripts/ci/ci-local.sh frontend
 ./scripts/ci/ci-local.sh backend
 ./scripts/ci/ci-local.sh docker
+./scripts/ci/ci-local.sh e2e
 ```
 
 ## Fallback para Windows puro
@@ -225,17 +226,27 @@ Se voce precisar rodar o projeto fora do WSL, ainda existem os scripts PowerShel
 .\\scripts\\ci\\ci-local.ps1
 ```
 
+No PowerShell, para escolher workflow especifico:
+
+```powershell
+.\\scripts\\ci\\ci-local.ps1 -Workflow frontend
+.\\scripts\\ci\\ci-local.ps1 -Workflow backend
+.\\scripts\\ci\\ci-local.ps1 -Workflow docker
+.\\scripts\\ci\\ci-local.ps1 -Workflow e2e
+```
+
 Mas o fluxo recomendado segue sendo o `WSL-first`.
 
 ## CI atual
 
-O projeto tem tres workflows separados:
+O projeto tem quatro workflows separados:
 
 - `frontend-ci.yml`
 - `backend-ci.yml`
 - `docker-ci.yml`
+- `e2e-auth.yml`
 
-Eles rodam quando houver alteracoes nas areas relevantes do frontend, backend ou docker.
+Eles rodam quando houver alteracoes nas areas relevantes do frontend, backend ou docker, e o `e2e-auth` cobre a trilha ponta a ponta de autenticacao.
 
 ## Como pensar o desenvolvimento daqui para frente
 
@@ -264,8 +275,7 @@ Objetivo:
 - processar arquivos e alimentar PostgreSQL e ClickHouse
 - construir painel operacional e analitico
 
-
-## Mapa oficial de servicos e variaveis (Sprint 1)
+## Mapa oficial de servicos e variaveis (Sprint 2)
 
 Para evitar drift entre frontend, backend, compose e contratos, este projeto passa a assumir estes nomes como oficiais:
 
@@ -290,11 +300,39 @@ Para evitar drift entre frontend, backend, compose e contratos, este projeto pas
 
 - `VITE_API_BASE_URL`
 
+### Variaveis de auth e sessao usadas pela API
+
+- `AUTH_SESSION_TTL_HOURS`
+- `AUTH_PASSWORD_RESET_TTL_MINUTES`
+- `AUTH_TOKEN_PEPPER`
+- `AUTH_SESSION_TRANSPORT`
+- `AUTH_COOKIE_ENABLED`
+- `AUTH_CSRF_MODE`
+
+### Variaveis de throttle de auth (hardening Sprint 2)
+
+- `AUTH_LOGIN_LIMIT_PER_IP`
+- `AUTH_LOGIN_LIMIT_PER_IDENTIFIER`
+- `AUTH_REGISTER_LIMIT_PER_IP`
+- `AUTH_PASSWORD_RESET_REQUEST_LIMIT_PER_IP`
+- `AUTH_PASSWORD_RESET_REQUEST_LIMIT_PER_IDENTIFIER`
+- `AUTH_PASSWORD_RESET_CONFIRM_LIMIT_PER_IP`
+- `AUTH_THROTTLE_WINDOW_SECONDS`
+
+### Variaveis de CORS da API
+
+- `API_CORS_ALLOWED_ORIGINS`
+- `API_CORS_ALLOW_CREDENTIALS`
+
 Esses nomes estao alinhados com:
 
 - `apps/api/config/database.yml`
+- `apps/api/config/initializers/auth_runtime.rb`
+- `apps/api/config/initializers/cors.rb`
 - `apps/web/src/lib/api-client.ts`
 - scripts de CI e compose em `scripts/`
+
+No `compose.yaml`, essas variaveis de auth/CORS/frontend tambem tem valores default para evitar quebra de `docker compose` quando o `.env` local estiver desatualizado.
 
 ## Padrao de encoding para scripts locais
 

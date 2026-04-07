@@ -5,7 +5,8 @@ import { AuthShell } from '@/components/app/auth-shell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { saveRegisteredProfile } from '@/lib/auth'
+import { useAuth } from '@/features/auth/auth-context'
+import { ApiClientError } from '@/lib/api-client'
 import { showSingletonToast } from '@/lib/toast'
 import { validateEmail, validatePassword, validateRegistrationInput } from '@/lib/validation'
 
@@ -35,6 +36,7 @@ function buildRegisterErrors(form: {
 
 export function RegisterPage() {
   const navigate = useNavigate()
+  const { register } = useAuth()
   const [form, setForm] = useState({
     name: '',
     birthDate: '',
@@ -44,12 +46,13 @@ export function RegisterPage() {
   })
   const [errors, setErrors] = useState<RegisterErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [remember, setRemember] = useState(true)
 
   function handleChange(field: RegisterFields, value: string) {
     setForm((current) => ({ ...current, [field]: value }))
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     const validationErrors = validateRegistrationInput(form)
@@ -62,29 +65,59 @@ export function RegisterPage() {
 
     setIsSubmitting(true)
 
-    window.setTimeout(() => {
-      saveRegisteredProfile({
+    try {
+      await register({
+        fullName: form.name.trim(),
         email: form.email.trim(),
-        name: form.name.trim(),
+        password: form.password,
+        passwordConfirmation: form.confirmPassword,
+        remember,
       })
 
-      showSingletonToast('success', 'Cadastro concluido. Agora faca seu login.')
-      navigate('/login', {
-        replace: true,
-        state: {
-          email: form.email.trim(),
-          name: form.name.trim(),
-        },
-      })
+      showSingletonToast('success', 'Cadastro concluido. Sua sessao ja esta ativa.')
+      navigate('/dashboard', { replace: true })
+    } catch (error) {
+      const fallback = 'Nao foi possivel concluir seu cadastro agora.'
+
+      if (error instanceof ApiClientError && error.code === 'validation_failed') {
+        const nextErrors: RegisterErrors = { ...errors }
+
+        error.details.forEach((detail) => {
+          if (!detail.field) {
+            return
+          }
+
+          if (detail.field === 'full_name') {
+            nextErrors.name = 'Informe seu nome completo.'
+          }
+
+          if (detail.field === 'email' && detail.reason === 'taken') {
+            nextErrors.email = 'Este e-mail ja esta em uso.'
+          }
+
+          if (detail.field === 'password') {
+            nextErrors.password = 'A senha nao atende a politica de seguranca.'
+          }
+
+          if (detail.field === 'password_confirmation') {
+            nextErrors.confirmPassword = 'A confirmacao de senha deve ser igual a senha.'
+          }
+        })
+
+        setErrors(nextErrors)
+      }
+
+      showSingletonToast('error', error instanceof ApiClientError ? error.message : fallback)
+    } finally {
       setIsSubmitting(false)
-    }, 420)
+    }
   }
 
   return (
     <AuthShell
       eyebrow="Cadastro"
       title="Crie sua entrada."
-      description="Cadastre sua conta para preparar o acesso ao workspace. As regras de senha e validacao seguem o mesmo modelo da plataforma."
+      description="Cadastre sua conta para preparar o acesso ao workspace. As regras de senha seguem a politica real da plataforma."
       footer={
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--text-dim)]">
           <span>Ja tem conta? Retorne para o login sem perder o contexto da interface.</span>
@@ -94,10 +127,11 @@ export function RegisterPage() {
         </div>
       }
     >
-      <form onSubmit={handleSubmit} className="grid gap-5 sm:grid-cols-2">
+      <form data-testid="register-form" onSubmit={handleSubmit} className="grid gap-5 sm:grid-cols-2">
         <div className="flex flex-col gap-2 sm:col-span-2">
           <Label htmlFor="name">Nome completo</Label>
           <Input
+            data-testid="register-name"
             id="name"
             placeholder="Ana Costa"
             autoComplete="name"
@@ -111,6 +145,7 @@ export function RegisterPage() {
         <div className="flex flex-col gap-2">
           <Label htmlFor="birthDate">Data de nascimento</Label>
           <Input
+            data-testid="register-birthdate"
             id="birthDate"
             type="date"
             value={form.birthDate}
@@ -123,6 +158,7 @@ export function RegisterPage() {
         <div className="flex flex-col gap-2">
           <Label htmlFor="email">E-mail corporativo</Label>
           <Input
+            data-testid="register-email"
             id="email"
             type="email"
             placeholder="time@empresa.com"
@@ -137,16 +173,17 @@ export function RegisterPage() {
         <div className="flex flex-col gap-2">
           <Label htmlFor="password">Senha</Label>
           <Input
+            data-testid="register-password"
             id="password"
             type="password"
-            placeholder="Ate 8 caracteres"
+            placeholder="Senha forte"
             autoComplete="new-password"
             value={form.password}
             invalid={Boolean(errors.password)}
             onChange={(event) => handleChange('password', event.target.value)}
           />
           <p className="text-xs text-[var(--text-faint)]">
-            Use no maximo 8 caracteres, com 1 numero e 1 letra maiuscula.
+            Use entre 12 e 128 caracteres com maiuscula, minuscula, numero e simbolo.
           </p>
           {errors.password ? <p className="text-sm text-[var(--signal-red)]">{errors.password}</p> : null}
         </div>
@@ -154,6 +191,7 @@ export function RegisterPage() {
         <div className="flex flex-col gap-2">
           <Label htmlFor="confirmPassword">Confirmar senha</Label>
           <Input
+            data-testid="register-confirm-password"
             id="confirmPassword"
             type="password"
             placeholder="Repita sua senha"
@@ -167,11 +205,23 @@ export function RegisterPage() {
           ) : null}
         </div>
 
+        <div className="sm:col-span-2 flex items-center gap-3 text-sm text-[var(--text-soft)]">
+          <input
+            data-testid="register-remember"
+            id="remember"
+            type="checkbox"
+            checked={remember}
+            onChange={(event) => setRemember(event.target.checked)}
+            className="size-4 rounded border border-white/10 bg-white/5 accent-[var(--signal-teal)]"
+          />
+          <Label htmlFor="remember" className="cursor-pointer">Relembrar login neste dispositivo</Label>
+        </div>
+
         <div className="sm:col-span-2 flex flex-col gap-3 pt-2">
-          <Button type="submit" variant="inverted" size="xl" disabled={isSubmitting}>
+          <Button data-testid="register-submit" type="submit" variant="inverted" size="xl" disabled={isSubmitting}>
             {isSubmitting ? 'Criando acesso...' : 'Concluir cadastro'}
           </Button>
-          <Button asChild type="button" variant="panel" size="xl">
+          <Button data-testid="register-login-link" asChild type="button" variant="panel" size="xl">
             <Link to="/login">Ja tenho conta</Link>
           </Button>
         </div>

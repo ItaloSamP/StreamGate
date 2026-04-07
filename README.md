@@ -20,7 +20,7 @@ A stack definida para a base atual e:
 - `OLAP`: ClickHouse
 - `Suporte`: Redis
 - `Ambiente local`: Docker Compose
-- `CI/CD`: GitHub Actions com pipelines separados para frontend, backend e docker
+- `CI/CD`: GitHub Actions com pipelines separados para frontend, backend, docker e e2e de auth
 
 ## Estrutura do repositorio
 
@@ -71,28 +71,30 @@ O repositorio trabalha com dois modos principais:
 ## O que ja esta pronto
 
 - monorepo inicial organizado
-- frontend gerado, redesenhado e buildando
-- API Rails gerada e preparada para PostgreSQL e Swagger/OpenAPI base
+- frontend com auth real e base de workspace segmentada
+- API Rails com auth real, sessao e reset de senha
 - worker Ruby isolado como app do monorepo
 - compose validado com perfis `infra` e `full`
-- CI separado em tres workflows
+- CI separado em quatro workflows
 - scripts de bootstrap, dev, ci e compose organizados por trilha
-- roadmap executivo e ADR inicial documentados
-- base de skills do projeto ampliada para arquitetura e modelagem de backend, OpenAPI, estrategia de testes, testes de integracao/contrato, CI/CD, infra e seguranca
+- roadmap executivo e ADRs de autenticacao documentados
+- base de skills ampliada para arquitetura, modelagem de backend, OpenAPI, estrategia de testes, testes de integracao/contrato, CI/CD, infra e seguranca
 
 ## CI/CD
 
 Os workflows atuais ficam em `.github/workflows`:
 
-- `frontend-ci.yml`: instala, linta e builda `apps/web`
+- `frontend-ci.yml`: instala, linta, testa e builda `apps/web`
 - `backend-ci.yml`: testa `apps/api` e `apps/worker`
 - `docker-ci.yml`: valida o compose e builda as imagens Docker da API e do frontend
+- `e2e-auth.yml`: valida auth ponta a ponta com stack de aplicacao + Playwright
 
 ## Documentacao
 
 - [Hub de documentacao](C:/estudos/StreamGate/docs/README.md)
 - [Visao do produto](C:/estudos/StreamGate/docs/product/vision.md)
 - [Arquitetura](C:/estudos/StreamGate/docs/guides/architecture.md)
+- [Guia de autenticacao](C:/estudos/StreamGate/docs/guides/authentication-guide.md)
 - [Definition of Done](C:/estudos/StreamGate/docs/guides/definition-of-done.md)
 - [Baseline de testes da Sprint 0](C:/estudos/StreamGate/docs/guides/testing-baseline-sprint-0.md)
 - [Baseline de seguranca da Sprint 0](C:/estudos/StreamGate/docs/guides/security-baseline-sprint-0.md)
@@ -101,4 +103,6 @@ Os workflows atuais ficam em `.github/workflows`:
 - [Swagger/OpenAPI da API](C:/estudos/StreamGate/docs/guides/api-docs.md)
 - [Roadmap mestre de sprints](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
 - [ADR 0001 - Fundacoes de engenharia](C:/estudos/StreamGate/docs/adr/0001-engineering-foundations.md)
+- [ADR 0003 - Estrategia de autenticacao e sessao](C:/estudos/StreamGate/docs/adr/0003-authentication-and-session-strategy.md)
+- [Closeout Sprint 2](C:/estudos/StreamGate/docs/sprints/SPRINT-02-closeout.md)
 - [Catalogo de skills do projeto](C:/estudos/StreamGate/.agents/skills/README.md)

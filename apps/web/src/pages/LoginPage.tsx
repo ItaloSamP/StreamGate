@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/features/auth/auth-context'
-import { readRegisteredProfile } from '@/lib/auth'
+import { ApiClientError } from '@/lib/api-client'
 import { showSingletonToast } from '@/lib/toast'
 import { validateLoginInput } from '@/lib/validation'
 
@@ -15,16 +15,27 @@ type LoginErrors = Partial<Record<'email' | 'password', string>>
 type LoginRouteState = {
   from?: string
   email?: string
-  name?: string
+  reason?: string
 }
 
-function deriveDisplayName(email: string) {
-  const localPart = email.split('@')[0] ?? 'usuario'
-  return localPart
-    .split(/[._-]/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ')
+function resolveLoginErrorMessage(error: unknown) {
+  if (!(error instanceof ApiClientError)) {
+    return 'Nao foi possivel autenticar agora. Tente novamente.'
+  }
+
+  if (error.code === 'invalid_credentials') {
+    return 'Credenciais invalidas. Revise e-mail e senha.'
+  }
+
+  if (error.code === 'access_denied') {
+    return 'Seu acesso foi negado para este recurso.'
+  }
+
+  if (error.code === 'validation_failed') {
+    return error.details[0]?.reason ?? 'Revise os dados e tente novamente.'
+  }
+
+  return error.message
 }
 
 export function LoginPage() {
@@ -40,15 +51,19 @@ export function LoginPage() {
   const [errors, setErrors] = useState<LoginErrors>({})
 
   const redirectTo = routeState?.from ?? '/dashboard'
-  const helperCopy = useMemo(
-    () =>
-      routeState?.from
-        ? 'Faca login para liberar a dashboard protegida e continuar de onde voce parou.'
-        : 'Use suas credenciais para entrar no ambiente protegido do StreamGate.',
-    [routeState?.from],
-  )
+  const helperCopy = useMemo(() => {
+    if (routeState?.reason === 'session_expired') {
+      return 'Sua sessao anterior nao esta mais valida. Faca login novamente para voltar ao workspace.'
+    }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    if (routeState?.from) {
+      return 'Faca login para liberar a dashboard protegida e continuar de onde voce parou.'
+    }
+
+    return 'Use suas credenciais para entrar no ambiente protegido do StreamGate.'
+  }, [routeState?.from, routeState?.reason])
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     const validationErrors = validateLoginInput({ email, password })
@@ -69,21 +84,26 @@ export function LoginPage() {
 
     setIsSubmitting(true)
 
-    window.setTimeout(() => {
-      const registeredProfile = readRegisteredProfile(email.trim())
-      const resolvedName =
-        registeredProfile?.name ?? routeState?.name ?? deriveDisplayName(email.trim())
-
-      login({
+    try {
+      await login({
         email: email.trim(),
-        name: resolvedName,
+        password,
         remember,
       })
 
       showSingletonToast('success', 'Login realizado. Sua dashboard ja esta liberada.')
       navigate(redirectTo, { replace: true })
+    } catch (error) {
+      const message = resolveLoginErrorMessage(error)
+
+      if (error instanceof ApiClientError && error.code === 'invalid_credentials') {
+        setErrors((current) => ({ ...current, password: message }))
+      }
+
+      showSingletonToast('error', message)
+    } finally {
       setIsSubmitting(false)
-    }, 420)
+    }
   }
 
   return (
@@ -91,6 +111,7 @@ export function LoginPage() {
       eyebrow="Login"
       title="Entrar no workspace."
       description={helperCopy}
+      descriptionTestId="login-helper-copy"
       footer={
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--text-dim)]">
           <span>Novo por aqui? Crie uma conta e mantenha a mesma identidade do produto.</span>
@@ -100,10 +121,11 @@ export function LoginPage() {
         </div>
       }
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <form data-testid="login-form" onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div className="flex flex-col gap-2">
           <Label htmlFor="email">E-mail corporativo</Label>
           <Input
+            data-testid="login-email"
             id="email"
             type="email"
             placeholder="time@empresa.com"
@@ -118,6 +140,7 @@ export function LoginPage() {
         <div className="flex flex-col gap-2">
           <Label htmlFor="password">Senha</Label>
           <Input
+            data-testid="login-password"
             id="password"
             type="password"
             placeholder="Sua senha"
@@ -132,6 +155,7 @@ export function LoginPage() {
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
           <label className="flex items-center gap-3 text-[var(--text-soft)]">
             <input
+              data-testid="login-remember"
               type="checkbox"
               checked={remember}
               onChange={(event) => setRemember(event.target.checked)}
@@ -140,16 +164,20 @@ export function LoginPage() {
             Relembrar login
           </label>
 
-          <Link to="/reset-password" className="text-[var(--signal-teal)] transition hover:text-white">
+          <Link
+            data-testid="login-reset-link"
+            to="/reset-password"
+            className="text-[var(--signal-teal)] transition hover:text-white"
+          >
             Redefinir senha
           </Link>
         </div>
 
-        <Button type="submit" variant="inverted" size="xl" disabled={isSubmitting}>
+        <Button data-testid="login-submit" type="submit" variant="inverted" size="xl" disabled={isSubmitting}>
           {isSubmitting ? 'Entrando...' : 'Entrar na dashboard'}
         </Button>
 
-        <Button asChild type="button" variant="panel" size="xl">
+        <Button data-testid="login-create-account" asChild type="button" variant="panel" size="xl">
           <Link to="/register">Criar conta</Link>
         </Button>
       </form>

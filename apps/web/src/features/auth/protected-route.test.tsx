@@ -1,9 +1,16 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { createSessionPayload, storeSession } from '@/lib/auth'
+import { createStoredAuthSession, storeAuthSession } from '@/lib/auth'
 import { AuthProvider } from '@/features/auth/auth-context'
 import { ProtectedRoute } from '@/features/auth/protected-route'
+
+const originalFetch = global.fetch
+
+afterEach(() => {
+  global.fetch = originalFetch
+})
 
 describe('ProtectedRoute', () => {
   beforeEach(() => {
@@ -38,18 +45,53 @@ describe('ProtectedRoute', () => {
     expect(screen.queryByText('Dashboard protegida')).not.toBeInTheDocument()
   })
 
-  it('renders protected content when a remembered session exists', () => {
-    storeSession(
-      createSessionPayload({
-        email: 'ana@empresa.com',
-        name: 'Ana Costa',
+  it('renders protected content when a remembered session exists', async () => {
+    storeAuthSession(
+      createStoredAuthSession({
         remember: true,
+        user: {
+          id: 'user_1',
+          email: 'ana@empresa.com',
+          full_name: 'Ana Costa',
+          role: 'operator',
+          status: 'active',
+        },
+        session: {
+          id: 'sess_1',
+          token_type: 'Bearer',
+          access_token: 'token_valid',
+          expires_at: '2099-04-07T12:00:00Z',
+        },
       }),
     )
 
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({
+        data: {
+          user: {
+            id: 'user_1',
+            email: 'ana@empresa.com',
+            full_name: 'Ana Costa',
+            role: 'operator',
+            status: 'active',
+          },
+          session: {
+            id: 'sess_1',
+            user_id: 'user_1',
+            expires_at: '2099-04-07T12:00:00Z',
+            revoked_at: null,
+            last_seen_at: null,
+            trace_id: 'trace_1',
+          },
+        },
+      }),
+    }) as typeof fetch
+
     renderApp('/dashboard')
 
-    expect(screen.getByText('Dashboard protegida')).toBeInTheDocument()
+    expect(await screen.findByText('Dashboard protegida')).toBeInTheDocument()
     expect(screen.queryByText('Tela de login')).not.toBeInTheDocument()
   })
 })

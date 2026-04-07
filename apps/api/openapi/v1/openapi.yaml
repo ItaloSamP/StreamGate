@@ -4,11 +4,13 @@ info:
   version: v1
   description: |
     Base inicial da documentacao OpenAPI do StreamGate.
-    A Sprint 1 fecha os envelopes, recursos iniciais e convencoes de paginacao e filtros
-    antes da proliferacao de endpoints de negocio.
+    A Sprint 2 consolida autenticacao real, sessao e endpoint `me`.
 servers:
   - url: http://localhost:3000
     description: Desenvolvimento local
+tags:
+  - name: Health
+  - name: Auth
 paths:
   /up:
     get:
@@ -23,7 +25,226 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthCheckResponse'
+
+  /api/v1/auth/register:
+    post:
+      summary: Cadastro de usuario com sessao inicial
+      operationId: registerUser
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequest'
+      responses:
+        '201':
+          description: Usuario criado e sessao iniciada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponseEnvelope'
+        '422':
+          description: Dados invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          description: Limite de tentativas excedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/auth/login:
+    post:
+      summary: Login com email e senha
+      operationId: loginUser
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login bem-sucedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponseEnvelope'
+        '401':
+          description: Credencial invalida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          description: Limite de tentativas excedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/auth/logout:
+    post:
+      summary: Revoga a sessao atual
+      operationId: logoutUser
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sessao revogada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/auth/session/refresh:
+    post:
+      summary: Renova sessao com rotacao de token
+      operationId: refreshSession
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sessao renovada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionRefreshEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/auth/me:
+    get:
+      summary: Retorna sessao e usuario atuais
+      operationId: currentSession
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sessao atual
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeResponseEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/auth/password/reset/request:
+    post:
+      summary: Solicita redefinicao de senha
+      operationId: requestPasswordReset
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+      responses:
+        '200':
+          description: Requisicao processada sem enumeracao de usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageEnvelope'
+        '429':
+          description: Limite de tentativas excedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/auth/password/reset/confirm:
+    post:
+      summary: Confirma redefinicao de senha com token
+      operationId: confirmPasswordReset
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRequest'
+      responses:
+        '200':
+          description: Senha redefinida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageEnvelope'
+        '401':
+          description: Token invalido ou expirado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          description: Limite de tentativas excedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Token
+
   schemas:
     HealthCheckResponse:
       type: object
@@ -33,6 +254,7 @@ components:
         status:
           type: string
           example: ok
+
     SuccessEnvelope:
       type: object
       required:
@@ -42,6 +264,21 @@ components:
           description: Payload principal do recurso ou colecao.
         meta:
           $ref: '#/components/schemas/EnvelopeMeta'
+
+    MessageEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+              example: Operacao concluida com sucesso.
+            revoked:
+              type: boolean
+
     ErrorEnvelope:
       type: object
       required:
@@ -57,6 +294,14 @@ components:
           properties:
             code:
               type: string
+              description: Codigo estavel de erro para contrato com cliente.
+              enum:
+                - validation_failed
+                - invalid_credentials
+                - access_denied
+                - session_expired
+                - rate_limited
+                - not_found
               example: validation_failed
             message:
               type: string
@@ -71,6 +316,7 @@ components:
             trace_id:
               type: string
               example: trace_3c3b72fe95be45e48dcc9f944d5fb6d8
+
     ErrorDetail:
       type: object
       required:
@@ -78,10 +324,11 @@ components:
       properties:
         field:
           type: string
-          example: upload_id
+          example: email
         reason:
           type: string
-          example: already_processed
+          example: invalid
+
     EnvelopeMeta:
       type: object
       properties:
@@ -89,6 +336,7 @@ components:
           $ref: '#/components/schemas/PaginationMeta'
         filters:
           $ref: '#/components/schemas/FilterMeta'
+
     PaginationMeta:
       type: object
       required:
@@ -113,6 +361,7 @@ components:
           type: integer
           minimum: 0
           example: 3
+
     FilterMeta:
       type: object
       additionalProperties:
@@ -124,6 +373,239 @@ components:
             items:
               type: string
           - type: 'null'
+
+    RegistrationRequest:
+      type: object
+      required:
+        - registration
+      properties:
+        registration:
+          type: object
+          required:
+            - full_name
+            - email
+            - password
+            - password_confirmation
+          properties:
+            full_name:
+              type: string
+              example: StreamGate Operator
+            email:
+              type: string
+              format: email
+              example: operator@streamgate.local
+            password:
+              type: string
+              format: password
+              example: StrongPass123!
+            password_confirmation:
+              type: string
+              format: password
+              example: StrongPass123!
+
+    LoginRequest:
+      type: object
+      required:
+        - session
+      properties:
+        session:
+          type: object
+          required:
+            - email
+            - password
+          properties:
+            email:
+              type: string
+              format: email
+              example: operator@streamgate.local
+            password:
+              type: string
+              format: password
+              example: StrongPass123!
+
+    PasswordResetRequest:
+      type: object
+      required:
+        - password_reset
+      properties:
+        password_reset:
+          type: object
+          required:
+            - email
+          properties:
+            email:
+              type: string
+              format: email
+
+    PasswordResetConfirmRequest:
+      type: object
+      required:
+        - password_reset_confirmation
+      properties:
+        password_reset_confirmation:
+          type: object
+          required:
+            - token
+            - password
+            - password_confirmation
+          properties:
+            token:
+              type: string
+            password:
+              type: string
+              format: password
+            password_confirmation:
+              type: string
+              format: password
+
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - full_name
+        - role
+        - status
+      properties:
+        id:
+          type: string
+          example: user_6c561be0f4f24b2db15c0ddfd4e0d3c2
+        email:
+          type: string
+          format: email
+          example: operator@streamgate.local
+        full_name:
+          type: string
+          example: StreamGate Operator
+        role:
+          type: string
+          enum:
+            - operator
+            - admin
+            - service_account
+        status:
+          type: string
+          enum:
+            - invited
+            - active
+            - suspended
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    AuthSession:
+      type: object
+      required:
+        - id
+        - user_id
+        - expires_at
+        - trace_id
+      properties:
+        id:
+          type: string
+          example: sess_7fdbe4f4c8ce4020a18dc89f23d641fe
+        user_id:
+          type: string
+          example: user_6c561be0f4f24b2db15c0ddfd4e0d3c2
+        expires_at:
+          type: string
+          format: date-time
+        revoked_at:
+          type: string
+          format: date-time
+          nullable: true
+        last_seen_at:
+          type: string
+          format: date-time
+          nullable: true
+        trace_id:
+          type: string
+          example: trace_3c3b72fe95be45e48dcc9f944d5fb6d8
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    AuthToken:
+      type: object
+      required:
+        - id
+        - token_type
+        - access_token
+        - expires_at
+      properties:
+        id:
+          type: string
+          example: sess_7fdbe4f4c8ce4020a18dc89f23d641fe
+        token_type:
+          type: string
+          example: Bearer
+        access_token:
+          type: string
+          example: 6ZnqYYAS8X9YQhY9VmcP2rGquk3xvyy6zIP6ZjfrEqw
+        expires_at:
+          type: string
+          format: date-time
+
+    AuthPayload:
+      type: object
+      required:
+        - user
+        - session
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        session:
+          $ref: '#/components/schemas/AuthToken'
+
+    AuthResponseEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/AuthPayload'
+
+    MePayload:
+      type: object
+      required:
+        - user
+        - session
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        session:
+          $ref: '#/components/schemas/AuthSession'
+
+    MeResponseEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/MePayload'
+
+    SessionRefreshPayload:
+      type: object
+      required:
+        - session
+      properties:
+        session:
+          $ref: '#/components/schemas/AuthToken'
+
+    SessionRefreshEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/SessionRefreshPayload'
+
     Upload:
       type: object
       required:
@@ -183,6 +665,7 @@ components:
         updated_at:
           type: string
           format: date-time
+
     Job:
       type: object
       required:
@@ -232,3 +715,4 @@ components:
         updated_at:
           type: string
           format: date-time
+

@@ -1,18 +1,22 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { AuthShell } from '@/components/app/auth-shell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { ApiClientError } from '@/lib/api-client'
+import { streamgateApi } from '@/lib/streamgate-api'
 import { showSingletonToast } from '@/lib/toast'
 import { validateEmail, validatePassword, validateResetPasswordInput } from '@/lib/validation'
 
-type ResetFields = 'email' | 'password' | 'confirmPassword'
+type ResetMode = 'request' | 'confirm'
+type ResetFields = 'email' | 'token' | 'password' | 'confirmPassword'
 type ResetErrors = Partial<Record<ResetFields, string>>
 
 function buildResetErrors(form: {
   email: string
+  token: string
   password: string
   confirmPassword: string
 }): ResetErrors {
@@ -20,6 +24,7 @@ function buildResetErrors(form: {
 
   return {
     email: !validateEmail(form.email) ? 'Informe um e-mail valido.' : undefined,
+    token: !form.token.trim() ? 'Informe o token de redefinicao.' : undefined,
     password: passwordErrors[0],
     confirmPassword:
       form.confirmPassword !== form.password
@@ -32,26 +37,81 @@ export function ResetPasswordPage() {
   const navigate = useNavigate()
   const [form, setForm] = useState({
     email: '',
+    token: '',
     password: '',
     confirmPassword: '',
   })
+  const [mode, setMode] = useState<ResetMode>('request')
   const [errors, setErrors] = useState<ResetErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  const description = useMemo(() => {
+    if (mode === 'request') {
+      return 'Solicite o token de redefinicao. Em ambiente de desenvolvimento, o token e exibido automaticamente.'
+    }
+
+    return 'Com o token em maos, defina sua nova senha seguindo a politica real da plataforma.'
+  }, [mode])
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    const validationErrors = validateResetPasswordInput(form)
-    setErrors(buildResetErrors(form))
+    if (mode === 'request') {
+      if (!validateEmail(form.email)) {
+        setErrors({ email: 'Informe um e-mail valido.' })
+        showSingletonToast('error', 'Informe um e-mail valido.')
+        return
+      }
 
-    if (validationErrors.length > 0) {
-      showSingletonToast('error', validationErrors[0] ?? 'Revise os dados e tente novamente.')
+      setIsSubmitting(true)
+
+      try {
+        const payload = await streamgateApi.auth.requestPasswordReset({ email: form.email.trim() })
+
+        setMode('confirm')
+        setErrors({})
+
+        if (payload.debug_reset_token) {
+          setForm((current) => ({ ...current, token: payload.debug_reset_token ?? '' }))
+          showSingletonToast('success', 'Token gerado no ambiente local. Defina sua nova senha para concluir.')
+        } else {
+          showSingletonToast('success', payload.message ?? 'Token solicitado. Confira seu e-mail para continuar.')
+        }
+      } catch (error) {
+        showSingletonToast(
+          'error',
+          error instanceof ApiClientError ? error.message : 'Nao foi possivel solicitar a redefinicao.',
+        )
+      } finally {
+        setIsSubmitting(false)
+      }
+
+      return
+    }
+
+    const validationErrors = validateResetPasswordInput({
+      email: form.email,
+      password: form.password,
+      confirmPassword: form.confirmPassword,
+    })
+
+    const nextErrors = buildResetErrors(form)
+    setErrors(nextErrors)
+
+    if (validationErrors.length > 0 || !form.token.trim()) {
+      showSingletonToast('error', validationErrors[0] ?? nextErrors.token ?? 'Revise os dados e tente novamente.')
       return
     }
 
     setIsSubmitting(true)
 
-    window.setTimeout(() => {
+    try {
+      await streamgateApi.auth.confirmPasswordReset({
+        token: form.token.trim(),
+        password: form.password,
+        passwordConfirmation: form.confirmPassword,
+      })
+
       showSingletonToast('success', 'Senha redefinida. Agora faca o login.')
       navigate('/login', {
         replace: true,
@@ -59,15 +119,22 @@ export function ResetPasswordPage() {
           email: form.email.trim(),
         },
       })
+    } catch (error) {
+      showSingletonToast(
+        'error',
+        error instanceof ApiClientError ? error.message : 'Nao foi possivel redefinir a senha agora.',
+      )
+    } finally {
       setIsSubmitting(false)
-    }, 420)
+    }
   }
 
   return (
     <AuthShell
       eyebrow="Redefinicao"
       title="Atualize sua senha."
-      description="Este fluxo segue exatamente a mesma regra de senha do cadastro e retorna voce para o login quando concluir."
+      description={description}
+      descriptionTestId="reset-helper-copy"
       footer={
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--text-dim)]">
           <span>Se lembrou da senha atual, volte para o login e entre normalmente.</span>
@@ -77,10 +144,11 @@ export function ResetPasswordPage() {
         </div>
       }
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <form data-testid="reset-form" onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div className="flex flex-col gap-2">
           <Label htmlFor="email">E-mail corporativo</Label>
           <Input
+            data-testid="reset-email"
             id="email"
             type="email"
             placeholder="time@empresa.com"
@@ -92,44 +160,91 @@ export function ResetPasswordPage() {
           {errors.email ? <p className="text-sm text-[var(--signal-red)]">{errors.email}</p> : null}
         </div>
 
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="password">Nova senha</Label>
-          <Input
-            id="password"
-            type="password"
-            placeholder="Ate 8 caracteres"
-            autoComplete="new-password"
-            value={form.password}
-            invalid={Boolean(errors.password)}
-            onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
-          />
-          <p className="text-xs text-[var(--text-faint)]">
-            A senha precisa ter no maximo 8 caracteres, com 1 numero e 1 letra maiuscula.
-          </p>
-          {errors.password ? <p className="text-sm text-[var(--signal-red)]">{errors.password}</p> : null}
-        </div>
+        {mode === 'confirm' ? (
+          <>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="token">Token de redefinicao</Label>
+              <Input
+                data-testid="reset-token"
+                id="token"
+                placeholder="Cole o token recebido"
+                value={form.token}
+                invalid={Boolean(errors.token)}
+                onChange={(event) => setForm((current) => ({ ...current, token: event.target.value }))}
+              />
+              {errors.token ? <p className="text-sm text-[var(--signal-red)]">{errors.token}</p> : null}
+            </div>
 
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="confirmPassword">Confirmar nova senha</Label>
-          <Input
-            id="confirmPassword"
-            type="password"
-            placeholder="Repita sua nova senha"
-            autoComplete="new-password"
-            value={form.confirmPassword}
-            invalid={Boolean(errors.confirmPassword)}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, confirmPassword: event.target.value }))
-            }
-          />
-          {errors.confirmPassword ? (
-            <p className="text-sm text-[var(--signal-red)]">{errors.confirmPassword}</p>
-          ) : null}
-        </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="password">Nova senha</Label>
+              <Input
+                data-testid="reset-password"
+                id="password"
+                type="password"
+                placeholder="Senha forte"
+                autoComplete="new-password"
+                value={form.password}
+                invalid={Boolean(errors.password)}
+                onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
+              />
+              <p className="text-xs text-[var(--text-faint)]">
+                Use entre 12 e 128 caracteres com maiuscula, minuscula, numero e simbolo.
+              </p>
+              {errors.password ? <p className="text-sm text-[var(--signal-red)]">{errors.password}</p> : null}
+            </div>
 
-        <Button type="submit" variant="inverted" size="xl" disabled={isSubmitting}>
-          {isSubmitting ? 'Redefinindo...' : 'Salvar nova senha'}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="confirmPassword">Confirmar nova senha</Label>
+              <Input
+                data-testid="reset-confirm-password"
+                id="confirmPassword"
+                type="password"
+                placeholder="Repita sua nova senha"
+                autoComplete="new-password"
+                value={form.confirmPassword}
+                invalid={Boolean(errors.confirmPassword)}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, confirmPassword: event.target.value }))
+                }
+              />
+              {errors.confirmPassword ? (
+                <p className="text-sm text-[var(--signal-red)]">{errors.confirmPassword}</p>
+              ) : null}
+            </div>
+          </>
+        ) : null}
+
+        <Button
+          data-testid={mode === 'request' ? 'reset-request-submit' : 'reset-confirm-submit'}
+          type="submit"
+          variant="inverted"
+          size="xl"
+          disabled={isSubmitting}
+        >
+          {isSubmitting
+            ? mode === 'request'
+              ? 'Solicitando token...'
+              : 'Redefinindo...'
+            : mode === 'request'
+              ? 'Solicitar token de redefinicao'
+              : 'Salvar nova senha'}
         </Button>
+
+        {mode === 'confirm' ? (
+          <Button
+            data-testid="reset-request-new-token"
+            type="button"
+            variant="panel"
+            size="xl"
+            onClick={() => {
+              setMode('request')
+              setErrors({})
+              setForm((current) => ({ ...current, token: '' }))
+            }}
+          >
+            Solicitar novo token
+          </Button>
+        ) : null}
       </form>
     </AuthShell>
   )
