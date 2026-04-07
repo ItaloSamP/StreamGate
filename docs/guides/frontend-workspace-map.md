@@ -116,3 +116,11 @@ Quando a mudanca tocar integracao real, adicionar tambem:
 - `playwright`
 
 
+
+## Gate de prontidao da Sprint 2.5
+
+Decisoes fechadas para liberar a Sprint 3 base sem retrabalho:
+
+- filtros minimos de listagem no workspace devem mapear URL em status + page;
+- per_page e search permanecem reservados para evolucao progressiva sem quebrar o shell atual;
+- modo de uso guided vs dvanced fica documentado como direcao de UX e nao como feature entregue nesta sprint.

@@ -709,7 +709,7 @@ Evidencia minima da trilha (2026-04-07):
 
 ## Sprint 2.5 - Pente fino estrutural e prontidao para o novo direcionamento de produto
 
-**Status atual:** `Planejada (Gate sem duracao fixa)`
+**Status atual:** `Concluida (Gate sem duracao fixa)`
 
 **Dependencias**
 
@@ -744,104 +744,120 @@ Regra explicita da Sprint 2.5: permitido ajuste pontual de codigo para alinhamen
 ### Back planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
-- [ ] Mapear delta entre visao de produto atualizada e modelo de dominio/API existente.
-- [ ] Listar gaps de contrato que podem quebrar compatibilidade na trilha upload/job base.
-- [ ] Revisar decisoes de idempotencia e naming para manter consistencia entre backend, OpenAPI e contratos.
-- [ ] Definir fronteiras explicitas do que fica para Sprint 3 base vs Sprint 3.x/4.
+- [x] Mapear delta entre visao de produto atualizada e modelo de dominio/API existente.
+- [x] Listar gaps de contrato que podem quebrar compatibilidade na trilha upload/job base.
+- [x] Revisar decisoes de idempotencia e naming para manter consistencia entre backend, OpenAPI e contratos.
+- [x] Definir fronteiras explicitas do que fica para Sprint 3 base vs Sprint 3.x/4.
 
 ### Back execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `openapi`, `review-codebase`.
-- [ ] Executar ajustes pontuais de estrutura em backend sem abrir features novas de negocio.
-- [ ] Reduzir acoplamentos desnecessarios entre controllers, services e contratos HTTP.
-- [ ] Alinhar naming e envelopes de resposta onde houver drift conhecido.
-- [ ] Atualizar contratos e OpenAPI quando houver ajuste estrutural que afete interface existente.
+- [x] Executar ajustes pontuais de estrutura em backend sem abrir features novas de negocio.
+- [x] Reduzir acoplamentos desnecessarios entre controllers, services e contratos HTTP.
+- [x] Alinhar naming e envelopes de resposta onde houver drift conhecido.
+- [x] Atualizar contratos e OpenAPI quando houver ajuste estrutural que afete interface existente.
 
 ### Front planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
-- [ ] Mapear delta UX atual vs visao (modo `guided`/`advanced`, observabilidade operacional, produtividade).
-- [ ] Definir matriz minima de estados obrigatorios por pagina de workspace antes da Sprint 3.
-- [ ] Priorizar ajustes de base que reduzem retrabalho nas proximas funcionalidades.
+- [x] Mapear delta UX atual vs visao (modo `guided`/`advanced`, observabilidade operacional, produtividade).
+- [x] Definir matriz minima de estados obrigatorios por pagina de workspace antes da Sprint 3.
+- [x] Priorizar ajustes de base que reduzem retrabalho nas proximas funcionalidades.
 
 ### Front execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
-- [ ] Aplicar ajustes pontuais de base no workspace para coerencia de estados e navegacao.
-- [ ] Consolidar convencoes de erro/loading/empty no shell compartilhado sem redesenhar a UX inteira.
-- [ ] Preservar adapter HTTP unico (`api-client`) e remover pontos de acoplamento que dificultem a Sprint 3.
-- [ ] Nao abrir escopo de conectores (`google_drive`, `s3`, `http_url`) nesta sprint.
+- [x] Aplicar ajustes pontuais de base no workspace para coerencia de estados e navegacao.
+- [x] Consolidar convencoes de erro/loading/empty no shell compartilhado sem redesenhar a UX inteira.
+- [x] Preservar adapter HTTP unico (`api-client`) e remover pontos de acoplamento que dificultem a Sprint 3.
+- [x] Nao abrir escopo de conectores (`google_drive`, `s3`, `http_url`) nesta sprint.
 
 ### DevOps
 
 - Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
 - Documentos de apoio: [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md), [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md) e [docs/guides/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/devops-roadmap.md).
-- [ ] Revisar envs e variaveis compartilhadas para evitar drift antes da trilha upload/job.
-- [ ] Revisar pipelines para garantir gate coerente com mudancas pontuais da Sprint 2.5.
-- [ ] Definir sinais minimos de observabilidade para a transicao segura da Sprint 3.
-- [ ] Registrar limites de ambiente (Windows/WSL) e workaround oficial atualizado.
+- [x] Revisar envs e variaveis compartilhadas para evitar drift antes da trilha upload/job.
+- [x] Revisar pipelines para garantir gate coerente com mudancas pontuais da Sprint 2.5.
+- [x] Definir sinais minimos de observabilidade para a transicao segura da Sprint 3.
+- [x] Registrar limites de ambiente (Windows/WSL) e workaround oficial atualizado.
 
 ### Documentation
 
 - Skills obrigatorias para todas as tasks desta trilha: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
-- [ ] Atualizar roadmap mestre com delta real da Sprint 2.5 e criterio de liberacao da Sprint 3.
-- [ ] Atualizar documentos de arquitetura/guias tocados pelos ajustes pontuais desta sprint.
-- [ ] Registrar decisoes de fronteira (o que entra na Sprint 3 base e o que fica para 3.x/4).
-- [ ] Publicar closeout da Sprint 2.5 com riscos residuais e pendencias priorizadas.
+- [x] Atualizar roadmap mestre com delta real da Sprint 2.5 e criterio de liberacao da Sprint 3.
+- [x] Atualizar documentos de arquitetura/guias tocados pelos ajustes pontuais desta sprint.
+- [x] Registrar decisoes de fronteira (o que entra na Sprint 3 base e o que fica para 3.x/4).
+- [x] Publicar closeout da Sprint 2.5 com riscos residuais e pendencias priorizadas.
 
 ### Test planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Definir matriz de regressao para cada ajuste estrutural pontual aprovado.
-- [ ] Planejar verificacoes de contrato para garantir que ajustes de 2.5 nao quebrem a base da Sprint 3.
-- [ ] Planejar smoke de workspace para estados essenciais apos os ajustes.
+- [x] Definir matriz de regressao para cada ajuste estrutural pontual aprovado.
+- [x] Planejar verificacoes de contrato para garantir que ajustes de 2.5 nao quebrem a base da Sprint 3.
+- [x] Planejar smoke de workspace para estados essenciais apos os ajustes.
 
 ### Test execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Executar suites relevantes por camada de acordo com o delta aplicado.
-- [ ] Registrar evidencias por comando, resultado e classificacao ambiente vs implementacao.
-- [ ] Confirmar que nao houve regressao no fluxo de auth/sessao e no shell do workspace.
+- [x] Executar suites relevantes por camada de acordo com o delta aplicado.
+- [x] Registrar evidencias por comando, resultado e classificacao ambiente vs implementacao.
+- [x] Confirmar que nao houve regressao no fluxo de auth/sessao e no shell do workspace.
 
 ### Security
 
 - Skills obrigatorias para todas as tasks desta trilha: `review-architecture`, `review-codebase`, `openapi`, `docker`, `security-best-practices`, `security-threat-model`.
-- [ ] Revisar superficies de ataque para ingestao futura por `external_link` e `connector` sem implementar conectores agora.
-- [ ] Validar se contratos/logs atuais evitam vazamento de dados sensiveis em fluxos de erro.
-- [ ] Revisar rate limits e controles base que serao reutilizados na Sprint 3.
-- [ ] Registrar riscos residuais e mitigacoes propostas para Sprint 3.x/4.
+- [x] Revisar superficies de ataque para ingestao futura por `external_link` e `connector` sem implementar conectores agora.
+- [x] Validar se contratos/logs atuais evitam vazamento de dados sensiveis em fluxos de erro.
+- [x] Revisar rate limits e controles base que serao reutilizados na Sprint 3.
+- [x] Registrar riscos residuais e mitigacoes propostas para Sprint 3.x/4.
 
 ### Skills da sprint
 
-- [ ] Usar `review-codebase` e `review-architecture` no inicio para mapear desalinhamentos estruturais.
-- [ ] Usar `api-designer` e `openapi` para corrigir drift de contrato antes da feature sprint.
-- [ ] Usar `breakdown-test` para matriz de regressao da Sprint 2.5.
-- [ ] Usar `monitoring-observability` para definir sinais minimos de prontidao da Sprint 3.
-- [ ] Usar `readiness-report` no fechamento para validar o gate de transicao.
+- [x] Usar `review-codebase` e `review-architecture` no inicio para mapear desalinhamentos estruturais.
+- [x] Usar `api-designer` e `openapi` para corrigir drift de contrato antes da feature sprint.
+- [x] Usar `breakdown-test` para matriz de regressao da Sprint 2.5.
+- [x] Usar `monitoring-observability` para definir sinais minimos de prontidao da Sprint 3.
+- [x] Usar `readiness-report` no fechamento para validar o gate de transicao.
 
 ### Checklist de saida
 
-- [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
-- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
-- [ ] Gate so fecha com riscos residuais documentados e pendencias priorizadas com proximo passo definido.
-- [ ] Conflitos de naming/contrato/UX base identificados e tratados ou aceitos explicitamente.
-- [ ] Sprint 3 liberada apenas com pre-condicoes estruturais verificadas.
+- [x] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
+- [x] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
+- [x] Gate so fecha com riscos residuais documentados e pendencias priorizadas com proximo passo definido.
+- [x] Conflitos de naming/contrato/UX base identificados e tratados ou aceitos explicitamente.
+- [x] Sprint 3 liberada apenas com pre-condicoes estruturais verificadas.
 
 ### Reavaliacao de transicao por trilha
 
-- [ ] `Back planning`: confirmar que o delta visao x dominio/API foi fechado para a Sprint 3 base.
-- [ ] `Back execution`: confirmar que ajustes pontuais nao abriram escopo funcional indevido.
-- [ ] `Front planning`: confirmar matriz de estados obrigatorios para upload/job base.
-- [ ] `Front execution`: confirmar reducao de acoplamento e ausencia de regressao visual/funcional critica.
-- [ ] `DevOps`: confirmar envs/gates minimos prontos para fluxo upload/job.
-- [ ] `Documentation`: confirmar rastreabilidade das decisoes e fronteiras da Sprint 3.
-- [ ] `Test planning`: confirmar cobertura de regressao adequada para o delta da 2.5.
-- [ ] `Test execution`: confirmar evidencias minimas de validacao do gate.
-- [ ] `Security`: confirmar riscos residuais mapeados para ingestao por link/conector em sprint posterior.
-- [ ] `Skills da sprint`: registrar gaps, ajustes e recomendacoes para Sprint 3.
+- [x] `Back planning`: confirmar que o delta visao x dominio/API foi fechado para a Sprint 3 base.
+- [x] `Back execution`: confirmar que ajustes pontuais nao abriram escopo funcional indevido.
+- [x] `Front planning`: confirmar matriz de estados obrigatorios para upload/job base.
+- [x] `Front execution`: confirmar reducao de acoplamento e ausencia de regressao visual/funcional critica.
+- [x] `DevOps`: confirmar envs/gates minimos prontos para fluxo upload/job.
+- [x] `Documentation`: confirmar rastreabilidade das decisoes e fronteiras da Sprint 3.
+- [x] `Test planning`: confirmar cobertura de regressao adequada para o delta da 2.5.
+- [x] `Test execution`: confirmar evidencias minimas de validacao do gate.
+- [x] `Security`: confirmar riscos residuais mapeados para ingestao por link/conector em sprint posterior.
+- [x] `Skills da sprint`: registrar gaps, ajustes e recomendacoes para Sprint 3.
+
+### Delta por trilha (2026-04-07)
+
+- Back planning: concluida; delta visao x dominio/API mapeado e fronteiras da Sprint 3 base congeladas.
+- Back execution: concluida; ajustes pontuais de estrutura/hardening aplicados sem abrir pacote funcional novo.
+- Front planning: concluida; matriz de estados obrigatorios e URL state minimo (`status` + `page`) consolidados.
+- Front execution: concluida; adapter HTTP alinhado para `/api/v1/uploads` e `/api/v1/jobs` com suporte a envelope completo.
+- DevOps: concluida; envs oficiais de readiness de upload alinhados em `.env.example`, compose e CI.
+- Documentation: concluida; roadmap, guias e closeout sincronizados no mesmo ciclo.
+- Test planning: concluida; regressao da trilha de adapter/contrato mapeada para o gate.
+- Test execution: concluida; suites relevantes do delta executadas e registradas.
+- Security: concluida; filtro de parametros sensiveis ampliado para segredos e URL assinada.
+- Skills da sprint: concluida; uso das skills obrigatorias registrado por trilha.
+
+Evidencia de fechamento:
+
+- [x] `docs/sprints/SPRINT-02-5-closeout.md` publicado.
 
 ---
-
 ## Sprint 3 - Upload assinado e criacao de job (E2E Workspace)
 
 **Status atual:** `Planejada`

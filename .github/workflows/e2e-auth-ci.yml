@@ -40,6 +40,11 @@ jobs:
 
       - name: Prepare env file
         run: cp .env.example .env
+          echo UPLOAD_STORAGE_ENDPOINT=http://minio:9000 >> .env
+          echo UPLOAD_STORAGE_BUCKET=streamgate-uploads >> .env
+          echo UPLOAD_STORAGE_REGION=us-east-1 >> .env
+          echo UPLOAD_SIGNED_URL_TTL_SECONDS=900 >> .env
+          echo UPLOAD_SIGNED_URL_MODE=presigned_put >> .env
 
       - name: Start full auth stack
         run: docker compose --profile app up -d --build

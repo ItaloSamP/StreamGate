@@ -113,3 +113,11 @@ A evolucao planejada do frontend esta em [docs/planning/streamgate-full-sprints-
 2. dashboard operacional com dados reais
 3. dashboard analitico conectado
 4. refinamento de estados de modulo (loading/empty/error por dominio)
+
+## Gate de prontidao da Sprint 2.5
+
+A Sprint 2.5 fechou ajustes estruturais sem abrir feature nova de dominio:
+
+- adapter streamgate-api alinhado para namespace /api/v1 em listagens de jobs e uploads;
+- suporte a envelope completo (data + meta) no pi-client para preparar paginacao/filters da Sprint 3;
+- matriz minima de estados (loading, empty, error, success) consolidada nos guias de frontend para evitar retrabalho.

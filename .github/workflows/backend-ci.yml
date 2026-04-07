@@ -44,6 +44,11 @@ jobs:
       AUTH_CSRF_MODE: token
       API_CORS_ALLOWED_ORIGINS: http://localhost:5173
       API_CORS_ALLOW_CREDENTIALS: false
+      UPLOAD_STORAGE_ENDPOINT: http://localhost:9000
+      UPLOAD_STORAGE_BUCKET: streamgate-uploads
+      UPLOAD_STORAGE_REGION: us-east-1
+      UPLOAD_SIGNED_URL_TTL_SECONDS: 900
+      UPLOAD_SIGNED_URL_MODE: presigned_put
       SEED_OPERATOR_PASSWORD: StrongPass123!
       SEED_ADMIN_PASSWORD: StrongPass123!
       BUNDLE_WITHOUT: production

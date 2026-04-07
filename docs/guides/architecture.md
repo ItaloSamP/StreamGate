@@ -84,3 +84,9 @@ Quando a v1 estabilizar, a migracao natural e:
 - adicionar tracing distribuido
 - migrar polling curto para SSE ou WebSocket
 - separar pipelines de deploy por ambiente
+
+## Decisoes de prontidao (Sprint 2.5)
+
+- Contrato e naming de rotas operacionais de upload/job ficam oficialmente em namespace /api/v1, evitando drift com auth e OpenAPI.
+- Sprint 2.5 e gate estrutural: ajustes pontuais de base sao permitidos; abertura de pacote funcional novo continua proibida.
+- Itens de ingestao por external_link, oauth_delegated e conectores (google_drive, s3, http_url) permanecem fora do escopo da Sprint 3 base.

@@ -1,12 +1,21 @@
-import { apiClient, type RequestOptions } from '@/lib/api-client'
+import { apiClient, type ApiSuccessEnvelope, type RequestOptions } from '@/lib/api-client'
 
 type StreamgateHttpClient = {
   get: <T>(path: string, options?: RequestOptions) => Promise<T>
   post: <T>(path: string, options?: RequestOptions) => Promise<T>
+  getEnvelope?: <T>(path: string, options?: RequestOptions) => Promise<ApiSuccessEnvelope<T>>
+  postEnvelope?: <T>(path: string, options?: RequestOptions) => Promise<ApiSuccessEnvelope<T>>
 }
 
 export type HealthResponse = {
   status: string
+}
+
+export type ListQuery = {
+  status?: string
+  page?: number
+  per_page?: number
+  search?: string
 }
 
 export type JobSummary = {
@@ -103,13 +112,47 @@ export type PasswordResetConfirmInput = {
   passwordConfirmation: string
 }
 
+function normalizeListQuery(query?: ListQuery): Record<string, string | number | boolean | null | undefined> | undefined {
+  if (!query) return undefined
+
+  return {
+    status: query.status,
+    page: query.page,
+    per_page: query.per_page,
+    search: query.search,
+  }
+}
+
+const endpoints = {
+  jobs: '/api/v1/jobs',
+  uploads: '/api/v1/uploads',
+} as const
+
 export function createStreamgateApi(client: StreamgateHttpClient = apiClient) {
   return {
     health: () => client.get<HealthResponse>('/up', undefined),
-    listJobs: (query?: Record<string, string | number | boolean | null | undefined>) =>
-      client.get<JobSummary[]>('/jobs', { query }),
-    listUploads: (query?: Record<string, string | number | boolean | null | undefined>) =>
-      client.get<UploadSummary[]>('/uploads', { query }),
+
+    listJobs: async (query?: ListQuery): Promise<ApiSuccessEnvelope<JobSummary[]>> => {
+      const normalizedQuery = normalizeListQuery(query)
+
+      if (client.getEnvelope) {
+        return client.getEnvelope<JobSummary[]>(endpoints.jobs, { query: normalizedQuery })
+      }
+
+      const data = await client.get<JobSummary[]>(endpoints.jobs, { query: normalizedQuery })
+      return { data }
+    },
+
+    listUploads: async (query?: ListQuery): Promise<ApiSuccessEnvelope<UploadSummary[]>> => {
+      const normalizedQuery = normalizeListQuery(query)
+
+      if (client.getEnvelope) {
+        return client.getEnvelope<UploadSummary[]>(endpoints.uploads, { query: normalizedQuery })
+      }
+
+      const data = await client.get<UploadSummary[]>(endpoints.uploads, { query: normalizedQuery })
+      return { data }
+    },
 
     auth: {
       register: (input: RegisterInput) =>
