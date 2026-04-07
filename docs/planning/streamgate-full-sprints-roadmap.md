@@ -29,7 +29,9 @@ O tom aqui e deliberadamente de engenharia. A ideia nao e listar desejos. A idei
 
 ## Assumptions Fechados
 
-- Cadencia padrao: `2 semanas` por sprint.
+- Cadencia orientada por prontidao, nao por sprint curta obrigatoria.
+- Gates sem duracao fixa sao permitidos quando reduzem risco (exemplo: Sprint 2.5).
+- Timebox longo pode ser usado quando necessario; `2 semanas` passa a ser referencia, nao regra fixa.
 - Pasta oficial de skills recorrentes do projeto: `.agents/skills`.
 - Estado final esperado: `Docker + Kubernetes`.
 - Toda entrega de frontend deve preservar o modelo visual do projeto; nao existe permissao tacita para redesenhar tudo a cada feature.
@@ -131,58 +133,58 @@ Regra de preenchimento:
 
 Matriz minima obrigatoria para todas as sprints:
 
-| Trilha | Reavaliacao minima obrigatoria |
-| --- | --- |
-| `Back planning` | escopo planejado vs escopo entregue, novos requisitos e repriorizacao de backlog |
-| `Back execution` | dominio, regras, contrato HTTP/eventos, OpenAPI e debitos tecnicos transferidos |
-| `Worker execution` (quando houver) | fila, retries, idempotencia, observabilidade e efeito em operacao/analytics |
-| `Front planning` | jornadas, prioridades de UX e estados obrigatorios por tela/modulo |
-| `Front execution` | fidelidade do fluxo real, estados de UI, acessibilidade, performance e regressao visual |
-| `DevOps` | CI/gates, scripts oficiais, ambientes, smoke operacional e gaps de automacao |
-| `Documentation` | docs atualizados, ADRs/runbooks alterados e inconsistencias documentais abertas |
-| `Test planning` | matriz de testes da proxima sprint, novas coberturas obrigatorias e riscos de qualidade |
-| `Test execution` | comandos rodados, resultados, falhas de ambiente vs implementacao e riscos residuais |
-| `Security` | novas superficies sensiveis, controles faltantes, riscos aceitos e hardening priorizado |
-| `Skills da sprint` | skills usadas, skills faltantes e ajustes no stack de skills da proxima sprint |
+| Trilha                             | Reavaliacao minima obrigatoria                                                          |
+| ---------------------------------- | --------------------------------------------------------------------------------------- |
+| `Back planning`                    | escopo planejado vs escopo entregue, novos requisitos e repriorizacao de backlog        |
+| `Back execution`                   | dominio, regras, contrato HTTP/eventos, OpenAPI e debitos tecnicos transferidos         |
+| `Worker execution` (quando houver) | fila, retries, idempotencia, observabilidade e efeito em operacao/analytics             |
+| `Front planning`                   | jornadas, prioridades de UX e estados obrigatorios por tela/modulo                      |
+| `Front execution`                  | fidelidade do fluxo real, estados de UI, acessibilidade, performance e regressao visual |
+| `DevOps`                           | CI/gates, scripts oficiais, ambientes, smoke operacional e gaps de automacao            |
+| `Documentation`                    | docs atualizados, ADRs/runbooks alterados e inconsistencias documentais abertas         |
+| `Test planning`                    | matriz de testes da proxima sprint, novas coberturas obrigatorias e riscos de qualidade |
+| `Test execution`                   | comandos rodados, resultados, falhas de ambiente vs implementacao e riscos residuais    |
+| `Security`                         | novas superficies sensiveis, controles faltantes, riscos aceitos e hardening priorizado |
+| `Skills da sprint`                 | skills usadas, skills faltantes e ajustes no stack de skills da proxima sprint          |
 
 ### Matriz minima de documentacao por sprint
 
 Sempre revisar, no minimo, estes documentos quando a sprint tocar o assunto:
 
-| Area | Documento minimo |
-| --- | --- |
-| Produto e escopo | `docs/product/vision.md` |
-| Roadmap e progresso | este arquivo |
-| Arquitetura macro | `docs/guides/architecture.md` e ADRs em `docs/adr/` |
-| API | `docs/guides/api-docs.md` e `apps/api/openapi/v1/openapi.yaml` |
-| Setup/ambiente | `docs/guides/setup.md` |
-| Skills/metodo | `.agents/skills/README.md` |
-| App especifico | `apps/web/README.md`, `apps/api/README.md`, `apps/worker/README.md` |
+| Area                | Documento minimo                                                    |
+| ------------------- | ------------------------------------------------------------------- |
+| Produto e escopo    | `docs/product/vision.md`                                            |
+| Roadmap e progresso | este arquivo                                                        |
+| Arquitetura macro   | `docs/guides/architecture.md` e ADRs em `docs/adr/`                 |
+| API                 | `docs/guides/api-docs.md` e `apps/api/openapi/v1/openapi.yaml`      |
+| Setup/ambiente      | `docs/guides/setup.md`                                              |
+| Skills/metodo       | `.agents/skills/README.md`                                          |
+| App especifico      | `apps/web/README.md`, `apps/api/README.md`, `apps/worker/README.md` |
 
 ### Comandos oficiais de verdade
 
 Os comandos abaixo sao a base para checklist operacional. Quando um comando falha por limitacao de ambiente, isso deve ser registrado com causa e plano de correcao.
 
-| Escopo | Comando oficial |
-| --- | --- |
-| Frontend install/build | `pnpm install`, `pnpm build` em `apps/web` |
-| Frontend lint/test | `pnpm lint`, `pnpm test:run` em `apps/web` |
-| API | `bundle exec rails db:prepare`, `bundle exec rails test` em `apps/api` |
-| Worker | `bundle exec rspec` em `apps/worker` |
-| CI local | `./scripts/ci/ci-local.sh` ou `.\scripts\ci\ci-local.ps1` |
-| Docker infra | `./scripts/dev/dev-up.sh` |
-| Docker full | `./scripts/dev/dev-up.sh full` |
-| Compose smoke | `./scripts/compose/compose-health-tests.sh` |
+| Escopo                 | Comando oficial                                                        |
+| ---------------------- | ---------------------------------------------------------------------- |
+| Frontend install/build | `pnpm install`, `pnpm build` em `apps/web`                             |
+| Frontend lint/test     | `pnpm lint`, `pnpm test:run` em `apps/web`                             |
+| API                    | `bundle exec rails db:prepare`, `bundle exec rails test` em `apps/api` |
+| Worker                 | `bundle exec rspec` em `apps/worker`                                   |
+| CI local               | `./scripts/ci/ci-local.sh` ou `.\scripts\ci\ci-local.ps1`              |
+| Docker infra           | `./scripts/dev/dev-up.sh`                                              |
+| Docker full            | `./scripts/dev/dev-up.sh full`                                         |
+| Compose smoke          | `./scripts/compose/compose-health-tests.sh`                            |
 
 ### Matriz de ambientes
 
-| Ambiente | Papel | Status hoje | Observacao |
-| --- | --- | --- | --- |
-| `Windows host` | host de conveniencia | Parcial | Vitest falha neste ambiente; nao deve ser o fluxo principal |
-| `WSL dev` | ambiente recomendado | Parcial | e o fluxo alvo para desenvolvimento diario |
-| `Docker infra` | dependencias locais | Ja existe | compose e health checks ja preparados |
-| `Docker full` | stack completa | Parcial | apps sobem, mas worker ainda nao tem runtime real |
-| `CI GitHub` | validacao oficial | Parcial | workflows existem, mas ainda validam um produto incompleto |
+| Ambiente       | Papel                | Status hoje | Observacao                                                  |
+| -------------- | -------------------- | ----------- | ----------------------------------------------------------- |
+| `Windows host` | host de conveniencia | Parcial     | Vitest falha neste ambiente; nao deve ser o fluxo principal |
+| `WSL dev`      | ambiente recomendado | Parcial     | e o fluxo alvo para desenvolvimento diario                  |
+| `Docker infra` | dependencias locais  | Ja existe   | compose e health checks ja preparados                       |
+| `Docker full`  | stack completa       | Parcial     | apps sobem, mas worker ainda nao tem runtime real           |
+| `CI GitHub`    | validacao oficial    | Parcial     | workflows existem, mas ainda validam um produto incompleto  |
 
 ## Stack de Skills do Projeto
 
@@ -262,7 +264,6 @@ O guia de backend ja congelou `trace_id`, `request_id`, `upload_id`, `job_id` e 
 - logs estruturados precisam existir antes da operacao ficar real;
 - runbooks e sinais minimos entram antes de cluster;
 - replay, auditoria e analytics dependem dessa rastreabilidade estar viva desde as primeiras features reais.
-
 
 ---
 
@@ -419,7 +420,6 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 
 - nenhum bloqueador critico aberto para fechar a Sprint 1
 - limitacao conhecida de ambiente Windows para `vitest`/`vite build` (`spawn EPERM` e binary nativa do Tailwind), sem impacto no fechamento do escopo de planejamento e execucao desta sprint
-
 
 **O que nao pode ficar para depois**
 
@@ -633,6 +633,7 @@ Evidencia minima da trilha (2026-04-07):
 - [x] `docs/guides/authentication-guide.md` criado como guia operacional de auth da Sprint 2.
 - [x] `docs/adr/0003-authentication-and-session-strategy.md` atualizado com decisoes de hardening.
 - [x] `docs/sprints/SPRINT-02-closeout.md` publicado com checklist e evidencias da sprint.
+
 ### Test planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
@@ -703,17 +704,312 @@ Evidencia minima da trilha (2026-04-07):
 - Test execution: concluida; request/integration/e2e executados com evidencia minima registrada.
 - Security: concluida; hardening inicial (throttle, logs, contratos e superficie de sessao) aplicado e validado.
 - Skills da sprint: concluida; uso das skills obrigatorias registrado por trilha.
+
 ---
-## Fluxo de planejamento incremental apos a Sprint 2
 
-A partir desta revisao, os escopos detalhados de sprints futuras deixam de ficar pre-definidos neste documento.
+## Sprint 2.5 - Pente fino estrutural e prontidao para o novo direcionamento de produto
 
-Regra de operacao:
+**Status atual:** `Planejada (Gate sem duracao fixa)`
 
-- manter concluido e historico de `Sprint 0` e `Sprint 1`;
-- executar `Sprint 2` com o escopo atual;
-- ao fechar cada sprint, criar do zero o escopo da sprint seguinte usando o mesmo modelo deste roadmap (trilhas, skills, checklist de saida e reavaliacao);
-- planejar somente uma sprint a frente, com base no estado real do repositorio e no que surgiu na reavaliacao.
+**Dependencias**
+
+- Sprint 2 concluida com auth real, sessao e gates minimos estabilizados.
+- Visao de produto atualizada em `2026-04-07` e consolidada em `docs/product/vision.md`.
+
+**Bloqueadores conhecidos**
+
+- Possiveis desalinhamentos entre contratos atuais de API/frontend e a nova visao de produto ainda nao mapeados ponta a ponta.
+- Riscos de naming, estados de UX e acoplamentos estruturais podem gerar retrabalho direto na Sprint 3 se nao forem tratados antes.
+- Limites de ambiente no host Windows continuam relevantes para parte das validacoes locais; fluxo oficial segue `WSL-first`.
+
+**O que nao pode ficar para depois**
+
+- remover conflitos de naming, contrato e UX base que possam contaminar a Sprint 3;
+- fechar lacunas estruturais pequenas agora para evitar rework caro nas trilhas futuras;
+- registrar pendencias priorizadas com clareza de ownership e criterio de transicao.
+
+**Contexto e intencao**
+
+Esta sprint funciona como gate de prontidao entre a Sprint 2 e a Sprint 3. O objetivo e validar aderencia entre implementacao atual e nova visao de produto, corrigindo desalinhamentos pontuais antes de abrir nova feature de negocio.
+
+Regra explicita da Sprint 2.5: permitido ajuste pontual de codigo para alinhamento estrutural; proibido abrir novo pacote funcional amplo.
+
+**Ja existe hoje**
+
+- [x] auth real e sessao em producao local com gates minimos ativos.
+- [x] shell protegido do workspace e malha principal de rotas no frontend.
+- [x] base de dominio (`Upload`, `Job`, `AuditEvent`) e contratos iniciais versionados.
+- [x] Sprint 3 planejada para upload assinado + criacao de job.
+
+### Back planning
+
+- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
+- [ ] Mapear delta entre visao de produto atualizada e modelo de dominio/API existente.
+- [ ] Listar gaps de contrato que podem quebrar compatibilidade na trilha upload/job base.
+- [ ] Revisar decisoes de idempotencia e naming para manter consistencia entre backend, OpenAPI e contratos.
+- [ ] Definir fronteiras explicitas do que fica para Sprint 3 base vs Sprint 3.x/4.
+
+### Back execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `openapi`, `review-codebase`.
+- [ ] Executar ajustes pontuais de estrutura em backend sem abrir features novas de negocio.
+- [ ] Reduzir acoplamentos desnecessarios entre controllers, services e contratos HTTP.
+- [ ] Alinhar naming e envelopes de resposta onde houver drift conhecido.
+- [ ] Atualizar contratos e OpenAPI quando houver ajuste estrutural que afete interface existente.
+
+### Front planning
+
+- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
+- [ ] Mapear delta UX atual vs visao (modo `guided`/`advanced`, observabilidade operacional, produtividade).
+- [ ] Definir matriz minima de estados obrigatorios por pagina de workspace antes da Sprint 3.
+- [ ] Priorizar ajustes de base que reduzem retrabalho nas proximas funcionalidades.
+
+### Front execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
+- [ ] Aplicar ajustes pontuais de base no workspace para coerencia de estados e navegacao.
+- [ ] Consolidar convencoes de erro/loading/empty no shell compartilhado sem redesenhar a UX inteira.
+- [ ] Preservar adapter HTTP unico (`api-client`) e remover pontos de acoplamento que dificultem a Sprint 3.
+- [ ] Nao abrir escopo de conectores (`google_drive`, `s3`, `http_url`) nesta sprint.
+
+### DevOps
+
+- Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
+- Documentos de apoio: [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md), [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md) e [docs/guides/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/devops-roadmap.md).
+- [ ] Revisar envs e variaveis compartilhadas para evitar drift antes da trilha upload/job.
+- [ ] Revisar pipelines para garantir gate coerente com mudancas pontuais da Sprint 2.5.
+- [ ] Definir sinais minimos de observabilidade para a transicao segura da Sprint 3.
+- [ ] Registrar limites de ambiente (Windows/WSL) e workaround oficial atualizado.
+
+### Documentation
+
+- Skills obrigatorias para todas as tasks desta trilha: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
+- [ ] Atualizar roadmap mestre com delta real da Sprint 2.5 e criterio de liberacao da Sprint 3.
+- [ ] Atualizar documentos de arquitetura/guias tocados pelos ajustes pontuais desta sprint.
+- [ ] Registrar decisoes de fronteira (o que entra na Sprint 3 base e o que fica para 3.x/4).
+- [ ] Publicar closeout da Sprint 2.5 com riscos residuais e pendencias priorizadas.
+
+### Test planning
+
+- Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
+- [ ] Definir matriz de regressao para cada ajuste estrutural pontual aprovado.
+- [ ] Planejar verificacoes de contrato para garantir que ajustes de 2.5 nao quebrem a base da Sprint 3.
+- [ ] Planejar smoke de workspace para estados essenciais apos os ajustes.
+
+### Test execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
+- [ ] Executar suites relevantes por camada de acordo com o delta aplicado.
+- [ ] Registrar evidencias por comando, resultado e classificacao ambiente vs implementacao.
+- [ ] Confirmar que nao houve regressao no fluxo de auth/sessao e no shell do workspace.
+
+### Security
+
+- Skills obrigatorias para todas as tasks desta trilha: `review-architecture`, `review-codebase`, `openapi`, `docker`, `security-best-practices`, `security-threat-model`.
+- [ ] Revisar superficies de ataque para ingestao futura por `external_link` e `connector` sem implementar conectores agora.
+- [ ] Validar se contratos/logs atuais evitam vazamento de dados sensiveis em fluxos de erro.
+- [ ] Revisar rate limits e controles base que serao reutilizados na Sprint 3.
+- [ ] Registrar riscos residuais e mitigacoes propostas para Sprint 3.x/4.
+
+### Skills da sprint
+
+- [ ] Usar `review-codebase` e `review-architecture` no inicio para mapear desalinhamentos estruturais.
+- [ ] Usar `api-designer` e `openapi` para corrigir drift de contrato antes da feature sprint.
+- [ ] Usar `breakdown-test` para matriz de regressao da Sprint 2.5.
+- [ ] Usar `monitoring-observability` para definir sinais minimos de prontidao da Sprint 3.
+- [ ] Usar `readiness-report` no fechamento para validar o gate de transicao.
+
+### Checklist de saida
+
+- [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
+- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
+- [ ] Gate so fecha com riscos residuais documentados e pendencias priorizadas com proximo passo definido.
+- [ ] Conflitos de naming/contrato/UX base identificados e tratados ou aceitos explicitamente.
+- [ ] Sprint 3 liberada apenas com pre-condicoes estruturais verificadas.
+
+### Reavaliacao de transicao por trilha
+
+- [ ] `Back planning`: confirmar que o delta visao x dominio/API foi fechado para a Sprint 3 base.
+- [ ] `Back execution`: confirmar que ajustes pontuais nao abriram escopo funcional indevido.
+- [ ] `Front planning`: confirmar matriz de estados obrigatorios para upload/job base.
+- [ ] `Front execution`: confirmar reducao de acoplamento e ausencia de regressao visual/funcional critica.
+- [ ] `DevOps`: confirmar envs/gates minimos prontos para fluxo upload/job.
+- [ ] `Documentation`: confirmar rastreabilidade das decisoes e fronteiras da Sprint 3.
+- [ ] `Test planning`: confirmar cobertura de regressao adequada para o delta da 2.5.
+- [ ] `Test execution`: confirmar evidencias minimas de validacao do gate.
+- [ ] `Security`: confirmar riscos residuais mapeados para ingestao por link/conector em sprint posterior.
+- [ ] `Skills da sprint`: registrar gaps, ajustes e recomendacoes para Sprint 3.
+
+---
+
+## Sprint 3 - Upload assinado e criacao de job (E2E Workspace)
+
+**Status atual:** `Planejada`
+
+**Dependencias**
+
+- Sprint 2 concluida com auth real, sessao, CI `e2e-auth`, OpenAPI de auth e base de dominio consolidada.
+- Sprint 2.5 concluida com gate de prontidao estrutural fechado e sem pendencias criticas abertas.
+
+**Bloqueadores conhecidos**
+
+- backend ainda nao expoe rotas de negocio (`/uploads`, `/jobs`) apesar do adapter do frontend ja prever essas leituras;
+- worker runtime segue fora de escopo funcional nesta fase (container de desenvolvimento, sem consumo real de fila);
+- limitacoes conhecidas do host Windows para Vitest seguem classificadas como ambiente; fluxo oficial permanece `WSL-first`;
+- itens criticos herdados da Sprint 2.5 nao fechados bloqueiam o inicio da execucao funcional desta sprint.
+
+**O que nao pode ficar para depois**
+
+- congelar o contrato de upload assinado antes de plugar UI real;
+- entregar leitura real minima de uploads/jobs para tirar o workspace do mock principal dessa trilha;
+- fechar testes por camada e manter OpenAPI + contratos sincronizados no mesmo ciclo.
+
+**Contexto e intencao**
+
+Com auth ja estabilizada na Sprint 2 e o gate estrutural fechado na Sprint 2.5, o gargalo seguinte da v1 passa a ser ingestao. Esta sprint fecha o fluxo ponta a ponta de entrada no workspace autenticado:
+
+- assinar upload;
+- enviar arquivo para object storage com URL assinada;
+- confirmar upload e registrar job;
+- ler uploads/jobs reais na interface.
+
+Escopo confirmado desta sprint: `upload+job base`, sem abertura de conectores e sem runtime real do worker.
+
+Regra desta sprint: trilha de `Documentation` fica no final para consolidar o que foi entregue.
+
+Fronteira explicita (fora da Sprint 3 base): `external_link`, `oauth_delegated` e conectores wave 1 (`google_drive`, `s3`, `http_url`) ficam para sprint posterior (3.x/4).
+
+**Ja existe hoje**
+
+- [x] dominio base (`Upload`, `Job`, `AuditEvent`) e `Uploads::RegisterUploadService` no backend;
+- [x] adapter frontend (`api-client`, `streamgate-api`) com base para leituras de uploads/jobs;
+- [x] contratos base em `packages/contracts` e OpenAPI v1 com auth.
+
+### Back planning
+
+- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
+- [ ] Congelar fluxo em 2 etapas: `POST signed-url` + `POST register upload/job`.
+- [ ] Definir endpoints oficiais da sprint:
+  - `POST /api/v1/uploads/signed-url`
+  - `POST /api/v1/uploads`
+  - `GET /api/v1/uploads`
+  - `GET /api/v1/jobs`
+- [ ] Definir filtros minimos (`status`, `page`, `per_page`, `search` opcional) e envelope de paginacao.
+- [ ] Definir regra de idempotencia para registro de upload (`checksum_sha256` + `storage_key`).
+- [ ] Definir codigos de erro da trilha (`validation_failed`, `resource_conflict`, `access_denied`, `rate_limited`, `dependency_unavailable`).
+
+### Back execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
+- [ ] Implementar servico de assinatura MinIO (presigned `PUT`) com TTL configuravel.
+- [ ] Criar controllers/policies/serializers para upload e listagens de upload/job.
+- [ ] Integrar `POST /api/v1/uploads` ao `Uploads::RegisterUploadService`.
+- [ ] Garantir auditoria no registro de upload/job com `trace_id` e `request_id`.
+- [ ] Implementar resposta paginada em envelope padrao (`data` + `meta.pagination` + `meta.filters`).
+- [ ] Atualizar `config/routes.rb` e `apps/api/openapi/v1/openapi.yaml` no mesmo PR.
+- [ ] Manter fora de escopo os ajustes de pente fino estrutural ja tratados na Sprint 2.5.
+
+### Front planning
+
+- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
+- [ ] Definir UX do `UploadPage` para estados reais: idle, assinando, enviando, confirmando, sucesso e erro.
+- [ ] Definir estrategia de refresh de dados apos upload confirmado (`/uploads` e `/jobs`).
+- [ ] Definir empty/error/loading states reais para `UploadPage` e `JobsPage`.
+- [ ] Definir mapeamento de filtros de jobs/uploads na URL (minimo: `status` + `page`).
+
+### Front execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
+- [ ] Adicionar no `streamgate-api` metodos para solicitar signed URL, registrar upload/job e listar uploads/jobs com filtros.
+- [ ] Implementar formulario real de upload em `UploadPage` com envio para URL assinada.
+- [ ] Trocar blocos mock de `JobsPage` para consumo real da API.
+- [ ] Aplicar estados explicitos de loading/empty/error/success sem quebrar o shell visual atual.
+- [ ] Preservar adapter HTTP unico (`api-client`) com tratamento centralizado de erros contratuais.
+- [ ] Manter fora de escopo os ajustes estruturais horizontais que nao impactam diretamente upload/job base.
+
+### DevOps
+
+- Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
+- Documentos de apoio: [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md), [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md) e [docs/guides/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/devops-roadmap.md).
+- [ ] Introduzir envs oficiais de assinatura/upload (endpoint/bucket/ttl/credenciais S3-compativeis).
+- [ ] Garantir CORS do MinIO para upload browser via presigned `PUT`.
+- [ ] Ajustar compose/profile `full` para variaveis de upload sem drift.
+- [ ] Atualizar CI local/remoto para incluir testes da trilha upload/job.
+- [ ] Incluir smoke operacional para upload assinado (stack app + seed + fluxo minimo).
+- [ ] Tratar como pre-condicao atendida os ajustes de base e governanca fechados na Sprint 2.5.
+
+### Test planning
+
+- Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
+- [ ] Planejar request tests da API para os 4 endpoints novos (sucesso + erros esperados).
+- [ ] Planejar testes de contrato para novos schemas HTTP e exemplos.
+- [ ] Planejar testes frontend unitarios para o novo adapter upload/job.
+- [ ] Planejar integracao web->api para fluxo `signed-url -> register`.
+- [ ] Planejar E2E minimo de dominio: usuario autenticado envia arquivo e visualiza job criado.
+- [ ] Reusar matriz de regressao da Sprint 2.5 para garantir ausencia de regressao estrutural.
+
+### Test execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
+- [ ] Rodar `bundle exec rails test` cobrindo requests e services de upload/job.
+- [ ] Rodar `pnpm lint` e `pnpm test:run` em `apps/web`.
+- [ ] Rodar `pnpm test:integration` com backend real para fluxo upload/job.
+- [ ] Rodar E2E do fluxo completo com stack `full`.
+- [ ] Registrar evidencias por comando, resultado e classificacao ambiente vs implementacao.
+
+### Security
+
+- Skills obrigatorias para todas as tasks desta trilha: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
+- [ ] Validar allowlist de `content_type` e limites de tamanho no registro.
+- [ ] Garantir TTL curto e escopo restrito da signed URL.
+- [ ] Revisar riscos de overwrite/path traversal em `storage_key`.
+- [ ] Revisar rate limit para `signed-url` e `register upload`.
+- [ ] Garantir que logs/auditoria nao vazem segredos, token ou URL assinada completa.
+- [ ] Manter fora de escopo desta sprint os riscos especificos de conectores externos (Sprint 3.x/4).
+
+### Skills da sprint
+
+- [ ] Usar `test-driven-development` antes da implementacao dos endpoints de upload/job.
+- [ ] Usar `api-designer` e `openapi` para fechar contrato antes da UI.
+- [ ] Usar `api-contract-testing` para sincronizar `packages/contracts` com OpenAPI.
+- [ ] Usar `breakdown-test` para matriz de cobertura por camada.
+- [ ] Usar `monitoring-observability` para sinais operacionais minimos da trilha.
+
+### Documentation
+
+- Skills obrigatorias para todas as tasks desta trilha: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
+- [ ] Atualizar este roadmap mestre com status e evidencia real da sprint.
+- [ ] Atualizar `docs/guides/api-docs.md` com endpoints e erros da trilha upload/job.
+- [ ] Atualizar `docs/guides/setup.md` com envs de upload, CORS MinIO e comandos de validacao.
+- [ ] Atualizar `docs/guides/frontend-foundations.md` e `docs/guides/frontend-workspace-map.md` com estados reais de upload/jobs.
+- [ ] Atualizar `apps/api/README.md` e `apps/web/README.md` com o fluxo novo.
+- [ ] Atualizar contratos em `packages/contracts` (schemas, exemplos e compatibilidade).
+- [ ] Publicar `docs/sprints/SPRINT-03-closeout.md`.
+
+### Checklist de saida
+
+- [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
+- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
+- [ ] Trilha nao tocada registrada: `Worker execution` (nao tocada nesta sprint).
+- [ ] Pre-condicoes da Sprint 2.5 validadas e sem item critico pendente para o escopo da Sprint 3.
+- [ ] Fluxo upload assinado + criacao de job funcionando ponta a ponta.
+- [ ] Workspace autenticado exibindo uploads/jobs reais no fluxo principal da trilha.
+- [ ] OpenAPI, contratos e documentacao sincronizados no mesmo ciclo da entrega.
+- [ ] Gate de testes da sprint verde em CI local e remoto.
+
+### Reavaliacao de transicao por trilha
+
+- [ ] `Back planning`: comparar contrato planejado vs implementado.
+- [ ] `Back execution`: registrar dividas tecnicas movidas para Sprint 4.
+- [ ] `Worker execution`: registrar explicitamente `nao tocada nesta sprint`.
+- [ ] `Front planning`: validar ajustes de jornada e prioridades de UX.
+- [ ] `Front execution`: validar fluxo real, estados de UI, a11y e performance.
+- [ ] `DevOps`: revisar maturidade de smoke, gates e readiness para runtime real do worker.
+- [ ] `Documentation`: confirmar fechamento documental completo ao final da sprint.
+- [ ] `Test planning`: confirmar cobertura obrigatoria da sprint seguinte.
+- [ ] `Test execution`: registrar resultados e risco residual.
+- [ ] `Security`: registrar riscos residuais de upload, storage e broker.
+- [ ] `Skills da sprint`: registrar lacunas e ajustes no stack de skills da proxima sprint.
 
 ## Pos-v1 e backlog estrategico
 
@@ -739,7 +1035,6 @@ Os itens abaixo nao entram na trilha critica da v1, mas ja estao visiveis pelo e
 - politicas de retencao por cliente ou por pipeline;
 - enriquecimento da camada analitica com backfills, jobs agendados e metricas historicas mais ricas.
 
-
 ## Ordem recomendada de execucao
 
 Se houver pressao para pular etapas, usar esta sequencia como trava racional:
@@ -747,19 +1042,19 @@ Se houver pressao para pular etapas, usar esta sequencia como trava racional:
 1. Fechar baseline, ambiente e metodo.
 2. Congelar dominio e contratos.
 3. Entregar auth real.
-4. Entregar upload e criacao de job.
-5. Entregar worker e processamento.
-6. Entregar quarentena e leitura operacional.
-7. Entregar dashboard operacional real.
-8. Entregar analytics real.
-9. Entregar reprocessamento e auditoria forte.
-10. Endurecer qualidade, seguranca e release.
-11. Levar para Kubernetes com observabilidade madura.
+4. Fechar gate de prontidao estrutural (Sprint 2.5).
+5. Entregar upload e criacao de job base.
+6. Entregar worker e processamento.
+7. Entregar quarentena e leitura operacional.
+8. Entregar dashboard operacional real.
+9. Entregar analytics real.
+10. Entregar reprocessamento e auditoria forte.
+11. Endurecer qualidade, seguranca e release.
+12. Levar para Kubernetes com observabilidade madura.
 
 ## Fechamento
 
 Se este documento for seguido com disciplina, o projeto deixa de evoluir por intuicao e passa a evoluir por capacidade comprovada. A regra e simples: nenhuma sprint e pronta porque o codigo parece bom; ela so e pronta quando o escopo implementado roda, esta testado, esta documentado, esta coberto por CI e nao abre uma divida invisivel para a sprint seguinte.
-
 
 
 

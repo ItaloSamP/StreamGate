@@ -1,25 +1,35 @@
 # Visao do Produto: StreamGate
 
+## Objetivo deste documento
+
+Este arquivo e a fonte unica da ideia e da visao de produto do StreamGate.
+
+Regra de governanca:
+
+- direcao de produto deve ser atualizada primeiro aqui;
+- roadmap, checklist e demais docs devem referenciar este arquivo para evitar conflito de visao.
+
 ## Resumo executivo
 
-O StreamGate existe para receber arquivos massivos, processa-los de forma assincrona e transformar esse processamento em duas visoes complementares:
+O StreamGate existe para receber dados em alto volume, processa-los de forma assincrona e transformar esse processamento em duas visoes complementares:
 
-- operacional, com foco em status, auditoria e tratamento de falhas
-- analitica, com foco em consulta de alto volume e dashboards
+- operacional, com foco em status, auditoria, diagnostico e resolucao de falhas;
+- analitica, com foco em consulta de alto volume e indicadores.
 
-O produto resolve o gargalo de pipelines sincronicos e centralizados, que costumam gerar lentidao, baixa rastreabilidade, falhas operacionais e pouca confiabilidade no acompanhamento do processamento.
+A evolucao do produto segue uma estrategia equilibrada entre operacao e conectividade (`dual-track`):
+
+- manter confiabilidade operacional e rastreabilidade ponta a ponta;
+- ampliar flexibilidade de entrada e saida de dados sem perder governanca.
 
 ## Problema
 
-Organizacoes que ingerem grandes volumes de dados precisam:
+Organizacoes que ingerem grandes volumes de dados enfrentam friccao em tres frentes ao mesmo tempo:
 
-- aceitar uploads extensos sem sobrecarregar a API
-- processar dados em lotes com resiliencia
-- manter trilha de auditoria por arquivo, job e lote
-- separar registros validos de registros com erro
-- consultar rapidamente o estado operacional e os indicadores analiticos
+- entrada: nem todo fluxo nasce de upload local; parte dos dados ja esta em outras plataformas;
+- operacao: falhas costumam ser dificeis de diagnosticar e caras de corrigir;
+- experiencia: fluxos muito tecnicos afastam usuarios novos e fluxos muito simplificados travam usuarios avancados.
 
-Sem essa separacao, o sistema tende a acumular acoplamento entre upload, processamento e consulta, dificultando escala e manutencao.
+Sem separacao clara entre ingestao, processamento, diagnostico e entrega de resultados, o sistema acumula acoplamento, retrabalho e baixa previsibilidade operacional.
 
 ## Proposta de valor
 
@@ -27,17 +37,24 @@ O StreamGate entrega uma arquitetura orientada a eventos com separacao clara ent
 
 Diferenciais-chave:
 
-- upload direto para object storage via URL assinada
-- processamento assincrono desacoplado por eventos
-- suporte a retries, idempotencia e quarentena
-- separacao entre dados brutos, operacionais e analiticos
-- caminho claro de evolucao de ambiente local para cluster
+- ingestao multicanal (arquivo local, link externo e conectores);
+- processamento assincrono desacoplado por eventos;
+- suporte a retries, idempotencia e quarentena;
+- diagnostico guiado para reduzir tempo de investigacao;
+- produtividade com templates e presets;
+- entrega de artefatos finais (dados processados + relatorio operacional/auditoria);
+- separacao entre dados brutos, operacionais e analiticos;
+- caminho claro de evolucao de ambiente local para cluster.
 
 ## Perfis de usuario
 
-### Operacao
+### Operacao interna
 
-Precisa acompanhar jobs, identificar falhas, revisar quarentena e confirmar se o processamento terminou dentro do prazo esperado.
+Precisa acompanhar jobs, identificar falhas, revisar quarentena, aplicar retry e confirmar SLA operacional.
+
+### Cliente externo (self-service)
+
+Precisa enviar dados por fluxos simples, acompanhar progresso, entender erros sem linguagem tecnica excessiva e baixar resultados com confianca.
 
 ### Analise
 
@@ -49,19 +66,27 @@ Precisa investigar eventos, reprocessar cargas, auditar trilhas e manter o pipel
 
 ## Escopo funcional da v1
 
-### Fluxos principais
+### Ingestao multicanal
 
-- solicitar upload pela SPA
-- obter URL assinada via API
-- enviar arquivo diretamente ao MinIO
-- confirmar upload e registrar job
-- publicar evento de processamento no RabbitMQ
-- consumir o evento no worker
-- validar, higienizar e processar arquivo em lotes
-- enviar invalidos para quarentena com motivo explicito
-- persistir dados operacionais no PostgreSQL
-- persistir dados analiticos no ClickHouse
-- expor status e indicadores para o frontend
+- upload local via SPA;
+- ingestao por link externo com suporte inicial a `public_link` e evolucao para `oauth_delegated`;
+- conectores wave 1 planejados: `google_drive`, `s3`, `http_url`;
+- entrada inicial com foco em arquivo zipado e portabilidade para outras extensoes.
+
+### Fluxo principal
+
+- solicitar ingestao pela SPA;
+- obter credencial/URL assinada ou autorizacao de aquisicao remota via API;
+- trazer arquivo para o ambiente bruto (MinIO) com rastreabilidade;
+- confirmar ingestao e registrar job;
+- publicar evento de processamento no RabbitMQ;
+- consumir evento no worker;
+- validar, higienizar e processar em lotes;
+- enviar invalidos para quarentena com motivo explicito;
+- persistir dados operacionais no PostgreSQL;
+- persistir dados analiticos no ClickHouse;
+- expor status e indicadores para o frontend;
+- disponibilizar download de `processed_dataset` e `quality_report`/`audit_report` no final do processo.
 
 ### Estados de job
 
@@ -78,13 +103,37 @@ Precisa investigar eventos, reprocessar cargas, auditar trilhas e manter o pipel
 - `etl.batch.loaded`
 - `etl.job.completed`
 
+## Principios de UX do produto
+
+### Fluxo de ingestao hibrido
+
+- modo `guided` (wizard) para orientar quem precisa de seguranca operacional;
+- modo `advanced` para usuarios experientes com menor friccao.
+
+### Observabilidade + produtividade
+
+- observabilidade operacional: timeline de job, status por etapa e diagnostico orientado;
+- produtividade: templates/presets, filtros salvos, acoes em lote e reuso de configuracoes.
+
+### Comunicacao de estado
+
+- notificacoes em `in_app`, `email` e `webhook` para eventos relevantes;
+- estados de loading, erro e sucesso claros, acionaveis e consistentes.
+
+## Governanca e confianca
+
+- RBAC inicial por papel e modulo;
+- trilha de auditoria navegavel por job, usuario e acao;
+- politica de retencao configuravel por workspace;
+- rastreabilidade por `request_id`, `trace_id`, `upload_id`, `job_id` e `batch_id`.
+
 ## Arquitetura funcional
 
 | Camada | Tecnologia | Responsabilidade |
 | --- | --- | --- |
-| Frontend | React + Vite + TypeScript | Upload, acompanhamento de jobs e dashboards |
-| API | Ruby on Rails API-only | Autenticacao, orquestracao de uploads, jobs e leitura para a SPA |
-| Object storage | MinIO | Armazenamento bruto e upload multipart |
+| Frontend | React + Vite + TypeScript | Ingestao hibrida, acompanhamento de jobs, dashboards e downloads finais |
+| API | Ruby on Rails API-only | Autenticacao, autorizacao, orquestracao de ingestao, jobs, auditoria e entrega de artefatos |
+| Object storage | MinIO | Armazenamento bruto, upload direto e artefatos de saida |
 | Mensageria | RabbitMQ | Eventos de ingestao e processamento |
 | Worker | Ruby | ETL, validacao, retries, idempotencia e carga |
 | OLTP | PostgreSQL | Metadados, auditoria, status e quarentena |
@@ -95,58 +144,97 @@ Precisa investigar eventos, reprocessar cargas, auditar trilhas e manter o pipel
 
 ### Extract
 
-O frontend solicita URL assinada, envia o arquivo ao MinIO e confirma o envio pela API.
+A origem pode ser `local_file`, `external_link` ou `connector`. A API valida contexto, registra rastreabilidade e garante aquisicao segura para o ambiente bruto.
 
 ### Transform
 
-O worker consome o evento, processa o arquivo em lotes, valida conteudo, aplica regras de idempotencia e separa erros rastreaveis em quarentena.
+O worker consome o evento, processa em lotes, valida conteudo, aplica idempotencia e separa erros rastreaveis em quarentena.
 
 ### Load
 
-O PostgreSQL recebe o estado operacional e o ClickHouse recebe os dados preparados para exploracao analitica.
+O PostgreSQL recebe estado operacional e o ClickHouse recebe dados preparados para exploracao analitica.
+
+### Delivery
+
+Ao final, o produto entrega artefatos de resultado para consumo humano e tecnico (dados processados e relatorios operacionais/auditoria).
 
 ### Analytics
 
-O frontend consulta a API para ler status operacionais a partir do PostgreSQL e metricas agregadas a partir do ClickHouse.
+O frontend consulta a API para ler status operacionais e metricas agregadas. Na v1, atualizacao quase em tempo real por polling curto, com evolucao futura para SSE/WebSocket.
 
-Na v1, a atualizacao deve ser quase em tempo real via polling curto, com possibilidade de evolucao para SSE ou WebSocket.
+## Interfaces e conceitos de produto (direcao, sem implementacao imediata)
+
+- `source_type`: `local_file`, `external_link`, `connector`
+- `link_mode`: `public_link`, `oauth_delegated`
+- `connector_type` wave 1: `google_drive`, `s3`, `http_url`
+- `output_artifact_type`: `processed_dataset`, `quality_report`, `audit_report`
+- `ui_mode`: `guided`, `advanced`
+- `notification_channel`: `in_app`, `email`, `webhook`
+- `retention_policy_scope`: `workspace`
 
 ## Requisitos nao funcionais
 
-- suportar uploads grandes sem passar payload pela API
-- garantir rastreabilidade por arquivo, job e lote
-- tolerar reinicio de worker sem perda de mensagens em fila duravel
-- evitar duplicacao de carga em reprocessamentos
-- permitir diagnostico rapido por logs, health checks e trilha de auditoria
-- manter fronteiras claras entre leitura operacional e leitura analitica
+- suportar ingestao de arquivos grandes sem transferir payload pesado pela API;
+- suportar aquisicao remota confiavel para links e conectores;
+- garantir rastreabilidade por arquivo, job e lote;
+- tolerar reinicio de worker sem perda de mensagens em fila duravel;
+- evitar duplicacao de carga em reprocessamentos;
+- manter seguranca de links externos, credenciais e artefatos de saida;
+- permitir diagnostico rapido por logs, health checks e trilha de auditoria;
+- manter fronteiras claras entre leitura operacional e leitura analitica;
+- manter previsibilidade de entrega para usuario final (status e resultado claros).
 
 ## Casos de validacao prioritarios
 
-- upload com falha parcial de rede e retomada sem corromper o job
-- reprocessamento do mesmo arquivo sem duplicar registros validos
-- linhas invalidas indo para quarentena com motivo rastreavel
-- reinicio de worker sem perda de mensagens
-- dashboard refletindo dados dentro da janela esperada
+- upload local com falha parcial de rede e retomada sem corromper o job;
+- ingestao por link externo com validacao de acesso e rastreabilidade da aquisicao;
+- ingestao de arquivo zipado com processamento consistente do conteudo;
+- reprocessamento do mesmo arquivo sem duplicar registros validos;
+- linhas invalidas indo para quarentena com motivo rastreavel;
+- reinicio de worker sem perda de mensagens;
+- dashboard refletindo dados dentro da janela esperada;
+- download final de dataset e relatorio com coerencia de status e auditoria.
 
 ## Direcionamentos para desenvolvimento
 
-Para manter o projeto alinhado com essa visao, o desenvolvimento deve priorizar:
+Para manter o projeto alinhado com esta visao, o desenvolvimento deve priorizar:
 
-1. contratos de eventos em `packages/contracts`
-2. modelo de job e trilha de auditoria na API
-3. fluxo de upload assinado ponta a ponta
-4. runtime real do worker com processamento em lotes
-5. persistencia inicial no PostgreSQL e carga analitica minima no ClickHouse
-6. painel operacional antes de dashboards avancados
+1. contratos de eventos e interfaces em `packages/contracts`;
+2. modelo de job, trilha de auditoria e governanca na API;
+3. ingestao multicanal com rastreabilidade ponta a ponta;
+4. runtime real do worker com processamento em lotes;
+5. persistencia operacional no PostgreSQL e carga analitica no ClickHouse;
+6. painel operacional robusto com UX observavel e produtiva;
+7. entrega final de artefatos para consumo do usuario.
 
 ## Fora do escopo imediato
 
-- tempo real completo por WebSocket
-- automacao completa de deploy em cluster
-- observabilidade avancada com tracing distribuido
-- multi-tenant e politicas complexas de segregacao
-- orquestracao de multiplos tipos de pipeline alem da ingestao principal
+- tempo real completo por WebSocket;
+- automacao completa de deploy em cluster;
+- observabilidade avancada com tracing distribuido em todos os servicos;
+- marketplace amplo de conectores alem da wave inicial;
+- multi-tenant com politicas avancadas de segregacao;
+- orquestracao de multiplos tipos de pipeline alem da ingestao principal.
+
+## Decisoes aprovadas (datadas)
+
+Data-base: `2026-04-07`
+
+| Tema | Decisao | Status |
+| --- | --- | --- |
+| Estrategia de evolucao | Operacao e conectividade evoluem em paralelo (`dual-track`) | `aprovado` |
+| Cadencia de entrega | Sem dependencia de sprint curta para evolucao de produto | `aprovado` |
+| Ingestao por link | Suporte a links publicos + evolucao para OAuth | `aprovado` |
+| Conectores wave 1 | `Google Drive`, `S3`, `URL HTTP` | `planejado` |
+| Entrada de arquivos | Foco inicial em zipado com portabilidade para outras extensoes | `planejado` |
+| Saida final | Dataset processado + relatorio operacional/auditoria | `aprovado` |
+| UX de ingestao | Fluxo hibrido (`guided` + `advanced`) | `aprovado` |
+| UX operacional | Priorizar observabilidade + produtividade | `aprovado` |
+| Notificacoes | `in_app`, `email`, `webhook` | `planejado` |
+| Governanca | RBAC inicial + trilha de auditoria navegavel | `planejado` |
+| Retencao | Politica configuravel por workspace | `planejado` |
+| Diferencial inicial | Diagnostico guiado para reduzir tempo de resolucao | `futuro` |
 
 ## Resultado esperado
 
-O StreamGate deve se tornar a base confiavel para ingestao, processamento auditavel e exploracao analitica de grandes volumes de dados, com uma estrutura que permita crescer sem reescrever os fundamentos da plataforma.
+O StreamGate deve se tornar uma base confiavel para ingestao, processamento auditavel e exploracao analitica de grandes volumes de dados, com experiencia operacional forte e conectividade flexivel, sem perder previsibilidade, governanca e identidade de produto.
