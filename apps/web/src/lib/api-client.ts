@@ -113,7 +113,7 @@ export function resolveApiBaseUrl() {
 }
 
 export function createApiClient(baseUrl = resolveApiBaseUrl()) {
-  async function request<T>(path: string, options: RequestOptions = {}) {
+  async function requestEnvelope<T>(path: string, options: RequestOptions = {}) {
     const { query, body, headers, traceId, ...rest } = options
     const url = `${baseUrl}${path}${buildQueryString(query)}`
 
@@ -152,13 +152,20 @@ export function createApiClient(baseUrl = resolveApiBaseUrl()) {
       throw error
     }
 
-    return (payload as ApiSuccessEnvelope<T>).data
+    return payload as ApiSuccessEnvelope<T>
+  }
+
+  async function request<T>(path: string, options: RequestOptions = {}) {
+    const envelope = await requestEnvelope<T>(path, options)
+    return envelope.data
   }
 
   return {
     request,
     get: <T>(path: string, options?: RequestOptions) => request<T>(path, { ...options, method: 'GET' }),
     post: <T>(path: string, options?: RequestOptions) => request<T>(path, { ...options, method: 'POST' }),
+    getEnvelope: <T>(path: string, options?: RequestOptions) => requestEnvelope<T>(path, { ...options, method: 'GET' }),
+    postEnvelope: <T>(path: string, options?: RequestOptions) => requestEnvelope<T>(path, { ...options, method: 'POST' }),
   }
 }
 

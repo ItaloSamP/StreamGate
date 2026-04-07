@@ -51,6 +51,35 @@ describe('createApiClient', () => {
     )
   })
 
+  it('can return the full envelope when pagination metadata is needed', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({
+        data: [{ id: 'job_1' }],
+        meta: {
+          pagination: {
+            page: 1,
+            per_page: 20,
+            total_count: 1,
+            total_pages: 1,
+          },
+          filters: {
+            status: 'pending',
+          },
+        },
+      }),
+    }) as typeof fetch
+
+    const client = createApiClient('http://localhost:3000')
+    const result = await client.getEnvelope<{ id: string }[]>('/api/v1/jobs', {
+      query: { status: 'pending', page: 1, per_page: 20 },
+    })
+
+    expect(result.meta?.pagination?.page).toBe(1)
+    expect(result.meta?.filters?.status).toBe('pending')
+  })
+
   it('injects bearer token when auth config provides one', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,

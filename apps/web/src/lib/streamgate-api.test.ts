@@ -95,4 +95,43 @@ describe('streamgateApi auth adapter', () => {
       },
     })
   })
+
+  it('aligns jobs and uploads list endpoints with api v1 and keeps query shape stable', async () => {
+    const getEnvelope = vi.fn()
+      .mockResolvedValueOnce({
+        data: [{ id: 'job_1', status: 'pending' }],
+        meta: { pagination: { page: 1, per_page: 20, total_count: 1, total_pages: 1 }, filters: { status: 'pending' } },
+      })
+      .mockResolvedValueOnce({
+        data: [{ id: 'upload_1', filename: 'input.csv', status: 'registered' }],
+        meta: { pagination: { page: 1, per_page: 20, total_count: 1, total_pages: 1 }, filters: { status: 'registered' } },
+      })
+
+    const api = createStreamgateApi({
+      get: vi.fn(),
+      post: vi.fn(),
+      getEnvelope,
+    })
+
+    await api.listJobs({ status: 'pending', page: 1, per_page: 20 })
+    await api.listUploads({ status: 'registered', page: 1, per_page: 20, search: 'input' })
+
+    expect(getEnvelope).toHaveBeenNthCalledWith(1, '/api/v1/jobs', {
+      query: {
+        status: 'pending',
+        page: 1,
+        per_page: 20,
+        search: undefined,
+      },
+    })
+
+    expect(getEnvelope).toHaveBeenNthCalledWith(2, '/api/v1/uploads', {
+      query: {
+        status: 'registered',
+        page: 1,
+        per_page: 20,
+        search: 'input',
+      },
+    })
+  })
 })
