@@ -1,6 +1,17 @@
 require "test_helper"
 
 class AuthFlowTest < ActionDispatch::IntegrationTest
+  setup do
+    @original_cache = Rails.cache
+    Rails.cache = ActiveSupport::Cache.lookup_store(:memory_store)
+    Rails.cache.clear
+  end
+
+  teardown do
+    Rails.cache.clear
+    Rails.cache = @original_cache
+  end
+
   test "register creates active user and session token" do
     post "/api/v1/auth/register",
          params: {
@@ -31,6 +42,36 @@ class AuthFlowTest < ActionDispatch::IntegrationTest
 
     assert_response :unauthorized
     assert_equal "invalid_credentials", parsed_json.dig("error", "code")
+  end
+
+  test "login returns rate_limited after repeated failures from same ip" do
+    original_ip_limit = Rails.application.config.x.auth_login_limit_per_ip
+    original_window = Rails.application.config.x.auth_throttle_window_seconds
+
+    Rails.application.config.x.auth_login_limit_per_ip = 2
+    Rails.application.config.x.auth_throttle_window_seconds = 60
+
+    begin
+      create_auth_user(email: "rate-limit@example.com", password: "StrongPass123!")
+
+      2.times do
+        post "/api/v1/auth/login",
+             params: { session: { email: "rate-limit@example.com", password: "WrongPass123!" } },
+             as: :json
+
+        assert_response :unauthorized
+      end
+
+      post "/api/v1/auth/login",
+           params: { session: { email: "rate-limit@example.com", password: "WrongPass123!" } },
+           as: :json
+
+      assert_response :too_many_requests
+      assert_equal "rate_limited", parsed_json.dig("error", "code")
+    ensure
+      Rails.application.config.x.auth_login_limit_per_ip = original_ip_limit
+      Rails.application.config.x.auth_throttle_window_seconds = original_window
+    end
   end
 
   test "me returns current user and session when token is valid" do
@@ -154,3 +195,4 @@ class AuthFlowTest < ActionDispatch::IntegrationTest
     parsed_json
   end
 end
+

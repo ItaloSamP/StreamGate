@@ -73,6 +73,24 @@ class ApplicationController < ActionController::API
     end
   end
 
+  def enforce_rate_limit!(scope:, discriminator:, limit:, period_seconds:)
+    key_discriminator = discriminator.to_s.downcase.strip.presence || "anonymous"
+    key = "streamgate:throttle:#{scope}:#{key_discriminator}"
+
+    attempts = Rails.cache.increment(key, 1, expires_in: period_seconds, initial: 0)
+    attempts = attempts.to_i
+
+    return true if attempts <= limit
+
+    render_api_error(
+      code: "rate_limited",
+      message: "Muitas tentativas. Aguarde alguns instantes antes de tentar novamente.",
+      status: :too_many_requests
+    )
+
+    false
+  end
+
   def set_request_context
     Current.request_id = request.request_id
     Current.trace_id = request.headers["X-Trace-Id"].presence || StreamGate::Id.generate("trace")

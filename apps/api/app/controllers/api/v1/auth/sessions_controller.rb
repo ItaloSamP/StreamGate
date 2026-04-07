@@ -3,6 +3,7 @@ module Api
     module Auth
       class SessionsController < ApplicationController
         before_action :authenticate_request!, only: [ :destroy, :refresh ]
+        before_action :enforce_create_rate_limits!, only: :create
 
         def create
           result = ::Auth::LoginService.call(
@@ -15,6 +16,9 @@ module Api
           )
 
           unless result.success?
+            Rails.logger.info(
+              "auth.login_failed request_id=#{Current.request_id} trace_id=#{Current.trace_id} reason=#{result.reason}"
+            )
             return handle_login_failure(result.reason)
           end
 
@@ -69,6 +73,24 @@ module Api
           else
             render_api_error(code: "access_denied", message: "Acesso negado para este recurso.", status: :forbidden)
           end
+        end
+
+        def enforce_create_rate_limits!
+          window_seconds = Rails.application.config.x.auth_throttle_window_seconds
+
+          return unless enforce_rate_limit!(
+            scope: "auth.login.ip",
+            discriminator: request.remote_ip,
+            limit: Rails.application.config.x.auth_login_limit_per_ip,
+            period_seconds: window_seconds
+          )
+
+          return if enforce_rate_limit!(
+            scope: "auth.login.identifier",
+            discriminator: login_params[:email],
+            limit: Rails.application.config.x.auth_login_limit_per_identifier,
+            period_seconds: window_seconds
+          )
         end
       end
     end

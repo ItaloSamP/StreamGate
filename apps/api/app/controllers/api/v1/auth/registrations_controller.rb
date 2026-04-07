@@ -2,6 +2,8 @@ module Api
   module V1
     module Auth
       class RegistrationsController < ApplicationController
+        before_action :enforce_create_rate_limit!, only: :create
+
         def create
           result = ::Auth::RegisterUserService.call(
             full_name: registration_params[:full_name],
@@ -37,6 +39,15 @@ module Api
             access_token: token,
             expires_at: session.expires_at&.iso8601
           }
+        end
+
+        def enforce_create_rate_limit!
+          enforce_rate_limit!(
+            scope: "auth.register.ip",
+            discriminator: request.remote_ip,
+            limit: Rails.application.config.x.auth_register_limit_per_ip,
+            period_seconds: Rails.application.config.x.auth_throttle_window_seconds
+          )
         end
       end
     end

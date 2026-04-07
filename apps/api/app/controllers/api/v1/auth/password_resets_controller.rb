@@ -2,6 +2,9 @@ module Api
   module V1
     module Auth
       class PasswordResetsController < ApplicationController
+        before_action :enforce_request_rate_limits!, only: :create
+        before_action :enforce_confirm_rate_limit!, only: :update
+
         def create
           result = ::Auth::RequestPasswordResetService.call(email: request_params[:email])
           payload = { message: "Se o email existir, as instrucoes de redefinicao serao enviadas." }
@@ -35,6 +38,33 @@ module Api
 
         def confirm_params
           params.require(:password_reset_confirmation).permit(:token, :password, :password_confirmation)
+        end
+
+        def enforce_request_rate_limits!
+          window_seconds = Rails.application.config.x.auth_throttle_window_seconds
+
+          return unless enforce_rate_limit!(
+            scope: "auth.password_reset.request.ip",
+            discriminator: request.remote_ip,
+            limit: Rails.application.config.x.auth_password_reset_request_limit_per_ip,
+            period_seconds: window_seconds
+          )
+
+          return if enforce_rate_limit!(
+            scope: "auth.password_reset.request.identifier",
+            discriminator: request_params[:email],
+            limit: Rails.application.config.x.auth_password_reset_request_limit_per_identifier,
+            period_seconds: window_seconds
+          )
+        end
+
+        def enforce_confirm_rate_limit!
+          enforce_rate_limit!(
+            scope: "auth.password_reset.confirm.ip",
+            discriminator: request.remote_ip,
+            limit: Rails.application.config.x.auth_password_reset_confirm_limit_per_ip,
+            period_seconds: Rails.application.config.x.auth_throttle_window_seconds
+          )
         end
       end
     end
