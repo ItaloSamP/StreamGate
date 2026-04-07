@@ -505,3 +505,7 @@ Codigos obrigatorios:
 - `invalid_credentials`
 - `session_expired`
 - `access_denied`
+
+### Gate de prontidao da Sprint 2.5
+
+Antes da Sprint 3, fica congelado que os recursos de upload e job da trilha base devem seguir o namespace /api/v1 e o envelope padrao (data + meta.pagination + meta.filters) quando houver listagem. A Sprint 2.5 nao abre endpoints novos de negocio; ela apenas reduz drift de contrato, naming e preparacao de ambiente para a entrega funcional da Sprint 3.

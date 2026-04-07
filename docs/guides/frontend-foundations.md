@@ -312,3 +312,13 @@ Uma entrega de frontend so e considerada pronta quando:
 
 
 
+
+## Ajustes de prontidao da Sprint 2.5
+
+- Adapter oficial passa a reservar consumo de envelope completo para listagens paginadas (getEnvelope), mantendo contrato consistente para Sprint 3.
+- Endpoints de listagem em preparacao foram alinhados para /api/v1/uploads e /api/v1/jobs no adapter compartilhado, sem abrir fluxo funcional novo nesta sprint.
+- Matriz minima de estados obrigatorios para superficies de dados no workspace (Sprint 3 base):
+  - loading: feedback explicito no modulo e CTA afetado
+  - empty: explicacao do estado vazio + proxima acao
+  - error: mensagem operacional + retry quando aplicavel
+  - success: confirmacao de transicao de estado sem ruir hierarquia visual

@@ -244,7 +244,7 @@ O projeto tem quatro workflows separados:
 - `frontend-ci.yml`
 - `backend-ci.yml`
 - `docker-ci.yml`
-- `e2e-auth.yml`
+- `e2e-auth-ci.yml`
 
 Eles rodam quando houver alteracoes nas areas relevantes do frontend, backend ou docker, e o `e2e-auth` cobre a trilha ponta a ponta de autenticacao.
 
@@ -319,6 +319,15 @@ Para evitar drift entre frontend, backend, compose e contratos, este projeto pas
 - `AUTH_PASSWORD_RESET_CONFIRM_LIMIT_PER_IP`
 - `AUTH_THROTTLE_WINDOW_SECONDS`
 
+### Variaveis de readiness de upload (Sprint 2.5)
+
+- `UPLOAD_STORAGE_ENDPOINT`
+- `UPLOAD_STORAGE_BUCKET`
+- `UPLOAD_STORAGE_REGION`
+- `UPLOAD_SIGNED_URL_TTL_SECONDS`
+- `UPLOAD_SIGNED_URL_MODE`
+
+Essas variaveis ainda nao ativam o fluxo funcional da Sprint 3 por si sozinhas, mas passam a ser oficiais para evitar drift entre compose, CI e API antes da implementacao de upload assinado.
 ### Variaveis de CORS da API
 
 - `API_CORS_ALLOWED_ORIGINS`

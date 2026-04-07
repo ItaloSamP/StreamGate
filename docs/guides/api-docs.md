@@ -67,3 +67,11 @@ Envelope de erro padrao:
 - estrategia de sessao e auth: [docs/adr/0003-authentication-and-session-strategy.md](C:/estudos/StreamGate/docs/adr/0003-authentication-and-session-strategy.md)
 - guia operacional de auth: [docs/guides/authentication-guide.md](C:/estudos/StreamGate/docs/guides/authentication-guide.md)
 - setup e envs: [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md)
+
+## Gate de prontidao da Sprint 2.5
+
+A Sprint 2.5 nao introduz endpoints novos de negocio. O foco desta etapa foi congelar contratos e naming para reduzir drift antes da Sprint 3:
+
+- namespace oficial para upload/job base: /api/v1/uploads e /api/v1/jobs;
+- estrategia de listagem: envelope data + meta.pagination + meta.filters;
+- implementacao funcional desses endpoints permanece para a Sprint 3.

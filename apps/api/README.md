@@ -87,3 +87,11 @@ A API deve evoluir nesta ordem:
 3. expor leitura operacional e, depois, leitura analitica
 
 O backlog executivo detalhado dessa evolucao esta em [docs/planning/streamgate-full-sprints-roadmap.md](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md).
+
+## Gate de prontidao da Sprint 2.5
+
+A Sprint 2.5 nao abriu endpoints de negocio novos. O foco foi alinhar prontidao estrutural para Sprint 3:
+
+- congelamento do namespace alvo para trilha upload/job base em /api/v1;
+- alinhamento de envs oficiais de upload em setup/compose/CI;
+- hardening de logs para reduzir risco de vazamento de URL assinada e segredos.

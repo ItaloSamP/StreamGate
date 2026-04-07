@@ -134,3 +134,9 @@ Entregas esperadas:
 - estrategia de GitOps para reconciliacao de ambiente.
 
 
+
+## Sprint 2.5 - Gate de prontidao (registro)
+
+- envs oficiais de upload adicionados em .env.example, compose.yaml e CI para evitar drift antes da Sprint 3;
+- trilha de upload assinado continua sem execucao funcional nesta sprint;
+- foco mantido em preparacao operacional e governanca de transicao.
