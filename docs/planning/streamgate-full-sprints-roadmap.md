@@ -268,7 +268,7 @@ O guia de backend ja congelou `trace_id`, `request_id`, `upload_id`, `job_id` e 
 
 ## Sprint 0 - Fundacao do metodo, baseline tecnica e limpeza do terreno
 
-**Status atual:** `Parcial`
+**Status atual:** `Concluida`
 
 **Dependencias**
 
@@ -542,7 +542,7 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 
 ## Sprint 2 - Autenticacao real e sessao
 
-**Status atual:** `Parcial`
+**Status atual:** `Concluida`
 
 **Dependencias**
 
@@ -551,7 +551,7 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 **Bloqueadores conhecidos**
 
 - frontend ja opera com auth real; proxima lacuna e conectar dados reais dos modulos do workspace
-- backend e frontend ja possuem auth real; lacunas remanescentes estao em trilhas de Documentation, Security e E2E
+- backend e frontend ja possuem auth real; fechamento documental e hardening da Sprint 2 foram concluidos em 2026-04-07
 - Swagger ja cobre auth real; proximas iteracoes cobrem recursos de negocio da API
 
 **O que nao pode ficar para depois**
@@ -621,11 +621,18 @@ O frontend ja ensaiou a experiencia de acesso. Esta sprint faz o backend assumir
 ### Documentation
 
 - Skills obrigatorias para todas as tasks desta trilha: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
-- [ ] Atualizar setup para incluir auth real.
-- [ ] Atualizar API docs e guia de autenticacao.
-- [ ] Documentar contrato de erro de auth.
-- [ ] Criar ADR curto da estrategia de autenticacao da SPA.
+- [x] Atualizar setup para incluir auth real.
+- [x] Atualizar API docs e guia de autenticacao.
+- [x] Documentar contrato de erro de auth.
+- [x] Criar ADR curto da estrategia de autenticacao da SPA.
 
+Evidencia minima da trilha (2026-04-07):
+
+- [x] `docs/guides/setup.md` atualizado com workflow `e2e-auth` e envs de hardening de auth.
+- [x] `docs/guides/api-docs.md` atualizado com contrato de erro (`invalid_credentials`, `access_denied`, `session_expired`, `rate_limited`) e status HTTP.
+- [x] `docs/guides/authentication-guide.md` criado como guia operacional de auth da Sprint 2.
+- [x] `docs/adr/0003-authentication-and-session-strategy.md` atualizado com decisoes de hardening.
+- [x] `docs/sprints/SPRINT-02-closeout.md` publicado com checklist e evidencias da sprint.
 ### Test planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
@@ -674,7 +681,7 @@ Evidencia minima da trilha (2026-04-07):
 
 - [x] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
 - [x] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
-- [x] Trilha nao tocada registrada: `Documentation` (nao tocada nesta sprint; fechamento no fim da sprint).
+- [x] Trilha de Documentation concluida com setup, API docs, auth guide, ADR e closeout da sprint.
 - [x] Trilha de Test planning/execution atualizada com evidencia minima da Sprint 2.
 - [x] Workflow dedicado `e2e-auth` criado e runner local estendido com modo `e2e`.
 
@@ -691,7 +698,7 @@ Evidencia minima da trilha (2026-04-07):
 - Front planning: concluida; estados de loading/erro/sessao expirada mapeados para integracao real.
 - Front execution: concluida; fluxo auth conectado ao backend real sem dependencia de mock.
 - DevOps: concluida; envs/seeds/CI para auth real estabilizados e reproduziveis.
-- Documentation: nao tocada nesta sprint; trilha reservada para fechamento final da sprint.
+- Documentation: concluida; setup, guia de auth, OpenAPI, ADR e closeout da sprint sincronizados.
 - Test planning: concluida; matriz unit/integration/e2e e gate dedicado definidos.
 - Test execution: concluida; request/integration/e2e executados com evidencia minima registrada.
 - Security: concluida; hardening inicial (throttle, logs, contratos e superficie de sessao) aplicado e validado.
@@ -752,4 +759,7 @@ Se houver pressao para pular etapas, usar esta sequencia como trava racional:
 ## Fechamento
 
 Se este documento for seguido com disciplina, o projeto deixa de evoluir por intuicao e passa a evoluir por capacidade comprovada. A regra e simples: nenhuma sprint e pronta porque o codigo parece bom; ela so e pronta quando o escopo implementado roda, esta testado, esta documentado, esta coberto por CI e nao abre uma divida invisivel para a sprint seguinte.
+
+
+
 

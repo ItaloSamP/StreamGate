@@ -51,6 +51,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          description: Limite de tentativas excedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
 
   /api/v1/auth/login:
     post:
@@ -79,6 +85,12 @@ paths:
                 $ref: '#/components/schemas/ErrorEnvelope'
         '403':
           description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          description: Limite de tentativas excedido
           content:
             application/json:
               schema:
@@ -187,6 +199,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MessageEnvelope'
+        '429':
+          description: Limite de tentativas excedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
 
   /api/v1/auth/password/reset/confirm:
     post:
@@ -209,6 +227,12 @@ paths:
                 $ref: '#/components/schemas/MessageEnvelope'
         '401':
           description: Token invalido ou expirado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          description: Limite de tentativas excedido
           content:
             application/json:
               schema:
@@ -270,6 +294,14 @@ components:
           properties:
             code:
               type: string
+              description: Codigo estavel de erro para contrato com cliente.
+              enum:
+                - validation_failed
+                - invalid_credentials
+                - access_denied
+                - session_expired
+                - rate_limited
+                - not_found
               example: validation_failed
             message:
               type: string
@@ -683,3 +715,4 @@ components:
         updated_at:
           type: string
           format: date-time
+

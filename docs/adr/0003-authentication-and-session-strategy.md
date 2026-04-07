@@ -21,10 +21,15 @@ A Sprint 2 congela as seguintes decisoes para a v1:
    - `invalid_credentials`
    - `session_expired`
    - `access_denied`
+   - `rate_limited`
 7. Reset de senha usa token temporario com digest e expira por TTL configuravel.
 8. Fronteira entre autenticacao e autorizacao:
    - autenticacao valida identidade/sessao;
    - autorizacao por papel continua em policies, com papeis iniciais `operator`, `admin` e `service_account`.
+9. Hardening inicial de auth na Sprint 2:
+   - throttle configuravel por IP e identificador para login/register/reset;
+   - logs de falha sem vazamento de segredo;
+   - CORS configuravel por env e sem cookies por padrao (`AUTH_COOKIE_ENABLED=false`).
 
 ## Consequencias
 
@@ -33,13 +38,15 @@ A Sprint 2 congela as seguintes decisoes para a v1:
 - frontend ganha bootstrap real (`me`) sem depender de mock;
 - sessao passa a ser revogavel e auditavel;
 - erro de auth fica estavel para UX e contratos;
-- base pronta para evoluir RBAC fino nas proximas sprints.
+- base pronta para evoluir RBAC fino nas proximas sprints;
+- protecao inicial contra abuso por repeticao de tentativas.
 
 ### Custos e trade-offs
 
 - estado de sessao passa a exigir tabela e limpeza operacional;
 - refresh com rotacao aumenta controle de seguranca, mas adiciona logica de token no backend;
-- reset de senha fica funcional sem email transacional nesta fase, com token de depuracao apenas em ambiente local/teste.
+- reset de senha fica funcional sem email transacional nesta fase, com token de depuracao apenas em ambiente local/teste;
+- throttle exige ajuste de limites por ambiente para evitar falso bloqueio em testes de carga.
 
 ## Itens explicitamente adiados
 

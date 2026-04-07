@@ -16,19 +16,18 @@ A API nao deve assumir processamento pesado de arquivo. Esse trabalho pertence a
 
 ## Estado atual
 
-Depois da primeira execucao de backend da Sprint 1, a API ja saiu do esqueleto puro e passou a ter fundacao de dominio executavel:
+Depois do fechamento da Sprint 2, a API possui base de auth real e contratos documentados:
 
 - health check disponivel em `GET /up`
-- OpenAPI inicial preparado em `/api-docs`
+- OpenAPI v1 servido em `/api-docs`
 - dominio operacional base materializado com `User`, `Upload`, `Job`, `JobBatch`, `QuarantineRecord`, `ProcessingAttempt` e `AuditEvent`
-- autenticacao real da Sprint 2 com `register`, `login`, `logout`, `me`, `session/refresh` e reset de senha
+- autenticacao real com `register`, `login`, `logout`, `me`, `session/refresh` e reset de senha
 - tabela de sessao persistida (`auth_sessions`) com expiracao e revogacao
-- migration inicial com constraints, indices e rastreabilidade
-- esqueleto de `services`, `policies` e `serializers`
+- hardening inicial com rate limit configuravel por env para login/register/reset
 - seeds e fixtures minimas para desenvolvimento e testes
 - suite de Minitest cobrindo validacoes de dominio e fluxo de auth
 
-As convencoes oficiais da camada backend nesta fase estao em [docs/guides/backend-foundations.md](C:/estudos/StreamGate/docs/guides/backend-foundations.md), [docs/guides/domain-glossary.md](C:/estudos/StreamGate/docs/guides/domain-glossary.md) e [docs/adr/0002-domain-boundaries-identifiers-and-contracts.md](C:/estudos/StreamGate/docs/adr/0002-domain-boundaries-identifiers-and-contracts.md).
+As convencoes oficiais desta fase estao em [docs/guides/backend-foundations.md](C:/estudos/StreamGate/docs/guides/backend-foundations.md), [docs/guides/authentication-guide.md](C:/estudos/StreamGate/docs/guides/authentication-guide.md), [docs/guides/domain-glossary.md](C:/estudos/StreamGate/docs/guides/domain-glossary.md) e [docs/adr/0003-authentication-and-session-strategy.md](C:/estudos/StreamGate/docs/adr/0003-authentication-and-session-strategy.md).
 
 ## Convencao arquitetural adotada
 
@@ -45,12 +44,14 @@ O detalhamento completo de envelopes de erro, sucesso, nomenclatura e rastreabil
 ## Arquivos importantes
 
 - rotas: `config/routes.rb`
-- OpenAPI base: `openapi/v1/openapi.yaml`
+- OpenAPI: `openapi/v1/openapi.yaml`
 - modelos de dominio: `app/models/`
 - servicos de aplicacao: `app/services/`
 - politicas de acesso: `app/policies/`
 - serializers: `app/serializers/`
-- migration inicial da Sprint 1: `db/migrate/20260405000100_create_streamgate_domain_foundations.rb`
+- migrations base:
+  - `db/migrate/20260405000100_create_streamgate_domain_foundations.rb`
+  - `db/migrate/20260406000100_add_authentication_foundations.rb`
 
 ## Fluxo local
 
@@ -59,6 +60,7 @@ Com o PostgreSQL local disponivel:
 ```bash
 bundle install
 bundle exec rails db:prepare
+bundle exec rails db:seed
 bundle exec rails server
 ```
 
@@ -71,11 +73,10 @@ Com a app rodando localmente:
 
 ```bash
 bundle exec rails test
+bundle exec rails test test/requests/auth_flow_test.rb
 bundle exec rubocop
 bundle exec brakeman
 ```
-
-No ambiente local atual, a validacao da Sprint 1 foi executada com PostgreSQL via `docker compose up -d postgres`.
 
 ## Proximo passo esperado
 

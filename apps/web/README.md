@@ -14,17 +14,17 @@ A aplicacao web e responsavel por:
 
 ## Estado atual
 
-Hoje o frontend ja possui uma base relevante:
+No fechamento da Sprint 2, o frontend possui:
 
 - landing page
-- login, cadastro e reset
-- route guard
+- login, cadastro e reset conectados na API real
+- route guard com tratamento de sessao expirada
 - workspace autenticado segmentado por modulos
-- auth real integrado a API (`register`, `login`, `logout`, `me`, `session/refresh`, reset)
-- camada HTTP oficial para a API
-- testes de UX, navegacao e adapter
+- auth real integrado (`register`, `login`, `logout`, `me`, `session/refresh`, reset)
+- camada HTTP oficial para API (`api-client` e `streamgate-api`)
+- suites de teste unitaria, integracao (backend real) e E2E
 
-As convencoes oficiais do frontend nesta fase estao em [docs/guides/frontend-foundations.md](C:/estudos/StreamGate/docs/guides/frontend-foundations.md) e [docs/guides/frontend-workspace-map.md](C:/estudos/StreamGate/docs/guides/frontend-workspace-map.md).
+As convencoes oficiais desta fase estao em [docs/guides/frontend-foundations.md](C:/estudos/StreamGate/docs/guides/frontend-foundations.md), [docs/guides/frontend-workspace-map.md](C:/estudos/StreamGate/docs/guides/frontend-workspace-map.md) e [docs/guides/authentication-guide.md](C:/estudos/StreamGate/docs/guides/authentication-guide.md).
 
 ## Superficies oficiais
 
@@ -91,6 +91,8 @@ pnpm dev --host
 pnpm lint
 pnpm build
 pnpm test:run
+pnpm test:integration
+pnpm test:e2e
 ```
 
 ## Pilares de implementacao

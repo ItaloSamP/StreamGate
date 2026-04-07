@@ -101,11 +101,11 @@ Observacao operacional:
 
 ## Fora de escopo desta trilha
 
-Mesmo com DevOps da Sprint 2 fechado, permanecem trilhas proprias da sprint para fechamento separado:
+No fechamento final da Sprint 2 (2026-04-07), as trilhas relacionadas que estavam fora de escopo direto de DevOps tambem foram concluidas no roadmap mestre:
 
-- Documentation (guias de auth e contrato de erro);
-- Test planning/execution (matriz e execucao E2E de auth);
-- Security (revisoes de hardening de auth, rate limit e logs sensiveis).
+- Documentation finalizada com setup, guia de auth, ADR e closeout da sprint;
+- Test planning/execution finalizada com gate `e2e-auth`;
+- Security finalizada com hardening inicial de auth, throttle e logs.
 
 ## Proximas fases apos Sprint 2
 
@@ -132,4 +132,5 @@ Entregas esperadas:
 - manifests/Helm por servico;
 - readiness e liveness probes alinhados ao runtime real;
 - estrategia de GitOps para reconciliacao de ambiente.
+
 
