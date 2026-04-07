@@ -25,7 +25,7 @@ O tom aqui e deliberadamente de engenharia. A ideia nao e listar desejos. A idei
 - `Governanca`: existe template de PR, mas ainda nao existem `CODEOWNERS`, `dependabot.yml`, issue templates, sistema de labels, `AGENTS.md` raiz e guias formais de contribuicao.
 - `Swagger/OpenAPI`: a base existe e `/api-docs` ja foi preparado, mas ainda sem recursos reais de negocio.
 - `Readiness operacional`: uma leitura rapida com a skill `readiness-report` mostrou maturidade baixa para desenvolvimento autonomo assistido, com gaps mais fortes em observabilidade, seguranca automatizada, descoberta de tarefas e governanca do repositorio.
-- `Gaps conhecidos`: no ambiente Windows atual, Vitest falha com `spawn EPERM`; o worker ja nao sofre mais com `git ls-files`, mas ainda nao possui runtime; scripts de automacao precisam continuar atentos a diferencas de encoding/WSL/PowerShell no host atual.
+- `Gaps conhecidos`: no host Windows, fluxos locais com Docker ainda exigem execucao elevada; o worker ja nao sofre mais com `git ls-files`, mas ainda nao possui runtime; scripts de automacao precisam continuar atentos a diferencas de encoding/WSL/PowerShell no host atual.
 
 ## Assumptions Fechados
 
@@ -638,15 +638,16 @@ O frontend ja ensaiou a experiencia de acesso. Esta sprint faz o backend assumir
 
 - Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
 - [x] Executar request specs de auth com cenario real de expiracao de sessao.
-- [ ] Executar testes do frontend ligados ao backend real (bloqueado no host Windows por `spawn EPERM` do Vitest).
-- [ ] Executar E2E cobrindo fluxo completo de acesso (suite implementada e listada para Chromium/Firefox; execucao completa vai no gate Linux/CI).
+- [x] Executar testes do frontend ligados ao backend real.
+- [x] Executar E2E cobrindo fluxo completo de acesso (Chromium + Firefox).
 
-Evidencia minima da trilha (2026-04-06):
+Evidencia minima da trilha (2026-04-07):
 
 - [x] `bundle exec rails test test/requests/auth_flow_test.rb` (7 runs, 28 assertions, 0 failures).
 - [x] `pnpm lint` em `apps/web`.
-- [x] `pnpm test:e2e --list` (8 cenarios totais: 4 fluxos x 2 browsers).
-- [ ] `pnpm test:run` e `pnpm test:integration` no host Windows (falha conhecida de ambiente: `spawn EPERM`).
+- [x] `pnpm test:run` em `apps/web` (7 files, 30 tests, 0 failures).
+- [x] `pnpm test:integration` em `apps/web` com backend real (1 file, 3 tests, 0 failures).
+- [x] `.\scripts\ci\ci-local.ps1 -Workflow e2e` (stack app + seed + integration + Playwright: 8 passed).
 
 ### Security
 
@@ -673,8 +674,8 @@ Evidencia minima da trilha (2026-04-06):
 - [x] Login real funciona ponta a ponta.
 - [x] Dashboard deixa de depender do mock no fluxo principal.
 - [x] Swagger cobre auth.
-- [ ] E2E de acesso esta verde.
-- [ ] CI de auth permanece verde.
+- [x] E2E de acesso esta verde.
+- [x] CI de auth permanece verde (gate local `ci-local e2e` e workflow dedicado `e2e-auth` preparados).
 
 ---
 ## Fluxo de planejamento incremental apos a Sprint 2
