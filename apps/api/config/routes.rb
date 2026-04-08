@@ -12,6 +12,14 @@ Rails.application.routes.draw do
         post "password/reset/request", to: "password_resets#create"
         post "password/reset/confirm", to: "password_resets#update"
       end
+
+      resources :uploads, only: [ :create, :index ] do
+        collection do
+          post "signed-url", to: "uploads#signed_url"
+        end
+      end
+
+      resources :jobs, only: [ :index ]
     end
   end
 

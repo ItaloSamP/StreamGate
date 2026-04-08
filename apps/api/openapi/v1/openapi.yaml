@@ -4,13 +4,15 @@ info:
   version: v1
   description: |
     Base inicial da documentacao OpenAPI do StreamGate.
-    A Sprint 2 consolida autenticacao real, sessao e endpoint `me`.
+    A Sprint 3 consolida upload assinado, registro idempotente e listagens reais de uploads/jobs.
 servers:
   - url: http://localhost:3000
     description: Desenvolvimento local
 tags:
   - name: Health
   - name: Auth
+  - name: Uploads
+  - name: Jobs
 paths:
   /up:
     get:
@@ -238,6 +240,228 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
 
+  /api/v1/uploads/signed-url:
+    post:
+      summary: Gera URL assinada para upload no storage
+      operationId: generateSignedUploadUrl
+      tags:
+        - Uploads
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadSignedUrlRequest'
+      responses:
+        '201':
+          description: URL assinada gerada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadSignedUrlEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Dados invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          description: Limite de tentativas excedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '503':
+          description: Dependencia de storage indisponivel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/uploads:
+    post:
+      summary: Registra upload e cria job inicial
+      operationId: registerUploadAndCreateJob
+      tags:
+        - Uploads
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadRegisterRequest'
+      responses:
+        '201':
+          description: Upload registrado e job criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadRegisterEnvelope'
+        '200':
+          description: Registro idempotente reaproveitado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadRegisterEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Conflito de storage_key/checksum
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Dados invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          description: Limite de tentativas excedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '503':
+          description: Dependencia de storage indisponivel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+    get:
+      summary: Lista uploads com filtros e paginacao
+      operationId: listUploads
+      tags:
+        - Uploads
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - in: query
+          name: search
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de uploads
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadListEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Filtros invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/jobs:
+    get:
+      summary: Lista jobs com filtros e paginacao
+      operationId: listJobs
+      tags:
+        - Jobs
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - in: query
+          name: search
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de jobs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobListEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Filtros invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
 components:
   securitySchemes:
     bearerAuth:
@@ -301,6 +525,8 @@ components:
                 - access_denied
                 - session_expired
                 - rate_limited
+                - resource_conflict
+                - dependency_unavailable
                 - not_found
               example: validation_failed
             message:
@@ -606,6 +832,152 @@ components:
         data:
           $ref: '#/components/schemas/SessionRefreshPayload'
 
+
+    UploadSignedUrlRequest:
+      type: object
+      required:
+        - upload
+      properties:
+        upload:
+          type: object
+          required:
+            - filename
+            - content_type
+            - byte_size
+            - checksum_sha256
+          properties:
+            filename:
+              type: string
+            content_type:
+              type: string
+              enum:
+                - application/zip
+                - text/csv
+            byte_size:
+              type: integer
+              minimum: 1
+            checksum_sha256:
+              type: string
+              pattern: '^[a-f0-9]{64}$'
+
+    UploadSignedUrlPayload:
+      type: object
+      required:
+        - storage_key
+        - method
+        - upload_url
+        - required_headers
+        - expires_at
+      properties:
+        storage_key:
+          type: string
+          example: uploads/user_abc/2026/04/07/token-orders.csv
+        method:
+          type: string
+          example: PUT
+        upload_url:
+          type: string
+          format: uri
+        required_headers:
+          type: object
+          additionalProperties:
+            type: string
+        expires_at:
+          type: string
+          format: date-time
+
+    UploadSignedUrlEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/UploadSignedUrlPayload'
+
+    UploadRegisterRequest:
+      type: object
+      required:
+        - upload
+      properties:
+        upload:
+          type: object
+          required:
+            - filename
+            - content_type
+            - byte_size
+            - checksum_sha256
+            - storage_key
+          properties:
+            filename:
+              type: string
+            content_type:
+              type: string
+              enum:
+                - application/zip
+                - text/csv
+            byte_size:
+              type: integer
+              minimum: 1
+            checksum_sha256:
+              type: string
+              pattern: '^[a-f0-9]{64}$'
+            storage_key:
+              type: string
+              example: uploads/user_abc/2026/04/07/token-orders.csv
+            metadata:
+              type: object
+              additionalProperties: true
+
+    UploadRegisterPayload:
+      type: object
+      required:
+        - upload
+        - job
+      properties:
+        upload:
+          $ref: '#/components/schemas/Upload'
+        job:
+          $ref: '#/components/schemas/Job'
+
+    UploadRegisterMeta:
+      type: object
+      properties:
+        idempotent:
+          type: boolean
+
+    UploadRegisterEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/UploadRegisterPayload'
+        meta:
+          $ref: '#/components/schemas/UploadRegisterMeta'
+
+    UploadListEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Upload'
+        meta:
+          $ref: '#/components/schemas/EnvelopeMeta'
+
+    JobListEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Job'
+        meta:
+          $ref: '#/components/schemas/EnvelopeMeta'
     Upload:
       type: object
       required:
@@ -715,4 +1087,5 @@ components:
         updated_at:
           type: string
           format: date-time
+
 

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/http/upload-list-response.v1.json",
+  "title": "UploadListResponseV1",
+  "type": "object",
+  "required": ["data", "meta"],
+  "properties": {
+    "data": {
+      "type": "array",
+      "items": { "$ref": "./resources/upload.v1.json" }
+    },
+    "meta": { "$ref": "./success-envelope.v1.json#/properties/meta" }
+  },
+  "additionalProperties": false
+}

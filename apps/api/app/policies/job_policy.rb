@@ -1,4 +1,8 @@
 class JobPolicy < ApplicationPolicy
+  def index?
+    actor.present?
+  end
+
   def show?
     admin? || actor_owns_upload?
   end

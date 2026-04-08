@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/http/upload-signed-url-response.v1.json",
+  "title": "UploadSignedUrlResponseV1",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": ["storage_key", "method", "upload_url", "required_headers", "expires_at"],
+      "properties": {
+        "storage_key": { "type": "string" },
+        "method": { "type": "string", "const": "PUT" },
+        "upload_url": { "type": "string", "format": "uri" },
+        "required_headers": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "expires_at": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,4 +1,8 @@
 class UploadPolicy < ApplicationPolicy
+  def index?
+    actor.present?
+  end
+
   def show?
     admin? || owns_record?
   end

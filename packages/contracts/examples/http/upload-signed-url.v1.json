@@ -1,0 +1,12 @@
+{
+  "data": {
+    "storage_key": "uploads/user_fixture_operator/2026/04/07/token-orders.csv",
+    "method": "PUT",
+    "upload_url": "http://localhost:9000/streamgate-uploads/uploads/user_fixture_operator/2026/04/07/token-orders.csv?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=streamgate%2F20260407%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260407T180000Z&X-Amz-Expires=900&X-Amz-SignedHeaders=content-type%3Bhost%3Bx-amz-meta-checksum-sha256&X-Amz-Signature=abcdef",
+    "required_headers": {
+      "Content-Type": "text/csv",
+      "x-amz-meta-checksum-sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "expires_at": "2026-04-07T18:15:00Z"
+  }
+}
