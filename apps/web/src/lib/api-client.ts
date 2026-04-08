@@ -1,4 +1,4 @@
-export type ApiSuccessEnvelope<T> = {
+﻿export type ApiSuccessEnvelope<T> = {
   data: T
   meta?: {
     pagination?: {
@@ -8,6 +8,7 @@ export type ApiSuccessEnvelope<T> = {
       total_pages: number
     }
     filters?: Record<string, string | number | boolean | null | string[]>
+    idempotent?: boolean
   }
 }
 
@@ -170,3 +171,4 @@ export function createApiClient(baseUrl = resolveApiBaseUrl()) {
 }
 
 export const apiClient = createApiClient()
+
