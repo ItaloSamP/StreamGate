@@ -84,11 +84,28 @@ services:
     depends_on:
       minio:
         condition: service_healthy
+    environment:
+      MINIO_BUCKET_RAW: ${MINIO_BUCKET_RAW:-streamgate-uploads}
+      UPLOAD_STORAGE_BUCKET: ${UPLOAD_STORAGE_BUCKET:-streamgate-uploads}
+      MINIO_CORS_ALLOWED_ORIGIN: ${MINIO_CORS_ALLOWED_ORIGIN:-http://localhost:5173}
     entrypoint: >
       /bin/sh -eu -c "
+      bucket=\"${UPLOAD_STORAGE_BUCKET}\";
       mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
-      mc mb --ignore-existing local/${MINIO_BUCKET_RAW};
-      mc anonymous set private local/${MINIO_BUCKET_RAW};
+      mc mb --ignore-existing local/$${bucket};
+      mc anonymous set private local/$${bucket};
+      cat > /tmp/minio-cors.json <<'EOF'
+      [
+        {
+          \"AllowedOrigins\": [\"$${MINIO_CORS_ALLOWED_ORIGIN}\"],
+          \"AllowedMethods\": [\"PUT\", \"GET\", \"HEAD\"],
+          \"AllowedHeaders\": [\"*\"],
+          \"ExposeHeaders\": [\"ETag\", \"x-amz-request-id\", \"x-amz-id-2\"],
+          \"MaxAgeSeconds\": 300
+        }
+      ]
+      EOF
+      mc cors set local/$${bucket} /tmp/minio-cors.json;
       "
     networks:
       - streamgate
