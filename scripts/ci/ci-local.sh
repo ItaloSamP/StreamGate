@@ -243,6 +243,10 @@ run_e2e_workflow() {
   fi
 
   if [[ $failed -eq 0 ]]; then
+    ci_local_run_step "$workflow" 'Run signed upload operational smoke' "$ROOT_DIR" "SEED_OPERATOR_PASSWORD=$seed_operator_password SMOKE_API_BASE_URL=http://localhost:3000 python scripts/compose/upload-signed-smoke.py" || { failed=1; reason='Falha em Run signed upload operational smoke.'; }
+  fi
+
+  if [[ $failed -eq 0 ]]; then
     ci_local_run_step "$workflow" 'Run web integration auth tests' "$ROOT_DIR/apps/web" "AUTH_INTEGRATION_BASE_URL=http://localhost:3000 SEED_OPERATOR_PASSWORD=$seed_operator_password pnpm test:integration" || { failed=1; reason='Falha em Run web integration auth tests.'; }
   fi
 

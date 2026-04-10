@@ -49,6 +49,13 @@ jobs:
       UPLOAD_STORAGE_REGION: us-east-1
       UPLOAD_SIGNED_URL_TTL_SECONDS: 900
       UPLOAD_SIGNED_URL_MODE: presigned_put
+      UPLOAD_STORAGE_ACCESS_KEY: streamgate
+      UPLOAD_STORAGE_SECRET_KEY: streamgate123
+      UPLOAD_ALLOWED_CONTENT_TYPES: application/zip,text/csv
+      UPLOAD_SIGNED_URL_LIMIT_PER_IP: 30
+      UPLOAD_REGISTER_LIMIT_PER_IP: 30
+      UPLOAD_THROTTLE_WINDOW_SECONDS: 60
+      UPLOAD_VERIFY_OBJECT_BEFORE_REGISTER: false
       SEED_OPERATOR_PASSWORD: StrongPass123!
       SEED_ADMIN_PASSWORD: StrongPass123!
       BUNDLE_WITHOUT: production
@@ -81,6 +88,9 @@ jobs:
 
       - name: Run auth flow tests
         run: bundle exec rails test test/requests/auth_flow_test.rb
+
+      - name: Run upload/job flow tests
+        run: bundle exec rails test test/requests/uploads_jobs_flow_test.rb
 
       - name: Run tests
         run: bundle exec rails test
