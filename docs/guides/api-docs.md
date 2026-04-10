@@ -2,76 +2,126 @@
 
 A API Rails do StreamGate usa OpenAPI como contrato publico versionado da v1.
 
-## O que ja ficou pronto na Sprint 2
+## Estado apos Sprint 3
 
-- gems `rswag-api` e `rswag-ui` no `Gemfile` da API
-- rota de documentacao em `/api-docs`
-- configuracao de `openapi_root` apontando para `apps/api/openapi`
-- arquivo oficial `apps/api/openapi/v1/openapi.yaml`
-- endpoints de auth reais documentados: `register`, `login`, `logout`, `me`, `session/refresh` e reset de senha
-- contrato de erro de auth fechado com codigos estaveis para frontend e CI
+O contrato oficial agora cobre auth + trilha base de ingestao (`upload+job`):
 
-## Como ativar localmente
+- auth: `register`, `login`, `logout`, `me`, `session/refresh`, reset de senha
+- upload/job:
+  - `POST /api/v1/uploads/signed-url`
+  - `POST /api/v1/uploads`
+  - `GET /api/v1/uploads`
+  - `GET /api/v1/jobs`
+
+Fonte unica do contrato:
+
+- `apps/api/openapi/v1/openapi.yaml`
+
+## Como acessar localmente
 
 ```bash
 cd apps/api
-bundle install
 bundle exec rails server
 ```
 
-Depois disso, a UI deve ficar disponivel em:
+UI da doc:
 
 - [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
 
-## Contrato de erro de auth (v1)
+## Contratos da trilha upload/job (Sprint 3)
 
-Codigos documentados no OpenAPI:
+### `POST /api/v1/uploads/signed-url`
 
-- `invalid_credentials`
+Request (`upload`):
+
+- `filename`
+- `content_type` (`application/zip` ou `text/csv`)
+- `byte_size`
+- `checksum_sha256`
+
+Response `201`:
+
+- `data.storage_key`
+- `data.method` (`PUT`)
+- `data.upload_url`
+- `data.required_headers`
+- `data.expires_at`
+
+### `POST /api/v1/uploads`
+
+Request (`upload`):
+
+- `filename`
+- `content_type`
+- `byte_size`
+- `checksum_sha256`
+- `storage_key`
+- `metadata` (opcional)
+
+Response `201`:
+
+- `data.upload`
+- `data.job`
+
+Idempotencia:
+
+- mesmo `storage_key` + mesmo `checksum_sha256` retorna `200` com `meta.idempotent=true`
+- mesmo `storage_key` + checksum diferente retorna `409 resource_conflict`
+
+### `GET /api/v1/uploads` e `GET /api/v1/jobs`
+
+Filtros:
+
+- `status`
+- `page`
+- `per_page`
+- `search` (opcional)
+
+Envelope padrao:
+
+- `data`
+- `meta.pagination`
+- `meta.filters`
+
+## Codigos de erro estaveis
+
+Trilha auth/upload/job usa estes codigos como contrato:
+
+- `validation_failed`
+- `resource_conflict`
 - `access_denied`
-- `session_expired`
 - `rate_limited`
+- `dependency_unavailable`
+- `invalid_credentials`
+- `session_expired`
 
-Envelope de erro padrao:
+Envelope de erro:
 
 ```json
 {
   "error": {
-    "code": "rate_limited",
-    "message": "Muitas tentativas. Aguarde alguns instantes antes de tentar novamente.",
+    "code": "validation_failed",
+    "message": "Nao foi possivel validar os dados enviados.",
     "request_id": "req_xxx",
-    "trace_id": "trace_xxx"
+    "trace_id": "trace_xxx",
+    "details": [
+      { "field": "content_type", "reason": "not_supported" }
+    ]
   }
 }
 ```
 
-## Status HTTP relevantes para auth
+## Relacao com contratos compartilhados
 
-- `200`: sucesso (`login`, `logout`, `me`, `refresh`, reset)
-- `201`: cadastro com sessao inicial
-- `401`: credencial invalida, token invalido ou sessao expirada
-- `403`: acesso negado para recurso protegido
-- `422`: validacao de payload
-- `429`: throttle de auth excedido
+Os schemas/examples HTTP da trilha ficam em:
 
-## Estrategia recomendada daqui para frente
+- `packages/contracts/schemas/http`
+- `packages/contracts/examples/http`
 
-- manter `apps/api/openapi/v1/openapi.yaml` como fonte unica de contrato
-- atualizar OpenAPI no mesmo PR de qualquer endpoint novo
-- manter exemplos de request/response sincronizados com testes de request
-- preservar nomes de `error.code` como contrato estavel para frontend
-- registrar no roadmap qualquer alteracao de contrato com impacto de UX
+Compatibilidade de contrato deve seguir sincronizada com OpenAPI no mesmo ciclo de mudanca.
 
-## Relacao com outros documentos
+## Relacao com outros docs
 
-- estrategia de sessao e auth: [docs/adr/0003-authentication-and-session-strategy.md](C:/estudos/StreamGate/docs/adr/0003-authentication-and-session-strategy.md)
-- guia operacional de auth: [docs/guides/authentication-guide.md](C:/estudos/StreamGate/docs/guides/authentication-guide.md)
 - setup e envs: [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md)
-
-## Gate de prontidao da Sprint 2.5
-
-A Sprint 2.5 nao introduz endpoints novos de negocio. O foco desta etapa foi congelar contratos e naming para reduzir drift antes da Sprint 3:
-
-- namespace oficial para upload/job base: /api/v1/uploads e /api/v1/jobs;
-- estrategia de listagem: envelope data + meta.pagination + meta.filters;
-- implementacao funcional desses endpoints permanece para a Sprint 3.
+- autenticacao: [docs/guides/authentication-guide.md](C:/estudos/StreamGate/docs/guides/authentication-guide.md)
+- roadmap executivo: [docs/planning/streamgate-full-sprints-roadmap.md](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)

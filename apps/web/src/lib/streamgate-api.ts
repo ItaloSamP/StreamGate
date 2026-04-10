@@ -1,4 +1,4 @@
-import { apiClient, type ApiSuccessEnvelope, type RequestOptions } from '@/lib/api-client'
+﻿import { apiClient, type ApiSuccessEnvelope, type RequestOptions } from '@/lib/api-client'
 
 type StreamgateHttpClient = {
   get: <T>(path: string, options?: RequestOptions) => Promise<T>
@@ -17,6 +17,8 @@ export type ListQuery = {
   per_page?: number
   search?: string
 }
+
+export type UploadContentType = 'application/zip' | 'text/csv'
 
 export type JobSummary = {
   id: string
@@ -45,6 +47,35 @@ export type UploadSummary = {
   trace_id: string
   created_at: string | null
   updated_at: string | null
+}
+
+export type UploadSignedUrlRequest = {
+  filename: string
+  contentType: UploadContentType
+  byteSize: number
+  checksumSha256: string
+}
+
+export type UploadSignedUrlResponse = {
+  storage_key: string
+  method: 'PUT'
+  upload_url: string
+  expires_at: string
+  required_headers: Record<string, string>
+}
+
+export type UploadRegisterRequest = {
+  filename: string
+  contentType: UploadContentType
+  byteSize: number
+  checksumSha256: string
+  storageKey: string
+  metadata?: Record<string, unknown>
+}
+
+export type UploadRegisterResponse = {
+  upload: UploadSummary
+  job: JobSummary
 }
 
 export type AuthUser = {
@@ -126,11 +157,50 @@ function normalizeListQuery(query?: ListQuery): Record<string, string | number |
 const endpoints = {
   jobs: '/api/v1/jobs',
   uploads: '/api/v1/uploads',
+  uploadSignedUrl: '/api/v1/uploads/signed-url',
 } as const
 
 export function createStreamgateApi(client: StreamgateHttpClient = apiClient) {
   return {
     health: () => client.get<HealthResponse>('/up', undefined),
+
+    requestUploadSignedUrl: async (input: UploadSignedUrlRequest): Promise<ApiSuccessEnvelope<UploadSignedUrlResponse>> => {
+      const body = {
+        upload: {
+          filename: input.filename,
+          content_type: input.contentType,
+          byte_size: input.byteSize,
+          checksum_sha256: input.checksumSha256,
+        },
+      }
+
+      if (client.postEnvelope) {
+        return client.postEnvelope<UploadSignedUrlResponse>(endpoints.uploadSignedUrl, { body })
+      }
+
+      const data = await client.post<UploadSignedUrlResponse>(endpoints.uploadSignedUrl, { body })
+      return { data }
+    },
+
+    registerUpload: async (input: UploadRegisterRequest): Promise<ApiSuccessEnvelope<UploadRegisterResponse>> => {
+      const body = {
+        upload: {
+          filename: input.filename,
+          content_type: input.contentType,
+          byte_size: input.byteSize,
+          checksum_sha256: input.checksumSha256,
+          storage_key: input.storageKey,
+          metadata: input.metadata,
+        },
+      }
+
+      if (client.postEnvelope) {
+        return client.postEnvelope<UploadRegisterResponse>(endpoints.uploads, { body })
+      }
+
+      const data = await client.post<UploadRegisterResponse>(endpoints.uploads, { body })
+      return { data }
+    },
 
     listJobs: async (query?: ListQuery): Promise<ApiSuccessEnvelope<JobSummary[]>> => {
       const normalizedQuery = normalizeListQuery(query)

@@ -45,8 +45,19 @@ Todo contrato de evento deve prever, quando aplicavel:
 - `job_id`
 - `batch_id`
 
+## Contratos HTTP adicionados na Sprint 3
+
+- `upload-signed-url-request.v1.json`
+- `upload-signed-url-response.v1.json`
+- `upload-register-request.v1.json`
+- `upload-register-response.v1.json`
+- `upload-list-response.v1.json`
+- `job-list-response.v1.json`
+
+Exemplos correspondentes estao em `examples/http`.
 ## Fonte de verdade complementar
 
 - [Glossario de dominio](C:/estudos/StreamGate/docs/guides/domain-glossary.md)
 - [Fundacoes do backend](C:/estudos/StreamGate/docs/guides/backend-foundations.md)
 - [ADR 0002](C:/estudos/StreamGate/docs/adr/0002-domain-boundaries-identifiers-and-contracts.md)
+

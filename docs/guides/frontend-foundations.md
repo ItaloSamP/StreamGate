@@ -235,21 +235,18 @@ Arquivos principais:
 - src/features/auth/protected-route.tsx
 - paginas de auth em src/pages
 
-### Workspace mock
+### Workspace mock parcial
 
-Ainda esta mockado no cliente:
+Depois da Sprint 3, a trilha principal de `upload+job` deixou de ser mock no workspace:
 
-- KPIs
-- jobs
-- filas
-- workers
-- eventos
-- uploads
-- analytics
-- quarentena
-- auditoria
-- chips e alertas de status
-- graficos e distribuicoes do workspace
+- `/upload`: formulario real com fluxo `signed-url -> PUT -> register`, estados explicitos (`idle`, `assinando`, `enviando`, `confirmando`, `sucesso`, `erro`) e duas listagens reais (uploads e jobs recentes);
+- `/jobs`: listagem real de jobs com filtro/status + pagina em URL.
+
+Ainda permanece mockado no cliente:
+
+- KPIs e visao consolidada do dashboard
+- analytics, quarentena, event log e auditoria em profundidade
+- chips globais e distribuicoes avancadas ainda sem backend analitico completo
 
 Arquivos principais:
 
@@ -263,7 +260,7 @@ Arquivos principais:
 Mesmo quando os dados ainda sao mock, a estrutura visual nao e provisoria. Nesta fase, o projeto passa a assumir:
 
 - landing, auth shell e workspace shell como baseline oficial
-- mocks apenas como substituicao temporaria da camada de dados e autenticacao
+- mocks apenas como substituicao temporaria das trilhas ainda nao conectadas
 - substituicao de mock por dado real sem resetar a linguagem visual
 - substituicao de fetch mock por adapter real sem multiplicar clientes HTTP pela app
 
@@ -322,3 +319,11 @@ Uma entrega de frontend so e considerada pronta quando:
   - empty: explicacao do estado vazio + proxima acao
   - error: mensagem operacional + retry quando aplicavel
   - success: confirmacao de transicao de estado sem ruir hierarquia visual
+
+## Entrega consolidada da Sprint 3
+
+- `UploadPage` e `JobsPage` agora consomem API real via adapter oficial.
+- URL state minimo aplicado:
+  - `/jobs`: `status`, `page`
+  - `/upload`: `upload_status`, `upload_page`, `job_status`, `job_page`
+- Refresh pos-upload confirmado sem polling continuo nesta sprint (refetch imediato de uploads/jobs).

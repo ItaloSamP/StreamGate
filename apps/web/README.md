@@ -14,7 +14,7 @@ A aplicacao web e responsavel por:
 
 ## Estado atual
 
-No fechamento da Sprint 2, o frontend possui:
+No fechamento da Sprint 3, o frontend possui:
 
 - landing page
 - login, cadastro e reset conectados na API real
@@ -22,6 +22,8 @@ No fechamento da Sprint 2, o frontend possui:
 - workspace autenticado segmentado por modulos
 - auth real integrado (`register`, `login`, `logout`, `me`, `session/refresh`, reset)
 - camada HTTP oficial para API (`api-client` e `streamgate-api`)
+- fluxo real de upload assinado em `/upload` (assinar, enviar, confirmar, atualizar listas)
+- listagem real de jobs em `/jobs` com filtro/paginacao na URL
 - suites de teste unitaria, integracao (backend real) e E2E
 
 As convencoes oficiais desta fase estao em [docs/guides/frontend-foundations.md](C:/estudos/StreamGate/docs/guides/frontend-foundations.md), [docs/guides/frontend-workspace-map.md](C:/estudos/StreamGate/docs/guides/frontend-workspace-map.md) e [docs/guides/authentication-guide.md](C:/estudos/StreamGate/docs/guides/authentication-guide.md).
@@ -47,7 +49,7 @@ Antes de criar novas variacoes, o app deve reaproveitar:
 Nesta fase, ainda sao mockados no cliente:
 
 - dados operacionais exibidos no dashboard
-- leituras de jobs, analytics, quarentena e auditoria
+- analytics, quarentena, event log e auditoria em profundidade
 - algumas superficies de modulo que ainda servem como scaffold visual
 
 A estrutura visual dessas telas nao e provisoria. O mock atual substitui dados de dominio, nao a linguagem de interface, a segmentacao do workspace nem a camada adapter.
@@ -81,6 +83,13 @@ Responsabilidades desta camada:
 - tratar expiracao/negacao de sessao sem acoplamento de pagina
 - evitar fetch ad hoc por tela
 
+Para a trilha de upload/job da Sprint 3, o adapter inclui:
+
+- `requestUploadSignedUrl`
+- `registerUpload`
+- `listUploads`
+- `listJobs`
+
 Toda integracao futura deve partir dessa camada antes de introduzir caches, query libraries ou polling mais sofisticado.
 
 ## Comandos locais
@@ -109,15 +118,15 @@ Toda evolucao do frontend deve respeitar estes principios:
 
 A evolucao planejada do frontend esta em [docs/planning/streamgate-full-sprints-roadmap.md](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md), com foco em:
 
-1. fluxo real de upload
-2. dashboard operacional com dados reais
+1. ampliar dados reais nos modulos alem de upload/job
+2. dashboard operacional consolidado com dados de dominio
 3. dashboard analitico conectado
-4. refinamento de estados de modulo (loading/empty/error por dominio)
+4. suporte futuro a ingestao por link/conector (fora da Sprint 3 base)
 
 ## Gate de prontidao da Sprint 2.5
 
 A Sprint 2.5 fechou ajustes estruturais sem abrir feature nova de dominio:
 
 - adapter streamgate-api alinhado para namespace /api/v1 em listagens de jobs e uploads;
-- suporte a envelope completo (data + meta) no pi-client para preparar paginacao/filters da Sprint 3;
+- suporte a envelope completo (data + meta) no api-client para preparar paginacao/filters da Sprint 3;
 - matriz minima de estados (loading, empty, error, success) consolidada nos guias de frontend para evitar retrabalho.

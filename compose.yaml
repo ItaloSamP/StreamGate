@@ -1,4 +1,4 @@
-name: streamgate
+﻿name: streamgate
 
 services:
   postgres:
@@ -84,12 +84,33 @@ services:
     depends_on:
       minio:
         condition: service_healthy
-    entrypoint: >
-      /bin/sh -eu -c "
-      mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
-      mc mb --ignore-existing local/${MINIO_BUCKET_RAW};
-      mc anonymous set private local/${MINIO_BUCKET_RAW};
-      "
+    environment:
+      MINIO_BUCKET_RAW: ${MINIO_BUCKET_RAW:-streamgate-uploads}
+      UPLOAD_STORAGE_BUCKET: ${UPLOAD_STORAGE_BUCKET:-streamgate-uploads}
+      MINIO_CORS_ALLOWED_ORIGIN: ${MINIO_CORS_ALLOWED_ORIGIN:-http://localhost:5173}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    entrypoint:
+      - /bin/sh
+      - -eu
+      - -c
+      - |
+        bucket="${UPLOAD_STORAGE_BUCKET}"
+        mc alias set local http://minio:9000 "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}"
+        mc mb --ignore-existing "local/$${bucket}"
+        mc anonymous set private "local/$${bucket}"
+        cat >/tmp/minio-cors.xml <<EOF
+        <CORSConfiguration>
+          <CORSRule>
+            <AllowedOrigin>${MINIO_CORS_ALLOWED_ORIGIN}</AllowedOrigin>
+            <AllowedMethod>PUT</AllowedMethod>
+            <AllowedMethod>GET</AllowedMethod>
+            <AllowedMethod>HEAD</AllowedMethod>
+            <AllowedHeader>*</AllowedHeader>            <MaxAgeSeconds>300</MaxAgeSeconds>
+          </CORSRule>
+        </CORSConfiguration>
+        EOF
+        mc cors set "local/$${bucket}" /tmp/minio-cors.xml || echo "[minio-init] warning: cors set not supported by current MinIO build; continuing"
     networks:
       - streamgate
 
@@ -138,7 +159,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       AUTH_SESSION_TTL_HOURS: ${AUTH_SESSION_TTL_HOURS:-24}
       AUTH_PASSWORD_RESET_TTL_MINUTES: ${AUTH_PASSWORD_RESET_TTL_MINUTES:-30}
-      AUTH_TOKEN_PEPPER: ${AUTH_TOKEN_PEPPER:-streamgate-local-dev-pepper}
+      AUTH_TOKEN_PEPPER: ${AUTH_TOKEN_PEPPER}
       AUTH_SESSION_TRANSPORT: ${AUTH_SESSION_TRANSPORT:-bearer}
       AUTH_COOKIE_ENABLED: ${AUTH_COOKIE_ENABLED:-false}
       AUTH_CSRF_MODE: ${AUTH_CSRF_MODE:-token}
@@ -147,8 +168,15 @@ services:
       UPLOAD_STORAGE_ENDPOINT: ${UPLOAD_STORAGE_ENDPOINT:-http://minio:9000}
       UPLOAD_STORAGE_BUCKET: ${UPLOAD_STORAGE_BUCKET:-streamgate-uploads}
       UPLOAD_STORAGE_REGION: ${UPLOAD_STORAGE_REGION:-us-east-1}
+      UPLOAD_STORAGE_ACCESS_KEY: ${UPLOAD_STORAGE_ACCESS_KEY}
+      UPLOAD_STORAGE_SECRET_KEY: ${UPLOAD_STORAGE_SECRET_KEY}
+      UPLOAD_ALLOWED_CONTENT_TYPES: ${UPLOAD_ALLOWED_CONTENT_TYPES}
       UPLOAD_SIGNED_URL_TTL_SECONDS: ${UPLOAD_SIGNED_URL_TTL_SECONDS:-900}
       UPLOAD_SIGNED_URL_MODE: ${UPLOAD_SIGNED_URL_MODE:-presigned_put}
+      UPLOAD_SIGNED_URL_LIMIT_PER_IP: ${UPLOAD_SIGNED_URL_LIMIT_PER_IP}
+      UPLOAD_REGISTER_LIMIT_PER_IP: ${UPLOAD_REGISTER_LIMIT_PER_IP}
+      UPLOAD_THROTTLE_WINDOW_SECONDS: ${UPLOAD_THROTTLE_WINDOW_SECONDS}
+      UPLOAD_VERIFY_OBJECT_BEFORE_REGISTER: ${UPLOAD_VERIFY_OBJECT_BEFORE_REGISTER}
     ports:
       - "${API_PORT:-3000}:3000"
     volumes:
@@ -168,7 +196,11 @@ services:
       clickhouse:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "ruby -rsocket -e \"socket = TCPSocket.new('127.0.0.1', 3000); socket.close\""]
+      test:
+        [
+          "CMD-SHELL",
+          'ruby -rsocket -e "socket = TCPSocket.new(''127.0.0.1'', 3000); socket.close"',
+        ]
       interval: 15s
       timeout: 5s
       retries: 10
@@ -200,7 +232,11 @@ services:
       api:
         condition: service_started
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:5173 >/dev/null 2>&1 || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://127.0.0.1:5173 >/dev/null 2>&1 || exit 1",
+        ]
       interval: 15s
       timeout: 5s
       retries: 10
@@ -236,7 +272,7 @@ services:
       clickhouse:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "bundle exec ruby -e \"require 'worker'\""]
+      test: ["CMD-SHELL", 'bundle exec ruby -e "require ''worker''"']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -256,4 +292,10 @@ volumes:
 networks:
   streamgate:
     driver: bridge
+
+
+
+
+
+
 
