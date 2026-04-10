@@ -956,21 +956,21 @@ Fronteira explicita (fora da Sprint 3 base): `external_link`, `oauth_delegated` 
 ### Test planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Planejar request tests da API para os 4 endpoints novos (sucesso + erros esperados).
-- [ ] Planejar testes de contrato para novos schemas HTTP e exemplos.
-- [ ] Planejar testes frontend unitarios para o novo adapter upload/job.
-- [ ] Planejar integracao web->api para fluxo `signed-url -> register`.
-- [ ] Planejar E2E minimo de dominio: usuario autenticado envia arquivo e visualiza job criado.
-- [ ] Reusar matriz de regressao da Sprint 2.5 para garantir ausencia de regressao estrutural.
+- [x] Planejar request tests da API para os 4 endpoints novos (sucesso + erros esperados).
+- [x] Planejar testes de contrato para novos schemas HTTP e exemplos.
+- [x] Planejar testes frontend unitarios para o novo adapter upload/job.
+- [x] Planejar integracao web->api para fluxo `signed-url -> register`.
+- [x] Planejar E2E minimo de dominio: usuario autenticado envia arquivo e visualiza job criado.
+- [x] Reusar matriz de regressao da Sprint 2.5 para garantir ausencia de regressao estrutural.
 
 ### Test execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Rodar `bundle exec rails test` cobrindo requests e services de upload/job.
-- [ ] Rodar `pnpm lint` e `pnpm test:run` em `apps/web`.
-- [ ] Rodar `pnpm test:integration` com backend real para fluxo upload/job.
-- [ ] Rodar E2E do fluxo completo com stack `full`.
-- [ ] Registrar evidencias por comando, resultado e classificacao ambiente vs implementacao.
+- [x] Rodar `bundle exec rails test` cobrindo requests e services de upload/job.
+- [x] Rodar `pnpm lint` e `pnpm test:run` em `apps/web`.
+- [x] Rodar `pnpm test:integration` com backend real para fluxo upload/job.
+- [x] Rodar E2E do fluxo completo com stack `full`.
+- [x] Registrar evidencias por comando, resultado e classificacao ambiente vs implementacao.
 
 ### Security
 
