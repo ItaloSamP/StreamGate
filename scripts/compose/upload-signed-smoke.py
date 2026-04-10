@@ -1,4 +1,4 @@
-import hashlib
+﻿import hashlib
 import json
 import os
 import sys
@@ -10,6 +10,7 @@ API_BASE_URL = os.environ.get("SMOKE_API_BASE_URL", "http://localhost:3000").rst
 OPERATOR_EMAIL = os.environ.get("SMOKE_OPERATOR_EMAIL", "operator@streamgate.local")
 OPERATOR_PASSWORD = os.environ.get("SEED_OPERATOR_PASSWORD", "ChangeMe123!")
 TIMEOUT_SECONDS = int(os.environ.get("SMOKE_HTTP_TIMEOUT_SECONDS", "20"))
+SMOKE_STORAGE_PUBLIC_BASE_URL = os.environ.get("SMOKE_STORAGE_PUBLIC_BASE_URL", "").strip()
 
 
 def request_json(method: str, path_or_url: str, payload: dict | None = None, headers: dict[str, str] | None = None) -> dict:
@@ -19,35 +20,62 @@ def request_json(method: str, path_or_url: str, payload: dict | None = None, hea
     body = None
     merged_headers = {"Accept": "application/json"}
     if headers:
-      merged_headers.update(headers)
+        merged_headers.update(headers)
 
     if payload is not None:
-      body = json.dumps(payload).encode("utf-8")
-      merged_headers["Content-Type"] = "application/json"
+        body = json.dumps(payload).encode("utf-8")
+        merged_headers["Content-Type"] = "application/json"
 
     req = urllib.request.Request(url=url, method=method, data=body, headers=merged_headers)
     try:
-      with urllib.request.urlopen(req, timeout=TIMEOUT_SECONDS) as response:
-          raw = response.read().decode("utf-8") if response.readable() else "{}"
-          if not raw:
-              return {}
-          return json.loads(raw)
+        with urllib.request.urlopen(req, timeout=TIMEOUT_SECONDS) as response:
+            raw = response.read().decode("utf-8")
+            if not raw:
+                return {}
+            return json.loads(raw)
     except urllib.error.HTTPError as error:
-      payload = error.read().decode("utf-8")
-      message = payload
-      try:
-          parsed = json.loads(payload)
-          if isinstance(parsed, dict):
-              message = parsed.get("error", {}).get("message") or payload
-      except json.JSONDecodeError:
-          pass
-      raise RuntimeError(f"HTTP {error.code} on {method} {url}: {message}") from error
+        payload_text = error.read().decode("utf-8", errors="replace")
+        message = payload_text
+        try:
+            parsed = json.loads(payload_text)
+            if isinstance(parsed, dict):
+                message = parsed.get("error", {}).get("message") or payload_text
+        except json.JSONDecodeError:
+            pass
+        raise RuntimeError(f"HTTP {error.code} on {method} {url}: {message}") from error
 
 
-def upload_to_signed_url(upload_url: str, content: bytes, required_headers: dict[str, str], content_type: str) -> None:
+def resolve_upload_target(upload_url: str) -> tuple[str, str | None]:
+    parsed = urllib.parse.urlparse(upload_url)
+
+    if SMOKE_STORAGE_PUBLIC_BASE_URL:
+        public_base = urllib.parse.urlparse(SMOKE_STORAGE_PUBLIC_BASE_URL)
+        resolved = urllib.parse.urlunparse(
+            (
+                public_base.scheme or parsed.scheme,
+                public_base.netloc,
+                parsed.path,
+                parsed.params,
+                parsed.query,
+                parsed.fragment,
+            )
+        )
+        return resolved, parsed.netloc
+
+    if parsed.hostname == "minio":
+        port = f":{parsed.port}" if parsed.port else ""
+        resolved = urllib.parse.urlunparse((parsed.scheme, f"localhost{port}", parsed.path, parsed.params, parsed.query, parsed.fragment))
+        return resolved, parsed.netloc
+
+    return upload_url, None
+
+
+def upload_to_signed_url(upload_url: str, content: bytes, required_headers: dict[str, str], content_type: str, host_header: str | None = None) -> None:
     headers = dict(required_headers or {})
     if not any(key.lower() == "content-type" for key in headers):
         headers["Content-Type"] = content_type
+    if host_header:
+        headers["Host"] = host_header
 
     req = urllib.request.Request(upload_url, data=content, method="PUT", headers=headers)
     try:
@@ -103,7 +131,8 @@ def main() -> int:
     require(bool(storage_key), "missing storage_key in signed-url response")
 
     print("[smoke] put object on storage")
-    upload_to_signed_url(upload_url, csv_content, required_headers, content_type)
+    resolved_upload_url, host_header = resolve_upload_target(upload_url)
+    upload_to_signed_url(resolved_upload_url, csv_content, required_headers, content_type, host_header=host_header)
 
     print("[smoke] register upload + job")
     register = request_json(
