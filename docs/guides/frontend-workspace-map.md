@@ -99,6 +99,12 @@ Ainda faltando para as proximas sprints:
 - filtros, paginacao e query state conectados a URL
 - polling e refresh operacional
 
+Ja entregue na Sprint 3:
+
+- `/upload` com fluxo real de upload assinado + registro de job;
+- `/upload` com duas listagens reais (`uploads` e `jobs recentes`) e URL state dedicado;
+- `/jobs` com listagem real, filtro por status e paginacao por URL.
+
 ## Skills obrigatorias para reavaliacao futura
 
 Toda reavaliacao desse mapa entre sprints deve usar pelo menos:
@@ -123,4 +129,4 @@ Decisoes fechadas para liberar a Sprint 3 base sem retrabalho:
 
 - filtros minimos de listagem no workspace devem mapear URL em status + page;
 - per_page e search permanecem reservados para evolucao progressiva sem quebrar o shell atual;
-- modo de uso guided vs dvanced fica documentado como direcao de UX e nao como feature entregue nesta sprint.
+- modo de uso guided vs advanced fica documentado como direcao de UX e nao como feature entregue nesta sprint.

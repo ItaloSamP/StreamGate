@@ -16,7 +16,7 @@ A API nao deve assumir processamento pesado de arquivo. Esse trabalho pertence a
 
 ## Estado atual
 
-Depois do fechamento da Sprint 2, a API possui base de auth real e contratos documentados:
+Depois do fechamento da Sprint 3, a API possui auth real + trilha base de upload/job:
 
 - health check disponivel em `GET /up`
 - OpenAPI v1 servido em `/api-docs`
@@ -24,6 +24,14 @@ Depois do fechamento da Sprint 2, a API possui base de auth real e contratos doc
 - autenticacao real com `register`, `login`, `logout`, `me`, `session/refresh` e reset de senha
 - tabela de sessao persistida (`auth_sessions`) com expiracao e revogacao
 - hardening inicial com rate limit configuravel por env para login/register/reset
+- endpoints de upload/job reais:
+  - `POST /api/v1/uploads/signed-url`
+  - `POST /api/v1/uploads`
+  - `GET /api/v1/uploads`
+  - `GET /api/v1/jobs`
+- idempotencia no registro de upload por `storage_key + checksum_sha256`
+- validacao de objeto no storage antes de registrar upload/job
+- paginacao padrao com `data + meta.pagination + meta.filters`
 - seeds e fixtures minimas para desenvolvimento e testes
 - suite de Minitest cobrindo validacoes de dominio e fluxo de auth
 
@@ -73,6 +81,7 @@ Com a app rodando localmente:
 
 ```bash
 bundle exec rails test
+bundle exec rails test test/requests/uploads_jobs_flow_test.rb
 bundle exec rails test test/requests/auth_flow_test.rb
 bundle exec rubocop
 bundle exec brakeman
@@ -82,9 +91,9 @@ bundle exec brakeman
 
 A API deve evoluir nesta ordem:
 
-1. abrir upload assinado e criacao de job sobre o dominio ja materializado
+1. ampliar cobertura operacional (analytics/quarantine/audit) sobre a base upload/job ja entregue
 2. conectar worker real aos contratos versionados
-3. expor leitura operacional e, depois, leitura analitica
+3. abrir ingestao por link/conector em sprint posterior (3.x/4)
 
 O backlog executivo detalhado dessa evolucao esta em [docs/planning/streamgate-full-sprints-roadmap.md](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md).
 

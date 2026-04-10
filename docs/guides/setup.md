@@ -328,6 +328,51 @@ Para evitar drift entre frontend, backend, compose e contratos, este projeto pas
 - `UPLOAD_SIGNED_URL_MODE`
 
 Essas variaveis ainda nao ativam o fluxo funcional da Sprint 3 por si sozinhas, mas passam a ser oficiais para evitar drift entre compose, CI e API antes da implementacao de upload assinado.
+
+### Variaveis oficiais de upload/job (Sprint 3)
+
+- `UPLOAD_STORAGE_ENDPOINT`
+- `UPLOAD_STORAGE_BUCKET`
+- `UPLOAD_STORAGE_REGION`
+- `UPLOAD_STORAGE_ACCESS_KEY`
+- `UPLOAD_STORAGE_SECRET_KEY`
+- `UPLOAD_SIGNED_URL_TTL_SECONDS`
+- `UPLOAD_SIGNED_URL_MODE`
+- `UPLOAD_ALLOWED_CONTENT_TYPES`
+- `UPLOAD_VERIFY_OBJECT_BEFORE_REGISTER`
+- `UPLOAD_SIGNED_URL_LIMIT_PER_IP`
+- `UPLOAD_REGISTER_LIMIT_PER_IP`
+- `UPLOAD_THROTTLE_WINDOW_SECONDS`
+- `MINIO_CORS_ALLOWED_ORIGIN`
+
+Essas variaveis sustentam a trilha base de upload assinado (`signed-url -> PUT -> register`) e as listagens reais de uploads/jobs.
+
+### Validacao operacional recomendada (Sprint 3)
+
+Com stack `full` no ar, rodar:
+
+```bash
+python scripts/compose/compose-smoke.py
+python scripts/compose/upload-signed-smoke.py
+```
+
+Suite de testes da trilha:
+
+```bash
+cd apps/api
+bundle exec rails test
+
+cd ../web
+pnpm lint
+pnpm test:run
+pnpm test:integration
+pnpm test:e2e
+```
+
+Regra de aceite:
+
+- `WSL/CI` e o ambiente oficial de gate;
+- falhas exclusivas de host Windows devem ser classificadas como ambiente quando nao reproduzirem em `WSL/CI`.
 ### Variaveis de CORS da API
 
 - `API_CORS_ALLOWED_ORIGINS`
