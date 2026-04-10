@@ -1,4 +1,4 @@
-﻿# StreamGate - Roadmap Mestre de Sprints e To-Do Executivo
+# StreamGate - Roadmap Mestre de Sprints e To-Do Executivo
 
 ## Objetivo
 
@@ -860,7 +860,7 @@ Evidencia de fechamento:
 ---
 ## Sprint 3 - Upload assinado e criacao de job (E2E Workspace)
 
-**Status atual:** `Em andamento (Back e Front concluidos; trilhas de suporte pendentes)`
+**Status atual:** `Em andamento (Back, Front e DevOps concluidos; trilhas de suporte pendentes)`
 
 **Dependencias**
 
@@ -946,12 +946,12 @@ Fronteira explicita (fora da Sprint 3 base): `external_link`, `oauth_delegated` 
 
 - Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
 - Documentos de apoio: [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md), [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md) e [docs/guides/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/devops-roadmap.md).
-- [ ] Introduzir envs oficiais de assinatura/upload (endpoint/bucket/ttl/credenciais S3-compativeis).
-- [ ] Garantir CORS do MinIO para upload browser via presigned `PUT`.
-- [ ] Ajustar compose/profile `full` para variaveis de upload sem drift.
-- [ ] Atualizar CI local/remoto para incluir testes da trilha upload/job.
-- [ ] Incluir smoke operacional para upload assinado (stack app + seed + fluxo minimo).
-- [ ] Tratar como pre-condicao atendida os ajustes de base e governanca fechados na Sprint 2.5.
+- [x] Introduzir envs oficiais de assinatura/upload (endpoint/bucket/ttl/credenciais S3-compativeis).
+- [x] Garantir CORS do MinIO para upload browser via presigned `PUT`.
+- [x] Ajustar compose/profile `full` para variaveis de upload sem drift.
+- [x] Atualizar CI local/remoto para incluir testes da trilha upload/job.
+- [x] Incluir smoke operacional para upload assinado (stack app + seed + fluxo minimo).
+- [x] Tratar como pre-condicao atendida os ajustes de base e governanca fechados na Sprint 2.5.
 
 ### Test planning
 
@@ -1019,7 +1019,7 @@ Fronteira explicita (fora da Sprint 3 base): `external_link`, `oauth_delegated` 
 - [ ] `Worker execution`: registrar explicitamente `nao tocada nesta sprint`.
 - [x] `Front planning`: validar ajustes de jornada e prioridades de UX.
 - [x] `Front execution`: validar fluxo real, estados de UI, a11y e performance.
-- [ ] `DevOps`: revisar maturidade de smoke, gates e readiness para runtime real do worker.
+- [x] `DevOps`: revisar maturidade de smoke, gates e readiness para runtime real do worker.
 - [ ] `Documentation`: confirmar fechamento documental completo ao final da sprint.
 - [ ] `Test planning`: confirmar cobertura obrigatoria da sprint seguinte.
 - [ ] `Test execution`: registrar resultados e risco residual.
@@ -1070,9 +1070,3 @@ Se houver pressao para pular etapas, usar esta sequencia como trava racional:
 ## Fechamento
 
 Se este documento for seguido com disciplina, o projeto deixa de evoluir por intuicao e passa a evoluir por capacidade comprovada. A regra e simples: nenhuma sprint e pronta porque o codigo parece bom; ela so e pronta quando o escopo implementado roda, esta testado, esta documentado, esta coberto por CI e nao abre uma divida invisivel para a sprint seguinte.
-
-
-
-
-
-
