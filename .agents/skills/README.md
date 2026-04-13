@@ -191,6 +191,8 @@ A partir da Sprint 0, estes gatilhos deixam de ser recomendacao e passam a ser r
 
 ### Documentacao
 
+- Skill obrigatoria base para qualquer tarefa documental: `documentation-writer`
+- Reestruturacoes editoriais amplas: `brainstorming`
 - Revisao de consistencia do repo e impactos cruzados: `review-codebase`
 - APIs e contratos: `api-documenter` + `openapi` quando houver interface publica
 - Trilha nova sem skill adequada: `find-skills`

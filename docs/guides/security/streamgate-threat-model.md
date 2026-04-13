@@ -1,3 +1,21 @@
+## Objetivo
+Este guia consolida diretrizes de streamgate threat model para uso consistente no projeto.
+
+## Estado atual
+Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+
+## Regras/Contratos
+- As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
+- Mudancas devem manter alinhamento com roadmap, ADRs e READMEs.
+
+## Validacao/Evidencias
+- Validar coerencia com README raiz, docs/README e roadmap da release atual.
+- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+
+## Referencias
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)
+
 ## Executive summary
 
 O StreamGate ainda esta em fase de fundacao, entao o risco mais importante da Sprint 0 nao e uma vulnerabilidade de negocio ja exploravel, e sim a chance de as proximas sprints herdarem defaults inseguros nas fronteiras que ja estao desenhadas no repo: auth, upload, storage, broker e dashboards. Os maiores riscos atuais sao promover o auth mock do frontend para um contexto indevido, reutilizar credenciais simples do ambiente local em ambientes compartilhados e abrir as superficies futuras de upload e mensageria sem contrato, validacao e revisao de seguranca proporcionais.
@@ -54,8 +72,8 @@ Evidence anchors principais:
 
 - [compose.yaml](C:/estudos/StreamGate/compose.yaml)
 - [vision.md](C:/estudos/StreamGate/docs/product/vision.md)
-- [architecture.md](C:/estudos/StreamGate/docs/guides/architecture.md)
-- [backend-foundations.md](C:/estudos/StreamGate/docs/guides/backend-foundations.md)
+- [architecture.md](C:/estudos/StreamGate/docs/guides/platform/architecture.md)
+- [backend-foundations.md](C:/estudos/StreamGate/docs/guides/backend/backend-foundations.md)
 
 ### Data flows and trust boundaries
 
@@ -130,7 +148,7 @@ flowchart LR
 | Console do MinIO | porta administrativa 9001 | host -> MinIO console | risco sobe se credenciais simples vazarem para ambiente compartilhado | `compose.yaml`, `.env.example` |
 | RabbitMQ management | porta 15672 | host -> broker | ainda sem uso de negocio, mas ja e superficie administrativa | `compose.yaml`, `.env.example` |
 | Futuro upload direto | dashboard e visao do produto | browser -> storage | ainda nao implementado, mas ja e superficie oficial do produto | `docs/product/vision.md`, `apps/web/src/components/app/dashboard-surface.tsx` |
-| Futuro pipeline de eventos | API -> broker -> worker | servicos internos | risco de integridade quando contratos virarem runtime real | `docs/guides/architecture.md`, `packages/contracts/README.md` |
+| Futuro pipeline de eventos | API -> broker -> worker | servicos internos | risco de integridade quando contratos virarem runtime real | `docs/guides/platform/architecture.md`, `packages/contracts/README.md` |
 
 ## Top abuse paths
 
@@ -146,11 +164,11 @@ flowchart LR
 | Threat ID | Threat source | Prerequisites | Threat action | Impact | Impacted assets | Existing controls (evidence) | Gaps | Recommended mitigations | Detection ideas | Likelihood | Impact severity | Priority |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | TM-001 | usuario remoto no browser | acesso ao frontend e capacidade de editar storage local | forja sessao mock e contorna o gate visual do dashboard | acesso indevido ao workspace mock e narrativa errada sobre autenticacao | sessao, perfil, dashboard | `ProtectedRoute` existe, mas depende de sessao local; evidencias em `apps/web/src/lib/auth.ts` e `apps/web/src/features/auth/protected-route.tsx` | nao existe auth real nem assinatura de sessao | manter auth mock explicitamente fora de ambientes compartilhados; trocar por auth real antes de qualquer dado real; registrar isso como restricao de release | teste manual e automatizado garantindo que ambientes reais nao usem o mock; revisar rotas protegidas antes da Sprint 2 | high | medium | high |
-| TM-002 | operador ou atacante com acesso de rede ao host exposto | ambiente compartilhado usando defaults locais ou portas abertas | acessa MinIO, RabbitMQ ou banco com credenciais fracas de baseline | takeover operacional, leitura/escrita indevida e indisponibilidade | segredos, storage, broker, banco | docs dizem que `.env` real nao sobe para Git; MinIO raw inicia privado; evidencias em `.env.example`, `compose.yaml` e `docs/guides/setup.md` | credenciais de exemplo sao simples e portas administrativas estao publicadas no host local | proibir promocao de `.env.example`; usar segredos unicos por ambiente; reduzir portas expostas fora de dev; revisar perfis antes de preview/producao | alertar quando compose compartilhar management ports; revisar envs e portas no PR | medium | high | high |
-| TM-003 | futuro usuario de upload ou atacante explorando entrada de arquivo | endpoint assinado e confirmacao de upload implementados sem limites adequados | envia arquivos fora do contrato, volumetria abusiva ou conteudo inesperado | abuso de armazenamento, custo, falha operacional e pipeline contaminado | bucket bruto, worker, disponibilidade | bucket privado ja previsto; fluxo assinado ainda nao existe; evidencias em `docs/product/vision.md` e `docs/guides/architecture.md` | faltam limites, validacao, tipos aceitos, tamanho, checksum e idempotencia implementados | exigir contrato de upload, limites por arquivo, tipos permitidos, checksum, confirmacao pos-upload e observabilidade antes de liberar a feature | metricas por bucket, alertas de volume, logs por `upload_id`, falhas de validacao | medium | high | high |
-| TM-004 | futuro produtor/consumidor interno mal configurado ou comprometido | broker ativo e eventos sem validacao forte | publica ou consome evento invalido, replayado ou forjado | estados falsos de job, processamento indevido ou duplicacao | eventos, jobs, auditoria, disponibilidade | nomenclatura e rastreabilidade iniciais documentadas em `packages/contracts/README.md` e `docs/guides/backend-foundations.md` | contratos ainda sao placeholder e nao ha validacao executavel nem authz entre servicos | materializar contratos versionados, validar payloads na borda, amarrar producer/consumer a ids rastreaveis e politicas de replay | logs estruturados por `event_id`, `trace_id`, `job_id`; alarmes para eventos rejeitados | medium | high | high |
+| TM-002 | operador ou atacante com acesso de rede ao host exposto | ambiente compartilhado usando defaults locais ou portas abertas | acessa MinIO, RabbitMQ ou banco com credenciais fracas de baseline | takeover operacional, leitura/escrita indevida e indisponibilidade | segredos, storage, broker, banco | docs dizem que `.env` real nao sobe para Git; MinIO raw inicia privado; evidencias em `.env.example`, `compose.yaml` e `docs/guides/platform/setup.md` | credenciais de exemplo sao simples e portas administrativas estao publicadas no host local | proibir promocao de `.env.example`; usar segredos unicos por ambiente; reduzir portas expostas fora de dev; revisar perfis antes de preview/producao | alertar quando compose compartilhar management ports; revisar envs e portas no PR | medium | high | high |
+| TM-003 | futuro usuario de upload ou atacante explorando entrada de arquivo | endpoint assinado e confirmacao de upload implementados sem limites adequados | envia arquivos fora do contrato, volumetria abusiva ou conteudo inesperado | abuso de armazenamento, custo, falha operacional e pipeline contaminado | bucket bruto, worker, disponibilidade | bucket privado ja previsto; fluxo assinado ainda nao existe; evidencias em `docs/product/vision.md` e `docs/guides/platform/architecture.md` | faltam limites, validacao, tipos aceitos, tamanho, checksum e idempotencia implementados | exigir contrato de upload, limites por arquivo, tipos permitidos, checksum, confirmacao pos-upload e observabilidade antes de liberar a feature | metricas por bucket, alertas de volume, logs por `upload_id`, falhas de validacao | medium | high | high |
+| TM-004 | futuro produtor/consumidor interno mal configurado ou comprometido | broker ativo e eventos sem validacao forte | publica ou consome evento invalido, replayado ou forjado | estados falsos de job, processamento indevido ou duplicacao | eventos, jobs, auditoria, disponibilidade | nomenclatura e rastreabilidade iniciais documentadas em `packages/contracts/README.md` e `docs/guides/backend/backend-foundations.md` | contratos ainda sao placeholder e nao ha validacao executavel nem authz entre servicos | materializar contratos versionados, validar payloads na borda, amarrar producer/consumer a ids rastreaveis e politicas de replay | logs estruturados por `event_id`, `trace_id`, `job_id`; alarmes para eventos rejeitados | medium | high | high |
 | TM-005 | erro operacional interno ou vazamento em PR/log | uso de segredos reais no repo, docs ou exemplos | expoe credenciais em Git, screenshots, logs ou fixtures | comprometimento de servicos e perda de confianca operacional | segredos, banco, storage, broker | Rails filtra parametros sensiveis em logs; docs avisam para nao subir `.env`; evidencias em `apps/api/config/initializers/filter_parameter_logging.rb` e `.env.example` | ainda nao existe politica formal de segredos antes desta sprint | adotar politica minima de segredos, revisar arquivos sensiveis em PR e usar scanners de dependencia/config proporcionais | checklist de PR, busca por padroes sensiveis, revisao de docs e envs | medium | medium | medium |
-| TM-006 | futuro consumidor autenticado com permissao mal definida | dashboard e analytics reais entram sem authz por superficie | acessa mais dado operacional ou analitico do que deveria | exposicao de informacao e quebra de segregacao funcional | dashboards, analytics, auditoria | a arquitetura separa operacional e analitico no desenho; evidencias em `docs/product/vision.md` e `docs/guides/architecture.md` | nao existe politica de authz ou classificacao de dados do dominio ainda | classificar dados sensiveis na Sprint 1, definir papeis de leitura e revisar authz antes de dashboards reais | auditoria de consultas, logs por usuario, testes de autorizacao | low | high | medium |
+| TM-006 | futuro consumidor autenticado com permissao mal definida | dashboard e analytics reais entram sem authz por superficie | acessa mais dado operacional ou analitico do que deveria | exposicao de informacao e quebra de segregacao funcional | dashboards, analytics, auditoria | a arquitetura separa operacional e analitico no desenho; evidencias em `docs/product/vision.md` e `docs/guides/platform/architecture.md` | nao existe politica de authz ou classificacao de dados do dominio ainda | classificar dados sensiveis na Sprint 1, definir papeis de leitura e revisar authz antes de dashboards reais | auditoria de consultas, logs por usuario, testes de autorizacao | low | high | medium |
 
 ## Criticality calibration
 
@@ -181,7 +199,7 @@ Exemplos para este repo:
 | `.env.example` | explicita defaults de desenvolvimento que nao podem ser promovidos | TM-002, TM-005 |
 | `packages/contracts/README.md` | ancora a futura integridade do pipeline de eventos | TM-004 |
 | `docs/product/vision.md` | descreve o upload direto, eventos e leitura analitica que definem o risco futuro | TM-003, TM-006 |
-| `docs/guides/backend-foundations.md` | fixa rastreabilidade e responsabilidades da API/worker | TM-004, TM-005 |
+| `docs/guides/backend/backend-foundations.md` | fixa rastreabilidade e responsabilidades da API/worker | TM-004, TM-005 |
 
 ## Quality check
 
@@ -190,3 +208,4 @@ Exemplos para este repo:
 - runtime foi separado de tooling/dev: risco de compose local foi tratado como baseline operacional, nao como producao
 - este documento foi fechado com suposicoes explicitas porque o contexto de exposicao e deploy real ainda nao foi validado pelo time
 - conclusoes condicionais foram marcadas especialmente nas trilhas de upload, broker e analytics, que ainda nao possuem runtime real
+

@@ -60,18 +60,20 @@
 
 - [ ] `docs/planning/streamgate-full-sprints-roadmap.md`
 - [ ] `docs/product/vision.md`
-- [ ] `docs/guides/architecture.md`
-- [ ] `docs/guides/backend-foundations.md`
-- [ ] `docs/guides/frontend-foundations.md`
-- [ ] `docs/guides/definition-of-done.md`
-- [ ] `docs/guides/testing-baseline-sprint-0.md` ou documento equivalente
-- [ ] `docs/guides/security-baseline-sprint-0.md` ou documento equivalente
-- [ ] `docs/guides/devops-roadmap.md`
+- [ ] `docs/guides/platform/architecture.md`
+- [ ] `docs/guides/backend/backend-foundations.md`
+- [ ] `docs/guides/frontend/frontend-foundations.md`
+- [ ] `docs/guides/quality/definition-of-done.md`
+- [ ] `docs/guides/quality/testing-baseline-sprint-0.md` ou documento equivalente
+- [ ] `docs/guides/security/security-baseline-sprint-0.md` ou documento equivalente
+- [ ] `docs/guides/platform/devops-roadmap.md`
+- [ ] `docs/guides/operations/documentation-governance.md`
 - [ ] `apps/web/README.md`
 - [ ] `apps/api/README.md`
 - [ ] `apps/worker/README.md`
 - [ ] `packages/contracts`
 - [ ] `apps/api/openapi/v1/openapi.yaml`
+- [ ] Regra de skill obrigatoria para documentacao (`documentation-writer`) aplicada nas tasks documentais da sprint
 - [ ] Outros:
 
 ## Skills usadas na reavaliacao
@@ -81,6 +83,7 @@ Skills minimas obrigatorias:
 - [ ] `review-codebase`
 - [ ] `breakdown-test`
 - [ ] `readiness-report`
+- [ ] `documentation-writer` (obrigatoria para qualquer atividade de documentacao)
 
 Skills adicionais usadas nesta sprint:
 

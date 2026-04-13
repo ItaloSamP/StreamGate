@@ -35,7 +35,7 @@ Depois do fechamento da Sprint 3, a API possui auth real + trilha base de upload
 - seeds e fixtures minimas para desenvolvimento e testes
 - suite de Minitest cobrindo validacoes de dominio e fluxo de auth
 
-As convencoes oficiais desta fase estao em [docs/guides/backend-foundations.md](C:/estudos/StreamGate/docs/guides/backend-foundations.md), [docs/guides/authentication-guide.md](C:/estudos/StreamGate/docs/guides/authentication-guide.md), [docs/guides/domain-glossary.md](C:/estudos/StreamGate/docs/guides/domain-glossary.md) e [docs/adr/0003-authentication-and-session-strategy.md](C:/estudos/StreamGate/docs/adr/0003-authentication-and-session-strategy.md).
+As convencoes oficiais desta fase estao em [docs/guides/backend/backend-foundations.md](C:/estudos/StreamGate/docs/guides/backend/backend-foundations.md), [docs/guides/backend/authentication-guide.md](C:/estudos/StreamGate/docs/guides/backend/authentication-guide.md), [docs/guides/backend/domain-glossary.md](C:/estudos/StreamGate/docs/guides/backend/domain-glossary.md) e [docs/adr/0003-authentication-and-session-strategy.md](C:/estudos/StreamGate/docs/adr/0003-authentication-and-session-strategy.md).
 
 ## Convencao arquitetural adotada
 

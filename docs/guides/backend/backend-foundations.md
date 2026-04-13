@@ -1,8 +1,28 @@
 # Fundacoes do Backend
 
 ## Objetivo
+Este guia consolida diretrizes de backend foundations para uso consistente no projeto.
 
-Este guia fixa as decisoes operacionais do backend durante a Sprint 0. Ele existe para eliminar ambiguidade antes da implementacao de dominio e endpoints reais.
+## Estado atual
+Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+
+
+## Regras/Contratos
+- As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
+- Mudancas devem manter alinhamento com roadmap, ADRs e READMEs.
+
+## Validacao/Evidencias
+- Validar coerencia com README raiz, docs/README e roadmap da release atual.
+- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+
+## Referencias
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)
+
+
+## Objetivo detalhado
+
+Este guia consolida as decisoes operacionais do backend na fase pos-Sprint 3 e orienta a evolucao da Sprint 4 em diante.
 
 O backend do StreamGate e composto por:
 
@@ -12,20 +32,20 @@ O backend do StreamGate e composto por:
 
 Este documento complementa:
 
-- [Arquitetura base](C:/estudos/StreamGate/docs/guides/architecture.md)
+- [Arquitetura base](C:/estudos/StreamGate/docs/guides/platform/architecture.md)
 - [ADR 0001 - Fundacoes de engenharia](C:/estudos/StreamGate/docs/adr/0001-engineering-foundations.md)
 - [Visao do produto](C:/estudos/StreamGate/docs/product/vision.md)
 
-## Estado atual assumido
+## Estado atual detalhado
 
-Na Sprint 0, o backend ainda esta em fundacao:
+No fechamento da Sprint 3:
 
-- a API Rails esta operacional como esqueleto tecnico
-- o worker ainda nao e um runtime de fila real
-- o dominio de negocio ainda nao foi implementado
-- os contratos compartilhados ainda serao materializados ao longo das proximas sprints
+- a API Rails ja opera auth real + trilha base de upload/job;
+- o worker permanece sem runtime real de fila (escopo central da Sprint 4);
+- contratos HTTP da trilha base ja estao sincronizados com OpenAPI e `packages/contracts`;
+- a documentacao esta organizada por dominio para reduzir drift entre trilhas.
 
-O objetivo aqui nao e adiantar feature. O objetivo e congelar a linguagem e as fronteiras.
+Objetivo desta fase: preservar fronteiras de arquitetura e preparar a trilha de runtime real sem regressao de contrato.
 
 ## Responsabilidades por camada
 

@@ -1,6 +1,25 @@
 # Baseline de Seguranca da Sprint 0
 
 ## Objetivo
+Este guia consolida diretrizes de security baseline sprint 0 para uso consistente no projeto.
+
+## Estado atual
+Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+
+
+## Estado atual detalhado
+Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+
+## Regras/Contratos
+- As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
+- Mudancas devem manter alinhamento com roadmap, ADRs e READMEs.
+
+## Validacao/Evidencias
+- Validar coerencia com README raiz, docs/README e roadmap da release atual.
+- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+
+
+## Objetivo detalhado
 
 Este guia fixa a base minima de seguranca do StreamGate na Sprint 0. Ele existe para impedir que o projeto siga evoluindo com suposicoes soltas sobre auth, segredos, superficies de ataque e validacao de seguranca.
 
@@ -31,12 +50,12 @@ Isso significa que a maior parte do risco atual esta em:
 | Upload | previsto na visao do produto e no dashboard, mas sem endpoint real | entrar na Sprint 3 sem limites, validacao e contrato claros | `docs/product/vision.md`, `apps/web/src/components/app/dashboard-surface.tsx` |
 | Storage | MinIO local com bucket privado e Active Storage local na API | reuso de credenciais simples e exposicao indevida de console/storage | `compose.yaml`, `apps/api/config/storage.yml` |
 | Broker | RabbitMQ ja sobe no compose, mas sem produtor/consumidor reais | mensagens futuras sem contrato, authz ou naming rastreavel | `compose.yaml`, `packages/contracts/README.md` |
-| Dashboard | shell autenticado e dados mockados | confundir UX protegida com autorizacao real de dados | `apps/web/src/pages/DashboardPage.tsx`, `docs/guides/frontend-foundations.md` |
+| Dashboard | shell autenticado e dados mockados | confundir UX protegida com autorizacao real de dados | `apps/web/src/pages/DashboardPage.tsx`, `docs/guides/frontend/frontend-foundations.md` |
 | Analytics | ClickHouse previsto em compose e visao de produto | leitura analitica sem classificacao de dado e sem fronteira de acesso definida | `compose.yaml`, `docs/product/vision.md` |
 
 ## Threat model inicial
 
-O threat model inicial do repositorio foi consolidado em [streamgate-threat-model.md](C:/estudos/StreamGate/docs/guides/streamgate-threat-model.md).
+O threat model inicial do repositorio foi consolidado em [streamgate-threat-model.md](C:/estudos/StreamGate/docs/guides/security/streamgate-threat-model.md).
 
 Ele deve ser tratado como referencia obrigatoria antes de abrir sprints que materializem:
 
@@ -150,10 +169,10 @@ A partir da Sprint 0, revisao de seguranca deixa de ser opcional e passa a ser o
 - nao existe classificacao formal de dados sensiveis do dominio
 - scanners de dependencia e imagem ainda nao foram incorporados como gate automatizado em toda a stack
 
-## Referencias relacionadas
+## Referencias
 
-- [Threat model inicial do repositorio](C:/estudos/StreamGate/docs/guides/streamgate-threat-model.md)
-- [Definition of Done](C:/estudos/StreamGate/docs/guides/definition-of-done.md)
-- [Baseline DevOps da Sprint 0](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md)
-- [Baseline de Testes da Sprint 0](C:/estudos/StreamGate/docs/guides/testing-baseline-sprint-0.md)
+- [Threat model inicial do repositorio](C:/estudos/StreamGate/docs/guides/security/streamgate-threat-model.md)
+- [Definition of Done](C:/estudos/StreamGate/docs/guides/quality/definition-of-done.md)
+- [Baseline DevOps da Sprint 0](C:/estudos/StreamGate/docs/guides/platform/devops-baseline-sprint-0.md)
+- [Baseline de Testes da Sprint 0](C:/estudos/StreamGate/docs/guides/quality/testing-baseline-sprint-0.md)
 - [Catalogo de skills do projeto](C:/estudos/StreamGate/.agents/skills/README.md)

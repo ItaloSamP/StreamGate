@@ -1,6 +1,29 @@
 # Glossario de Dominio do StreamGate
 
 ## Objetivo
+Este guia consolida diretrizes de domain glossary para uso consistente no projeto.
+
+## Estado atual
+Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+
+
+## Estado atual detalhado
+Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+
+## Regras/Contratos
+- As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
+- Mudancas devem manter alinhamento com roadmap, ADRs e READMEs.
+
+## Validacao/Evidencias
+- Validar coerencia com README raiz, docs/README e roadmap da release atual.
+- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+
+## Referencias
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)
+
+
+## Objetivo detalhado
 
 Este glossario congela a linguagem operacional da Sprint 1 para evitar que API, worker, frontend e contratos usem nomes diferentes para o mesmo conceito.
 

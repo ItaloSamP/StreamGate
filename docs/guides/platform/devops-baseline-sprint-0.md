@@ -1,6 +1,29 @@
 # Baseline DevOps da Sprint 0
 
 ## Objetivo
+Este guia consolida diretrizes de devops baseline sprint 0 para uso consistente no projeto.
+
+## Estado atual
+Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+
+
+## Estado atual detalhado
+Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+
+## Regras/Contratos
+- As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
+- Mudancas devem manter alinhamento com roadmap, ADRs e READMEs.
+
+## Validacao/Evidencias
+- Validar coerencia com README raiz, docs/README e roadmap da release atual.
+- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+
+## Referencias
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)
+
+
+## Objetivo detalhado
 
 Este documento registra o estado operacional real do projeto ao fim da trilha DevOps da Sprint 0. Ele existe para separar:
 
@@ -121,4 +144,3 @@ Para a Sprint 0, estes continuam sendo os comandos oficiais de referencia:
 - `powershell -ExecutionPolicy Bypass -File .\scripts\compose\compose-health.tests.ps1`
 
 A diferenca agora e que o projeto passa a registrar explicitamente quando um comando falha por ambiente, em vez de atribuir automaticamente a falha ao codigo do produto.
-

@@ -1,5 +1,24 @@
 # Swagger/OpenAPI da API
 
+## Objetivo
+Este guia consolida diretrizes de api docs para uso consistente no projeto.
+
+## Estado atual
+Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+
+## Regras/Contratos
+- As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
+- Mudancas devem manter alinhamento com roadmap, ADRs e READMEs.
+
+## Validacao/Evidencias
+- Validar coerencia com README raiz, docs/README e roadmap da release atual.
+- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+
+## Referencias
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)
+
+
 A API Rails do StreamGate usa OpenAPI como contrato publico versionado da v1.
 
 ## Estado apos Sprint 3
@@ -122,6 +141,6 @@ Compatibilidade de contrato deve seguir sincronizada com OpenAPI no mesmo ciclo 
 
 ## Relacao com outros docs
 
-- setup e envs: [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md)
-- autenticacao: [docs/guides/authentication-guide.md](C:/estudos/StreamGate/docs/guides/authentication-guide.md)
+- setup e envs: [docs/guides/platform/setup.md](C:/estudos/StreamGate/docs/guides/platform/setup.md)
+- autenticacao: [docs/guides/backend/authentication-guide.md](C:/estudos/StreamGate/docs/guides/backend/authentication-guide.md)
 - roadmap executivo: [docs/planning/streamgate-full-sprints-roadmap.md](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)

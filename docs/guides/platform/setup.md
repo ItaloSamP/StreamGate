@@ -1,5 +1,24 @@
 # Setup do Ambiente
 
+## Objetivo
+Este guia consolida diretrizes de setup para uso consistente no projeto.
+
+## Estado atual
+Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+
+## Regras/Contratos
+- As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
+- Mudancas devem manter alinhamento com roadmap, ADRs e READMEs.
+
+## Validacao/Evidencias
+- Validar coerencia com README raiz, docs/README e roadmap da release atual.
+- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+
+## Referencias
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)
+
+
 ## Ambiente recomendado
 
 O setup principal do projeto e `WSL2 + Ubuntu + Docker Desktop com integracao WSL`.
@@ -15,7 +34,7 @@ Os scripts `.ps1` continuam disponiveis apenas como fallback para Windows puro.
 
 A raiz de `scripts/` agora expoe apenas os comandos principais; helpers internos ficam organizados em `scripts/bootstrap`, `scripts/dev`, `scripts/ci` e `scripts/compose`.
 
-A classificacao operacional real da Sprint 0 para ambientes, checks e falhas conhecidas esta em [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md).
+A classificacao operacional real da Sprint 0 para ambientes, checks e falhas conhecidas esta em [docs/guides/platform/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/platform/devops-baseline-sprint-0.md).
 
 ## O que voce precisa instalar
 

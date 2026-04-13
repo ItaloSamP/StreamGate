@@ -1,6 +1,25 @@
 # Definition of Done
 
 ## Objetivo
+Este guia consolida diretrizes de definition of done para uso consistente no projeto.
+
+## Estado atual
+Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+
+
+## Estado atual detalhado
+Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+
+## Regras/Contratos
+- As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
+- Mudancas devem manter alinhamento com roadmap, ADRs e READMEs.
+
+## Validacao/Evidencias
+- Validar coerencia com README raiz, docs/README e roadmap da release atual.
+- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+
+
+## Objetivo detalhado
 
 Este documento existe para transformar a definicao de pronto do StreamGate em uma referencia simples, reutilizavel e verificavel por sprint, PR e revisao tecnica.
 
@@ -127,15 +146,15 @@ Skills adicionais devem entrar quando a sprint tocar temas especificos, por exem
 
 A transicao entre sprints so deve ser considerada pronta quando essa reavaliacao tiver sido executada e refletida na documentacao viva do projeto.
 
-Checklist operacional oficial: `docs/guides/sprint-reassessment-checklist.md`.
+Checklist operacional oficial: `docs/guides/quality/sprint-reassessment-checklist.md`.
 
-## Referencias relacionadas
+## Referencias
 
 - [Roadmap mestre de sprints](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
-- [Fundacoes do backend](C:/estudos/StreamGate/docs/guides/backend-foundations.md)
-- [Fundacoes do frontend](C:/estudos/StreamGate/docs/guides/frontend-foundations.md)
-- [Baseline DevOps da Sprint 0](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md)
-- [Baseline de Testes da Sprint 0](C:/estudos/StreamGate/docs/guides/testing-baseline-sprint-0.md)
-- [Baseline de Seguranca da Sprint 0](C:/estudos/StreamGate/docs/guides/security-baseline-sprint-0.md)
-- [Threat model inicial do repositorio](C:/estudos/StreamGate/docs/guides/streamgate-threat-model.md)
-- [Checklist de reavaliacao entre sprints](C:/estudos/StreamGate/docs/guides/sprint-reassessment-checklist.md)
+- [Fundacoes do backend](C:/estudos/StreamGate/docs/guides/backend/backend-foundations.md)
+- [Fundacoes do frontend](C:/estudos/StreamGate/docs/guides/frontend/frontend-foundations.md)
+- [Baseline DevOps da Sprint 0](C:/estudos/StreamGate/docs/guides/platform/devops-baseline-sprint-0.md)
+- [Baseline de Testes da Sprint 0](C:/estudos/StreamGate/docs/guides/quality/testing-baseline-sprint-0.md)
+- [Baseline de Seguranca da Sprint 0](C:/estudos/StreamGate/docs/guides/security/security-baseline-sprint-0.md)
+- [Threat model inicial do repositorio](C:/estudos/StreamGate/docs/guides/security/streamgate-threat-model.md)
+- [Checklist de reavaliacao entre sprints](C:/estudos/StreamGate/docs/guides/quality/sprint-reassessment-checklist.md)

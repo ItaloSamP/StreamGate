@@ -68,6 +68,7 @@ Cada sprint abaixo contem, no minimo:
 Nenhuma sprint fecha se qualquer item abaixo estiver quebrado no escopo da sprint:
 
 - documentacao da sprint nao foi atualizada;
+- tasks da trilha `Documentation` nao aplicaram `documentation-writer` como skill obrigatoria base;
 - testes planejados nao foram executados;
 - CI relevante nao esta verde;
 - Swagger/OpenAPI nao acompanha endpoints novos ou alterados;
@@ -111,15 +112,15 @@ Documentos que devem ser revistos e atualizados sempre que a sprint tiver impact
 
 - este roadmap mestre;
 - `docs/product/vision.md`;
-- `docs/guides/architecture.md`;
-- `docs/guides/backend-foundations.md`;
-- `docs/guides/frontend-foundations.md`;
-- `docs/guides/testing-baseline-sprint-0.md` ou o documento de testes vigente;
-- `docs/guides/security-baseline-sprint-0.md` ou o documento de seguranca vigente;
-- `docs/guides/devops-roadmap.md` e runbooks/ADRs afetados;
+- `docs/guides/platform/architecture.md`;
+- `docs/guides/backend/backend-foundations.md`;
+- `docs/guides/frontend/frontend-foundations.md`;
+- `docs/guides/quality/testing-baseline-sprint-0.md` ou o documento de testes vigente;
+- `docs/guides/security/security-baseline-sprint-0.md` ou o documento de seguranca vigente;
+- `docs/guides/platform/devops-roadmap.md` e runbooks/ADRs afetados;
 - `apps/web/README.md`, `apps/api/README.md` e `apps/worker/README.md`;
 - contratos e especificacoes vivas em `packages/contracts` e `apps/api/openapi/v1/openapi.yaml`.
-- o checklist operacional em `docs/guides/sprint-reassessment-checklist.md`.
+- o checklist operacional em `docs/guides/quality/sprint-reassessment-checklist.md`.
 
 ### Regra transversal de reavaliacao por trilha
 
@@ -141,7 +142,7 @@ Matriz minima obrigatoria para todas as sprints:
 | `Front planning`                   | jornadas, prioridades de UX e estados obrigatorios por tela/modulo                      |
 | `Front execution`                  | fidelidade do fluxo real, estados de UI, acessibilidade, performance e regressao visual |
 | `DevOps`                           | CI/gates, scripts oficiais, ambientes, smoke operacional e gaps de automacao            |
-| `Documentation`                    | docs atualizados, ADRs/runbooks alterados e inconsistencias documentais abertas         |
+| `Documentation`                    | docs atualizados, ADRs/runbooks alterados, inconsistencias abertas e uso obrigatorio de `documentation-writer` |
 | `Test planning`                    | matriz de testes da proxima sprint, novas coberturas obrigatorias e riscos de qualidade |
 | `Test execution`                   | comandos rodados, resultados, falhas de ambiente vs implementacao e riscos residuais    |
 | `Security`                         | novas superficies sensiveis, controles faltantes, riscos aceitos e hardening priorizado |
@@ -155,9 +156,9 @@ Sempre revisar, no minimo, estes documentos quando a sprint tocar o assunto:
 | ------------------- | ------------------------------------------------------------------- |
 | Produto e escopo    | `docs/product/vision.md`                                            |
 | Roadmap e progresso | este arquivo                                                        |
-| Arquitetura macro   | `docs/guides/architecture.md` e ADRs em `docs/adr/`                 |
-| API                 | `docs/guides/api-docs.md` e `apps/api/openapi/v1/openapi.yaml`      |
-| Setup/ambiente      | `docs/guides/setup.md`                                              |
+| Arquitetura macro   | `docs/guides/platform/architecture.md` e ADRs em `docs/adr/`                 |
+| API                 | `docs/guides/backend/api-docs.md` e `apps/api/openapi/v1/openapi.yaml`      |
+| Setup/ambiente      | `docs/guides/platform/setup.md`                                              |
 | Skills/metodo       | `.agents/skills/README.md`                                          |
 | App especifico      | `apps/web/README.md`, `apps/api/README.md`, `apps/worker/README.md` |
 
@@ -190,6 +191,8 @@ Os comandos abaixo sao a base para checklist operacional. Quando um comando falh
 
 A partir deste roadmap, o uso de skills nao deve ser tratado como sugestao. Toda task deve iniciar pelas skills da trilha correspondente antes de implementacao, revisao ou validacao.
 
+Regra transversal para documentacao (Sprint 4 em diante e proximas sprints): qualquer atividade documental exige `documentation-writer` como skill obrigatoria base. Quando houver reestruturacao editorial ampla, usar `brainstorming`; quando houver contrato/API, usar `api-documenter` + `openapi`.
+
 ### Skills locais ja adotadas como padrao
 
 - `find-skills`
@@ -209,6 +212,7 @@ A partir deste roadmap, o uso de skills nao deve ser tratado como sugestao. Toda
 - `review-architecture`
 - `readiness-report`
 - `api-documenter`
+- `documentation-writer`
 - `api-designer`
 - `openapi`
 - `docker`
@@ -339,7 +343,7 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 ### DevOps
 
 - Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
-- Documentos de apoio: [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md), [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md) e [docs/guides/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/devops-roadmap.md).
+- Documentos de apoio: [docs/guides/platform/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/platform/devops-baseline-sprint-0.md), [docs/guides/platform/setup.md](C:/estudos/StreamGate/docs/guides/platform/setup.md) e [docs/guides/platform/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/platform/devops-roadmap.md).
 - [x] Confirmar que `scripts/bootstrap`, `scripts/dev`, `scripts/ci` e `scripts/compose` sao os caminhos oficiais documentados.
 - [x] Classificar a falha do Vitest entre problema de ambiente, permissao e compatibilidade de runner.
 - [x] Classificar a falha do worker causada por `git ls-files` no gemspec.
@@ -374,7 +378,7 @@ Esta sprint existe para matar ambiguidade. O objetivo aqui nao e entregar featur
 ### Security
 
 - Skills obrigatorias para todas as tasks desta trilha: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
-- Documentos de apoio: [docs/guides/security-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/security-baseline-sprint-0.md), [docs/guides/streamgate-threat-model.md](C:/estudos/StreamGate/docs/guides/streamgate-threat-model.md) e [docs/guides/definition-of-done.md](C:/estudos/StreamGate/docs/guides/definition-of-done.md).
+- Documentos de apoio: [docs/guides/security/security-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/security/security-baseline-sprint-0.md), [docs/guides/security/streamgate-threat-model.md](C:/estudos/StreamGate/docs/guides/security/streamgate-threat-model.md) e [docs/guides/quality/definition-of-done.md](C:/estudos/StreamGate/docs/guides/quality/definition-of-done.md).
 - [x] Criar threat model inicial do repositorio inteiro.
 - [x] Delimitar superficies de ataque: auth, upload, storage, broker, dashboard, analytics.
 - [x] Definir scanners oficiais por camada.
@@ -434,7 +438,7 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 **Ja existe hoje**
 
 - [x] visao do produto em `docs/product/vision.md`
-- [x] arquitetura base em `docs/guides/architecture.md`
+- [x] arquitetura base em `docs/guides/platform/architecture.md`
 - [x] stack de infra que antecipa PostgreSQL, MinIO, RabbitMQ e ClickHouse
 
 ### Back planning
@@ -480,7 +484,7 @@ Antes de escrever upload, jobs e analytics, o projeto precisa concordar sobre o 
 ### DevOps
 
 - Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
-- Documentos de apoio: [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md), [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md) e [docs/guides/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/devops-roadmap.md).
+- Documentos de apoio: [docs/guides/platform/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/platform/devops-baseline-sprint-0.md), [docs/guides/platform/setup.md](C:/estudos/StreamGate/docs/guides/platform/setup.md) e [docs/guides/platform/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/platform/devops-roadmap.md).
 - [x] Garantir que `db:prepare` seja reproduzivel num banco limpo.
 - [x] Validar criacao/rollback de migrations em ambiente local.
 - [x] Definir fixture minima para desenvolvimento sem dados manuais.
@@ -611,7 +615,7 @@ O frontend ja ensaiou a experiencia de acesso. Esta sprint faz o backend assumir
 ### DevOps
 
 - Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
-- Documentos de apoio: [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md), [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md) e [docs/guides/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/devops-roadmap.md).
+- Documentos de apoio: [docs/guides/platform/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/platform/devops-baseline-sprint-0.md), [docs/guides/platform/setup.md](C:/estudos/StreamGate/docs/guides/platform/setup.md) e [docs/guides/platform/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/platform/devops-roadmap.md).
 - [x] Adicionar envs e segredos de auth.
 - [x] Criar seeds minimas para desenvolvimento.
 - [x] Ajustar CI para cobrir auth real.
@@ -628,9 +632,9 @@ O frontend ja ensaiou a experiencia de acesso. Esta sprint faz o backend assumir
 
 Evidencia minima da trilha (2026-04-07):
 
-- [x] `docs/guides/setup.md` atualizado com workflow `e2e-auth` e envs de hardening de auth.
-- [x] `docs/guides/api-docs.md` atualizado com contrato de erro (`invalid_credentials`, `access_denied`, `session_expired`, `rate_limited`) e status HTTP.
-- [x] `docs/guides/authentication-guide.md` criado como guia operacional de auth da Sprint 2.
+- [x] `docs/guides/platform/setup.md` atualizado com workflow `e2e-auth` e envs de hardening de auth.
+- [x] `docs/guides/backend/api-docs.md` atualizado com contrato de erro (`invalid_credentials`, `access_denied`, `session_expired`, `rate_limited`) e status HTTP.
+- [x] `docs/guides/backend/authentication-guide.md` criado como guia operacional de auth da Sprint 2.
 - [x] `docs/adr/0003-authentication-and-session-strategy.md` atualizado com decisoes de hardening.
 - [x] `docs/sprints/SPRINT-02-closeout.md` publicado com checklist e evidencias da sprint.
 
@@ -775,7 +779,7 @@ Regra explicita da Sprint 2.5: permitido ajuste pontual de codigo para alinhamen
 ### DevOps
 
 - Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
-- Documentos de apoio: [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md), [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md) e [docs/guides/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/devops-roadmap.md).
+- Documentos de apoio: [docs/guides/platform/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/platform/devops-baseline-sprint-0.md), [docs/guides/platform/setup.md](C:/estudos/StreamGate/docs/guides/platform/setup.md) e [docs/guides/platform/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/platform/devops-roadmap.md).
 - [x] Revisar envs e variaveis compartilhadas para evitar drift antes da trilha upload/job.
 - [x] Revisar pipelines para garantir gate coerente com mudancas pontuais da Sprint 2.5.
 - [x] Definir sinais minimos de observabilidade para a transicao segura da Sprint 3.
@@ -945,7 +949,7 @@ Fronteira explicita (fora da Sprint 3 base): `external_link`, `oauth_delegated` 
 ### DevOps
 
 - Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
-- Documentos de apoio: [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md), [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md) e [docs/guides/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/devops-roadmap.md).
+- Documentos de apoio: [docs/guides/platform/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/platform/devops-baseline-sprint-0.md), [docs/guides/platform/setup.md](C:/estudos/StreamGate/docs/guides/platform/setup.md) e [docs/guides/platform/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/platform/devops-roadmap.md).
 - [x] Introduzir envs oficiais de assinatura/upload (endpoint/bucket/ttl/credenciais S3-compativeis).
 - [x] Garantir CORS do MinIO para upload browser via presigned `PUT`.
 - [x] Ajustar compose/profile `full` para variaveis de upload sem drift.
@@ -1001,9 +1005,9 @@ Evidencias registradas (2026-04-10):
 
 - Skills obrigatorias para todas as tasks desta trilha: `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
 - [x] Atualizar este roadmap mestre com status e evidencia real da sprint.
-- [x] Atualizar `docs/guides/api-docs.md` com endpoints e erros da trilha upload/job.
-- [x] Atualizar `docs/guides/setup.md` com envs de upload, CORS MinIO e comandos de validacao.
-- [x] Atualizar `docs/guides/frontend-foundations.md` e `docs/guides/frontend-workspace-map.md` com estados reais de upload/jobs.
+- [x] Atualizar `docs/guides/backend/api-docs.md` com endpoints e erros da trilha upload/job.
+- [x] Atualizar `docs/guides/platform/setup.md` com envs de upload, CORS MinIO e comandos de validacao.
+- [x] Atualizar `docs/guides/frontend/frontend-foundations.md` e `docs/guides/frontend/frontend-workspace-map.md` com estados reais de upload/jobs.
 - [x] Atualizar `apps/api/README.md` e `apps/web/README.md` com o fluxo novo.
 - [x] Atualizar contratos em `packages/contracts` (schemas, exemplos e compatibilidade).
 - [x] Publicar `docs/sprints/SPRINT-03-closeout.md`.
@@ -1045,6 +1049,153 @@ Evidencias registradas (2026-04-10):
 - Test execution: concluida; suites backend/web/integration/e2e e smokes operacionais validadas.
 - Security: concluida; allowlist, TTL, storage_key hardening, rate limit e filtro de segredos revisados.
 - Skills da sprint: concluida; skills obrigatorias aplicadas nas trilhas da Sprint 3.
+
+## Sprint 4 - Worker runtime real e modulos operacionais reais
+
+**Status atual:** `Planejada`
+
+**Dependencias**
+
+- Sprint 3 concluida com upload assinado, registro de job e listagens reais no workspace.
+- Contratos HTTP da trilha base consolidados em OpenAPI + `packages/contracts`.
+- Reorganizacao documental concluida para suportar evolucao por dominio.
+
+**Bloqueadores conhecidos**
+
+- worker ainda nao roda consumo real de fila em loop operacional.
+- modulos `/analytics`, `/quarantine` e `/audit` ainda nao operam com dados reais do dominio.
+- conectores externos permanecem com alto risco de escopo se entrarem junto com runtime inicial do worker.
+
+**O que nao pode ficar para depois**
+
+- ativar runtime real do worker com transicoes oficiais de estado de job;
+- fechar leitura operacional minima real de `analytics/quarantine/audit`;
+- manter contrato, observabilidade e seguranca sincronizados no mesmo ciclo de entrega.
+
+**Contexto e intencao**
+
+A Sprint 3 removeu o mock da trilha principal de ingestao (`upload+job`). O proximo gargalo da v1 passa a ser execucao real assíncrona e leitura operacional dos modulos ainda em scaffold. Esta sprint fecha o primeiro ciclo funcional entre API + broker + worker e libera os paineis operacionais alem de `/upload` e `/jobs`.
+
+Fronteira explicita (fora da Sprint 4): `external_link`, `oauth_delegated`, `google_drive`, `s3` e `http_url` ficam fora da implementacao principal e podem entrar apenas como discovery tecnico sem entrega funcional.
+
+**Ja existe hoje**
+
+- [x] API com fluxo assinado e registro idempotente de upload/job.
+- [x] estrutura de contratos em `packages/contracts` para evoluir eventos do worker.
+- [x] reorganizacao de docs por dominio com links consolidados e sem arquivos-ponte na raiz de `docs/guides`.
+
+### Back planning
+
+- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
+- [ ] Congelar contrato de eventos do worker para consumo inicial (`upload.received` + transicoes de job).
+- [ ] Definir fronteira de processamento minimo, retry e classificacao de falha (`retryable` vs nao retryable).
+- [ ] Definir contratos HTTP minimos para leitura real de `analytics`, `quarantine` e `audit`.
+- [ ] Definir matriz minima de filtros/paginacao para novos modulos operacionais.
+
+### Back execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
+- [ ] Implementar runtime inicial do worker com consumo real de fila.
+- [ ] Aplicar transicao de estados de job (`pending -> processing -> completed|failed|quarantined_with_warnings`).
+- [ ] Registrar auditoria e rastreabilidade por `trace_id`, `request_id`, `upload_id`, `job_id`, `batch_id`.
+- [ ] Expor endpoints reais minimos para `analytics`, `quarantine` e `audit`.
+- [ ] Atualizar OpenAPI e contratos compartilhados no mesmo PR da trilha.
+
+### Front planning
+
+- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`.
+- [ ] Definir UX alvo para dados reais em `/analytics`, `/quarantine` e `/audit`.
+- [ ] Definir estados obrigatorios por modulo (loading, empty, erro acionavel, sucesso).
+- [ ] Definir estrategia de refresh e URL state para filtros operacionais.
+
+### Front execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `frontend-skill`, `shadcn`, `tailwind-design-system`, `vercel-react-best-practices`, `vitest`, `playwright`.
+- [ ] Integrar adapter HTTP aos endpoints reais de `analytics`, `quarantine` e `audit`.
+- [ ] Substituir blocos mock restantes desses modulos por dados reais.
+- [ ] Garantir tratamento consistente de erro contratual sem quebrar shell visual.
+- [ ] Preservar `api-client` como fronteira unica de consumo HTTP.
+
+### DevOps
+
+- Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
+- Documentos de apoio: [docs/guides/platform/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/platform/devops-baseline-sprint-0.md), [docs/guides/platform/setup.md](C:/estudos/StreamGate/docs/guides/platform/setup.md), [docs/guides/platform/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/platform/devops-roadmap.md) e [docs/guides/operations/worker-runtime-runbook.md](C:/estudos/StreamGate/docs/guides/operations/worker-runtime-runbook.md).
+- [ ] Ajustar compose/profile `full` para worker runtime real (sem `sleep infinity`).
+- [ ] Definir sinais minimos de observabilidade para consumo de fila e transicao de job.
+- [ ] Incluir smoke operacional cobrindo `upload -> fila -> worker -> leitura operacional`.
+
+### Test planning
+
+- Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
+- [ ] Planejar cobertura de consumo real do worker e transicao de estados.
+- [ ] Planejar request/integration tests para endpoints de `analytics`, `quarantine` e `audit`.
+- [ ] Planejar E2E minimo do fluxo completo com processamento real refletido no workspace.
+
+### Test execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
+- [ ] Executar suites backend/web/worker da trilha com classificacao ambiente vs implementacao.
+- [ ] Executar smoke operacional completo com broker e worker reais.
+- [ ] Registrar evidencias de comandos e resultados no fechamento da sprint.
+
+### Security
+
+- Skills obrigatorias para todas as tasks desta trilha: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
+- [ ] Revisar superficie de broker/eventos para payload invalido, replay e poison message.
+- [ ] Revisar dados sensiveis de `quarantine` e `audit` com controles de acesso e logging.
+- [ ] Revisar estrategia de retry/backoff e limites para prevenir abuso operacional.
+
+### Skills da sprint
+
+- [x] Descobrir e registrar skill geral de documentacao via `find-skills`.
+- [x] Adotar `documentation-writer` como skill geral para profissionalizacao de docs.
+- [ ] Usar `brainstorming` antes de alteracoes documentais estruturais de alto impacto.
+- [ ] Usar `api-documenter` + `openapi` para qualquer mudanca contratual de API.
+- [ ] Usar `api-contract-testing` para manter OpenAPI e contratos compartilhados sincronizados.
+
+### Documentation
+
+- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `documentation-writer`, `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
+- [x] Reorganizar `docs/guides` por dominio com pontes removidas e links consolidados.
+- [x] Criar runbook operacional do worker e guia de governanca de documentacao.
+- [ ] Atualizar guias tecnicos com estado pos-Sprint 3 e fronteiras da Sprint 4.
+- [ ] Atualizar roadmap, READMEs, ADRs e closeout correspondente no mesmo ciclo da entrega.
+
+### Checklist de saida
+
+- [ ] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
+- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint.
+- [ ] Worker runtime real executando consumo de fila no fluxo oficial.
+- [ ] Modulos `analytics`, `quarantine` e `audit` consumindo dados reais minimos.
+- [ ] OpenAPI, contratos e documentacao sincronizados sem drift.
+- [ ] Evidencias de teste e operacao registradas com classificacao de risco residual.
+
+### Reavaliacao de transicao por trilha
+
+- [ ] `Back planning`: validar contrato planejado vs implementado para worker e modulos operacionais.
+- [ ] `Back execution`: registrar debitos tecnicos movidos para a sprint seguinte.
+- [ ] `Worker execution`: validar retry, idempotencia e rastreabilidade operacional.
+- [ ] `Front planning`: validar jornada e usabilidade dos modulos operacionais.
+- [ ] `Front execution`: validar estados de UI, a11y e performance.
+- [ ] `DevOps`: revisar smoke, readiness e maturidade para ciclo continuo.
+- [ ] `Documentation`: confirmar fechamento documental completo da sprint.
+- [ ] `Test planning`: confirmar cobertura obrigatoria da sprint seguinte.
+- [ ] `Test execution`: registrar resultados e risco residual.
+- [ ] `Security`: registrar superficies sensiveis, mitigacoes e pendencias.
+- [ ] `Skills da sprint`: registrar lacunas e ajustes no stack de skills.
+
+### Delta por trilha (Sprint 4 - planejado)
+
+- Back planning: planejada; contrato de worker runtime e modulos operacionais sera congelado antes da implementacao.
+- Back execution: planejada; runtime inicial de fila e endpoints reais de leitura operacional serao entregues.
+- Front planning: planejada; jornada dos modulos operacionais sera fechada com estados explicitos.
+- Front execution: planejada; mock residual de `analytics/quarantine/audit` sera substituido por dados reais.
+- DevOps: planejada; stack `full` evolui para refletir consumo real do worker.
+- Documentation: em andamento; reorganizacao e governanca documental ja iniciadas neste ciclo.
+- Test planning: planejada; cobertura por camada sera definida para runtime real.
+- Test execution: planejada; suites + smoke operacional completo serao executados no fechamento.
+- Security: planejada; fronteira de broker e dados operacionais sensiveis sera revisada.
+- Skills da sprint: em andamento; stack obrigatoria consolidada e registrada.
 
 ## Pos-v1 e backlog estrategico
 

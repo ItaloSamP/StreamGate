@@ -26,7 +26,7 @@ No fechamento da Sprint 3, o frontend possui:
 - listagem real de jobs em `/jobs` com filtro/paginacao na URL
 - suites de teste unitaria, integracao (backend real) e E2E
 
-As convencoes oficiais desta fase estao em [docs/guides/frontend-foundations.md](C:/estudos/StreamGate/docs/guides/frontend-foundations.md), [docs/guides/frontend-workspace-map.md](C:/estudos/StreamGate/docs/guides/frontend-workspace-map.md) e [docs/guides/authentication-guide.md](C:/estudos/StreamGate/docs/guides/authentication-guide.md).
+As convencoes oficiais desta fase estao em [docs/guides/frontend/frontend-foundations.md](C:/estudos/StreamGate/docs/guides/frontend/frontend-foundations.md), [docs/guides/frontend/frontend-workspace-map.md](C:/estudos/StreamGate/docs/guides/frontend/frontend-workspace-map.md) e [docs/guides/backend/authentication-guide.md](C:/estudos/StreamGate/docs/guides/backend/authentication-guide.md).
 
 ## Superficies oficiais
 

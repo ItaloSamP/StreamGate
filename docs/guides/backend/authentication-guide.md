@@ -1,8 +1,31 @@
-# Guia de Autenticacao (Sprint 2)
+# Guia de Autenticacao
 
 ## Objetivo
+Este guia consolida diretrizes de authentication guide para uso consistente no projeto.
 
-Este guia consolida a estrategia de autenticacao real da Sprint 2 para backend, frontend, CI e operacao local.
+## Estado atual
+Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+
+
+## Estado atual detalhado
+Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+
+## Regras/Contratos
+- As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
+- Mudancas devem manter alinhamento com roadmap, ADRs e READMEs.
+
+## Validacao/Evidencias
+- Validar coerencia com README raiz, docs/README e roadmap da release atual.
+- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+
+## Referencias
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)
+
+
+## Objetivo detalhado
+
+Este guia consolida a estrategia de autenticacao real em uso no backend, frontend, CI e operacao local.
 
 A referencia arquitetural principal continua em [ADR 0003](C:/estudos/StreamGate/docs/adr/0003-authentication-and-session-strategy.md) e na spec [OpenAPI v1](C:/estudos/StreamGate/apps/api/openapi/v1/openapi.yaml).
 

@@ -1,4 +1,4 @@
-# StreamGate
+﻿# StreamGate
 
 Base inicial do projeto StreamGate, preparada para desenvolvimento local, organizacao em monorepo e evolucao para uma arquitetura orientada a eventos.
 
@@ -62,7 +62,7 @@ O repositorio trabalha com dois modos principais:
 
 ## Primeiros passos
 
-1. Leia o guia de setup em [docs/guides/setup.md](C:/estudos/StreamGate/docs/guides/setup.md).
+1. Leia o guia de setup em [docs/guides/platform/setup.md](C:/estudos/StreamGate/docs/guides/platform/setup.md).
 2. Leia o roadmap executivo em [docs/planning/streamgate-full-sprints-roadmap.md](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md).
 3. Copie `.env.example` para `.env` e ajuste os valores locais.
 4. Rode `./scripts/bootstrap/check-prereqs.sh`.
@@ -93,16 +93,18 @@ Os workflows atuais ficam em `.github/workflows`:
 
 - [Hub de documentacao](C:/estudos/StreamGate/docs/README.md)
 - [Visao do produto](C:/estudos/StreamGate/docs/product/vision.md)
-- [Arquitetura](C:/estudos/StreamGate/docs/guides/architecture.md)
-- [Guia de autenticacao](C:/estudos/StreamGate/docs/guides/authentication-guide.md)
-- [Definition of Done](C:/estudos/StreamGate/docs/guides/definition-of-done.md)
-- [Baseline de testes da Sprint 0](C:/estudos/StreamGate/docs/guides/testing-baseline-sprint-0.md)
-- [Baseline de seguranca da Sprint 0](C:/estudos/StreamGate/docs/guides/security-baseline-sprint-0.md)
-- [Threat model inicial do repositorio](C:/estudos/StreamGate/docs/guides/streamgate-threat-model.md)
-- [Setup do ambiente](C:/estudos/StreamGate/docs/guides/setup.md)
-- [Swagger/OpenAPI da API](C:/estudos/StreamGate/docs/guides/api-docs.md)
+- [Arquitetura](C:/estudos/StreamGate/docs/guides/platform/architecture.md)
+- [Guia de autenticacao](C:/estudos/StreamGate/docs/guides/backend/authentication-guide.md)
+- [Definition of Done](C:/estudos/StreamGate/docs/guides/quality/definition-of-done.md)
+- [Baseline de testes da Sprint 0](C:/estudos/StreamGate/docs/guides/quality/testing-baseline-sprint-0.md)
+- [Baseline de seguranca da Sprint 0](C:/estudos/StreamGate/docs/guides/security/security-baseline-sprint-0.md)
+- [Threat model inicial do repositorio](C:/estudos/StreamGate/docs/guides/security/streamgate-threat-model.md)
+- [Setup do ambiente](C:/estudos/StreamGate/docs/guides/platform/setup.md)
+- [Swagger/OpenAPI da API](C:/estudos/StreamGate/docs/guides/backend/api-docs.md)
 - [Roadmap mestre de sprints](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
 - [ADR 0001 - Fundacoes de engenharia](C:/estudos/StreamGate/docs/adr/0001-engineering-foundations.md)
 - [ADR 0003 - Estrategia de autenticacao e sessao](C:/estudos/StreamGate/docs/adr/0003-authentication-and-session-strategy.md)
-- [Closeout Sprint 2](C:/estudos/StreamGate/docs/sprints/SPRINT-02-closeout.md)
+- [Closeout Sprint 3](C:/estudos/StreamGate/docs/sprints/SPRINT-03-closeout.md)
+- [Planejamento Sprint 4](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
 - [Catalogo de skills do projeto](C:/estudos/StreamGate/.agents/skills/README.md)
+

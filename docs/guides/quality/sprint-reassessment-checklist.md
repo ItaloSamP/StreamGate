@@ -1,6 +1,29 @@
 # Checklist de Reavaliacao Entre Sprints
 
 ## Objetivo
+Este guia consolida diretrizes de sprint reassessment checklist para uso consistente no projeto.
+
+## Estado atual
+Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+
+
+## Estado atual detalhado
+Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+
+## Regras/Contratos
+- As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
+- Mudancas devem manter alinhamento com roadmap, ADRs e READMEs.
+
+## Validacao/Evidencias
+- Validar coerencia com README raiz, docs/README e roadmap da release atual.
+- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+
+## Referencias
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)
+
+
+## Objetivo detalhado
 
 Este documento transforma a reavaliacao entre sprints em um ritual operacional claro, repetivel e verificavel.
 
@@ -109,13 +132,13 @@ Ao final da reavaliacao entre sprints, deve existir pelo menos:
 
 - `docs/planning/streamgate-full-sprints-roadmap.md`
 - `docs/product/vision.md`
-- `docs/guides/architecture.md`
-- `docs/guides/backend-foundations.md`
-- `docs/guides/frontend-foundations.md`
-- `docs/guides/definition-of-done.md`
-- `docs/guides/testing-baseline-sprint-0.md` ou o documento de testes vigente
-- `docs/guides/security-baseline-sprint-0.md` ou o documento de seguranca vigente
-- `docs/guides/devops-roadmap.md`
+- `docs/guides/platform/architecture.md`
+- `docs/guides/backend/backend-foundations.md`
+- `docs/guides/frontend/frontend-foundations.md`
+- `docs/guides/quality/definition-of-done.md`
+- `docs/guides/quality/testing-baseline-sprint-0.md` ou o documento de testes vigente
+- `docs/guides/security/security-baseline-sprint-0.md` ou o documento de seguranca vigente
+- `docs/guides/platform/devops-roadmap.md`
 - `apps/web/README.md`
 - `apps/api/README.md`
 - `apps/worker/README.md`

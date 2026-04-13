@@ -57,7 +57,6 @@ Todo contrato de evento deve prever, quando aplicavel:
 Exemplos correspondentes estao em `examples/http`.
 ## Fonte de verdade complementar
 
-- [Glossario de dominio](C:/estudos/StreamGate/docs/guides/domain-glossary.md)
-- [Fundacoes do backend](C:/estudos/StreamGate/docs/guides/backend-foundations.md)
+- [Glossario de dominio](C:/estudos/StreamGate/docs/guides/backend/domain-glossary.md)
+- [Fundacoes do backend](C:/estudos/StreamGate/docs/guides/backend/backend-foundations.md)
 - [ADR 0002](C:/estudos/StreamGate/docs/adr/0002-domain-boundaries-identifiers-and-contracts.md)
-

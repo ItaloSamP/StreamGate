@@ -1,6 +1,25 @@
 # Baseline de Testes da Sprint 0
 
 ## Objetivo
+Este guia consolida diretrizes de testing baseline sprint 0 para uso consistente no projeto.
+
+## Estado atual
+Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+
+
+## Estado atual detalhado
+Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+
+## Regras/Contratos
+- As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
+- Mudancas devem manter alinhamento com roadmap, ADRs e READMEs.
+
+## Validacao/Evidencias
+- Validar coerencia com README raiz, docs/README e roadmap da release atual.
+- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+
+
+## Objetivo detalhado
 
 Este documento fixa a base de planejamento e execucao de testes da Sprint 0. Ele existe para responder quatro perguntas de forma operacional:
 
@@ -133,8 +152,8 @@ Exemplos invalidos:
 - contract tests reais entram quando `packages/contracts` deixar de ser placeholder
 - E2E real com `playwright` entra assim que os fluxos criticos deixarem de ser majoritariamente mock
 
-## Referencias relacionadas
+## Referencias
 
-- [Definition of Done](C:/estudos/StreamGate/docs/guides/definition-of-done.md)
-- [Baseline DevOps da Sprint 0](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md)
+- [Definition of Done](C:/estudos/StreamGate/docs/guides/quality/definition-of-done.md)
+- [Baseline DevOps da Sprint 0](C:/estudos/StreamGate/docs/guides/platform/devops-baseline-sprint-0.md)
 - [Roadmap mestre de sprints](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)

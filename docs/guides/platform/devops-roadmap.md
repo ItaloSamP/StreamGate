@@ -1,6 +1,29 @@
 # Roadmap DevOps
 
 ## Objetivo
+Este guia consolida diretrizes de devops roadmap para uso consistente no projeto.
+
+## Estado atual
+Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+
+
+## Estado atual detalhado
+Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+
+## Regras/Contratos
+- As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
+- Mudancas devem manter alinhamento com roadmap, ADRs e READMEs.
+
+## Validacao/Evidencias
+- Validar coerencia com README raiz, docs/README e roadmap da release atual.
+- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+
+## Referencias
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)
+
+
+## Objetivo detalhado
 
 Consolidar uma base operacional previsivel para o StreamGate, com foco em:
 
@@ -8,9 +31,9 @@ Consolidar uma base operacional previsivel para o StreamGate, com foco em:
 - separacao clara entre falha de ambiente e falha de implementacao;
 - evolucao segura para observabilidade, release continuo e cluster.
 
-A baseline operacional da Sprint 0 continua registrada em [docs/guides/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/devops-baseline-sprint-0.md).
+A baseline operacional da Sprint 0 continua registrada em [docs/guides/platform/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/platform/devops-baseline-sprint-0.md).
 
-## Estado consolidado ate a Sprint 2 (2026-04-06)
+## Estado consolidado ate a Sprint 3 (2026-04-10)
 
 ### O que ja esta fechado na trilha DevOps
 
@@ -30,6 +53,15 @@ Skills aplicadas nesta trilha: `docker`, `github-actions-expert`, `generate-gith
 - [x] ajustar CI para cobrir auth real (incluindo idempotencia de seed e fluxo auth);
 - [x] configurar envs de CORS/CSRF/cookies conforme estrategia de sessao da v1;
 - [x] garantir seeds e fixtures de auth reproduziveis em ambiente local e CI.
+
+### Fechamento adicional da Sprint 3 (DevOps)
+
+Skills aplicadas nesta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`.
+
+- [x] oficializar envs de upload/job para API, compose e CI;
+- [x] ajustar CORS de MinIO para fluxo browser com signed URL;
+- [x] incluir smoke operacional da trilha `signed-url -> PUT -> register`;
+- [x] manter `WSL/CI` como gate oficial para separar falha de ambiente e falha de implementacao.
 
 ## Planejamento da trilha DevOps na Sprint 2
 
@@ -75,7 +107,7 @@ Skills aplicadas nesta trilha: `docker`, `github-actions-expert`, `generate-gith
 
 ### 5) Documentacao operacional
 
-- `docs/guides/setup.md` foi atualizado com mapa oficial de servicos/variaveis da Sprint 2;
+- `docs/guides/platform/setup.md` foi atualizado com mapa oficial de servicos/variaveis da Sprint 2;
 - o roadmap mestre reflete a trilha DevOps da Sprint 2 como concluida.
 
 ## Evidencias operacionais da trilha
