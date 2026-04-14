@@ -6,7 +6,33 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
+    amq-protocol (2.7.0)
     ast (2.4.3)
+    aws-eventstream (1.4.0)
+    aws-partitions (1.1238.0)
+    aws-sdk-core (3.244.0)
+      aws-eventstream (~> 1, >= 1.3.0)
+      aws-partitions (~> 1, >= 1.992.0)
+      aws-sigv4 (~> 1.9)
+      base64
+      bigdecimal
+      jmespath (~> 1, >= 1.6.1)
+      logger
+    aws-sdk-kms (1.123.0)
+      aws-sdk-core (~> 3, >= 3.244.0)
+      aws-sigv4 (~> 1.5)
+    aws-sdk-s3 (1.219.0)
+      aws-sdk-core (~> 3, >= 3.244.0)
+      aws-sdk-kms (~> 1)
+      aws-sigv4 (~> 1.5)
+    aws-sigv4 (1.12.1)
+      aws-eventstream (~> 1, >= 1.0.2)
+    base64 (0.3.0)
+    bigdecimal (4.1.1)
+    bunny (2.24.0)
+      amq-protocol (~> 2.3)
+      sorted_set (~> 1, >= 1.0.2)
+    csv (3.3.5)
     date (3.5.1)
     diff-lcs (1.6.2)
     erb (6.0.2)
@@ -16,13 +42,17 @@ GEM
       prism (>= 1.3.0)
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
+    jmespath (1.6.2)
     json (2.19.3)
     language_server-protocol (3.17.0.5)
     lint_roller (1.1.0)
+    logger (1.7.0)
     parallel (1.27.0)
     parser (3.3.10.2)
       ast (~> 2.4.1)
       racc
+    pg (1.6.3-x64-mingw-ucrt)
+    pg (1.6.3-x86_64-linux)
     pp (0.6.3)
       prettyprint
     prettyprint (0.2.0)
@@ -33,6 +63,7 @@ GEM
     racc (1.8.1)
     rainbow (3.1.1)
     rake (13.3.1)
+    rbtree (0.4.6)
     rdoc (7.2.0)
       erb
       psych (>= 4.0.0)
@@ -68,6 +99,9 @@ GEM
       parser (>= 3.3.7.2)
       prism (~> 1.7)
     ruby-progressbar (1.13.0)
+    rubyzip (2.4.1)
+    sorted_set (1.1.0)
+      rbtree
     stringio (3.2.0)
     tsort (0.2.0)
     unicode-display_width (3.2.0)
@@ -79,10 +113,15 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
+  aws-sdk-s3 (~> 1.169)
+  bunny (~> 2.24)
+  csv (~> 3.3)
   irb
+  pg (~> 1.5)
   rake (~> 13.0)
   rspec (~> 3.0)
   rubocop (~> 1.21)
+  rubyzip (~> 2.4)
   worker!
 
 BUNDLED WITH
