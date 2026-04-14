@@ -20,6 +20,10 @@ Rails.application.routes.draw do
       end
 
       resources :jobs, only: [ :index ]
+      get "analytics", to: "analytics#index"
+      get "quarantine", to: "quarantine#index"
+      get "quarantine/dlq", to: "dlq#index"
+      get "audit", to: "audit#index"
     end
   end
 

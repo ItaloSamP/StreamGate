@@ -17,9 +17,26 @@ module Uploads
     end
 
     def call
+      outbox_event = nil
+      upload = nil
+      job = nil
+
       ApplicationRecord.transaction do
         upload = user.uploads.create!(upload_attributes)
         job = upload.jobs.create!(job_attributes)
+
+        event_payload = Messaging::UploadReceivedEventBuilder.call(upload: upload, job: job)
+        outbox_event = OutboxEnqueueEventService.call(
+          event_name: event_payload[:event_name],
+          routing_key: Rails.application.config.x.broker_upload_received_routing_key,
+          payload: event_payload,
+          headers: {
+            "x-event-name" => event_payload[:event_name],
+            "x-payload-version" => event_payload[:payload_version]
+          },
+          trace_id: event_payload[:trace_id],
+          request_id: event_payload[:request_id]
+        )
 
         AuditEvent.create!(
           actor: user,
@@ -31,12 +48,19 @@ module Uploads
           metadata: {
             upload_id: upload.id,
             job_id: job.id,
-            filename: upload.filename
+            filename: upload.filename,
+            event_id: event_payload[:event_id],
+            event_name: event_payload[:event_name],
+            correlation_id: event_payload[:correlation_id]
           }
         )
 
-        Result.new(upload: upload, job: job)
+        AnalyticsSyncJobSnapshotService.call(job: job)
       end
+
+      OutboxDispatchEventService.call(event_id: outbox_event.id) if outbox_event.present?
+
+      Result.new(upload: upload, job: job)
     end
 
     private

@@ -4,6 +4,7 @@ class UserSerializer < ApplicationSerializer
       id: record.id,
       email: record.email,
       full_name: record.full_name,
+      organization_id: record.organization_id,
       role: record.role,
       status: record.status,
       created_at: record.created_at&.iso8601,

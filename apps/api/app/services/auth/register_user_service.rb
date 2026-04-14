@@ -8,6 +8,7 @@ module Auth
         email: email,
         password: password,
         password_confirmation: password_confirmation,
+        organization_id: ENV.fetch("DEFAULT_ORGANIZATION_ID", "org_default"),
         role: :operator,
         status: :active
       }

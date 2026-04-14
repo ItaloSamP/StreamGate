@@ -67,10 +67,10 @@ module Api
       private
 
       def base_scope
-        scope = Job.joins(:upload)
+        scope = Job.joins(:requested_by)
         return scope if current_actor.admin?
 
-        scope.where(uploads: { user_id: current_actor.id })
+        scope.where(users: { organization_id: current_actor.organization_id })
       end
     end
   end
