@@ -26,7 +26,6 @@ fi
 
 timeout_seconds="$raw_timeout"
 poll_interval_seconds=5
-deadline=$((SECONDS + timeout_seconds))
 
 if [[ ! -f ".env" ]]; then
   echo "Arquivo .env nao encontrado. Copie .env.example para .env antes de subir o ambiente." >&2
@@ -41,11 +40,209 @@ if [[ -n "$project_name_validation" ]]; then
   exit 1
 fi
 
+hash_file_sha256() {
+  local file_path="$1"
+
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$file_path" | awk '{print $1}'
+    return 0
+  fi
+
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$file_path" | awk '{print $1}'
+    return 0
+  fi
+
+  echo "Nao foi possivel calcular hash SHA256: sha256sum/shasum indisponivel." >&2
+  return 1
+}
+
+hash_stdin_sha256() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum | awk '{print $1}'
+    return 0
+  fi
+
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 | awk '{print $1}'
+    return 0
+  fi
+
+  echo "Nao foi possivel calcular hash SHA256 de stream: sha256sum/shasum indisponivel." >&2
+  return 1
+}
+
+get_build_services_for_mode() {
+  local selected_mode="$1"
+  case "$selected_mode" in
+    app) echo "api web" ;;
+    full) echo "api web worker" ;;
+    *) echo "" ;;
+  esac
+}
+
+get_service_fingerprint_files() {
+  local service="$1"
+  case "$service" in
+    api)
+      cat <<'EOF'
+apps/api/Dockerfile.dev
+apps/api/.dockerignore
+apps/api/Gemfile
+apps/api/Gemfile.lock
+EOF
+      ;;
+    web)
+      cat <<'EOF'
+apps/web/Dockerfile.dev
+apps/web/.dockerignore
+apps/web/package.json
+apps/web/pnpm-lock.yaml
+EOF
+      ;;
+    worker)
+      cat <<'EOF'
+apps/worker/Dockerfile.dev
+apps/worker/.dockerignore
+apps/worker/Gemfile
+apps/worker/Gemfile.lock
+apps/worker/worker.gemspec
+EOF
+      ;;
+    *)
+      ;;
+  esac
+}
+
+get_service_build_fingerprint() {
+  local service="$1"
+  local payload=""
+  local relative_path=""
+
+  payload+="compose.yaml="
+  if [[ -f "$ROOT_DIR/compose.yaml" ]]; then
+    payload+="$(hash_file_sha256 "$ROOT_DIR/compose.yaml")"$'\n'
+  else
+    payload+="MISSING"$'\n'
+  fi
+
+  while IFS= read -r relative_path; do
+    [[ -z "$relative_path" ]] && continue
+    payload+="$relative_path="
+    if [[ -f "$ROOT_DIR/$relative_path" ]]; then
+      payload+="$(hash_file_sha256 "$ROOT_DIR/$relative_path")"$'\n'
+    else
+      payload+="MISSING"$'\n'
+    fi
+  done < <(get_service_fingerprint_files "$service")
+
+  printf '%s' "$payload" | hash_stdin_sha256
+}
+
+get_build_state_file() {
+  local service="$1"
+  echo "$ROOT_DIR/.tmp/dev-up-build/$service.sha256"
+}
+
+get_previous_build_fingerprint() {
+  local service="$1"
+  local state_file
+  state_file="$(get_build_state_file "$service")"
+
+  if [[ ! -f "$state_file" ]]; then
+    return 0
+  fi
+
+  tr -d '[:space:]' < "$state_file"
+}
+
+set_build_fingerprint_state() {
+  local service="$1"
+  local fingerprint="$2"
+  local state_file
+  state_file="$(get_build_state_file "$service")"
+  mkdir -p "$(dirname "$state_file")"
+  printf '%s' "$fingerprint" > "$state_file"
+}
+
+test_compose_image_exists() {
+  local service="$1"
+  local image_id=""
+
+  if ! image_id="$(invoke_compose_command images -q "$service" 2>/dev/null | awk 'NF { print; exit }')"; then
+    return 1
+  fi
+
+  [[ -n "$image_id" ]]
+}
+
+run_conditional_compose_build() {
+  local selected_mode="$1"
+  local buildable_services_raw=""
+  local buildable_services=()
+  local services_to_build=()
+  local state_updates=()
+  local rebuild_reason_lines=()
+  local service=""
+  local fingerprint=""
+  local previous_fingerprint=""
+  local reasons=()
+  local reasons_text=""
+
+  buildable_services_raw="$(get_build_services_for_mode "$selected_mode")"
+  if [[ -z "$buildable_services_raw" ]]; then
+    return 0
+  fi
+
+  read -r -a buildable_services <<< "$buildable_services_raw"
+
+  for service in "${buildable_services[@]}"; do
+    fingerprint="$(get_service_build_fingerprint "$service")"
+    previous_fingerprint="$(get_previous_build_fingerprint "$service")"
+    reasons=()
+
+    if ! test_compose_image_exists "$service"; then
+      reasons+=("imagem ausente")
+    fi
+
+    if [[ -z "$previous_fingerprint" ]]; then
+      reasons+=("baseline de fingerprint ausente")
+    elif [[ "$previous_fingerprint" != "$fingerprint" ]]; then
+      reasons+=("fingerprint alterado")
+    fi
+
+    state_updates+=("$service:$fingerprint")
+
+    if (( ${#reasons[@]} > 0 )); then
+      services_to_build+=("$service")
+      reasons_text="$(IFS=', '; echo "${reasons[*]}")"
+      rebuild_reason_lines+=(" - $service: $reasons_text")
+    fi
+  done
+
+  if (( ${#services_to_build[@]} == 0 )); then
+    echo "Sem alteracoes relevantes para build. Pulando docker compose build."
+    return 0
+  fi
+
+  echo "Alteracoes detectadas em artefatos de build. Executando rebuild seletivo:"
+  for reasons_text in "${rebuild_reason_lines[@]}"; do
+    echo "$reasons_text"
+  done
+  invoke_compose_command build "${services_to_build[@]}"
+
+  for service in "${state_updates[@]}"; do
+    set_build_fingerprint_state "${service%%:*}" "${service#*:}"
+  done
+}
+
 compose_args=()
 if [[ "$mode" != "infra" ]]; then
   compose_args+=(--profile "$mode")
 fi
 compose_args+=(up -d)
+
+run_conditional_compose_build "$mode"
 
 set +e
 compose_up_output="$(invoke_compose_command "${compose_args[@]}" 2>&1)"
@@ -68,6 +265,7 @@ if [[ $compose_up_exit -ne 0 ]]; then
   exit 1
 fi
 
+deadline=$((SECONDS + timeout_seconds))
 while true; do
   services_json="$(get_compose_services_json)"
 

@@ -23,6 +23,7 @@ vendor/bundle/
 log/
 tmp/
 storage/
+.tmp/dev-up-build/
 
 apps/api/.ruby-lsp/
 apps/api/.yardoc/
