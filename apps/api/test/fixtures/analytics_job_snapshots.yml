@@ -1,0 +1,35 @@
+pending_snapshot:
+  id: ajs_fixture_pending
+  job_id: job_fixture_pending
+  upload_id: upload_fixture_registered
+  actor_id: user_fixture_operator
+  organization_id: org_fixture_alpha
+  source_type: upload
+  status: pending
+  quarantined_records_count: 0
+  job_created_at: 2026-04-05 10:00:00
+  last_synced_at: 2026-04-05 10:00:00
+
+peer_completed_snapshot:
+  id: ajs_fixture_peer_completed
+  job_id: job_fixture_peer_completed
+  upload_id: upload_fixture_peer
+  actor_id: user_fixture_peer_operator
+  organization_id: org_fixture_alpha
+  source_type: upload
+  status: completed
+  quarantined_records_count: 1
+  job_created_at: 2026-04-06 10:00:00
+  last_synced_at: 2026-04-06 10:05:00
+
+external_failed_snapshot:
+  id: ajs_fixture_external_failed
+  job_id: job_fixture_external_failed
+  upload_id: upload_fixture_external
+  actor_id: user_fixture_external_operator
+  organization_id: org_fixture_beta
+  source_type: upload
+  status: failed
+  quarantined_records_count: 0
+  job_created_at: 2026-04-06 11:00:00
+  last_synced_at: 2026-04-06 11:05:00

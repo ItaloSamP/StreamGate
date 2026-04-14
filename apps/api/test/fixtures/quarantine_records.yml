@@ -8,3 +8,13 @@ warning_record:
   severity: warning
   trace_id: trace_fixture_1
   payload: {}
+
+peer_warning_record:
+  id: quarantine_fixture_peer_warning
+  job_id: job_fixture_peer_completed
+  row_number: 8
+  code: missing_document
+  message: Documento ausente.
+  severity: warning
+  trace_id: trace_fixture_peer
+  payload: {}

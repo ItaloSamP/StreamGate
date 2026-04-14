@@ -11,3 +11,31 @@ registered_upload:
   request_id: req_fixture_1
   trace_id: trace_fixture_1
   metadata: {}
+
+peer_upload:
+  id: upload_fixture_peer
+  user_id: user_fixture_peer_operator
+  filename: peer-orders.csv
+  content_type: text/csv
+  byte_size: 1536
+  checksum_sha256: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+  storage_key: uploads/peer-orders.csv
+  status: registered
+  sensitivity_level: internal
+  request_id: req_fixture_peer
+  trace_id: trace_fixture_peer
+  metadata: {}
+
+external_upload:
+  id: upload_fixture_external
+  user_id: user_fixture_external_operator
+  filename: external-orders.csv
+  content_type: text/csv
+  byte_size: 1536
+  checksum_sha256: eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+  storage_key: uploads/external-orders.csv
+  status: registered
+  sensitivity_level: internal
+  request_id: req_fixture_external
+  trace_id: trace_fixture_external
+  metadata: {}
