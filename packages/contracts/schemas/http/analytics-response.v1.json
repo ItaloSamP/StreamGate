@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/http/analytics-response.v1.json",
+  "title": "AnalyticsResponseV1",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": ["window", "kpis", "breakdowns"],
+      "properties": {
+        "window": {
+          "type": "object",
+          "required": ["from", "to", "timezone"],
+          "properties": {
+            "from": { "type": "string", "format": "date-time" },
+            "to": { "type": "string", "format": "date-time" },
+            "preset": { "type": ["string", "null"] },
+            "timezone": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "kpis": {
+          "type": "object",
+          "required": [
+            "uploads_total",
+            "jobs_total",
+            "jobs_processing",
+            "jobs_completed",
+            "jobs_failed",
+            "jobs_quarantined",
+            "quarantine_records_total",
+            "audit_events_total"
+          ],
+          "properties": {
+            "uploads_total": { "type": "integer", "minimum": 0 },
+            "jobs_total": { "type": "integer", "minimum": 0 },
+            "jobs_processing": { "type": "integer", "minimum": 0 },
+            "jobs_completed": { "type": "integer", "minimum": 0 },
+            "jobs_failed": { "type": "integer", "minimum": 0 },
+            "jobs_quarantined": { "type": "integer", "minimum": 0 },
+            "quarantine_records_total": { "type": "integer", "minimum": 0 },
+            "audit_events_total": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        },
+        "breakdowns": {
+          "type": "object",
+          "required": ["status", "actor", "source"],
+          "properties": {
+            "status": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["status", "count"],
+                "properties": {
+                  "status": { "type": "string" },
+                  "count": { "type": "integer", "minimum": 0 }
+                },
+                "additionalProperties": false
+              }
+            },
+            "actor": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["actor_id", "count"],
+                "properties": {
+                  "actor_id": { "type": "string" },
+                  "count": { "type": "integer", "minimum": 0 }
+                },
+                "additionalProperties": false
+              }
+            },
+            "source": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["source", "count"],
+                "properties": {
+                  "source": { "type": "string" },
+                  "count": { "type": "integer", "minimum": 0 }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "meta": {
+      "type": "object",
+      "properties": {
+        "pagination": {
+          "type": "object",
+          "properties": {
+            "page": { "type": "integer", "minimum": 1 },
+            "per_page": { "type": "integer", "minimum": 1 },
+            "total_count": { "type": "integer", "minimum": 0 },
+            "total_pages": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": true
+        },
+        "filters": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

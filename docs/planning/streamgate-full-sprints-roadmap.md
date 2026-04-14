@@ -1087,19 +1087,23 @@ Fronteira explicita (fora da Sprint 4): `external_link`, `oauth_delegated`, `goo
 ### Back planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `architecture-patterns`, `domain-modeling`, `review-architecture`, `api-designer`, `supabase-postgres-best-practices`.
-- [ ] Congelar contrato de eventos do worker para consumo inicial (`upload.received` + transicoes de job).
-- [ ] Definir fronteira de processamento minimo, retry e classificacao de falha (`retryable` vs nao retryable).
-- [ ] Definir contratos HTTP minimos para leitura real de `analytics`, `quarantine` e `audit`.
-- [ ] Definir matriz minima de filtros/paginacao para novos modulos operacionais.
+- [x] Congelar contrato de eventos do worker para consumo inicial (`upload.received.v1` + transicoes de job).
+- [x] Definir fronteira de processamento minimo, retry e classificacao de falha (`retryable` vs nao retryable).
+- [x] Definir contratos HTTP minimos para leitura real de `analytics`, `quarantine`, `quarantine/dlq` e `audit`.
+- [x] Definir matriz minima de filtros/paginacao para novos modulos operacionais.
+- [x] Congelar estrategia de outbox transacional para publicacao de eventos da API.
+- [x] Definir camada materializada inicial de analytics (`analytics_job_snapshots`).
 
 ### Back execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
-- [ ] Implementar runtime inicial do worker com consumo real de fila.
-- [ ] Aplicar transicao de estados de job (`pending -> processing -> completed|failed|quarantined_with_warnings`).
-- [ ] Registrar auditoria e rastreabilidade por `trace_id`, `request_id`, `upload_id`, `job_id`, `batch_id`.
-- [ ] Expor endpoints reais minimos para `analytics`, `quarantine` e `audit`.
-- [ ] Atualizar OpenAPI e contratos compartilhados no mesmo PR da trilha.
+- [x] Implementar runtime inicial do worker com consumo real de fila.
+- [x] Aplicar transicao de estados de job (`pending -> processing -> completed|failed|quarantined_with_warnings`).
+- [x] Registrar auditoria e rastreabilidade por `trace_id`, `request_id`, `correlation_id`, `upload_id`, `job_id`, `batch_id`.
+- [x] Expor endpoints reais minimos para `analytics`, `quarantine` e `audit`.
+- [x] Expor endpoint read-only de inspecao da DLQ (`GET /api/v1/quarantine/dlq`, admin-only).
+- [x] Implementar idempotencia de consumo por `event_id` e retry com backoff + DLQ.
+- [x] Atualizar OpenAPI e contratos compartilhados no mesmo PR da trilha.
 
 ### Front planning
 
@@ -1158,7 +1162,7 @@ Fronteira explicita (fora da Sprint 4): `external_link`, `oauth_delegated`, `goo
 - Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `documentation-writer`, `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
 - [x] Reorganizar `docs/guides` por dominio com pontes removidas e links consolidados.
 - [x] Criar runbook operacional do worker e guia de governanca de documentacao.
-- [ ] Atualizar guias tecnicos com estado pos-Sprint 3 e fronteiras da Sprint 4.
+- [x] Atualizar guias tecnicos com estado pos-Sprint 3 e fronteiras da Sprint 4.
 - [ ] Atualizar roadmap, READMEs, ADRs e closeout correspondente no mesmo ciclo da entrega.
 
 ### Checklist de saida
@@ -1186,8 +1190,8 @@ Fronteira explicita (fora da Sprint 4): `external_link`, `oauth_delegated`, `goo
 
 ### Delta por trilha (Sprint 4 - planejado)
 
-- Back planning: planejada; contrato de worker runtime e modulos operacionais sera congelado antes da implementacao.
-- Back execution: planejada; runtime inicial de fila e endpoints reais de leitura operacional serao entregues.
+- Back planning: concluida para backend; contrato de evento, outbox, retry/backoff, DLQ read-only e analytics materializado foram fechados.
+- Back execution: em andamento (backend); runtime inicial de fila, transicoes de job, idempotencia por evento e endpoints operacionais read-only implementados.
 - Front planning: planejada; jornada dos modulos operacionais sera fechada com estados explicitos.
 - Front execution: planejada; mock residual de `analytics/quarantine/audit` sera substituido por dados reais.
 - DevOps: planejada; stack `full` evolui para refletir consumo real do worker.

@@ -1,0 +1,39 @@
+{
+  "data": [
+    {
+      "payload": {
+        "event_id": "event_8cf97fd58a08413ca04f9d2420ab4a1d",
+        "event_name": "upload.received.v1",
+        "job_id": "job_6f51b476d7274d6d94c7943ee6d88515",
+        "upload_id": "upload_52dc1cd9d40c472ebd63408d8d7b866f",
+        "trace_id": "trace_3c3b72fe95be45e48dcc9f944d5fb6d8"
+      },
+      "exchange": "streamgate.events",
+      "routing_key": "upload.received.v1.dlq",
+      "redelivered": true,
+      "retry_count": 3,
+      "dead_letter_reason": "max_retries_exceeded",
+      "headers": {
+        "x-retry-count": 3,
+        "x-dead-letter-reason": "max_retries_exceeded"
+      }
+    }
+  ],
+  "meta": {
+    "pagination": {
+      "page": 1,
+      "per_page": 20,
+      "total_count": 1,
+      "total_pages": 1
+    },
+    "queue": {
+      "name": "streamgate.worker.upload.received.v1.dlq",
+      "queue_depth": 12
+    },
+    "filters": {
+      "dead_letter_reason": "max_retries_exceeded",
+      "sort_by": "retry_count",
+      "sort_order": "desc"
+    }
+  }
+}

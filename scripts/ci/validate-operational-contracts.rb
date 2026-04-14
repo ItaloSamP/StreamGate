@@ -1,0 +1,78 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "yaml"
+require "json"
+
+ROOT = File.expand_path("../..", __dir__)
+OPENAPI_PATH = File.join(ROOT, "apps/api/openapi/v1/openapi.yaml")
+
+HTTP_CONTRACTS = [
+  "packages/contracts/schemas/http/analytics-response.v1.json",
+  "packages/contracts/schemas/http/quarantine-list-response.v1.json",
+  "packages/contracts/schemas/http/audit-list-response.v1.json",
+  "packages/contracts/schemas/http/dlq-list-response.v1.json"
+].freeze
+
+HTTP_EXAMPLES = [
+  "packages/contracts/examples/http/analytics-list.v1.json",
+  "packages/contracts/examples/http/quarantine-list.v1.json",
+  "packages/contracts/examples/http/audit-list.v1.json",
+  "packages/contracts/examples/http/dlq-list.v1.json"
+].freeze
+
+EVENT_SCHEMA_PATH = "packages/contracts/schemas/events/upload.received.v1.json"
+EVENT_EXAMPLE_PATH = "packages/contracts/examples/events/upload.received.v1.json"
+
+REQUIRED_PATHS = {
+  "/api/v1/analytics" => "#/components/schemas/AnalyticsEnvelope",
+  "/api/v1/quarantine" => "#/components/schemas/QuarantineListEnvelope",
+  "/api/v1/audit" => "#/components/schemas/AuditListEnvelope",
+  "/api/v1/quarantine/dlq" => "#/components/schemas/DlqListEnvelope"
+}.freeze
+
+def assert!(condition, message)
+  return if condition
+
+  warn "ERROR: #{message}"
+  exit(1)
+end
+
+def parse_json!(path)
+  JSON.parse(File.read(path))
+rescue JSON::ParserError => error
+  warn "ERROR: invalid JSON at #{path}: #{error.message}"
+  exit(1)
+end
+
+openapi = YAML.safe_load(File.read(OPENAPI_PATH))
+paths = openapi.fetch("paths", {})
+
+REQUIRED_PATHS.each do |path, schema_ref|
+  operation = paths.fetch(path, {})["get"]
+  assert!(!operation.nil?, "missing GET operation at #{path}")
+  actual_ref = operation.dig("responses", "200", "content", "application/json", "schema", "$ref")
+  assert!(actual_ref == schema_ref, "unexpected 200 schema ref for #{path}: #{actual_ref.inspect} (expected #{schema_ref})")
+end
+
+HTTP_CONTRACTS.each do |relative_path|
+  full_path = File.join(ROOT, relative_path)
+  assert!(File.exist?(full_path), "missing contract schema #{relative_path}")
+  parse_json!(full_path)
+end
+
+HTTP_EXAMPLES.each do |relative_path|
+  full_path = File.join(ROOT, relative_path)
+  assert!(File.exist?(full_path), "missing contract example #{relative_path}")
+  parse_json!(full_path)
+end
+
+event_schema = parse_json!(File.join(ROOT, EVENT_SCHEMA_PATH))
+event_example = parse_json!(File.join(ROOT, EVENT_EXAMPLE_PATH))
+
+assert!(event_schema.dig("properties", "event_name", "const") == "upload.received.v1", "event schema const must be upload.received.v1")
+assert!(event_example["event_name"] == "upload.received.v1", "event example must use upload.received.v1")
+assert!(event_schema["required"].include?("correlation_id"), "event schema must require correlation_id")
+assert!(event_example.key?("correlation_id"), "event example must include correlation_id")
+
+puts "Operational contract validation passed."

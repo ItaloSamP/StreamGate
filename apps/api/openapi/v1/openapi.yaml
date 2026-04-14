@@ -4,7 +4,8 @@ info:
   version: v1
   description: |
     Base inicial da documentacao OpenAPI do StreamGate.
-    A Sprint 3 consolida upload assinado, registro idempotente e listagens reais de uploads/jobs.
+    A Sprint 4 consolida runtime real de worker com RabbitMQ, camada materializada de analytics
+    e leituras operacionais de quarantine/audit/DLQ.
 servers:
   - url: http://localhost:3000
     description: Desenvolvimento local
@@ -13,6 +14,9 @@ tags:
   - name: Auth
   - name: Uploads
   - name: Jobs
+  - name: Analytics
+  - name: Quarantine
+  - name: Audit
 paths:
   /up:
     get:
@@ -462,6 +466,350 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/analytics:
+    get:
+      summary: Leitura analitica operacional com KPIs e breakdowns
+      operationId: listAnalytics
+      tags:
+        - Analytics
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: preset
+          schema:
+            type: string
+            enum: [last_24h, last_7d, last_30d]
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: timezone
+          schema:
+            type: string
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+            enum: [count, actor_id, status, source]
+        - in: query
+          name: sort_order
+          schema:
+            type: string
+            enum: [asc, desc]
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Snapshot analitico operacional
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Filtros invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/quarantine:
+    get:
+      summary: Lista registros de quarentena com filtros operacionais
+      operationId: listQuarantine
+      tags:
+        - Quarantine
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: preset
+          schema:
+            type: string
+            enum: [last_24h, last_7d, last_30d]
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: timezone
+          schema:
+            type: string
+        - in: query
+          name: severity
+          schema:
+            type: string
+            enum: [warning, error]
+        - in: query
+          name: job_id
+          schema:
+            type: string
+        - in: query
+          name: trace_id
+          schema:
+            type: string
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+            enum: [created_at, severity, row_number, code]
+        - in: query
+          name: sort_order
+          schema:
+            type: string
+            enum: [asc, desc]
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Lista de quarentena
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuarantineListEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Filtros invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/quarantine/dlq:
+    get:
+      summary: Inspecao read-only da DLQ de upload.received.v1
+      operationId: inspectUploadDlq
+      tags:
+        - Quarantine
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: dead_letter_reason
+          schema:
+            type: string
+        - in: query
+          name: event_name
+          schema:
+            type: string
+        - in: query
+          name: trace_id
+          schema:
+            type: string
+        - in: query
+          name: job_id
+          schema:
+            type: string
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+            enum: [retry_count, dead_letter_reason, event_id, occurred_at]
+        - in: query
+          name: sort_order
+          schema:
+            type: string
+            enum: [asc, desc]
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Snapshot de mensagens presentes na DLQ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DlqListEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Filtros invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '503':
+          description: Dependencia indisponivel no broker
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/audit:
+    get:
+      summary: Lista trilha de auditoria operacional
+      operationId: listAuditEvents
+      tags:
+        - Audit
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: preset
+          schema:
+            type: string
+            enum: [last_24h, last_7d, last_30d]
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: timezone
+          schema:
+            type: string
+        - in: query
+          name: action
+          schema:
+            type: string
+        - in: query
+          name: actor_id
+          schema:
+            type: string
+        - in: query
+          name: auditable_type
+          schema:
+            type: string
+        - in: query
+          name: trace_id
+          schema:
+            type: string
+        - in: query
+          name: request_id
+          schema:
+            type: string
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+            enum: [occurred_at, action, actor_id, auditable_type]
+        - in: query
+          name: sort_order
+          schema:
+            type: string
+            enum: [asc, desc]
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Lista de eventos de auditoria
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditListEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Filtros invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
 components:
   securitySchemes:
     bearerAuth:
@@ -515,6 +863,7 @@ components:
             - message
             - request_id
             - trace_id
+            - correlation_id
           properties:
             code:
               type: string
@@ -542,6 +891,9 @@ components:
             trace_id:
               type: string
               example: trace_3c3b72fe95be45e48dcc9f944d5fb6d8
+            correlation_id:
+              type: string
+              example: req_12cbaf4c14bb49cf8f6497a38e8d673b
 
     ErrorDetail:
       type: object
@@ -690,6 +1042,7 @@ components:
         - id
         - email
         - full_name
+        - organization_id
         - role
         - status
       properties:
@@ -703,6 +1056,9 @@ components:
         full_name:
           type: string
           example: StreamGate Operator
+        organization_id:
+          type: string
+          example: org_streamgate
         role:
           type: string
           enum:
@@ -978,6 +1334,63 @@ components:
             $ref: '#/components/schemas/Job'
         meta:
           $ref: '#/components/schemas/EnvelopeMeta'
+    QuarantineListEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuarantineRecord'
+        meta:
+          $ref: '#/components/schemas/EnvelopeMeta'
+
+    AuditListEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditEvent'
+        meta:
+          $ref: '#/components/schemas/EnvelopeMeta'
+
+    DlqListEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/DlqMessage'
+        meta:
+          type: object
+          properties:
+            pagination:
+              $ref: '#/components/schemas/PaginationMeta'
+            queue:
+              type: object
+              properties:
+                name:
+                  type: string
+                queue_depth:
+                  type: integer
+            filters:
+              $ref: '#/components/schemas/FilterMeta'
+
+    AnalyticsEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/AnalyticsPayload'
+        meta:
+          $ref: '#/components/schemas/EnvelopeMeta'
     Upload:
       type: object
       required:
@@ -1088,4 +1501,189 @@ components:
           type: string
           format: date-time
 
+    QuarantineRecord:
+      type: object
+      required:
+        - id
+        - job_id
+        - severity
+        - code
+        - message
+        - trace_id
+      properties:
+        id:
+          type: string
+        job_id:
+          type: string
+        job_batch_id:
+          type: string
+          nullable: true
+        severity:
+          type: string
+          enum: [warning, error]
+        code:
+          type: string
+        message:
+          type: string
+        row_number:
+          type: integer
+          nullable: true
+        payload:
+          type: object
+          additionalProperties: true
+        trace_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
 
+    AuditEvent:
+      type: object
+      required:
+        - id
+        - action
+        - auditable_type
+        - auditable_id
+        - request_id
+        - trace_id
+        - occurred_at
+      properties:
+        id:
+          type: string
+        action:
+          type: string
+        actor_id:
+          type: string
+          nullable: true
+        auditable_type:
+          type: string
+        auditable_id:
+          type: string
+        request_id:
+          type: string
+        trace_id:
+          type: string
+        occurred_at:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    DlqMessage:
+      type: object
+      required:
+        - payload
+        - routing_key
+        - retry_count
+        - headers
+      properties:
+        payload:
+          oneOf:
+            - type: object
+              additionalProperties: true
+            - type: string
+        exchange:
+          type: string
+        routing_key:
+          type: string
+        redelivered:
+          type: boolean
+        retry_count:
+          type: integer
+          minimum: 0
+        dead_letter_reason:
+          type: string
+          nullable: true
+        headers:
+          type: object
+          additionalProperties: true
+
+    AnalyticsPayload:
+      type: object
+      required:
+        - window
+        - kpis
+        - breakdowns
+      properties:
+        window:
+          type: object
+          properties:
+            from:
+              type: string
+              format: date-time
+            to:
+              type: string
+              format: date-time
+            preset:
+              type: string
+              nullable: true
+            timezone:
+              type: string
+        kpis:
+          type: object
+          required:
+            - uploads_total
+            - jobs_total
+            - jobs_processing
+            - jobs_completed
+            - jobs_failed
+            - jobs_quarantined
+            - quarantine_records_total
+            - audit_events_total
+          properties:
+            uploads_total:
+              type: integer
+            jobs_total:
+              type: integer
+            jobs_processing:
+              type: integer
+            jobs_completed:
+              type: integer
+            jobs_failed:
+              type: integer
+            jobs_quarantined:
+              type: integer
+            quarantine_records_total:
+              type: integer
+            audit_events_total:
+              type: integer
+        breakdowns:
+          type: object
+          properties:
+            status:
+              type: array
+              items:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  count:
+                    type: integer
+            actor:
+              type: array
+              items:
+                type: object
+                properties:
+                  actor_id:
+                    type: string
+                  count:
+                    type: integer
+            source:
+              type: array
+              items:
+                type: object
+                properties:
+                  source:
+                    type: string
+                  count:
+                    type: integer

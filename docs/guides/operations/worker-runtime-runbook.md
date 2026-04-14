@@ -22,15 +22,18 @@ Padronizar operacao, diagnostico e resposta a incidentes da trilha de runtime re
 
 ## Estado atual detalhado
 
-- ate o fechamento da Sprint 3, o worker ainda nao consome fila em runtime real.
-- este runbook define o baseline operacional exigido para abrir a trilha de execucao real na Sprint 4.
+- Sprint 4 backend ativou runtime real de consumo RabbitMQ.
+- fluxo oficial agora opera com outbox transacional na API + consumidor real no worker.
+- leitura operacional de DLQ disponivel em `GET /api/v1/quarantine/dlq` (admin-only).
 
 ## Regras e contratos operacionais
 
 - trilha minima da Sprint 4:
   - consumo real de fila do broker;
-  - processamento de evento com transicao de estado de job;
-  - registro de erros com `trace_id`, `request_id`, `job_id` e `upload_id`.
+  - processamento de evento `upload.received.v1` com transicao de estado de job;
+  - idempotencia por `event_id` (`worker_consumed_events`);
+  - retry com backoff exponencial e DLQ apos limite;
+  - registro de erros com `trace_id`, `request_id`, `correlation_id`, `job_id` e `upload_id`.
 - escopo fora da Sprint 4:
   - conectores `external_link`, `oauth_delegated`, `google_drive`, `s3`, `http_url`;
   - automacao de cluster e reprocessamento avancado.
@@ -46,6 +49,11 @@ Padronizar operacao, diagnostico e resposta a incidentes da trilha de runtime re
 1. subir stack `full` (`api`, `web`, `worker`, infra).
 2. validar conectividade com broker e storage.
 3. validar health operacional da API (`/up`) e status de dependencias no compose.
+4. validar topologia de fila:
+   - exchange `streamgate.events`
+   - routing `upload.received.v1`
+   - queue `streamgate.worker.upload.received.v1`
+   - dlq `streamgate.worker.upload.received.v1.dlq`
 
 ### 2. Diagnostico de falhas
 
@@ -59,8 +67,12 @@ Padronizar operacao, diagnostico e resposta a incidentes da trilha de runtime re
 ### 3. Retry e recuperacao
 
 1. aplicar retry apenas para falhas `retryable`.
-2. evitar duplicacao de carga com idempotencia baseada em chaves do dominio.
-3. quando necessario, escalar para replay controlado com trilha de auditoria.
+2. politica default:
+   - max retries: `3`
+   - backoff: exponencial (`1s`, `2s`, `4s` ... ate `30s`)
+3. ao exceder limite, evento vai para DLQ com `x-dead-letter-reason`.
+4. erro terminal marca `job.failed` e segue com `ack` sem requeue.
+5. evitar duplicacao de carga com idempotencia por `event_id`.
 
 ## Validacao e evidencias
 
@@ -72,6 +84,29 @@ Padronizar operacao, diagnostico e resposta a incidentes da trilha de runtime re
 - comandos de referencia:
   - `python scripts/compose/compose-smoke.py`
   - `python scripts/compose/upload-signed-smoke.py`
+  - `bundle exec rake streamgate:outbox:dispatch` (API)
+  - `GET /api/v1/quarantine/dlq` (inspecao read-only da DLQ)
+  - `bundle exec rspec` em `apps/worker`
+
+## Playbook de incidente (fila)
+
+### Broker indisponivel
+
+1. confirmar health do `rabbitmq` no compose.
+2. verificar backlog de `integration_outbox_events` pendente.
+3. apos restaurar broker, disparar `streamgate:outbox:dispatch`.
+
+### Backlog crescendo na fila principal
+
+1. medir taxa de consumo do worker e latencia media (`worker_processing_metrics`).
+2. verificar falhas transitórias recorrentes em storage/rede.
+3. revisar `WORKER_MAX_RETRIES` e capacidade de processamento.
+
+### DLQ crescendo
+
+1. consultar `GET /api/v1/quarantine/dlq` por `dead_letter_reason`.
+2. separar eventos por `invalid_json`, `max_retries_exceeded`, `unexpected_error`.
+3. tratar causa raiz antes de replay manual.
   - suites relevantes de `apps/api`, `apps/web` e `apps/worker`.
 
 ## Referencias
