@@ -1,155 +1,128 @@
-# Mapa do Workspace Frontend
+﻿# Mapa do Workspace Frontend
 
 ## Objetivo
-Este guia consolida diretrizes de frontend workspace map para uso consistente no projeto.
+
+Este guia registra a malha oficial do workspace autenticado do StreamGate. Ele serve como mapa de produto e arquitetura para evitar que o dashboard volte a concentrar responsabilidades demais ou que novas telas nascam fora da linguagem operacional aprovada.
 
 ## Estado atual
-Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
 
+Estado alinhado a entrega de frontend da Sprint 4:
 
-## Estado atual detalhado
-Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+- workspace protegido usa `DashboardSurface` + `WorkspacePageFrame`
+- navegacao oficial vive em `workspace-config.ts`
+- dashboard virou command center operacional real
+- jobs, uploads, analytics, quarentena, DLQ, audit e event log consomem API real
+- audit e DLQ sao admin-only
+- badges de navegacao no dashboard usam dados reais
+- filtros operacionais sao refletidos em URL
+- rotas de detalhe permitem investigacao compartilhavel por ID
 
 ## Regras/Contratos
-- As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
-- Mudancas devem manter alinhamento com roadmap, ADRs e READMEs.
 
-## Validacao/Evidencias
-- Validar coerencia com README raiz, docs/README e roadmap da release atual.
-- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+### Shell oficial
 
-## Referencias
-- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
-- [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)
-
-
-## Objetivo detalhado
-
-Este documento registra a malha oficial do workspace autenticado aberta na Sprint 1. Ele existe para evitar que o frontend volte a tratar o dashboard como uma unica tela monolitica.
-
-## Shell oficial
-
-O shell autenticado compartilhado do projeto e composto por:
+O shell autenticado compartilhado e composto por:
 
 - `DashboardSurface`: sidebar, topbar, alert strip e linguagem visual base
-- `WorkspacePageFrame`: wrapper de sessao, logout e navegacao
-- `WorkspaceOverview`: conteudo da rota `/dashboard`
-- `WorkspaceModule`: scaffold padrao para novas superficies protegidas
+- `WorkspacePageFrame`: wrapper de sessao, role e navegacao
+- `WorkspaceOverview`: visao geral do dashboard quando aplicavel
+- `WorkspaceModule`: scaffold padrao para superficies protegidas
+- `OperationalToolbar`: filtros, refresh, export e frescor de dados
+- `OperationalStateBlock`: estados de loading, empty, error e access denied
 
 Toda nova pagina autenticada deve nascer a partir dessa pilha antes de propor um shell paralelo.
 
-## Rotas protegidas da Sprint 1
+### Rotas protegidas oficiais
 
-| Rota | Papel | Familia |
-| --- | --- | --- |
-| `/dashboard` | visao geral operacional | principal |
-| `/upload` | entrada de ingestao | principal |
-| `/jobs` | leitura de execucao | principal |
-| `/analytics` | metricas e leitura agregada | analise |
-| `/quarantine` | triagem de registros rejeitados | analise |
-| `/events` | event log operacional | analise |
-| `/audit` | governanca e trilha de auditoria | sistema |
-| `/settings` | defaults e configuracoes | sistema |
+| Rota | Papel | Familia | Acesso |
+| --- | --- | --- | --- |
+| `/dashboard` | command center operacional | principal | admin/operator |
+| `/upload` | entrada de ingestao | principal | admin/operator |
+| `/jobs` | leitura de execucao | principal | admin/operator |
+| `/jobs/:id` | detalhe de job | principal | admin/operator |
+| `/analytics` | metricas e leitura agregada | analise | admin/operator |
+| `/quarantine` | triagem read-only de registros rejeitados | analise | admin/operator |
+| `/quarantine/:id` | detalhe de registro em quarentena | analise | admin/operator |
+| `/quarantine/dlq/:messageId` | detalhe de mensagem DLQ | sistema | admin |
+| `/events` | event log operacional baseado em audit | analise | admin/operator |
+| `/audit` | trilha de auditoria | sistema | admin |
+| `/audit/:id` | detalhe de auditoria | sistema | admin |
+| `/settings` | defaults e configuracoes | sistema | admin/operator |
 
-## Configuracao central
+### Configuracao central
 
-A configuracao oficial da navegacao vive em `apps/web/src/components/app/workspace-config.ts`.
+A fonte de verdade da navegacao vive em `apps/web/src/components/app/workspace-config.ts`.
 
-Este arquivo passa a ser a fonte de verdade para:
+Este arquivo define:
 
 - grupos e ordem da sidebar
 - metadata de modulos
-- chips globais do topo
+- restricao admin-only
 - estados oficiais de job na UI
+- badges dinamicos quando habilitados pelo dashboard
 
 Mudancas de navegacao devem partir dessa configuracao antes de alterar paginas individualmente.
 
-## Regras de crescimento
+### Integração de dados
 
-### Novos modulos
-
-Ao adicionar um novo modulo protegido, o fluxo minimo deve ser:
-
-1. registrar a rota em `workspace-config.ts`
-2. criar a pagina com `WorkspacePageFrame`
-3. usar `WorkspaceModule` ou um derivado claro dessa linguagem
-4. registrar o modulo neste documento e no roadmap
-
-### Integracao de dados
-
-Toda pagina protegida futura deve consumir a camada HTTP oficial antes de implementar fetch local.
-
-Base atual:
+Toda pagina protegida deve consumir a camada HTTP oficial:
 
 - `apps/web/src/lib/api-client.ts`
 - `apps/web/src/lib/streamgate-api.ts`
 
-### Query state e polling
+Paginas e fontes atuais:
 
-A Sprint 1 so fecha o adapter. Polling, sincronizacao com URL e cache mais sofisticado entram nas proximas sprints, mas ja com estas regras:
+- `DashboardPage`: `getAnalytics`, `listJobs`, `listUploads`, `listQuarantine`, `listAuditEvents`, `listQuarantineDlq`
+- `AnalyticsPage`: `getAnalytics`
+- `QuarantinePage`: `listQuarantine`, `listQuarantineDlq`
+- `AuditPage`: `listAuditEvents`
+- `EventLogPage`: `listAuditEvents`
+- `JobsPage`: `listJobs`
+- `UploadPage`: `requestUploadSignedUrl`, `registerUpload`, `listUploads`, `listJobs`
+- `OperationalDetailPages`: listas oficiais filtradas por ID/search
 
-- filtros e paginacao nao devem ficar escondidos em estado local opaco
-- polling so deve nascer em modulos operacionais que realmente precisem de frescor
-- a camada HTTP deve continuar sendo a fronteira comum
+### Query state e refresh
 
-## Estados oficiais de job
+Regras atuais:
 
-A UI da Sprint 1 reconhece estes estados como oficiais:
+- filtros e paginacao operacionais ficam em URL
+- `preset=last_7d`, `timezone=UTC`, `page=1`, `per_page=20` sao defaults comuns
+- refresh e manual via `Recarregar`
+- `lastUpdatedAt` deve ficar visivel em telas operacionais
+- stale state deve indicar leitura potencialmente antiga sem iniciar polling automatico
 
-- `pending`
-- `processing`
-- `completed`
-- `failed`
-- `quarantined_with_warnings`
+### Investigacao operacional
 
-Se o backend ampliar a maquina de estados, este documento e `workspace-config.ts` devem ser atualizados no mesmo ciclo.
+Rotas de detalhe devem oferecer:
 
-## O que esta pronto vs o que ainda falta
+- contexto principal do item
+- IDs copiaveis
+- links para entidades relacionadas quando existirem
+- metadata/payload mascarado
+- JSON expandido colapsado por padrao
+- link atual copiavel quando util
 
-Ja pronto ate a Sprint 2:
+### Governanca de acesso
 
-- shell compartilhado do workspace
-- malha de rotas protegidas
-- scaffold de modulos
-- camada HTTP inicial
-- auth real integrado (login/cadastro/logout/me/refresh/reset)
-- testes basicos de navegacao e adapter
+- `operator` nao ve `Auditoria` na sidebar
+- `operator` nao acessa DLQ
+- `admin` ve audit e DLQ
+- paginas admin-only devem falhar de forma segura com access denied
 
-Ainda faltando para as proximas sprints:
+## Validacao/Evidencias
 
-- dados reais por modulo
-- estados de loading, empty e erro conectados a dados reais
-- filtros, paginacao e query state conectados a URL
-- polling e refresh operacional
+Evidencias da trilha de frontend Sprint 4:
 
-Ja entregue na Sprint 3:
+- testes de adapter cobrem endpoints reais e query params novos
+- testes de paginas cobrem analytics, quarantine, audit/event log, dashboard, navegacao por role e rotas de detalhe
+- `pnpm.cmd test:run`: aprovado, 11 arquivos e 53 testes
+- `pnpm.cmd lint`: aprovado sem warnings
+- `pnpm.cmd build`: aprovado com permissao escalada por restricao de sandbox
+- `pnpm.cmd test:e2e`: aprovado contra ambiente Docker `app` saudavel em `http://localhost:5173`
 
-- `/upload` com fluxo real de upload assinado + registro de job;
-- `/upload` com duas listagens reais (`uploads` e `jobs recentes`) e URL state dedicado;
-- `/jobs` com listagem real, filtro por status e paginacao por URL.
+## Referencias
 
-## Skills obrigatorias para reavaliacao futura
-
-Toda reavaliacao desse mapa entre sprints deve usar pelo menos:
-
-- `review-codebase`
-- `frontend-skill`
-- `tailwind-design-system`
-- `vercel-react-best-practices`
-- `vitest`
-
-Quando a mudanca tocar integracao real, adicionar tambem:
-
-- `breakdown-test`
-- `api-contract-testing`
-- `playwright`
-
-
-
-## Gate de prontidao da Sprint 2.5
-
-Decisoes fechadas para liberar a Sprint 3 base sem retrabalho:
-
-- filtros minimos de listagem no workspace devem mapear URL em status + page;
-- per_page e search permanecem reservados para evolucao progressiva sem quebrar o shell atual;
-- modo de uso guided vs advanced fica documentado como direcao de UX e nao como feature entregue nesta sprint.
+- [Fundacoes do frontend](C:/estudos/StreamGate/docs/guides/frontend/frontend-foundations.md)
+- [README do web](C:/estudos/StreamGate/apps/web/README.md)
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)

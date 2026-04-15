@@ -1,30 +1,30 @@
-# StreamGate Web
+﻿# StreamGate Web
 
 Frontend React do StreamGate.
 
-## Papel do app
+## Objetivo
 
-A aplicacao web e responsavel por:
-
-- apresentar a experiencia publica do produto
-- autenticar o usuario
-- iniciar uploads
-- acompanhar jobs, quarentena e dashboards
-- manter a linguagem visual oficial do projeto
+O `apps/web` entrega a experiencia publica, autenticacao e workspace operacional do StreamGate. A partir da Sprint 4, o workspace autenticado deixa de ser apenas scaffold visual para os modulos operacionais e passa a funcionar como command center read-only conectado aos dados reais do backend.
 
 ## Estado atual
 
-No fechamento da Sprint 3, o frontend possui:
+Estado alinhado a entrega de frontend da Sprint 4:
 
-- landing page
+- landing page publica preservada como superficie de produto
 - login, cadastro e reset conectados na API real
-- route guard com tratamento de sessao expirada
+- route guard com tratamento de sessao expirada e acesso negado
 - workspace autenticado segmentado por modulos
 - auth real integrado (`register`, `login`, `logout`, `me`, `session/refresh`, reset)
 - camada HTTP oficial para API (`api-client` e `streamgate-api`)
-- fluxo real de upload assinado em `/upload` (assinar, enviar, confirmar, atualizar listas)
-- listagem real de jobs em `/jobs` com filtro/paginacao na URL
-- suites de teste unitaria, integracao (backend real) e E2E
+- fluxo real de upload assinado em `/upload`
+- listagem real de jobs em `/jobs` com filtro e paginacao na URL
+- command center real em `/dashboard`
+- leitura real de `/analytics`, `/quarantine`, `/quarantine/dlq`, `/audit`, `/events`, `/jobs` e `/uploads`
+- rotas internas de detalhe para investigacao operacional
+- export CSV client-side para listas carregadas na tela
+- mascaramento visual de payloads e metadados sensiveis
+- badges reais de navegacao no dashboard
+- auditoria e DLQ visiveis apenas para `admin`
 
 As convencoes oficiais desta fase estao em [docs/guides/frontend/frontend-foundations.md](C:/estudos/StreamGate/docs/guides/frontend/frontend-foundations.md), [docs/guides/frontend/frontend-workspace-map.md](C:/estudos/StreamGate/docs/guides/frontend/frontend-workspace-map.md) e [docs/guides/backend/authentication-guide.md](C:/estudos/StreamGate/docs/guides/backend/authentication-guide.md).
 
@@ -36,23 +36,35 @@ A UI do projeto assume estas superficies como baseline oficial:
 - `AuthShell` como casca oficial de login, cadastro e reset
 - `DashboardSurface` como shell autenticado compartilhado
 - `DashboardPage`, `UploadPage`, `JobsPage`, `AnalyticsPage`, `QuarantinePage`, `EventLogPage`, `AuditPage` e `SettingsPage` como modulos oficiais do workspace
+- `OperationalDetailPages` para leitura contextual de jobs, quarentena, DLQ e auditoria
 
 Antes de criar novas variacoes, o app deve reaproveitar:
 
 - `StreamGateMark`, `SectionLabel`, `ShellPanel`
 - `Button`, `Input`, `Label`
 - `ProtectedRoute`, `AuthProvider` e `WorkspacePageFrame`
-- `DashboardSurface`, `WorkspaceOverview` e `WorkspaceModule`
+- `DashboardSurface`, `WorkspaceOverview`, `WorkspaceModule` e `OperationalToolbar`
+- helpers de `src/lib/operational-utils.ts` para query state, CSV, timestamps, masking e erros humanos
 
-## O que ainda e mock
+## Dados reais e fronteiras
 
-Nesta fase, ainda sao mockados no cliente:
+Nesta fase, os modulos protegidos abaixo consomem dados reais via adapter oficial:
 
-- dados operacionais exibidos no dashboard
-- analytics, quarentena, event log e auditoria em profundidade
-- algumas superficies de modulo que ainda servem como scaffold visual
+- `/dashboard`: KPIs, jobs recentes, uploads recentes, quarentena recente, audit/DLQ admin-only
+- `/analytics`: KPIs e breakdowns por `status`, `actor` e `source`
+- `/quarantine`: registros de quarentena e DLQ admin-only
+- `/events`: event log operacional baseado em `/audit`
+- `/audit`: trilha de auditoria admin-only
+- `/jobs`: jobs reais com filtro/paginacao e export CSV da lista carregada
+- `/upload`: fluxo real de upload assinado e registro de job
 
-A estrutura visual dessas telas nao e provisoria. O mock atual substitui dados de dominio, nao a linguagem de interface, a segmentacao do workspace nem a camada adapter.
+Ainda permanecem fora do escopo funcional desta sprint:
+
+- polling automatico
+- mutacoes operacionais (`retry`, `resolve`, `replay`, `delete`, `acknowledge`, `reprocess`)
+- exportacao server-side de toda a base
+- visualizacoes analiticas historicas avancadas
+- conectores externos (`external_link`, `oauth_delegated`, `google_drive`, `s3`, `http_url`)
 
 ## Rotas protegidas oficiais
 
@@ -61,13 +73,17 @@ A navegacao autenticada oficial contem estas rotas:
 - `/dashboard`
 - `/upload`
 - `/jobs`
+- `/jobs/:id`
 - `/analytics`
 - `/quarantine`
+- `/quarantine/:id`
+- `/quarantine/dlq/:messageId`
 - `/events`
 - `/audit`
+- `/audit/:id`
 - `/settings`
 
-Essa malha existe para evitar que o dashboard vire uma unica tela monolitica conforme o produto crescer.
+`/audit`, `/audit/:id` e a superficie de DLQ sao admin-only. Operadores permanecem com leitura operacional restrita aos modulos permitidos.
 
 ## Camada HTTP oficial
 
@@ -83,50 +99,47 @@ Responsabilidades desta camada:
 - tratar expiracao/negacao de sessao sem acoplamento de pagina
 - evitar fetch ad hoc por tela
 
-Para a trilha de upload/job da Sprint 3, o adapter inclui:
+Adapters oficiais da fase atual:
 
 - `requestUploadSignedUrl`
 - `registerUpload`
 - `listUploads`
 - `listJobs`
+- `getAnalytics`
+- `listQuarantine`
+- `listQuarantineDlq`
+- `listAuditEvents`
 
-Toda integracao futura deve partir dessa camada antes de introduzir caches, query libraries ou polling mais sofisticado.
+Toda integracao futura deve partir dessa camada antes de introduzir caches, query libraries, polling ou agregadores mais sofisticados.
 
-## Comandos locais
-
-```bash
-pnpm install
-pnpm dev --host
-pnpm lint
-pnpm build
-pnpm test:run
-pnpm test:integration
-pnpm test:e2e
-```
-
-## Pilares de implementacao
+## Regras/Contratos
 
 Toda evolucao do frontend deve respeitar estes principios:
 
 - preservar o modelo visual ja aprovado
 - nao criar componentes paralelos sem necessidade
-- tratar loading, empty state e erro como parte da entrega
-- manter coerencia com `frontend-skill`, `web-design-guidelines`, `tailwind-design-system` e `vercel-react-best-practices`
-- ampliar o workspace por modulos e adapters, nao por telas isoladas com fetch proprio
+- tratar `loading`, `empty`, `error`, `access denied`, `success` e `stale` como parte da entrega
+- manter filtros operacionais em URL quando afetarem leitura compartilhavel
+- mascarar payloads/metadados sensiveis no cliente antes de renderizar previews ou CSV
+- exportar CSV apenas do conjunto carregado na tela
+- preservar `api-client` e `streamgate-api` como fronteira unica de consumo HTTP
+- usar `documentation-writer` para qualquer atualizacao documental
+- usar `api-documenter` + `openapi` quando a mudanca tocar contrato/API
 
-## Proximos passos esperados
+## Validacao/Evidencias
 
-A evolucao planejada do frontend esta em [docs/planning/streamgate-full-sprints-roadmap.md](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md), com foco em:
+Validacoes executadas na trilha de frontend Sprint 4:
 
-1. ampliar dados reais nos modulos alem de upload/job
-2. dashboard operacional consolidado com dados de dominio
-3. dashboard analitico conectado
-4. suporte futuro a ingestao por link/conector (fora da Sprint 3 base)
+- `pnpm.cmd test:run`: aprovado, 11 arquivos de teste e 53 testes
+- `pnpm.cmd lint`: aprovado sem warnings
+- `pnpm.cmd build`: aprovado com permissao escalada por restricao de sandbox ao Vite/Tailwind
+- `pnpm.cmd test:e2e`: aprovado contra ambiente Docker `app` saudavel em `http://localhost:5173`
 
-## Gate de prontidao da Sprint 2.5
+Para validar E2E localmente, suba o web server antes do comando ou use `scripts/dev/dev-up.ps1 -Mode app`.
 
-A Sprint 2.5 fechou ajustes estruturais sem abrir feature nova de dominio:
+## Referencias
 
-- adapter streamgate-api alinhado para namespace /api/v1 em listagens de jobs e uploads;
-- suporte a envelope completo (data + meta) no api-client para preparar paginacao/filters da Sprint 3;
-- matriz minima de estados (loading, empty, error, success) consolidada nos guias de frontend para evitar retrabalho.
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Fundacoes do frontend](C:/estudos/StreamGate/docs/guides/frontend/frontend-foundations.md)
+- [Mapa do workspace frontend](C:/estudos/StreamGate/docs/guides/frontend/frontend-workspace-map.md)
+- [Guia de autenticacao](C:/estudos/StreamGate/docs/guides/backend/authentication-guide.md)
