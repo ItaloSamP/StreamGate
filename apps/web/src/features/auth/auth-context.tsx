@@ -96,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         remember,
       })
 
+      sessionRef.current = nextSession
       storeAuthSession(nextSession)
       startTransition(() => {
         setSession(nextSession)
