@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { LogOut } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
@@ -6,8 +6,9 @@ import '@/components/app/dashboard-surface.css'
 
 import { StreamGateMark } from '@/components/app/brand'
 import { dashboardNavIcon } from '@/components/app/dashboard-data'
-import { workspaceNavGroups, workspaceTopChips } from '@/components/app/workspace-config'
+import { getVisibleWorkspaceNavGroups, workspaceTopChips } from '@/components/app/workspace-config'
 import { WorkspaceOverview } from '@/components/app/workspace-overview'
+import { streamgateApi } from '@/lib/streamgate-api'
 
 function getInitials(name: string) {
   return name
@@ -86,28 +87,70 @@ export function DashboardSurface({
   locked = false,
   profileName = 'Ana Lima',
   email = 'ana.lima@streamgate.io',
+  role = 'operator',
   onLogout,
   eyebrow = 'Visao geral do sistema',
   title = 'Dashboard Operacional',
   pathname = '/dashboard',
   primaryActionLabel = '+ Upload',
   secondaryActionLabel = 'Exportar',
+  enableOperationalBadges = false,
   children,
 }: {
   locked?: boolean
   profileName?: string
   email?: string
+  role?: 'operator' | 'admin' | 'service_account'
   onLogout?: () => void
   eyebrow?: string
   title?: string
   pathname?: string
   primaryActionLabel?: string
   secondaryActionLabel?: string
+  enableOperationalBadges?: boolean
   children?: ReactNode
 }) {
   const initials = getInitials(profileName)
-  const role = locked ? 'Data Engineer' : email
+  const userRole = locked ? 'Data Engineer' : email
+  const visibleNavGroups = getVisibleWorkspaceNavGroups(role)
+  const [navBadges, setNavBadges] = useState<Record<string, number>>({})
   const content = children ?? <WorkspaceOverview />
+
+  useEffect(() => {
+    if (locked || !enableOperationalBadges) return
+
+    let active = true
+
+    async function loadNavBadges() {
+      try {
+        const [jobsResponse, quarantineResponse, auditResponse] = await Promise.all([
+          streamgateApi.listJobs({ status: 'processing', page: 1, per_page: 1 }),
+          streamgateApi.listQuarantine({ page: 1, per_page: 1 }),
+          role === 'admin'
+            ? streamgateApi.listAuditEvents({ preset: 'last_24h', page: 1, per_page: 1 })
+            : Promise.resolve({ data: [], meta: { pagination: { total_count: 0 } } }),
+        ])
+
+        if (!active) return
+
+        setNavBadges({
+          '/jobs': jobsResponse.meta?.pagination?.total_count ?? jobsResponse.data.length,
+          '/quarantine': quarantineResponse.meta?.pagination?.total_count ?? quarantineResponse.data.length,
+          '/events': auditResponse.meta?.pagination?.total_count ?? auditResponse.data.length,
+        })
+      } catch {
+        if (active) {
+          setNavBadges({})
+        }
+      }
+    }
+
+    loadNavBadges()
+
+    return () => {
+      active = false
+    }
+  }, [enableOperationalBadges, locked, role])
 
   return (
     <div className={`dash-frame ${locked ? 'dash-frame--locked' : ''}`}>
@@ -124,17 +167,18 @@ export function DashboardSurface({
           </div>
 
           <nav className="dash-nav">
-            {workspaceNavGroups.map((group) => (
+            {visibleNavGroups.map((group) => (
               <div key={group.label} className="dash-nav-group">
                 <div className="dash-nav-group-label">{group.label}</div>
                 {group.items.map((item) => {
                   const isActive = item.match === 'exact' ? pathname === item.href : pathname.startsWith(item.href)
+                  const dynamicBadge = navBadges[item.href]
                   const itemBody = (
                     <>
                       <div className="dash-nav-icon">{dashboardNavIcon(item.icon)}</div>
                       {item.label}
-                      {item.badge ? (
-                        <span className={`dash-nav-badge ${item.badge.tone ?? ''}`}>{item.badge.text}</span>
+                      {dynamicBadge && dynamicBadge > 0 ? (
+                        <span className="dash-nav-badge info">{dynamicBadge}</span>
                       ) : null}
                     </>
                   )
@@ -179,7 +223,7 @@ export function DashboardSurface({
               </div>
             </div>
 
-            <SidebarUser locked={locked} initials={initials} profileName={profileName} role={role} onLogout={onLogout} />
+            <SidebarUser locked={locked} initials={initials} profileName={profileName} role={userRole} onLogout={onLogout} />
           </div>
         </aside>
 
@@ -204,10 +248,10 @@ export function DashboardSurface({
           </header>
 
           <div className="dash-alert-strip">
-            <span className="dash-alert-icon">Atencao</span>
-            <span><strong>2 jobs falharam</strong> nas ultimas 2h. A navegacao desta sprint ja reserva as superficies de retry, quarentena e auditoria.</span>
-            <span className="dash-alert-link">Revisar</span>
-            <span className="dash-alert-close">Fechar</span>
+            <span className="dash-alert-icon">Sprint 4</span>
+            <span><strong>Leitura operacional real</strong> conectada a analytics, jobs, quarentena e auditoria. Use Recarregar para atualizar a janela atual.</span>
+            <span className="dash-alert-link">Read-only</span>
+            <span className="dash-alert-close">Sem polling</span>
           </div>
 
           {content}

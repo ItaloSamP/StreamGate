@@ -40,12 +40,14 @@ export function WorkspacePageFrame({
           <DashboardSurface
             profileName={session?.user.full_name ?? 'Operator'}
             email={session?.user.email ?? 'operator@streamgate.local'}
+            role={session?.user.role ?? 'operator'}
             onLogout={handleLogout}
             pathname={pathname}
             eyebrow={eyebrow}
             title={title}
             primaryActionLabel={primaryActionLabel}
             secondaryActionLabel={secondaryActionLabel}
+            enableOperationalBadges={pathname === '/dashboard'}
           >
             {children}
           </DashboardSurface>

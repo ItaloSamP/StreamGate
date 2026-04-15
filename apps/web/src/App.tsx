@@ -9,6 +9,7 @@ import { DashboardPage } from '@/pages/DashboardPage'
 import { EventLogPage } from '@/pages/EventLogPage'
 import { JobsPage } from '@/pages/JobsPage'
 import { LandingPage } from '@/pages/LandingPage'
+import { AuditDetailPage, DlqDetailPage, JobDetailPage, QuarantineDetailPage } from '@/pages/OperationalDetailPages'
 import { LoginPage } from '@/pages/LoginPage'
 import { QuarantinePage } from '@/pages/QuarantinePage'
 import { RegisterPage } from '@/pages/RegisterPage'
@@ -29,10 +30,14 @@ function App() {
         <Route path="/dashboard" element={protectedPage(<DashboardPage />)} />
         <Route path="/upload" element={protectedPage(<UploadPage />)} />
         <Route path="/jobs" element={protectedPage(<JobsPage />)} />
+        <Route path="/jobs/:id" element={protectedPage(<JobDetailPage />)} />
         <Route path="/analytics" element={protectedPage(<AnalyticsPage />)} />
         <Route path="/quarantine" element={protectedPage(<QuarantinePage />)} />
+        <Route path="/quarantine/dlq/:messageId" element={protectedPage(<DlqDetailPage />)} />
+        <Route path="/quarantine/:id" element={protectedPage(<QuarantineDetailPage />)} />
         <Route path="/events" element={protectedPage(<EventLogPage />)} />
         <Route path="/audit" element={protectedPage(<AuditPage />)} />
+        <Route path="/audit/:id" element={protectedPage(<AuditDetailPage />)} />
         <Route path="/settings" element={protectedPage(<SettingsPage />)} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

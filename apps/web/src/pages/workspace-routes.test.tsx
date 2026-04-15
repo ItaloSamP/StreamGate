@@ -125,7 +125,6 @@ describe('workspace routes', () => {
     renderProtectedEntry('/analytics')
 
     expect((await screen.findAllByText('Analytics Workspace')).length).toBeGreaterThan(0)
-    expect(screen.getByText('Separacao explicita entre workspace operacional e analitico.')).toBeInTheDocument()
+    expect(screen.getByText('Command Center Analytics')).toBeInTheDocument()
   })
 })
-

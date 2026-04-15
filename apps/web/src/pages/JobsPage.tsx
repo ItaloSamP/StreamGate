@@ -1,9 +1,11 @@
 ﻿import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
+import { OperationalToolbar } from '@/components/app/operational-readout'
 import { Button } from '@/components/ui/button'
 import { WorkspacePageFrame } from '@/components/app/workspace-page-frame'
 import { ApiClientError } from '@/lib/api-client'
+import { buildCsv, downloadCsv } from '@/lib/operational-utils'
 import { streamgateApi, type JobSummary } from '@/lib/streamgate-api'
 
 const DEFAULT_PER_PAGE = 20
@@ -26,6 +28,7 @@ type JobsViewState = {
     total_count: number
     total_pages: number
   }
+  lastUpdatedAt: Date | null
   errorMessage: string | null
 }
 
@@ -38,6 +41,7 @@ const INITIAL_STATE: JobsViewState = {
     total_count: 0,
     total_pages: 0,
   },
+  lastUpdatedAt: null,
   errorMessage: null,
 }
 
@@ -79,6 +83,7 @@ export function JobsPage() {
           status: jobs.length > 0 ? 'success' : 'empty',
           jobs,
           pagination,
+          lastUpdatedAt: new Date(),
           errorMessage: null,
         })
       } catch (error) {
@@ -87,6 +92,7 @@ export function JobsPage() {
         setViewState((current) => ({
           ...current,
           status: 'error',
+          lastUpdatedAt: new Date(),
           errorMessage: humanizeError(error, 'Nao foi possivel carregar jobs operacionais.'),
         }))
       }
@@ -134,6 +140,20 @@ export function JobsPage() {
     updateUrlState({ page: page + 1 })
   }
 
+  function exportCsv() {
+    const rows = viewState.jobs.map((job) => ({
+      id: job.id,
+      upload_id: job.upload_id,
+      status: job.status,
+      source_type: job.source_type,
+      trace_id: job.trace_id,
+      created_at: job.created_at,
+      updated_at: job.updated_at,
+    }))
+
+    downloadCsv('streamgate-jobs.csv', buildCsv(rows, ['id', 'upload_id', 'status', 'source_type', 'trace_id', 'created_at', 'updated_at']))
+  }
+
   return (
     <WorkspacePageFrame
       pathname="/jobs"
@@ -163,7 +183,7 @@ export function JobsPage() {
                   id="jobs-status-filter"
                   className="input-shell"
                   value={statusFilter}
-                  onChange={(event) => handleStatusChange(event.target.value)}
+                onChange={(event) => handleStatusChange(event.target.value)}
                 >
                   {JOB_STATUS_OPTIONS.map((option) => (
                     <option key={option.value || 'all'} value={option.value}>
@@ -173,9 +193,12 @@ export function JobsPage() {
                 </select>
               </div>
 
-              <Button type="button" variant="panel" size="xl" onClick={() => setReloadToken((current) => current + 1)}>
-                Recarregar lista
-              </Button>
+              <OperationalToolbar
+                lastUpdatedAt={viewState.lastUpdatedAt}
+                onRefresh={() => setReloadToken((current) => current + 1)}
+                onExport={exportCsv}
+                exportDisabled={viewState.jobs.length === 0}
+              />
             </div>
           </section>
 
