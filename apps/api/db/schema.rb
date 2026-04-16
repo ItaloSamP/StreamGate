@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_13_000600) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_15_000100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -29,7 +29,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_13_000600) do
     t.index ["actor_id", "job_created_at"], name: "index_analytics_job_snapshots_on_actor_id_and_job_created_at"
     t.index ["actor_id"], name: "index_analytics_job_snapshots_on_actor_id"
     t.index ["job_created_at", "status"], name: "index_analytics_job_snapshots_on_job_created_at_and_status"
-    t.index ["job_id"], name: "index_analytics_job_snapshots_on_job_id"
+    t.index ["job_id"], name: "index_analytics_job_snapshots_on_job_id", unique: true
     t.index ["organization_id", "job_created_at"], name: "idx_on_organization_id_job_created_at_8ecb6ddbb2"
     t.index ["source_type", "job_created_at"], name: "idx_on_source_type_job_created_at_fece9eb76e"
     t.index ["upload_id"], name: "index_analytics_job_snapshots_on_upload_id"

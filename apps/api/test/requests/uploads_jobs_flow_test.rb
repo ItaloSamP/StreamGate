@@ -176,6 +176,17 @@ class UploadsJobsFlowTest < ActionDispatch::IntegrationTest
     assert_equal "job_fixture_pending", parsed_json.dig("data", 0, "id")
   end
 
+  test "jobs index search can match related upload filename" do
+    token = login_as("operator@example.com", "StrongPass123!")
+
+    get "/api/v1/jobs", params: { page: 1, per_page: 10, search: "orders.csv" }, headers: auth_header(token)
+
+    assert_response :ok
+    ids = parsed_json.fetch("data").map { |entry| entry.fetch("id") }
+    assert_includes ids, "job_fixture_pending"
+    assert_includes ids, "job_fixture_peer_completed"
+  end
+
   private
 
   def parsed_json

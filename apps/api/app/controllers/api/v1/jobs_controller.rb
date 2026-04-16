@@ -67,7 +67,7 @@ module Api
       private
 
       def base_scope
-        scope = Job.joins(:requested_by)
+        scope = Job.joins(:requested_by, :upload)
         return scope if current_actor.admin?
 
         scope.where(users: { organization_id: current_actor.organization_id })
