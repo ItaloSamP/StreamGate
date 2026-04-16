@@ -82,11 +82,20 @@ Padronizar operacao, diagnostico e resposta a incidentes da trilha de runtime re
   - resultado por camada (API, worker, integração);
   - classificacao ambiente vs implementacao.
 - comandos de referencia:
-  - `python scripts/compose/compose-smoke.py`
-  - `python scripts/compose/upload-signed-smoke.py`
+  - `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1`
+  - `bash scripts/smokes/run-smokes.sh`
+  - `python scripts/smokes/compose-smoke.py`
+  - `python scripts/smokes/upload-signed-smoke.py`
+  - `python scripts/smokes/worker-operational-smoke.py`
   - `bundle exec rake streamgate:outbox:dispatch` (API)
   - `GET /api/v1/quarantine/dlq` (inspecao read-only da DLQ)
   - `bundle exec rspec` em `apps/worker`
+- o smoke operacional do worker deve comprovar, no minimo:
+  - CSV valido publicado via signed URL termina como `job.completed`;
+  - CSV com linha vazia termina como `job.quarantined_with_warnings`;
+  - a listagem de quarantine mostra o registro do arquivo com aviso;
+  - analytics reflete o delta de jobs apos o processamento;
+  - o runner derruba a stack ao final, inclusive em falha.
 
 ## Playbook de incidente (fila)
 

@@ -100,7 +100,7 @@ A cobertura minima da Sprint 0 e orientada por tipo de entrega, nao por percentu
 - `docker compose -f compose.yaml --profile full config`
 - `./scripts/compose/compose-health-tests.sh`
 - `powershell -ExecutionPolicy Bypass -File .\scripts\compose\compose-health.tests.ps1`
-- `python scripts/compose/compose-smoke.py`
+- `python scripts/smokes/compose-smoke.py`
 
 ### CI local
 

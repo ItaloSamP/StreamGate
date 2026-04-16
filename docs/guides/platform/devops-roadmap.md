@@ -4,11 +4,11 @@
 Este guia consolida diretrizes de devops roadmap para uso consistente no projeto.
 
 ## Estado atual
-Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+Conteudo alinhado ao fechamento da Sprint 3 e a execucao DevOps da Sprint 4; atualizar em cada mudanca relevante.
 
 
 ## Estado atual detalhado
-Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+Conteudo alinhado ao fechamento da Sprint 3 e a execucao DevOps da Sprint 4; atualizar em cada mudanca relevante.
 
 ## Regras/Contratos
 - As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
@@ -33,16 +33,18 @@ Consolidar uma base operacional previsivel para o StreamGate, com foco em:
 
 A baseline operacional da Sprint 0 continua registrada em [docs/guides/platform/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/platform/devops-baseline-sprint-0.md).
 
-## Estado consolidado ate a Sprint 3 (2026-04-10)
+## Estado consolidado ate a Sprint 4 (2026-04-15)
 
 ### O que ja esta fechado na trilha DevOps
 
-- [x] scripts oficiais consolidados em `scripts/bootstrap`, `scripts/dev`, `scripts/ci` e `scripts/compose`.
+- [x] scripts oficiais consolidados em `scripts/bootstrap`, `scripts/dev`, `scripts/ci`, `scripts/compose` e `scripts/smokes`.
 - [x] matriz de ambiente formalizada com recomendacao `WSL-first`.
 - [x] falha de `vitest` no Windows classificada como limitacao de ambiente local.
 - [x] falha antiga do worker por `git ls-files` tratada no gemspec.
 - [x] `compose.yaml` com perfis `infra` e `full`, health checks e validacao de config.
 - [x] workflows separados (`frontend-ci`, `backend-ci`, `docker-ci`) e alinhados ao estado real do projeto.
+- [x] profile `full` executa worker runtime real.
+- [x] smokes operacionais centralizados em `scripts/smokes`, com runner unico para `infra`, `app` e `full`.
 
 ### Fechamento especifico da Sprint 2 (DevOps)
 
@@ -62,6 +64,17 @@ Skills aplicadas nesta trilha: `docker`, `github-actions-expert`, `generate-gith
 - [x] ajustar CORS de MinIO para fluxo browser com signed URL;
 - [x] incluir smoke operacional da trilha `signed-url -> PUT -> register`;
 - [x] manter `WSL/CI` como gate oficial para separar falha de ambiente e falha de implementacao.
+
+### Fechamento adicional da Sprint 4 (DevOps)
+
+Skills aplicadas nesta trilha: `docker`, `github-actions-expert`, `monitoring-observability`, `documentation-writer`.
+
+- [x] reorganizar smokes em `scripts/smokes` sem wrappers legados em `scripts/compose`;
+- [x] manter `scripts/compose` focado em helpers e testes de health check;
+- [x] criar runner unico (`run-smokes.ps1` e `run-smokes.sh`) que derruba, sobe, valida e derruba a stack;
+- [x] incluir smoke operacional do worker real no profile `full`;
+- [x] conectar o pacote completo de smokes ao CI local e ao workflow `docker-ci`;
+- [x] documentar evidencias, comandos publicos e diagnostico de falha por logs recentes.
 
 ## Planejamento da trilha DevOps na Sprint 2
 
@@ -117,17 +130,23 @@ Comandos de referencia para validar essa trilha:
 - `docker compose -f compose.yaml config`
 - `docker compose -f compose.yaml --profile full config`
 - `powershell -ExecutionPolicy Bypass -File .\scripts\compose\compose-health.tests.ps1`
-- `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 -Workflow backend`
+- `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1`
+- `bash scripts/smokes/run-smokes.sh`
+- `python scripts/smokes/worker-operational-smoke.py`
+- `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 docker`
 
-Leitura pratica da ultima validacao executada em 2026-04-06:
+Leitura pratica da ultima validacao executada em 2026-04-15:
 
-- `docker compose -f compose.yaml config`: PASS (com warning de acesso ao `C:\Users\italo\.docker\config.json` no host, sem impacto no resultado);
-- `docker compose -f compose.yaml --profile full config`: PASS (mesmo warning de host);
+- `docker compose -f compose.yaml config`: PASS;
+- `docker compose -f compose.yaml --profile full config`: PASS;
 - `powershell -ExecutionPolicy Bypass -File .\scripts\compose\compose-health.tests.ps1`: PASS;
-- `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 -Workflow backend`: PASS apos executar com permissao de Docker habilitada na sessao.
+- `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1`: PASS; validou infra, app, full, upload assinado e worker operacional;
+- `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 docker`: PASS; validou configs Compose, builds de API/Web/Worker e o pacote completo de smokes;
+- `docker compose exec -T -e RAILS_ENV=test api bundle exec rails test test/requests/uploads_jobs_flow_test.rb`: PASS (`9 runs`, `50 assertions`, `0 failures`, `0 errors`).
 
 Observacao operacional:
 
+- no host Windows atual, o CI local PowerShell faz `SKIP` apenas do teste Bash de health quando o WSL Bash nao possui `jq`; o workflow remoto `docker-ci` continua estrito, pois instala `jq` antes da validacao.
 - avisos de `VIPS-WARNING` sobre modulos opcionais (`heif`, `jxl`, `magick`, `openslide`, `poppler`) apareceram na execucao de testes Ruby no Windows, mas nao bloquearam `db:prepare`, testes, RuboCop nem Brakeman.
 - qualquer falha restante de frontend `vitest` no host Windows continua classificada como limitacao de ambiente local, nao como bloqueador da trilha DevOps ja entregue.
 

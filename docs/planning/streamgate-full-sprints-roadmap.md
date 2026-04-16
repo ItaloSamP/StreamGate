@@ -980,7 +980,7 @@ Evidencias registradas (2026-04-10):
 
 - `apps/api`: `bundle exec rails test` com envs de projeto (`35 runs`, `147 assertions`, `0 failures`, `0 errors`).
 - `apps/web`: `pnpm lint` (ok), `pnpm test:run` (`9` arquivos, `41` testes, ok), `pnpm test:integration` (`3` testes, ok), `pnpm test:e2e` (`8` testes, ok).
-- operacao: `python scripts/compose/compose-smoke.py` (ok) e `python scripts/compose/upload-signed-smoke.py` (ok, upload/job criado).
+- operacao: `python scripts/smokes/compose-smoke.py` (ok) e `python scripts/smokes/upload-signed-smoke.py` (ok, upload/job criado).
 - classificacao ambiente vs implementacao: sem falha de implementacao aberta no fechamento; limitacoes de host Windows permanecem documentadas como ambiente quando nao reproduzidas em `WSL/CI`.
 
 ### Security
@@ -1062,7 +1062,7 @@ Evidencias registradas (2026-04-10):
 
 **Bloqueadores conhecidos**
 
-- smoke completo `upload -> fila -> worker -> leitura operacional` ainda precisa ser revalidado pela trilha DevOps/Test.
+- nenhum bloqueador de DevOps aberto apos a validacao do smoke completo `upload -> fila -> worker -> leitura operacional`.
 - conectores externos permanecem com alto risco de escopo se entrarem junto com runtime inicial do worker.
 
 **O que nao pode ficar para depois**
@@ -1129,9 +1129,12 @@ Fronteira explicita (fora da Sprint 4): `external_link`, `oauth_delegated`, `goo
 
 - Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
 - Documentos de apoio: [docs/guides/platform/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/platform/devops-baseline-sprint-0.md), [docs/guides/platform/setup.md](C:/estudos/StreamGate/docs/guides/platform/setup.md), [docs/guides/platform/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/platform/devops-roadmap.md) e [docs/guides/operations/worker-runtime-runbook.md](C:/estudos/StreamGate/docs/guides/operations/worker-runtime-runbook.md).
-- [ ] Ajustar compose/profile `full` para worker runtime real (sem `sleep infinity`).
-- [ ] Definir sinais minimos de observabilidade para consumo de fila e transicao de job.
-- [ ] Incluir smoke operacional cobrindo `upload -> fila -> worker -> leitura operacional`.
+- [x] Ajustar compose/profile `full` para worker runtime real (sem `sleep infinity`).
+- [x] Definir sinais minimos de observabilidade para consumo de fila e transicao de job.
+- [x] Reorganizar smokes oficiais em `scripts/smokes` sem wrappers legados em `scripts/compose`.
+- [x] Criar runner unico `scripts/smokes/run-smokes.ps1` e `scripts/smokes/run-smokes.sh` para lifecycle completo da stack.
+- [x] Incluir smoke operacional cobrindo `upload -> fila -> worker -> leitura operacional`.
+- [x] Conectar o pacote completo de smokes ao CI local e ao workflow `docker-ci`.
 
 ### Test planning
 
@@ -1144,8 +1147,17 @@ Fronteira explicita (fora da Sprint 4): `external_link`, `oauth_delegated`, `goo
 
 - Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
 - [ ] Executar suites backend/web/worker da trilha com classificacao ambiente vs implementacao.
-- [ ] Executar smoke operacional completo com broker e worker reais.
-- [ ] Registrar evidencias de comandos e resultados no fechamento da sprint.
+- [x] Executar smoke operacional completo com broker e worker reais.
+- [x] Registrar evidencias de DevOps com comandos e resultados da trilha.
+
+Evidencias DevOps registradas (2026-04-15):
+
+- `powershell -ExecutionPolicy Bypass -File scripts/smokes/run-smokes.ps1`: PASS; validou infra, upload assinado, profile `full`, worker healthy, CSV valido `completed`, CSV com linha vazia `quarantined_with_warnings`, analytics e quarantine.
+- `powershell -ExecutionPolicy Bypass -File scripts/ci/ci-local.ps1 docker`: PASS; validou config Compose default/full, helper PowerShell, builds de API/Web/Worker e todos os smokes via runner unico.
+- `docker compose -f compose.yaml --profile full config`: PASS; profile `full` materializa `api`, `web`, `worker` e dependencias.
+- `powershell -ExecutionPolicy Bypass -File scripts/compose/compose-health.tests.ps1`: PASS.
+- `docker compose exec -T -e RAILS_ENV=test api bundle exec rails test test/requests/uploads_jobs_flow_test.rb`: PASS (`9 runs`, `50 assertions`, `0 failures`, `0 errors`).
+- classificacao ambiente vs implementacao: o CI local PowerShell classifica ausencia de `jq` no WSL Bash local como `SKIP` apenas para o helper Bash; o `docker-ci` remoto continua estrito porque instala `jq` antes de validar esse helper.
 
 ### Security
 
@@ -1178,6 +1190,7 @@ Fronteira explicita (fora da Sprint 4): `external_link`, `oauth_delegated`, `goo
 - [x] Worker runtime real executando consumo de fila no fluxo oficial.
 - [x] Modulos `analytics`, `quarantine`, `quarantine/dlq`, `audit`, `events`, `jobs` e `uploads` consumindo dados reais no frontend.
 - [x] OpenAPI, contratos e documentacao sincronizados sem drift conhecido para as trilhas tocadas.
+- [x] Evidencias de DevOps registradas com runner local, docker-ci local e smoke operacional do worker.
 - [ ] Evidencias de teste e operacao finais registradas com classificacao de risco residual apos DevOps/Test/Security.
 
 ### Reavaliacao de transicao por trilha
@@ -1187,12 +1200,12 @@ Fronteira explicita (fora da Sprint 4): `external_link`, `oauth_delegated`, `goo
 - [ ] `Worker execution`: validar retry, idempotencia e rastreabilidade operacional.
 - [x] `Front planning`: validar jornada e usabilidade dos modulos operacionais.
 - [x] `Front execution`: validar estados de UI, a11y e performance.
-- [ ] `DevOps`: revisar smoke, readiness e maturidade para ciclo continuo.
-- [ ] `Documentation`: confirmar fechamento documental completo da sprint.
+- [x] `DevOps`: revisar smoke, readiness e maturidade para ciclo continuo.
+- [x] `Documentation`: registrar atualizacao documental da trilha DevOps com `documentation-writer`.
 - [ ] `Test planning`: confirmar cobertura obrigatoria da sprint seguinte.
 - [ ] `Test execution`: registrar resultados e risco residual.
 - [ ] `Security`: registrar superficies sensiveis, mitigacoes e pendencias.
-- [ ] `Skills da sprint`: registrar lacunas e ajustes no stack de skills.
+- [x] `Skills da sprint`: registrar uso de `docker`, `github-actions-expert`, `monitoring-observability` e `documentation-writer` na trilha DevOps.
 
 ### Delta por trilha (Sprint 4 - em andamento)
 
@@ -1200,12 +1213,12 @@ Fronteira explicita (fora da Sprint 4): `external_link`, `oauth_delegated`, `goo
 - Back execution: concluida para o corte atual; runtime inicial de fila, transicoes de job, idempotencia por evento, endpoints operacionais read-only e contratos foram implementados.
 - Front planning: concluida; command center real, URL state, refresh manual, stale state, role gating, masking, export CSV e rotas de detalhe foram fechados.
 - Front execution: concluida; mocks de `dashboard/analytics/quarantine/audit/events` foram substituidos por dados reais via `streamgate-api`, com detalhes compartilhaveis e badges reais.
-- DevOps: pendente nesta etapa; stack `full` ainda precisa ser revalidada como trilha propria apos os ajustes de frontend.
-- Documentation: em andamento; README do web, fundacoes de frontend, mapa do workspace e roadmap foram atualizados com `documentation-writer`.
+- DevOps: concluida para a Sprint 4; smokes foram centralizados em `scripts/smokes`, runner unico gerencia lifecycle completo, profile `full` sobe worker real healthy e `ci-local.ps1 docker` passou com todos os smokes.
+- Documentation: em andamento; README do web, fundacoes de frontend, mapa do workspace, runbook do worker, setup, roadmap DevOps e roadmap mestre foram atualizados com `documentation-writer`.
 - Test planning: parcialmente coberta pela trilha frontend; matriz de testes de paginas/adapters/detalhes foi aplicada no codigo, mas o fechamento formal permanece para a trilha de testes.
-- Test execution: parcialmente executada; `pnpm.cmd test:run`, `pnpm.cmd lint`, `pnpm.cmd build` e `pnpm.cmd test:e2e` passaram para o frontend contra ambiente Docker `app` saudavel.
+- Test execution: parcialmente executada; `pnpm.cmd test:run`, `pnpm.cmd lint`, `pnpm.cmd build`, `pnpm.cmd test:e2e`, request test de upload/jobs e `ci-local.ps1 docker` passaram; fechamento formal de Test/Security ainda permanece pendente.
 - Security: parcialmente coberta no frontend por role gating e masking visual; revisao formal de seguranca permanece pendente.
-- Skills da sprint: em andamento; stack obrigatoria aplicada nas trilhas backend/frontend/documentacao tocadas.
+- Skills da sprint: em andamento; stack obrigatoria aplicada nas trilhas backend/frontend/DevOps/documentacao tocadas.
 
 ## Pos-v1 e backlog estrategico
 

@@ -32,7 +32,7 @@ No Windows, a recomendacao pratica e:
 
 Os scripts `.ps1` continuam disponiveis apenas como fallback para Windows puro.
 
-A raiz de `scripts/` agora expoe apenas os comandos principais; helpers internos ficam organizados em `scripts/bootstrap`, `scripts/dev`, `scripts/ci` e `scripts/compose`.
+A raiz de `scripts/` agora expoe apenas os comandos principais; helpers internos ficam organizados em `scripts/bootstrap`, `scripts/dev`, `scripts/ci`, `scripts/compose` e `scripts/smokes`.
 
 A classificacao operacional real da Sprint 0 para ambientes, checks e falhas conhecidas esta em [docs/guides/platform/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/platform/devops-baseline-sprint-0.md).
 
@@ -178,9 +178,9 @@ No `docker ps -a` ele aparece parado; isso e esperado.
 
 ## Nota sobre o worker no profile `full`
 
-O `worker` ainda nao possui loop real de consumo de filas implementado no codigo do projeto.
-Por isso, o container do `worker` no `profile full` sobe como ambiente de desenvolvimento pronto para a gem, mantendo o processo ativo e validando que o pacote `worker` carrega corretamente.
-Quando o runtime do worker for implementado, esse comando pode ser trocado pelo processo real de consumo.
+O `worker` do profile `full` executa o runtime real de consumo RabbitMQ da Sprint 4.
+Ele consome eventos `upload.received.v1`, processa arquivos CSV/ZIP no corte inicial, atualiza estados de job e alimenta leituras operacionais de analytics/quarantine/audit.
+Para validar a trilha completa, use o runner de smokes em `scripts/smokes`.
 
 ## Como rodar cada app fora do compose
 
@@ -219,6 +219,7 @@ Na raiz do projeto:
 ./scripts/dev/dev-up.sh full
 ./scripts/dev/dev-down.sh
 ./scripts/compose/compose-health-tests.sh
+./scripts/smokes/run-smokes.sh
 ./scripts/ci/ci-local.sh
 ```
 
@@ -242,6 +243,8 @@ Se voce precisar rodar o projeto fora do WSL, ainda existem os scripts PowerShel
 .\\scripts\\dev\\dev-up.ps1
 .\\scripts\\dev\\dev-up.ps1 -Mode full
 .\\scripts\\dev\\dev-down.ps1
+.\\scripts\\compose\\compose-health.tests.ps1
+powershell -ExecutionPolicy Bypass -File .\\scripts\\smokes\\run-smokes.ps1
 .\\scripts\\ci\\ci-local.ps1
 ```
 
@@ -366,13 +369,26 @@ Essas variaveis ainda nao ativam o fluxo funcional da Sprint 3 por si sozinhas, 
 
 Essas variaveis sustentam a trilha base de upload assinado (`signed-url -> PUT -> register`) e as listagens reais de uploads/jobs.
 
-### Validacao operacional recomendada (Sprint 3)
+### Validacao operacional recomendada (Sprint 4)
 
-Com stack `full` no ar, rodar:
+Para rodar todos os smokes com lifecycle completo do Compose:
 
 ```bash
-python scripts/compose/compose-smoke.py
-python scripts/compose/upload-signed-smoke.py
+bash scripts/smokes/run-smokes.sh
+```
+
+No PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1
+```
+
+Smokes individuais:
+
+```bash
+python scripts/smokes/compose-smoke.py
+python scripts/smokes/upload-signed-smoke.py
+python scripts/smokes/worker-operational-smoke.py
 ```
 
 Suite de testes da trilha:

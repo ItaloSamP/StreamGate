@@ -38,8 +38,8 @@ Comandos e resultado:
 - `apps/web`: `pnpm test:run` (ok: `9` arquivos, `41` testes)
 - `apps/web`: `pnpm test:integration` (ok: `3` testes)
 - `apps/web`: `pnpm test:e2e` (ok: `8` testes)
-- raiz: `python scripts/compose/compose-smoke.py` (ok)
-- raiz: `python scripts/compose/upload-signed-smoke.py` (ok, upload/job criados)
+- raiz: `python scripts/smokes/compose-smoke.py` (ok)
+- raiz: `python scripts/smokes/upload-signed-smoke.py` (ok, upload/job criados)
 
 Classificacao ambiente vs implementacao:
 

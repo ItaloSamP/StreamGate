@@ -37,7 +37,7 @@ bundle exec ruby -e 'require "worker"; Worker.run!'
 
 O gap antigo do `gemspec` baseado em `git ls-files` ja foi removido na Sprint 0.
 
-No ambiente Windows atual, o principal cuidado do worker passa a ser a validacao do setup Ruby local e a evolucao segura do runtime real de fila, nao mais o placeholder do gemspec.
+No ambiente Windows atual, o principal cuidado do worker passa a ser a validacao do setup Ruby local e do runtime real de fila entregue na Sprint 4.
 
 ## Proximo passo esperado
 
