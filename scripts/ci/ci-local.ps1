@@ -292,20 +292,21 @@ function Run-DockerWorkflow {
   Ensure-EnvFile
 
   $composeHealthCommand = Get-PowerShellFileCommand -FilePath '.\\scripts\\compose\\compose-health.tests.ps1'
+  $bashHealthCommand = 'bash -lc "if ! command -v jq >/dev/null 2>&1; then echo ''SKIP: jq is not available in local WSL bash; GitHub docker-ci installs jq and validates this helper.''; exit 0; fi; bash scripts/compose/compose-health-tests.sh"'
 
   $failed = $false
   $reason = 'Todos os passos passaram.'
   $steps = @(
     @{ Name = 'Validate compose default config'; Dir = $root; Command = 'docker compose -f compose.yaml config'; Reason = 'Falha em Validate compose default config.' },
     @{ Name = 'Validate compose full profile'; Dir = $root; Command = 'docker compose -f compose.yaml --profile full config'; Reason = 'Falha em Validate compose full profile.' },
-    @{ Name = 'Validate WSL bash health helpers'; Dir = $root; Command = 'bash scripts/compose/compose-health-tests.sh'; Reason = 'Falha em Validate WSL bash health helpers.' },
+    @{ Name = 'Validate WSL bash health helpers'; Dir = $root; Command = $bashHealthCommand; Reason = 'Falha em Validate WSL bash health helpers.' },
     @{ Name = 'Validate PowerShell health helpers'; Dir = $root; Command = $composeHealthCommand; Reason = 'Falha em Validate PowerShell health helpers.' },
     @{ Name = 'Build API production image'; Dir = $root; Command = 'docker build -t streamgate-api:ci .\apps\api'; Reason = 'Falha em Build API production image.' },
     @{ Name = 'Build API development image'; Dir = $root; Command = 'docker build -f apps/api/Dockerfile.dev -t streamgate-api-dev:ci .\apps\api'; Reason = 'Falha em Build API development image.' },
     @{ Name = 'Build Web production image'; Dir = $root; Command = 'docker build -t streamgate-web:ci .\apps\web'; Reason = 'Falha em Build Web production image.' },
     @{ Name = 'Build Web development image'; Dir = $root; Command = 'docker build -f apps/web/Dockerfile.dev -t streamgate-web-dev:ci .\apps\web'; Reason = 'Falha em Build Web development image.' },
     @{ Name = 'Build Worker development image'; Dir = $root; Command = 'docker build -f apps/worker/Dockerfile.dev -t streamgate-worker-dev:ci .\apps\worker'; Reason = 'Falha em Build Worker development image.' },
-    @{ Name = 'Smoke test infra profile'; Dir = $root; Command = 'docker compose up -d && python scripts/compose/compose-smoke.py && docker compose ps'; Reason = 'Falha em Smoke test infra profile.' }
+    @{ Name = 'Run all smoke tests'; Dir = $root; Command = 'powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1'; Reason = 'Falha em Run all smoke tests.' }
   )
 
   foreach ($step in $steps) {
@@ -367,4 +368,3 @@ if ($createdEnv -and (Test-Path (Join-Path $root '.env'))) {
 if ($failureCount -gt 0) {
   exit 1
 }
-

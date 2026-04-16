@@ -243,7 +243,7 @@ run_e2e_workflow() {
   fi
 
   if [[ $failed -eq 0 ]]; then
-    ci_local_run_step "$workflow" 'Run signed upload operational smoke' "$ROOT_DIR" "SEED_OPERATOR_PASSWORD=$seed_operator_password SMOKE_API_BASE_URL=http://localhost:3000 python scripts/compose/upload-signed-smoke.py" || { failed=1; reason='Falha em Run signed upload operational smoke.'; }
+    ci_local_run_step "$workflow" 'Run signed upload operational smoke' "$ROOT_DIR" "SEED_OPERATOR_PASSWORD=$seed_operator_password SMOKE_API_BASE_URL=http://localhost:3000 python scripts/smokes/upload-signed-smoke.py" || { failed=1; reason='Falha em Run signed upload operational smoke.'; }
   fi
 
   if [[ $failed -eq 0 ]]; then
@@ -316,7 +316,7 @@ run_docker_workflow() {
     ci_local_run_step "$workflow" 'Build Worker development image' "$ROOT_DIR" 'docker build -f apps/worker/Dockerfile.dev -t streamgate-worker-dev:ci ./apps/worker' || { failed=1; reason='Falha em Build Worker development image.'; }
   fi
   if [[ $failed -eq 0 ]]; then
-    ci_local_run_step "$workflow" 'Smoke test infra profile' "$ROOT_DIR" 'docker compose up -d && python scripts/compose/compose-smoke.py && docker compose ps' || { failed=1; reason='Falha em Smoke test infra profile.'; }
+    ci_local_run_step "$workflow" 'Run all smoke tests' "$ROOT_DIR" 'bash scripts/smokes/run-smokes.sh' || { failed=1; reason='Falha em Run all smoke tests.'; }
   fi
 
   ci_local_run_step "$workflow" 'Stop compose stack' "$ROOT_DIR" './scripts/dev/dev-down.sh' >/dev/null 2>&1 || true

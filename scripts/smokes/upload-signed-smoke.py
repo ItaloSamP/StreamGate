@@ -1,4 +1,4 @@
-﻿import hashlib
+import hashlib
 import json
 import os
 import sys
@@ -39,7 +39,9 @@ def request_json(method: str, path_or_url: str, payload: dict | None = None, hea
         try:
             parsed = json.loads(payload_text)
             if isinstance(parsed, dict):
-                message = parsed.get("error", {}).get("message") or payload_text
+                error_payload = parsed.get("error", {})
+                if isinstance(error_payload, dict):
+                    message = error_payload.get("message") or payload_text
         except json.JSONDecodeError:
             pass
         raise RuntimeError(f"HTTP {error.code} on {method} {url}: {message}") from error
