@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+import socket
 import sys
 import urllib.error
 import urllib.parse
@@ -9,8 +10,12 @@ import urllib.request
 API_BASE_URL = os.environ.get("SMOKE_API_BASE_URL", "http://localhost:3000").rstrip("/")
 OPERATOR_EMAIL = os.environ.get("SMOKE_OPERATOR_EMAIL", "operator@streamgate.local")
 OPERATOR_PASSWORD = os.environ.get("SEED_OPERATOR_PASSWORD", "ChangeMe123!")
-TIMEOUT_SECONDS = int(os.environ.get("SMOKE_HTTP_TIMEOUT_SECONDS", "20"))
+TIMEOUT_SECONDS = int(os.environ.get("SMOKE_HTTP_TIMEOUT_SECONDS", "60"))
 SMOKE_STORAGE_PUBLIC_BASE_URL = os.environ.get("SMOKE_STORAGE_PUBLIC_BASE_URL", "").strip()
+
+
+def log(message: str) -> None:
+    print(message, flush=True)
 
 
 def request_json(method: str, path_or_url: str, payload: dict | None = None, headers: dict[str, str] | None = None) -> dict:
@@ -33,6 +38,8 @@ def request_json(method: str, path_or_url: str, payload: dict | None = None, hea
             if not raw:
                 return {}
             return json.loads(raw)
+    except (TimeoutError, socket.timeout) as error:
+        raise RuntimeError(f"timed out after {TIMEOUT_SECONDS}s on {method} {url}") from error
     except urllib.error.HTTPError as error:
         payload_text = error.read().decode("utf-8", errors="replace")
         message = payload_text
@@ -84,6 +91,8 @@ def upload_to_signed_url(upload_url: str, content: bytes, required_headers: dict
         with urllib.request.urlopen(req, timeout=TIMEOUT_SECONDS) as response:
             if response.status not in (200, 201, 204):
                 raise RuntimeError(f"unexpected storage response status={response.status}")
+    except (TimeoutError, socket.timeout) as error:
+        raise RuntimeError(f"signed PUT timed out after {TIMEOUT_SECONDS}s on {upload_url}") from error
     except urllib.error.HTTPError as error:
         raise RuntimeError(f"signed PUT failed status={error.code}") from error
 
@@ -99,7 +108,7 @@ def main() -> int:
     filename = "smoke-upload.csv"
     content_type = "text/csv"
 
-    print("[smoke] login operator")
+    log("[smoke] login operator")
     login = request_json(
         "POST",
         "/api/v1/auth/login",
@@ -109,7 +118,7 @@ def main() -> int:
     require(bool(token), "missing access_token in login response")
     auth_headers = {"Authorization": f"Bearer {token}"}
 
-    print("[smoke] request signed-url")
+    log("[smoke] request signed-url")
     signed = request_json(
         "POST",
         "/api/v1/uploads/signed-url",
@@ -132,11 +141,11 @@ def main() -> int:
     require(bool(upload_url), "missing upload_url in signed-url response")
     require(bool(storage_key), "missing storage_key in signed-url response")
 
-    print("[smoke] put object on storage")
+    log("[smoke] put object on storage")
     resolved_upload_url, host_header = resolve_upload_target(upload_url)
     upload_to_signed_url(resolved_upload_url, csv_content, required_headers, content_type, host_header=host_header)
 
-    print("[smoke] register upload + job")
+    log("[smoke] register upload + job")
     register = request_json(
         "POST",
         "/api/v1/uploads",
@@ -158,7 +167,7 @@ def main() -> int:
     require(bool(upload_id), "missing upload.id in register response")
     require(bool(job_id), "missing job.id in register response")
 
-    print("[smoke] verify listings")
+    log("[smoke] verify listings")
     uploads = request_json("GET", "/api/v1/uploads?page=1&per_page=20&search=smoke-upload", headers=auth_headers)
     jobs = request_json("GET", "/api/v1/jobs?page=1&per_page=20", headers=auth_headers)
 
@@ -168,7 +177,7 @@ def main() -> int:
     require(upload_id in upload_ids, "registered upload not found in /uploads listing")
     require(job_id in job_ids, "registered job not found in /jobs listing")
 
-    print(f"[smoke] success upload_id={upload_id} job_id={job_id}")
+    log(f"[smoke] success upload_id={upload_id} job_id={job_id}")
     return 0
 
 

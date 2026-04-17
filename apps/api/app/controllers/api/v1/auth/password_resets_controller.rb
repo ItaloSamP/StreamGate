@@ -50,7 +50,7 @@ module Api
             period_seconds: window_seconds
           )
 
-          return if enforce_rate_limit!(
+          enforce_rate_limit!(
             scope: "auth.password_reset.request.identifier",
             discriminator: request_params[:email],
             limit: Rails.application.config.x.auth_password_reset_request_limit_per_identifier,

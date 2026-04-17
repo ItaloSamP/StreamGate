@@ -74,4 +74,3 @@ Rails.application.config.x.upload_register_limit_per_ip = UploadRuntime.register
 Rails.application.config.x.upload_throttle_window_seconds = UploadRuntime.throttle_window_seconds
 Rails.application.config.x.upload_allowed_content_types = UploadRuntime.allowed_content_types
 Rails.application.config.x.upload_verify_object_before_register = UploadRuntime.verify_object_before_register?
-

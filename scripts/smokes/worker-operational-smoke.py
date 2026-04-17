@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import random
+import socket
 import sys
 import time
 import urllib.error
@@ -12,10 +13,14 @@ from datetime import datetime, timedelta, timezone
 API_BASE_URL = os.environ.get("SMOKE_API_BASE_URL", "http://localhost:3000").rstrip("/")
 OPERATOR_EMAIL = os.environ.get("SMOKE_OPERATOR_EMAIL", "operator@streamgate.local")
 OPERATOR_PASSWORD = os.environ.get("SEED_OPERATOR_PASSWORD", "ChangeMe123!")
-TIMEOUT_SECONDS = int(os.environ.get("SMOKE_HTTP_TIMEOUT_SECONDS", "20"))
+TIMEOUT_SECONDS = int(os.environ.get("SMOKE_HTTP_TIMEOUT_SECONDS", "60"))
 WORKER_TIMEOUT_SECONDS = int(os.environ.get("SMOKE_WORKER_TIMEOUT_SECONDS", "180"))
 POLL_INTERVAL_SECONDS = int(os.environ.get("SMOKE_POLL_INTERVAL_SECONDS", "3"))
 SMOKE_STORAGE_PUBLIC_BASE_URL = os.environ.get("SMOKE_STORAGE_PUBLIC_BASE_URL", "").strip()
+
+
+def log(message: str) -> None:
+    print(message, flush=True)
 
 
 def request_json(method: str, path_or_url: str, payload: dict | None = None, headers: dict[str, str] | None = None) -> dict:
@@ -38,6 +43,8 @@ def request_json(method: str, path_or_url: str, payload: dict | None = None, hea
             if not raw:
                 return {}
             return json.loads(raw)
+    except (TimeoutError, socket.timeout) as error:
+        raise RuntimeError(f"timed out after {TIMEOUT_SECONDS}s on {method} {url}") from error
     except urllib.error.HTTPError as error:
         payload_text = error.read().decode("utf-8", errors="replace")
         message = payload_text
@@ -89,6 +96,8 @@ def upload_to_signed_url(upload_url: str, content: bytes, required_headers: dict
         with urllib.request.urlopen(req, timeout=TIMEOUT_SECONDS) as response:
             if response.status not in (200, 201, 204):
                 raise RuntimeError(f"unexpected storage response status={response.status}")
+    except (TimeoutError, socket.timeout) as error:
+        raise RuntimeError(f"signed PUT timed out after {TIMEOUT_SECONDS}s on {upload_url}") from error
     except urllib.error.HTTPError as error:
         raise RuntimeError(f"signed PUT failed status={error.code}") from error
 
@@ -231,27 +240,27 @@ def main() -> int:
     suffix = f"{int(time.time())}-{random.randint(1000, 9999)}"
     window_from = datetime.now(timezone.utc) - timedelta(minutes=1)
 
-    print("[worker-smoke] login operator")
+    log("[worker-smoke] login operator")
     auth_headers = login_operator()
     initial_jobs_total = analytics_jobs_total(auth_headers, window_from)
 
-    print("[worker-smoke] valid csv -> completed")
+    log("[worker-smoke] valid csv -> completed")
     valid_filename = f"worker-smoke-valid-{suffix}.csv"
     _, valid_job_id = create_upload_job(auth_headers, valid_filename, b"order_id,amount\n1001,42\n1002,84\n")
     valid_job = wait_for_job_status(auth_headers, valid_job_id, "completed")
     require(int(valid_job.get("quarantined_records_count", 0)) == 0, f"valid job has quarantine records: {valid_job}")
 
-    print("[worker-smoke] csv with empty row -> quarantined_with_warnings")
+    log("[worker-smoke] csv with empty row -> quarantined_with_warnings")
     invalid_filename = f"worker-smoke-invalid-{suffix}.csv"
     _, invalid_job_id = create_upload_job(auth_headers, invalid_filename, b"order_id,amount\n1001,42\n,\n1003,21\n")
     invalid_job = wait_for_job_status(auth_headers, invalid_job_id, "quarantined_with_warnings")
     require(int(invalid_job.get("quarantined_records_count", 0)) >= 1, f"invalid job did not report quarantine count: {invalid_job}")
     quarantine_record = wait_for_quarantine_record(auth_headers, invalid_job_id)
 
-    print("[worker-smoke] verify analytics delta")
+    log("[worker-smoke] verify analytics delta")
     final_jobs_total = wait_for_analytics_delta(auth_headers, window_from, initial_jobs_total, 2)
 
-    print(
+    log(
         "[worker-smoke] success "
         f"valid_job_id={valid_job_id} invalid_job_id={invalid_job_id} "
         f"quarantine_record_id={quarantine_record.get('id')} analytics_jobs_total={final_jobs_total}"

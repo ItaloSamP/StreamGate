@@ -13,8 +13,25 @@ $PSNativeCommandUseErrorActionPreference = $false
 $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 . (Join-Path $root 'scripts/compose/compose-health.ps1')
 
+$reportsDir = Join-Path $root 'scripts/smokes/reports'
+$logsDir = Join-Path $reportsDir 'logs'
 $results = New-Object System.Collections.Generic.List[object]
 $failed = $false
+$startedAt = Get-Date
+
+function Initialize-SmokeReports {
+  New-Item -ItemType Directory -Force -Path $logsDir | Out-Null
+  foreach ($item in @('summary.json', 'report.html')) {
+    $target = Join-Path $reportsDir $item
+    if (Test-Path $target) { Remove-Item $target -Force }
+  }
+  Get-ChildItem -Path $logsDir -File -ErrorAction SilentlyContinue | Remove-Item -Force
+}
+
+function ConvertTo-ReportSlug {
+  param([string]$Value)
+  return ($Value.ToLowerInvariant() -replace '[^a-z0-9]+', '-' -replace '(^-|-$)', '')
+}
 
 function Invoke-SmokeCommand {
   param(
@@ -27,14 +44,23 @@ function Invoke-SmokeCommand {
   Write-Host ""
   Write-Host "==> $Name" -ForegroundColor Cyan
   $startedAt = Get-Date
-  & cmd.exe /d /c $Command
+  $output = & cmd.exe /d /c "$Command 2>&1"
   $exitCode = $LASTEXITCODE
   $duration = [Math]::Round(((Get-Date) - $startedAt).TotalSeconds, 1)
+  $logPath = Join-Path $logsDir "$((ConvertTo-ReportSlug -Value $Name)).log"
+  if ($null -ne $output -and @($output).Count -gt 0) {
+    $output | Out-Host
+    $output | Set-Content -Path $logPath -Encoding utf8
+  }
+  else {
+    '(sem output)' | Set-Content -Path $logPath -Encoding utf8
+  }
 
   $script:results.Add([pscustomobject]@{
     Name = $Name
     Status = $(if ($exitCode -eq 0) { 'PASS' } else { 'FAIL' })
     DurationSeconds = $duration
+    LogPath = ($logPath.Substring($root.Length + 1) -replace '\\', '/')
   })
 
   if ($exitCode -ne 0) {
@@ -45,11 +71,66 @@ function Invoke-SmokeCommand {
 function Invoke-ComposeLogsSnapshot {
   Write-Host ""
   Write-Host "Logs recentes para diagnostico:" -ForegroundColor Yellow
+  $diagnosticsPath = Join-Path $logsDir 'compose-diagnostics.log'
+  "" | Set-Content -Path $diagnosticsPath -Encoding utf8
   foreach ($service in @('api', 'web', 'worker', 'rabbitmq', 'minio')) {
     Write-Host ""
     Write-Host "--- $service ---" -ForegroundColor DarkYellow
-    & docker compose logs --tail 80 $service 2>&1 | Out-Host
+    "--- $service ---" | Add-Content -Path $diagnosticsPath -Encoding utf8
+    $logs = & docker compose logs --tail 80 $service 2>&1
+    $logs | Out-Host
+    $logs | Add-Content -Path $diagnosticsPath -Encoding utf8
   }
+}
+
+function Write-SmokeReports {
+  $finishedAt = Get-Date
+  $status = if ($failed) { 'FAIL' } else { 'PASS' }
+  $exitCode = if ($failed) { 1 } else { 0 }
+  $duration = [Math]::Round(($finishedAt - $startedAt).TotalSeconds, 2)
+  $summary = [ordered]@{
+    name = 'Operational smoke suite'
+    status = $status
+    exitCode = $exitCode
+    startedAt = $startedAt.ToUniversalTime().ToString('o')
+    finishedAt = $finishedAt.ToUniversalTime().ToString('o')
+    durationSeconds = $duration
+    cwd = '.'
+    command = 'scripts/smokes/run-smokes.ps1'
+    reportPath = 'scripts/smokes/reports/report.html'
+    artifacts = @(
+      [ordered]@{ label = 'Smoke logs'; path = 'scripts/smokes/reports/logs' }
+    )
+    steps = $results.ToArray()
+  }
+
+  $summary | ConvertTo-Json -Depth 8 | Set-Content -Path (Join-Path $reportsDir 'summary.json') -Encoding utf8
+  $rows = @($results | ForEach-Object {
+    "<tr><td>$($_.Name)</td><td class='$($_.Status.ToLowerInvariant())'>$($_.Status)</td><td>$($_.DurationSeconds)s</td><td><a href='logs/$([IO.Path]::GetFileName($_.LogPath))'>log</a></td></tr>"
+  }) -join "`n"
+  $html = @"
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Operational Smoke Suite</title>
+  <style>
+    body { margin: 0; font-family: "Segoe UI", sans-serif; background: #10130f; color: #f8f2dc; }
+    main { max-width: 980px; margin: 0 auto; padding: 36px 20px; }
+    h1 { font-size: clamp(2rem, 5vw, 4rem); letter-spacing: -.05em; }
+    table { width: 100%; border-collapse: collapse; background: #1b2118; border-radius: 18px; overflow: hidden; }
+    th, td { padding: 14px; border-bottom: 1px solid #33402c; text-align: left; }
+    .pass { color: #98e6a2; font-weight: 800; }
+    .fail { color: #ff8c76; font-weight: 800; }
+    a { color: #d7ff72; }
+  </style>
+</head>
+<body><main><h1>Operational Smoke Suite</h1><p>Status: <strong class="$($status.ToLowerInvariant())">$status</strong> | Duracao: ${duration}s</p><table><thead><tr><th>Smoke</th><th>Status</th><th>Duracao</th><th>Log</th></tr></thead><tbody>$rows</tbody></table></main></body>
+</html>
+"@
+  $html | Set-Content -Path (Join-Path $reportsDir 'report.html') -Encoding utf8
+  try { & node (Join-Path $root 'scripts/reports/generate-index.mjs') | Out-Host } catch {}
 }
 
 function Stop-StreamGateStack {
@@ -84,6 +165,7 @@ function Ensure-SeedPasswordEnv {
 }
 
 try {
+  Initialize-SmokeReports
   Ensure-SeedPasswordEnv
 
   Write-Host "Preparando ambiente limpo para smokes..." -ForegroundColor Cyan
@@ -115,6 +197,7 @@ finally {
   }
 
   Stop-StreamGateStack
+  Write-SmokeReports
 }
 
 if ($failed) {

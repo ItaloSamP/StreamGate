@@ -147,6 +147,7 @@ services:
     working_dir: /app
     command: >
       bash -lc "
+      bundle check || bundle install &&
       bundle exec rails db:prepare &&
       exec bundle exec rails server -b 0.0.0.0 -p 3000
       "
@@ -268,6 +269,7 @@ services:
     working_dir: /app
     command: >
       bash -lc "
+      bundle check || bundle install &&
       exec bundle exec ruby -e 'require \"worker\"; Worker.run!'
       "
     environment:

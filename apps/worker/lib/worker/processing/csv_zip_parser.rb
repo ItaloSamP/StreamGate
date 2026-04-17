@@ -38,9 +38,7 @@ module Worker
         normalized_content = raw_content.to_s.sub(/\A\xEF\xBB\xBF/, "")
         rows = CSV.parse(normalized_content, headers: true, col_sep: detect_delimiter(normalized_content), encoding: Encoding::UTF_8)
         headers = rows.headers&.map { |header| header.to_s.strip }
-        if headers.empty? || headers.any? { |header| header.empty? }
-          raise Worker::TerminalProcessingError, "csv_header_required"
-        end
+        raise Worker::TerminalProcessingError, "csv_header_required" if headers.empty? || headers.any?(&:empty?)
 
         invalid_records = []
         valid_rows = 0
@@ -66,8 +64,8 @@ module Worker
           invalid_rows: invalid_records.size,
           invalid_records: invalid_records
         )
-      rescue CSV::MalformedCSVError => error
-        raise Worker::TerminalProcessingError, "invalid_csv: #{error.message}"
+      rescue CSV::MalformedCSVError => e
+        raise Worker::TerminalProcessingError, "invalid_csv: #{e.message}"
       end
 
       def detect_delimiter(raw_content)

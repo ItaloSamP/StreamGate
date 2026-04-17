@@ -79,11 +79,11 @@ module Worker
           started_at: started_at
         )
         channel.ack(delivery_info.delivery_tag)
-      rescue JSON::ParserError => error
-        logger.error("invalid payload json error=#{error.message}")
+      rescue JSON::ParserError => e
+        logger.error("invalid payload json error=#{e.message}")
         publish_to_dlq(exchange, payload, "invalid_json", retry_count)
         channel.ack(delivery_info.delivery_tag)
-      rescue Worker::TransientProcessingError => error
+      rescue Worker::TransientProcessingError => e
         if retry_count < config.max_retries
           next_retry = retry_count + 1
           backoff_seconds = exponential_backoff(next_retry)
@@ -96,48 +96,48 @@ module Worker
             persistent: true,
             headers: {
               "x-retry-count" => next_retry,
-              "x-last-error" => error.class.name,
+              "x-last-error" => e.class.name,
               "x-backoff-seconds" => backoff_seconds
             }
           )
-          logger.warn("message retried event_id=#{event && event['event_id']} count=#{next_retry} backoff=#{backoff_seconds}s")
+          logger.warn("message retried event_id=#{event && event["event_id"]} count=#{next_retry} backoff=#{backoff_seconds}s")
           record_metric(
             event: event,
             status: "retried",
             retry_count: next_retry,
             moved_to_dlq: false,
             error_code: "transient_processing_error",
-            error_class: error.class.name,
+            error_class: e.class.name,
             started_at: started_at
           )
         else
           publish_to_dlq(exchange, payload, "max_retries_exceeded", retry_count)
-          logger.error("message moved to dlq event_id=#{event && event['event_id']} retries=#{retry_count}")
+          logger.error("message moved to dlq event_id=#{event && event["event_id"]} retries=#{retry_count}")
           record_metric(
             event: event,
             status: "dlq",
             retry_count: retry_count,
             moved_to_dlq: true,
             error_code: "max_retries_exceeded",
-            error_class: error.class.name,
+            error_class: e.class.name,
             started_at: started_at
           )
         end
         channel.ack(delivery_info.delivery_tag)
-      rescue Worker::TerminalProcessingError => error
-        logger.error("terminal processing error event_id=#{event && event['event_id']} error=#{error.message}")
+      rescue Worker::TerminalProcessingError => e
+        logger.error("terminal processing error event_id=#{event && event["event_id"]} error=#{e.message}")
         record_metric(
           event: event,
           status: "failed_terminal",
           retry_count: retry_count,
           moved_to_dlq: false,
           error_code: "terminal_processing_error",
-          error_class: error.class.name,
+          error_class: e.class.name,
           started_at: started_at
         )
         channel.ack(delivery_info.delivery_tag)
-      rescue StandardError => error
-        logger.error("unexpected consumer error=#{error.class.name} message=#{error.message}")
+      rescue StandardError => e
+        logger.error("unexpected consumer error=#{e.class.name} message=#{e.message}")
         if retry_count < config.max_retries
           next_retry = retry_count + 1
           backoff_seconds = exponential_backoff(next_retry)
@@ -150,7 +150,7 @@ module Worker
             persistent: true,
             headers: {
               "x-retry-count" => next_retry,
-              "x-last-error" => error.class.name,
+              "x-last-error" => e.class.name,
               "x-backoff-seconds" => backoff_seconds
             }
           )
@@ -160,7 +160,7 @@ module Worker
             retry_count: next_retry,
             moved_to_dlq: false,
             error_code: "unexpected_error",
-            error_class: error.class.name,
+            error_class: e.class.name,
             started_at: started_at
           )
         else
@@ -171,7 +171,7 @@ module Worker
             retry_count: retry_count,
             moved_to_dlq: true,
             error_code: "unexpected_error",
-            error_class: error.class.name,
+            error_class: e.class.name,
             started_at: started_at
           )
         end
@@ -192,7 +192,7 @@ module Worker
       end
 
       def exponential_backoff(attempt)
-        [ 2**([ attempt - 1, 0 ].max), MAX_BACKOFF_SECONDS ].min
+        [2**[attempt - 1, 0].max, MAX_BACKOFF_SECONDS].min
       end
 
       def record_metric(event:, status:, retry_count:, moved_to_dlq:, started_at:, error_code: nil, error_class: nil)

@@ -49,7 +49,7 @@ module Worker
             return :duplicate
           end
 
-          connection.exec_params("UPDATE jobs SET status = 'processing', updated_at = NOW() WHERE id = $1", [ ids[:job_id] ])
+          connection.exec_params("UPDATE jobs SET status = 'processing', updated_at = NOW() WHERE id = $1", [ids[:job_id]])
           sync_job_snapshot!(connection, ids[:job_id])
 
           attempt_number = next_attempt_number(connection, ids[:job_id])
@@ -91,21 +91,21 @@ module Worker
         end
 
         :processed
-      rescue TransientProcessingError => error
+      rescue TransientProcessingError => e
         fail_attempt(attempt_id, ids, error_code: "transient_processing_error", error_category: "transient_infra", retryable: true)
         release_event_reservation(ids)
-        logger.warn("transient processing failure event_id=#{ids && ids[:event_id]} job=#{ids && ids[:job_id]} retry_count=#{retry_count} error=#{error.message}")
+        logger.warn("transient processing failure event_id=#{ids && ids[:event_id]} job=#{ids && ids[:job_id]} retry_count=#{retry_count} error=#{e.message}")
         raise
-      rescue TerminalProcessingError => error
+      rescue TerminalProcessingError => e
         fail_attempt(attempt_id, ids, error_code: "terminal_processing_error", error_category: "integration", retryable: false)
         fail_job(ids, error_code: "terminal_processing_error", error_category: "integration")
-        logger.error("terminal processing failure event_id=#{ids && ids[:event_id]} job=#{ids && ids[:job_id]} error=#{error.message}")
+        logger.error("terminal processing failure event_id=#{ids && ids[:event_id]} job=#{ids && ids[:job_id]} error=#{e.message}")
         raise
-      rescue StandardError => error
+      rescue StandardError => e
         fail_attempt(attempt_id, ids, error_code: "unexpected_processing_error", error_category: "unexpected", retryable: true)
         release_event_reservation(ids)
-        logger.error("unexpected processing failure event_id=#{ids && ids[:event_id]} job=#{ids && ids[:job_id]} error=#{error.class.name}")
-        raise TransientProcessingError, "unexpected_processing_error: #{error.class.name}"
+        logger.error("unexpected processing failure event_id=#{ids && ids[:event_id]} job=#{ids && ids[:job_id]} error=#{e.class.name}")
+        raise TransientProcessingError, "unexpected_processing_error: #{e.class.name}"
       end
 
       private
@@ -115,9 +115,9 @@ module Worker
       def validate_event!(event)
         required = %w[event_id event_name payload upload_id job_id trace_id]
         missing = required.reject { |key| event.key?(key) }
-        raise TerminalProcessingError, "missing_required_fields=#{missing.join(',')}" if missing.any?
+        raise TerminalProcessingError, "missing_required_fields=#{missing.join(",")}" if missing.any?
 
-        raise TerminalProcessingError, "invalid_event_name=#{event['event_name']}" unless event["event_name"] == "upload.received.v1"
+        raise TerminalProcessingError, "invalid_event_name=#{event["event_name"]}" unless event["event_name"] == "upload.received.v1"
       end
 
       def event_identifiers(event)
@@ -159,19 +159,19 @@ module Worker
         return if ids.nil? || ids[:event_id].to_s.empty?
 
         db_client.with_connection do |connection|
-          connection.exec_params("DELETE FROM worker_consumed_events WHERE event_id = $1", [ ids[:event_id] ])
+          connection.exec_params("DELETE FROM worker_consumed_events WHERE event_id = $1", [ids[:event_id]])
         end
       rescue StandardError
         # Best effort release; retry path still protected by max-retries.
       end
 
       def lock_job!(connection, job_id, upload_id)
-        result = connection.exec_params("SELECT id FROM jobs WHERE id = $1 AND upload_id = $2 FOR UPDATE", [ job_id, upload_id ])
+        result = connection.exec_params("SELECT id FROM jobs WHERE id = $1 AND upload_id = $2 FOR UPDATE", [job_id, upload_id])
         raise TerminalProcessingError, "job_not_found_or_upload_mismatch" if result.ntuples.zero?
       end
 
       def next_attempt_number(connection, job_id)
-        result = connection.exec_params("SELECT COALESCE(MAX(attempt_number), 0) AS max_attempt FROM processing_attempts WHERE job_id = $1", [ job_id ])
+        result = connection.exec_params("SELECT COALESCE(MAX(attempt_number), 0) AS max_attempt FROM processing_attempts WHERE job_id = $1", [job_id])
         result[0]["max_attempt"].to_i + 1
       end
 
@@ -184,7 +184,7 @@ module Worker
             VALUES
               ($1, $2, $3, $4, 'started', $5, $6, NOW(), NOW(), NOW(), $7::jsonb)
           SQL
-          [ attempt_id, ids[:job_id], attempt_number, OPERATION, ids[:trace_id], ids[:request_id], {}.to_json ]
+          [attempt_id, ids[:job_id], attempt_number, OPERATION, ids[:trace_id], ids[:request_id], {}.to_json]
         )
         attempt_id
       end
@@ -197,10 +197,10 @@ module Worker
         parser.parse(content_type: content_type, raw_content: raw_content)
       rescue Aws::S3::Errors::NoSuchKey
         raise TerminalProcessingError, "storage_object_not_found"
-      rescue Aws::S3::Errors::ServiceError, Seahorse::Client::NetworkingError => error
-        raise TransientProcessingError, "storage_transient_error: #{error.class.name}"
-      rescue KeyError => error
-        raise TerminalProcessingError, "payload_missing_key: #{error.message}"
+      rescue Aws::S3::Errors::ServiceError, Seahorse::Client::NetworkingError => e
+        raise TransientProcessingError, "storage_transient_error: #{e.class.name}"
+      rescue KeyError => e
+        raise TerminalProcessingError, "payload_missing_key: #{e.message}"
       end
 
       def create_batch!(connection, ids, parse_result)
@@ -213,7 +213,7 @@ module Worker
             VALUES
               ($1, $2, 1, $3, $4, $5, $6, $7, NOW(), NOW())
           SQL
-          [ batch_id, ids[:job_id], status, parse_result.input_rows, parse_result.valid_rows, parse_result.invalid_rows, ids[:trace_id] ]
+          [batch_id, ids[:job_id], status, parse_result.input_rows, parse_result.valid_rows, parse_result.invalid_rows, ids[:trace_id]]
         )
         batch_id
       end
@@ -247,12 +247,12 @@ module Worker
 
         connection.exec_params(
           "UPDATE jobs SET status = $1, quarantined_records_count = $2, updated_at = NOW() WHERE id = $3",
-          [ new_status, parse_result.invalid_rows, ids[:job_id] ]
+          [new_status, parse_result.invalid_rows, ids[:job_id]]
         )
         sync_job_snapshot!(connection, ids[:job_id])
         connection.exec_params(
           "UPDATE processing_attempts SET status = 'succeeded', finished_at = NOW(), updated_at = NOW() WHERE id = $1",
-          [ attempt_id ]
+          [attempt_id]
         )
         create_audit_event!(
           connection,
@@ -292,7 +292,7 @@ module Worker
                   metadata = jsonb_build_object('error_category', $3)
               WHERE id = $4
             SQL
-            [ error_code, retryable, error_category, attempt_id ]
+            [error_code, retryable, error_category, attempt_id]
           )
           create_audit_event!(
             connection,
@@ -321,7 +321,7 @@ module Worker
         db_client.with_connection do |connection|
           connection.exec_params(
             "UPDATE jobs SET status = 'failed', error_code = $1, error_category = $2, updated_at = NOW() WHERE id = $3",
-            [ error_code, error_category, ids[:job_id] ]
+            [error_code, error_category, ids[:job_id]]
           )
           sync_job_snapshot!(connection, ids[:job_id])
           create_audit_event!(
@@ -389,7 +389,7 @@ module Worker
               last_synced_at = EXCLUDED.last_synced_at,
               updated_at = NOW()
           SQL
-          [ job_id ]
+          [job_id]
         )
       end
 
