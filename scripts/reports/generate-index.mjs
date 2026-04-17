@@ -41,9 +41,10 @@ function readSummary(label, relativePath) {
   }
 
   try {
+    const rawSummary = readFileSync(absolutePath, 'utf8').replace(/^\uFEFF/, '')
     return {
       label,
-      ...JSON.parse(readFileSync(absolutePath, 'utf8')),
+      ...JSON.parse(rawSummary),
     }
   } catch (error) {
     return {
