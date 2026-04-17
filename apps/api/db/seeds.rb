@@ -1,8 +1,9 @@
-def ensure_seed_user(email:, full_name:, role:, password:)
+def ensure_seed_user(email:, full_name:, role:, password:, organization_id:)
   user = User.find_or_initialize_by(email: email)
   user.full_name = full_name
   user.role = role
   user.status = :active
+  user.organization_id = organization_id
   user.password = password
   user.password_confirmation = password
   user.save!
@@ -16,14 +17,16 @@ operator = ensure_seed_user(
   email: "operator@streamgate.local",
   full_name: "StreamGate Operator",
   role: :operator,
-  password: default_operator_password
+  password: default_operator_password,
+  organization_id: "org_streamgate"
 )
 
 admin = ensure_seed_user(
   email: "admin@streamgate.local",
   full_name: "StreamGate Admin",
   role: :admin,
-  password: default_admin_password
+  password: default_admin_password,
+  organization_id: "org_streamgate"
 )
 
 seed_trace_id = "trace_seed_sprint_1"

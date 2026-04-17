@@ -3,6 +3,7 @@ operator:
   email: operator@example.com
   full_name: Fixture Operator
   password_digest: <%= BCrypt::Password.create('StrongPass123!') %>
+  organization_id: org_fixture_alpha
   role: operator
   status: active
 
@@ -11,5 +12,24 @@ admin:
   email: admin@example.com
   full_name: Fixture Admin
   password_digest: <%= BCrypt::Password.create('StrongPass123!') %>
+  organization_id: org_fixture_alpha
   role: admin
+  status: active
+
+peer_operator:
+  id: user_fixture_peer_operator
+  email: peer@example.com
+  full_name: Fixture Peer Operator
+  password_digest: <%= BCrypt::Password.create('StrongPass123!') %>
+  organization_id: org_fixture_alpha
+  role: operator
+  status: active
+
+external_operator:
+  id: user_fixture_external_operator
+  email: external@example.com
+  full_name: Fixture External Operator
+  password_digest: <%= BCrypt::Password.create('StrongPass123!') %>
+  organization_id: org_fixture_beta
+  role: operator
   status: active

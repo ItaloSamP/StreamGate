@@ -52,7 +52,7 @@ jobs:
         run: docker compose --profile app up -d --build
 
       - name: Validate infra smoke
-        run: python scripts/compose/compose-smoke.py
+        run: python scripts/smokes/compose-smoke.py
 
       - name: Wait for API and Web
         run: |
@@ -90,7 +90,7 @@ jobs:
           SMOKE_API_BASE_URL: http://localhost:3000
           SMOKE_OPERATOR_EMAIL: operator@streamgate.local
           SEED_OPERATOR_PASSWORD: ChangeMe123!
-        run: python scripts/compose/upload-signed-smoke.py
+        run: python scripts/smokes/upload-signed-smoke.py
 
       - name: Run web integration auth tests
         working-directory: apps/web

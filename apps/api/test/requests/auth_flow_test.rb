@@ -179,6 +179,7 @@ class AuthFlowTest < ActionDispatch::IntegrationTest
     User.create!(
       full_name: "Integration User",
       email: email,
+      organization_id: "org_auth_test",
       role: :operator,
       status: :active,
       password: password,
@@ -195,4 +196,3 @@ class AuthFlowTest < ActionDispatch::IntegrationTest
     parsed_json
   end
 end
-

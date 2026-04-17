@@ -29,12 +29,14 @@ class User < ApplicationRecord
   has_many :processing_attempts, foreign_key: :initiated_by_id, inverse_of: :initiated_by, dependent: :nullify
   has_many :audit_events, foreign_key: :actor_id, inverse_of: :actor, dependent: :nullify
   has_many :auth_sessions, dependent: :destroy
+  has_many :analytics_job_snapshots, foreign_key: :actor_id, inverse_of: :actor, dependent: :restrict_with_exception
 
   normalizes :email, with: ->(value) { value.to_s.strip.downcase }
 
   validates :email, presence: true, uniqueness: true,
                     format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :full_name, presence: true
+  validates :organization_id, presence: true
   validates :password,
             length: { minimum: PASSWORD_MIN_LENGTH, maximum: PASSWORD_MAX_LENGTH },
             format: {

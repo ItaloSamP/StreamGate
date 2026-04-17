@@ -23,6 +23,7 @@ class Upload < ApplicationRecord
   belongs_to :user
   has_many :jobs, dependent: :restrict_with_exception
   has_many :audit_events, as: :auditable, dependent: :restrict_with_exception
+  has_many :analytics_job_snapshots, dependent: :restrict_with_exception
 
   validates :filename, :content_type, :storage_key, :checksum_sha256, :trace_id, presence: true
   validates :byte_size, numericality: { greater_than: 0 }

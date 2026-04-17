@@ -28,7 +28,8 @@ class ApplicationController < ActionController::API
       code: code,
       message: message,
       request_id: Current.request_id,
-      trace_id: Current.trace_id
+      trace_id: Current.trace_id,
+      correlation_id: Current.correlation_id
     }
     error[:details] = details if details.present?
 
@@ -94,5 +95,7 @@ class ApplicationController < ActionController::API
   def set_request_context
     Current.request_id = request.request_id
     Current.trace_id = request.headers["X-Trace-Id"].presence || StreamGate::Id.generate("trace")
+    Current.correlation_id = request.headers["X-Correlation-Id"].presence || Current.request_id
+    response.set_header("X-Correlation-Id", Current.correlation_id)
   end
 end

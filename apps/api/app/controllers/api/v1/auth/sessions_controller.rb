@@ -85,7 +85,7 @@ module Api
             period_seconds: window_seconds
           )
 
-          return if enforce_rate_limit!(
+          enforce_rate_limit!(
             scope: "auth.login.identifier",
             discriminator: login_params[:email],
             limit: Rails.application.config.x.auth_login_limit_per_identifier,

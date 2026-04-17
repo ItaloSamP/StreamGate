@@ -5,6 +5,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd -- "$SCRIPT_DIR/../.." && pwd)"
 
 source "$SCRIPT_DIR/ci-local-lib.sh"
+export CI_LOCAL_REPORTS_DIR="$ROOT_DIR/scripts/ci/reports"
 
 mode="${1:-all}"
 case "$mode" in
@@ -22,6 +23,7 @@ cleanup() {
   fi
 }
 trap cleanup EXIT
+ci_local_init_reports "$CI_LOCAL_REPORTS_DIR"
 
 ensure_env_file() {
   if [[ -f "$ROOT_DIR/.env" ]]; then
@@ -50,6 +52,18 @@ get_powershell_file_command() {
     printf 'powershell -ExecutionPolicy Bypass -File %q' "$file_path"
     return 0
   fi
+
+  return 1
+}
+
+has_failed_workflow() {
+  local workflow status detail
+  for entry in "${CI_LOCAL_RESULTS[@]}"; do
+    IFS='|' read -r workflow status detail <<< "$entry"
+    if [[ "$status" != 'PASS' ]]; then
+      return 0
+    fi
+  done
 
   return 1
 }
@@ -225,8 +239,14 @@ run_e2e_workflow() {
   ensure_env_file
 
   local seed_operator_password
+  local seed_admin_password
   seed_operator_password="$(get_dotenv_value "$ROOT_DIR/.env" 'SEED_OPERATOR_PASSWORD')"
+  seed_admin_password="$(get_dotenv_value "$ROOT_DIR/.env" 'SEED_ADMIN_PASSWORD')"
   [[ -z "$seed_operator_password" ]] && seed_operator_password='ChangeMe123!'
+  [[ -z "$seed_admin_password" ]] && seed_admin_password="$seed_operator_password"
+
+  export SEED_OPERATOR_PASSWORD="$seed_operator_password"
+  export SEED_ADMIN_PASSWORD="$seed_admin_password"
 
   ci_local_run_step "$workflow" 'Install web dependencies' "$ROOT_DIR/apps/web" 'CI=true pnpm install --frozen-lockfile --config.confirmModulesPurge=false' || { failed=1; reason='Falha em Install web dependencies.'; }
 
@@ -239,19 +259,19 @@ run_e2e_workflow() {
   fi
 
   if [[ $failed -eq 0 ]]; then
-    ci_local_run_step "$workflow" 'Seed auth fixtures' "$ROOT_DIR" "docker compose exec -T api bundle exec rails db:seed && docker compose exec -T api bundle exec rails runner \"abort('operator seed missing') unless User.exists?(email: 'operator@streamgate.local')\"" || { failed=1; reason='Falha em Seed auth fixtures.'; }
+    ci_local_run_step "$workflow" 'Seed auth fixtures' "$ROOT_DIR" "docker compose exec -T -e SEED_OPERATOR_PASSWORD -e SEED_ADMIN_PASSWORD api bundle exec rails db:seed && docker compose exec -T api bundle exec rails runner \"abort('operator seed missing') unless User.exists?(email: 'operator@streamgate.local')\"" || { failed=1; reason='Falha em Seed auth fixtures.'; }
   fi
 
   if [[ $failed -eq 0 ]]; then
-    ci_local_run_step "$workflow" 'Run signed upload operational smoke' "$ROOT_DIR" "SEED_OPERATOR_PASSWORD=$seed_operator_password SMOKE_API_BASE_URL=http://localhost:3000 python scripts/compose/upload-signed-smoke.py" || { failed=1; reason='Falha em Run signed upload operational smoke.'; }
+    ci_local_run_step "$workflow" 'Run signed upload operational smoke' "$ROOT_DIR" "SMOKE_API_BASE_URL=http://localhost:3000 python scripts/smokes/upload-signed-smoke.py" || { failed=1; reason='Falha em Run signed upload operational smoke.'; }
   fi
 
   if [[ $failed -eq 0 ]]; then
-    ci_local_run_step "$workflow" 'Run web integration auth tests' "$ROOT_DIR/apps/web" "AUTH_INTEGRATION_BASE_URL=http://localhost:3000 SEED_OPERATOR_PASSWORD=$seed_operator_password pnpm test:integration" || { failed=1; reason='Falha em Run web integration auth tests.'; }
+    ci_local_run_step "$workflow" 'Run web integration auth tests' "$ROOT_DIR/apps/web" "AUTH_INTEGRATION_BASE_URL=http://localhost:3000 pnpm test:integration" || { failed=1; reason='Falha em Run web integration auth tests.'; }
   fi
 
   if [[ $failed -eq 0 ]]; then
-    ci_local_run_step "$workflow" 'Run auth e2e tests' "$ROOT_DIR/apps/web" "E2E_BASE_URL=http://localhost:5173 SEED_OPERATOR_PASSWORD=$seed_operator_password pnpm test:e2e" || { failed=1; reason='Falha em Run auth e2e tests.'; }
+    ci_local_run_step "$workflow" 'Run auth e2e tests' "$ROOT_DIR/apps/web" "E2E_BASE_URL=http://localhost:5173 pnpm test:e2e" || { failed=1; reason='Falha em Run auth e2e tests.'; }
   fi
 
   ci_local_run_step "$workflow" 'Stop auth app stack' "$ROOT_DIR" './scripts/dev/dev-down.sh' >/dev/null 2>&1 || true
@@ -316,7 +336,7 @@ run_docker_workflow() {
     ci_local_run_step "$workflow" 'Build Worker development image' "$ROOT_DIR" 'docker build -f apps/worker/Dockerfile.dev -t streamgate-worker-dev:ci ./apps/worker' || { failed=1; reason='Falha em Build Worker development image.'; }
   fi
   if [[ $failed -eq 0 ]]; then
-    ci_local_run_step "$workflow" 'Smoke test infra profile' "$ROOT_DIR" 'docker compose up -d && python scripts/compose/compose-smoke.py && docker compose ps' || { failed=1; reason='Falha em Smoke test infra profile.'; }
+    ci_local_run_step "$workflow" 'Run all smoke tests' "$ROOT_DIR" 'bash scripts/smokes/run-smokes.sh' || { failed=1; reason='Falha em Run all smoke tests.'; }
   fi
 
   ci_local_run_step "$workflow" 'Stop compose stack' "$ROOT_DIR" './scripts/dev/dev-down.sh' >/dev/null 2>&1 || true
@@ -331,9 +351,9 @@ run_docker_workflow() {
 case "$mode" in
   all)
     run_frontend_workflow
-    run_backend_workflow
-    run_e2e_workflow
-    run_docker_workflow
+    if ! has_failed_workflow; then run_backend_workflow; fi
+    if ! has_failed_workflow; then run_e2e_workflow; fi
+    if ! has_failed_workflow; then run_docker_workflow; fi
     ;;
   frontend)
     run_frontend_workflow
@@ -350,7 +370,11 @@ case "$mode" in
 esac
 
 if ci_local_print_summary; then
+  ci_local_write_reports "$CI_LOCAL_REPORTS_DIR" "$mode"
+  node "$ROOT_DIR/scripts/reports/generate-index.mjs" || true
   exit 0
 else
+  ci_local_write_reports "$CI_LOCAL_REPORTS_DIR" "$mode"
+  node "$ROOT_DIR/scripts/reports/generate-index.mjs" || true
   exit 1
 fi

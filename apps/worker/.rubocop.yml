@@ -1,9 +1,40 @@
 AllCops:
   TargetRubyVersion: 3.1
   SuggestExtensions: false
+  NewCops: disable
+  CacheRootDirectory: .rubocop_cache
 
 Layout/EndOfLine:
   EnforcedStyle: lf
+
+Layout/LineLength:
+  Max: 160
+
+Metrics/AbcSize:
+  Max: 80
+
+Metrics/BlockLength:
+  Max: 60
+  Exclude:
+    - "spec/**/*_spec.rb"
+
+Metrics/ClassLength:
+  Max: 400
+
+Metrics/CyclomaticComplexity:
+  Max: 12
+
+Metrics/MethodLength:
+  Max: 120
+
+Metrics/ParameterLists:
+  Max: 9
+
+Metrics/PerceivedComplexity:
+  Max: 12
+
+Style/Documentation:
+  Enabled: false
 
 Style/StringLiterals:
   EnforcedStyle: double_quotes

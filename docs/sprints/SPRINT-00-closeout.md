@@ -78,7 +78,7 @@
 
 - Novas superficies sensiveis abertas: nenhuma superficie nova real de negocio foi aberta; auth, upload, broker, storage e analytics permaneceram como fronteiras futuras formalmente mapeadas
 - Gaps de seguranca identificados: auth ainda mockado no frontend, ausencia de auth real, ausencia de scanners automatizados completos, falta de governanca e supply-chain hardening
-- Gaps operacionais identificados: worker ainda placeholder, contracts ainda placeholder, ausencia de runbooks operacionais maduros e baixa maturidade de automacao cross-env
+- Gaps operacionais identificados naquele fechamento: worker ainda sem runtime real, contracts ainda sem pacote funcional maduro, ausencia de runbooks operacionais maduros e baixa maturidade de automacao cross-env
 - Gaps de observabilidade identificados: ausencia de metricas reais, alertas e rastreamento operacional vivo; so a base conceitual ficou fechada
 - Runbooks ou alertas que precisam ser criados/atualizados: runbooks do worker, upload, incidentes, replay e operacao assistida entram nas sprints futuras
 

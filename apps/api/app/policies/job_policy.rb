@@ -4,7 +4,7 @@ class JobPolicy < ApplicationPolicy
   end
 
   def show?
-    admin? || actor_owns_upload?
+    admin? || same_organization?
   end
 
   def retry?
@@ -13,7 +13,7 @@ class JobPolicy < ApplicationPolicy
 
   private
 
-  def actor_owns_upload?
-    actor.present? && record.upload.user_id == actor.id
+  def same_organization?
+    actor.present? && record.requested_by.organization_id == actor.organization_id
   end
 end

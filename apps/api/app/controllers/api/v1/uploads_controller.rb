@@ -78,7 +78,7 @@ module Api
       end
 
       def index
-        scope = current_actor.admin? ? Upload.all : current_actor.uploads
+        scope = current_actor.admin? ? Upload.all : Upload.joins(:user).where(users: { organization_id: current_actor.organization_id })
 
         status = params[:status].to_s.strip
         if status.present?
@@ -328,4 +328,3 @@ module Api
     end
   end
 end
-

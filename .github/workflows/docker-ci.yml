@@ -52,34 +52,10 @@ jobs:
       - name: Build Worker development image
         run: docker build -f apps/worker/Dockerfile.dev -t streamgate-worker-dev:ci ./apps/worker
 
-      - name: Smoke test infra profile
+      - name: Run all smoke tests
         run: |
-          docker compose up -d
-          python scripts/compose/compose-smoke.py
-          docker compose ps
-      - name: Stop infra profile stack
-        run: docker compose down -v
-
-      - name: Smoke test signed upload flow (app profile)
-        run: |
-          cp .env.example .env
           echo MINIO_CORS_ALLOWED_ORIGIN=http://localhost:5173 >> .env
-          docker compose --profile app up -d --build
-          python scripts/compose/compose-smoke.py
-          for i in {1..60}; do
-            if curl -fsS http://localhost:3000/up >/dev/null; then
-              echo "API ready"
-              break
-            fi
-            if [ "$i" -eq 60 ]; then
-              echo "API did not become ready in time" >&2
-              exit 1
-            fi
-            sleep 2
-          done
-          docker compose exec -T api bundle exec rails db:seed
-          python scripts/compose/upload-signed-smoke.py
-          docker compose ps
+          bash scripts/smokes/run-smokes.sh
 
       - name: Stop compose stack
         if: always()

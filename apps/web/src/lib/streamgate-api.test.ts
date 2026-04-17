@@ -212,4 +212,81 @@ describe('streamgateApi auth adapter', () => {
       },
     })
   })
+
+  it('aligns Sprint 4 operational endpoints with api v1 and keeps query shape stable', async () => {
+    const getEnvelope = vi.fn()
+      .mockResolvedValueOnce({
+        data: {
+          window: { from: '2026-04-06T00:00:00Z', to: '2026-04-13T00:00:00Z', preset: 'last_7d', timezone: 'UTC' },
+          kpis: {
+            uploads_total: 2,
+            jobs_total: 2,
+            jobs_processing: 1,
+            jobs_completed: 1,
+            jobs_failed: 0,
+            jobs_quarantined: 0,
+            quarantine_records_total: 0,
+            audit_events_total: 3,
+          },
+          breakdowns: { status: [], actor: [], source: [] },
+        },
+      })
+      .mockResolvedValueOnce({ data: [{ id: 'quarantine_1', severity: 'warning' }] })
+      .mockResolvedValueOnce({ data: [{ id: 'audit_1', action: 'upload.registered' }] })
+      .mockResolvedValueOnce({ data: [{ routing_key: 'upload.received.v1.dlq', retry_count: 3, headers: {}, payload: {} }] })
+
+    const api = createStreamgateApi({
+      get: vi.fn(),
+      post: vi.fn(),
+      getEnvelope,
+    })
+
+    await api.getAnalytics({ preset: 'last_7d', timezone: 'UTC', sort_by: 'count', sort_order: 'desc' })
+    await api.listQuarantine({ preset: 'last_24h', severity: 'warning', page: 2, per_page: 20, sort_by: 'created_at', sort_order: 'desc' })
+    await api.listAuditEvents({ preset: 'last_30d', actor_id: 'user_1', search: 'upload', page: 1, per_page: 20 })
+    await api.listQuarantineDlq({ dead_letter_reason: 'max_retries_exceeded', sort_by: 'retry_count', sort_order: 'desc' })
+
+    expect(getEnvelope).toHaveBeenNthCalledWith(1, '/api/v1/analytics', {
+      query: {
+        preset: 'last_7d',
+        from: undefined,
+        to: undefined,
+        timezone: 'UTC',
+        sort_by: 'count',
+        sort_order: 'desc',
+        page: undefined,
+        per_page: undefined,
+        search: undefined,
+      },
+    })
+
+    expect(getEnvelope).toHaveBeenNthCalledWith(2, '/api/v1/quarantine', {
+      query: expect.objectContaining({
+        preset: 'last_24h',
+        severity: 'warning',
+        page: 2,
+        per_page: 20,
+        sort_by: 'created_at',
+        sort_order: 'desc',
+      }),
+    })
+
+    expect(getEnvelope).toHaveBeenNthCalledWith(3, '/api/v1/audit', {
+      query: expect.objectContaining({
+        preset: 'last_30d',
+        actor_id: 'user_1',
+        search: 'upload',
+        page: 1,
+        per_page: 20,
+      }),
+    })
+
+    expect(getEnvelope).toHaveBeenNthCalledWith(4, '/api/v1/quarantine/dlq', {
+      query: expect.objectContaining({
+        dead_letter_reason: 'max_retries_exceeded',
+        sort_by: 'retry_count',
+        sort_order: 'desc',
+      }),
+    })
+  })
 })

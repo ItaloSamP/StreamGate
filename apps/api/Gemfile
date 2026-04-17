@@ -34,6 +34,7 @@ gem "image_processing", "~> 1.2"
 
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 gem "rack-cors", "~> 2.0"
+gem "bunny", "~> 2.24"
 
 group :development do
   gem "rswag-api"
@@ -52,4 +53,7 @@ group :development, :test do
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
+
+  # Local coverage reports for the report hub.
+  gem "simplecov", require: false
 end

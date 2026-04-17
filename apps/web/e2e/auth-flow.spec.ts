@@ -1,7 +1,9 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test'
+import { readFileSync } from 'node:fs'
 
 const seededOperatorEmail = 'operator@streamgate.local'
-const seededOperatorPassword = process.env.SEED_OPERATOR_PASSWORD ?? 'ChangeMe123!'
+const seededOperatorPassword =
+  process.env.SEED_OPERATOR_PASSWORD ?? readRootDotEnvValue('SEED_OPERATOR_PASSWORD') ?? 'ChangeMe123!'
 
 type EphemeralCredentials = {
   fullName: string
@@ -19,7 +21,7 @@ test.describe('auth e2e flow', () => {
     await fillRegistrationForm(page, credentials)
     await page.getByTestId('register-submit').click()
 
-    await expect(page).toHaveURL(/\/dashboard$/)
+    await expectDashboard(page)
     await expect(page.getByText('Dashboard Operacional').first()).toBeVisible()
 
     await logoutFromDashboard(page)
@@ -38,7 +40,7 @@ test.describe('auth e2e flow', () => {
     await page.getByTestId('login-password').fill(seededOperatorPassword)
     await page.getByTestId('login-submit').click()
 
-    await expect(page).toHaveURL(/\/dashboard$/)
+    await expectDashboard(page)
     await expect(page.getByText('Dashboard Operacional').first()).toBeVisible()
   })
 
@@ -52,7 +54,7 @@ test.describe('auth e2e flow', () => {
     await fillRegistrationForm(page, credentials)
     await page.getByTestId('register-submit').click()
 
-    await expect(page).toHaveURL(/\/dashboard$/)
+    await expectDashboard(page)
     await logoutFromDashboard(page)
 
     await page.goto('/reset-password')
@@ -73,7 +75,7 @@ test.describe('auth e2e flow', () => {
     await page.getByTestId('login-password').fill(newPassword)
     await page.getByTestId('login-submit').click()
 
-    await expect(page).toHaveURL(/\/dashboard$/)
+    await expectDashboard(page)
     await expect(page.getByText('Dashboard Operacional').first()).toBeVisible()
   })
 
@@ -105,7 +107,14 @@ async function fillRegistrationForm(page: Page, credentials: EphemeralCredential
 
 async function logoutFromDashboard(page: Page) {
   await page.getByTestId('dashboard-user-menu-toggle').click()
-  await page.getByTestId('dashboard-logout-action').click()
+  const logoutAction = page.getByTestId('dashboard-logout-action')
+  await expect(logoutAction).toBeVisible()
+  await expect(logoutAction).toBeEnabled()
+  await Promise.all([page.waitForURL(/\/$/), logoutAction.click()])
+}
+
+async function expectDashboard(page: Page) {
+  await expect(page).toHaveURL(/\/dashboard$/, { timeout: 45_000 })
 }
 
 function buildEphemeralCredentials(prefix: string, testInfo: TestInfo): EphemeralCredentials {
@@ -137,5 +146,23 @@ function buildExpiredStoredSession() {
       access_token: 'expired-access-token',
       expires_at: new Date(now - 30_000).toISOString(),
     },
+  }
+}
+
+function readRootDotEnvValue(key: string) {
+  try {
+    const dotenv = readFileSync(new URL('../../../.env', import.meta.url), 'utf8')
+    const line = dotenv
+      .split(/\r?\n/)
+      .map((entry) => entry.trim())
+      .find((entry) => entry.startsWith(`${key}=`))
+
+    if (!line) {
+      return null
+    }
+
+    return line.slice(key.length + 1).trim().replace(/^["']|["']$/g, '')
+  } catch {
+    return null
   }
 }

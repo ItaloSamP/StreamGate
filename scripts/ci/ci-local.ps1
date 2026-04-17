@@ -8,8 +8,26 @@ $PSNativeCommandUseErrorActionPreference = $false
 
 $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 . (Join-Path $root 'scripts/compose/compose-health.ps1')
+$ciReportsDir = Join-Path $root 'scripts/ci/reports'
+$ciLogsDir = Join-Path $ciReportsDir 'logs'
 $results = New-Object System.Collections.Generic.List[object]
+$stepResults = New-Object System.Collections.Generic.List[object]
 $createdEnv = $false
+$ciStartedAt = Get-Date
+
+function Initialize-CiReports {
+  New-Item -ItemType Directory -Force -Path $ciLogsDir | Out-Null
+  foreach ($item in @('summary.json', 'report.html')) {
+    $target = Join-Path $ciReportsDir $item
+    if (Test-Path $target) { Remove-Item $target -Force }
+  }
+  Get-ChildItem -Path $ciLogsDir -File -ErrorAction SilentlyContinue | Remove-Item -Force
+}
+
+function ConvertTo-ReportSlug {
+  param([string]$Value)
+  return ($Value.ToLowerInvariant() -replace '[^a-z0-9]+', '-' -replace '(^-|-$)', '')
+}
 
 function Write-Rule {
   Write-Host ('=' * 80)
@@ -37,6 +55,16 @@ function Add-WorkflowResult {
   }) | Out-Null
 }
 
+function Test-WorkflowFailure {
+  foreach ($result in $results) {
+    if ($result.Status -ne 'PASS') {
+      return $true
+    }
+  }
+
+  return $false
+}
+
 function Ensure-EnvFile {
   $envPath = Join-Path $root '.env'
   if (Test-Path $envPath) {
@@ -61,6 +89,7 @@ function Invoke-WorkflowStep {
   Write-Host "Diretorio: $WorkingDirectory"
   Write-Host "Comando: $Command"
   Write-Host 'Status: RUNNING'
+  $startedAt = Get-Date
 
   Push-Location $WorkingDirectory
   try {
@@ -73,6 +102,24 @@ function Invoke-WorkflowStep {
     $ErrorActionPreference = $previousPreference
     Pop-Location
   }
+
+  $duration = [Math]::Round(((Get-Date) - $startedAt).TotalSeconds, 2)
+  $status = if ($exitCode -eq 0) { 'PASS' } else { 'FAIL' }
+  $logPath = Join-Path $ciLogsDir "$((ConvertTo-ReportSlug -Value "$WorkflowName-$StepName")).log"
+  if ($null -ne $output -and @($output).Count -gt 0) {
+    $output | Set-Content -Path $logPath -Encoding utf8
+  }
+  else {
+    '(sem output)' | Set-Content -Path $logPath -Encoding utf8
+  }
+  $script:stepResults.Add([pscustomobject]@{
+    Workflow = $WorkflowName
+    Step = $StepName
+    Status = $status
+    ExitCode = $exitCode
+    DurationSeconds = $duration
+    LogPath = ($logPath.Substring($root.Length + 1) -replace '\\', '/')
+  }) | Out-Null
 
   Write-Host '--- output start ---'
   if ($null -ne $output -and @($output).Count -gt 0) {
@@ -95,6 +142,59 @@ function Invoke-WorkflowStep {
     Output = @($output)
   }
 }
+
+function Write-CiReports {
+  $finishedAt = Get-Date
+  $failureCount = @($results | Where-Object { $_.Status -ne 'PASS' }).Count
+  $status = if ($failureCount -eq 0) { 'PASS' } else { 'FAIL' }
+  $exitCode = if ($failureCount -eq 0) { 0 } else { 1 }
+  $summary = [ordered]@{
+    name = 'Local CI suite'
+    status = $status
+    exitCode = $exitCode
+    startedAt = $ciStartedAt.ToUniversalTime().ToString('o')
+    finishedAt = $finishedAt.ToUniversalTime().ToString('o')
+    durationSeconds = [Math]::Round(($finishedAt - $ciStartedAt).TotalSeconds, 2)
+    cwd = '.'
+    command = "scripts/ci/ci-local.ps1 $Workflow"
+    reportPath = 'scripts/ci/reports/report.html'
+    artifacts = @(
+      [ordered]@{ label = 'CI logs'; path = 'scripts/ci/reports/logs' }
+    )
+    workflows = $results.ToArray()
+    steps = $stepResults.ToArray()
+  }
+  $summary | ConvertTo-Json -Depth 8 | Set-Content -Path (Join-Path $ciReportsDir 'summary.json') -Encoding utf8
+
+  $rows = @($stepResults | ForEach-Object {
+    "<tr><td>$($_.Workflow)</td><td>$($_.Step)</td><td class='$($_.Status.ToLowerInvariant())'>$($_.Status)</td><td>$($_.DurationSeconds)s</td><td><a href='logs/$([IO.Path]::GetFileName($_.LogPath))'>log</a></td></tr>"
+  }) -join "`n"
+  $html = @"
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Local CI Suite</title>
+  <style>
+    body { margin: 0; font-family: "Segoe UI", sans-serif; background: #10130f; color: #f8f2dc; }
+    main { max-width: 1120px; margin: 0 auto; padding: 36px 20px; }
+    h1 { font-size: clamp(2rem, 5vw, 4rem); letter-spacing: -.05em; }
+    table { width: 100%; border-collapse: collapse; background: #1b2118; border-radius: 18px; overflow: hidden; }
+    th, td { padding: 14px; border-bottom: 1px solid #33402c; text-align: left; }
+    .pass { color: #98e6a2; font-weight: 800; }
+    .fail { color: #ff8c76; font-weight: 800; }
+    a { color: #d7ff72; }
+  </style>
+</head>
+<body><main><h1>Local CI Suite</h1><p>Status: <strong class="$($status.ToLowerInvariant())">$status</strong></p><table><thead><tr><th>Workflow</th><th>Step</th><th>Status</th><th>Duracao</th><th>Log</th></tr></thead><tbody>$rows</tbody></table></main></body>
+</html>
+"@
+  $html | Set-Content -Path (Join-Path $ciReportsDir 'report.html') -Encoding utf8
+  try { & node (Join-Path $root 'scripts/reports/generate-index.mjs') | Out-Host } catch {}
+}
+
+Initialize-CiReports
 
 function Test-CommandAvailable {
   param([string]$Name)
@@ -248,9 +348,14 @@ function Run-E2EWorkflow {
 
   $seedOperatorPassword = Get-DotEnvValue -Path (Join-Path $root '.env') -Key 'SEED_OPERATOR_PASSWORD'
   if ([string]::IsNullOrWhiteSpace($seedOperatorPassword)) { $seedOperatorPassword = 'ChangeMe123!' }
+  $seedAdminPassword = Get-DotEnvValue -Path (Join-Path $root '.env') -Key 'SEED_ADMIN_PASSWORD'
+  if ([string]::IsNullOrWhiteSpace($seedAdminPassword)) { $seedAdminPassword = $seedOperatorPassword }
 
-  $integrationCommand = 'set "AUTH_INTEGRATION_BASE_URL=http://localhost:3000" && set "SEED_OPERATOR_PASSWORD=' + $seedOperatorPassword + '" && pnpm test:integration'
-  $e2eCommand = 'set "E2E_BASE_URL=http://localhost:5173" && set "SEED_OPERATOR_PASSWORD=' + $seedOperatorPassword + '" && pnpm test:e2e'
+  $env:SEED_OPERATOR_PASSWORD = $seedOperatorPassword
+  $env:SEED_ADMIN_PASSWORD = $seedAdminPassword
+
+  $integrationCommand = 'set "AUTH_INTEGRATION_BASE_URL=http://localhost:3000" && pnpm test:integration'
+  $e2eCommand = 'set "E2E_BASE_URL=http://localhost:5173" && pnpm test:e2e'
 
   $failed = $false
   $reason = 'Todos os passos passaram.'
@@ -258,7 +363,7 @@ function Run-E2EWorkflow {
     @{ Name = 'Install web dependencies'; Dir = (Join-Path $root 'apps/web'); Command = 'set CI=true && pnpm install --frozen-lockfile --config.confirmModulesPurge=false'; Reason = 'Falha em Install web dependencies.' },
     @{ Name = 'Install Playwright browsers'; Dir = (Join-Path $root 'apps/web'); Command = 'pnpm exec playwright install chromium firefox'; Reason = 'Falha em Install Playwright browsers.' },
     @{ Name = 'Start auth app stack'; Dir = $root; Command = 'powershell -ExecutionPolicy Bypass -File .\scripts\dev\dev-up.ps1 -Mode app -TimeoutSeconds 480'; Reason = 'Falha ao subir stack de aplicacao para e2e-auth.' },
-    @{ Name = 'Seed auth fixtures'; Dir = $root; Command = 'docker compose exec -T api bundle exec rails db:seed && docker compose exec -T api bundle exec rails runner "abort(''operator seed missing'') unless User.exists?(email: ''operator@streamgate.local'')"'; Reason = 'Falha em Seed auth fixtures.' },
+    @{ Name = 'Seed auth fixtures'; Dir = $root; Command = 'docker compose exec -T -e SEED_OPERATOR_PASSWORD -e SEED_ADMIN_PASSWORD api bundle exec rails db:seed && docker compose exec -T api bundle exec rails runner "abort(''operator seed missing'') unless User.exists?(email: ''operator@streamgate.local'')"'; Reason = 'Falha em Seed auth fixtures.' },
     @{ Name = 'Run web integration auth tests'; Dir = (Join-Path $root 'apps/web'); Command = $integrationCommand; Reason = 'Falha em Run web integration auth tests.' },
     @{ Name = 'Run auth e2e tests'; Dir = (Join-Path $root 'apps/web'); Command = $e2eCommand; Reason = 'Falha em Run auth e2e tests.' }
   )
@@ -292,20 +397,21 @@ function Run-DockerWorkflow {
   Ensure-EnvFile
 
   $composeHealthCommand = Get-PowerShellFileCommand -FilePath '.\\scripts\\compose\\compose-health.tests.ps1'
+  $bashHealthCommand = 'bash -lc "if ! command -v jq >/dev/null 2>&1; then echo ''SKIP: jq is not available in local WSL bash; GitHub docker-ci installs jq and validates this helper.''; exit 0; fi; bash scripts/compose/compose-health-tests.sh"'
 
   $failed = $false
   $reason = 'Todos os passos passaram.'
   $steps = @(
     @{ Name = 'Validate compose default config'; Dir = $root; Command = 'docker compose -f compose.yaml config'; Reason = 'Falha em Validate compose default config.' },
     @{ Name = 'Validate compose full profile'; Dir = $root; Command = 'docker compose -f compose.yaml --profile full config'; Reason = 'Falha em Validate compose full profile.' },
-    @{ Name = 'Validate WSL bash health helpers'; Dir = $root; Command = 'bash scripts/compose/compose-health-tests.sh'; Reason = 'Falha em Validate WSL bash health helpers.' },
+    @{ Name = 'Validate WSL bash health helpers'; Dir = $root; Command = $bashHealthCommand; Reason = 'Falha em Validate WSL bash health helpers.' },
     @{ Name = 'Validate PowerShell health helpers'; Dir = $root; Command = $composeHealthCommand; Reason = 'Falha em Validate PowerShell health helpers.' },
     @{ Name = 'Build API production image'; Dir = $root; Command = 'docker build -t streamgate-api:ci .\apps\api'; Reason = 'Falha em Build API production image.' },
     @{ Name = 'Build API development image'; Dir = $root; Command = 'docker build -f apps/api/Dockerfile.dev -t streamgate-api-dev:ci .\apps\api'; Reason = 'Falha em Build API development image.' },
     @{ Name = 'Build Web production image'; Dir = $root; Command = 'docker build -t streamgate-web:ci .\apps\web'; Reason = 'Falha em Build Web production image.' },
     @{ Name = 'Build Web development image'; Dir = $root; Command = 'docker build -f apps/web/Dockerfile.dev -t streamgate-web-dev:ci .\apps\web'; Reason = 'Falha em Build Web development image.' },
     @{ Name = 'Build Worker development image'; Dir = $root; Command = 'docker build -f apps/worker/Dockerfile.dev -t streamgate-worker-dev:ci .\apps\worker'; Reason = 'Falha em Build Worker development image.' },
-    @{ Name = 'Smoke test infra profile'; Dir = $root; Command = 'docker compose up -d && python scripts/compose/compose-smoke.py && docker compose ps'; Reason = 'Falha em Smoke test infra profile.' }
+    @{ Name = 'Run all smoke tests'; Dir = $root; Command = 'powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1'; Reason = 'Falha em Run all smoke tests.' }
   )
 
   foreach ($step in $steps) {
@@ -329,9 +435,9 @@ function Run-DockerWorkflow {
 switch ($Workflow) {
   'all' {
     Run-FrontendWorkflow
-    Run-BackendWorkflow
-    Run-E2EWorkflow
-    Run-DockerWorkflow
+    if (-not (Test-WorkflowFailure)) { Run-BackendWorkflow }
+    if (-not (Test-WorkflowFailure)) { Run-E2EWorkflow }
+    if (-not (Test-WorkflowFailure)) { Run-DockerWorkflow }
   }
   'frontend' { Run-FrontendWorkflow }
   'backend' { Run-BackendWorkflow }
@@ -364,7 +470,8 @@ if ($createdEnv -and (Test-Path (Join-Path $root '.env'))) {
   Remove-Item (Join-Path $root '.env')
 }
 
+Write-CiReports
+
 if ($failureCount -gt 0) {
   exit 1
 }
-

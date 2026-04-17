@@ -4,7 +4,7 @@ class UploadPolicy < ApplicationPolicy
   end
 
   def show?
-    admin? || owns_record?
+    admin? || same_organization?
   end
 
   def create?
@@ -13,7 +13,7 @@ class UploadPolicy < ApplicationPolicy
 
   private
 
-  def owns_record?
-    actor.present? && record.user_id == actor.id
+  def same_organization?
+    actor.present? && record.user.organization_id == actor.organization_id
   end
 end

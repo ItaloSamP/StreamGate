@@ -24,6 +24,7 @@ export type WorkspaceNavItem = {
   label: string
   href: WorkspaceRoute
   icon: WorkspaceIcon
+  adminOnly?: boolean
   badge?: {
     tone?: 'default' | 'info' | 'alert'
     text: string
@@ -45,21 +46,21 @@ export const workspaceNavGroups: { label: string; items: WorkspaceNavItem[] }[] 
     items: [
       { label: 'Dashboard', href: '/dashboard', icon: 'dashboard', match: 'exact' },
       { label: 'Upload', href: '/upload', icon: 'upload' },
-      { label: 'Jobs', href: '/jobs', icon: 'jobs', badge: { tone: 'info', text: '9' } },
+      { label: 'Jobs', href: '/jobs', icon: 'jobs' },
     ],
   },
   {
     label: 'Analise',
     items: [
       { label: 'Analytics', href: '/analytics', icon: 'analytics' },
-      { label: 'Quarentena', href: '/quarantine', icon: 'quarantine', badge: { tone: 'alert', text: '7' } },
-      { label: 'Event Log', href: '/events', icon: 'events', badge: { text: '3' } },
+      { label: 'Quarentena', href: '/quarantine', icon: 'quarantine' },
+      { label: 'Event Log', href: '/events', icon: 'events' },
     ],
   },
   {
     label: 'Sistema',
     items: [
-      { label: 'Auditoria', href: '/audit', icon: 'audit' },
+      { label: 'Auditoria', href: '/audit', icon: 'audit', adminOnly: true },
       { label: 'Configuracoes', href: '/settings', icon: 'settings' },
     ],
   },
@@ -161,4 +162,13 @@ export const jobUiStates = [
 
 export function getWorkspaceModule(route: WorkspaceRoute) {
   return workspaceModules.find((module) => module.route === route)
+}
+
+export function getVisibleWorkspaceNavGroups(role: 'operator' | 'admin' | 'service_account') {
+  return workspaceNavGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => !item.adminOnly || role === 'admin'),
+    }))
+    .filter((group) => group.items.length > 0)
 }

@@ -7,3 +7,25 @@ pending_job:
   request_id: req_fixture_1
   trace_id: trace_fixture_1
   quarantined_records_count: 0
+
+peer_completed_job:
+  id: job_fixture_peer_completed
+  upload_id: upload_fixture_peer
+  requested_by_id: user_fixture_peer_operator
+  source_type: upload
+  status: completed
+  request_id: req_fixture_peer
+  trace_id: trace_fixture_peer
+  quarantined_records_count: 1
+
+external_failed_job:
+  id: job_fixture_external_failed
+  upload_id: upload_fixture_external
+  requested_by_id: user_fixture_external_operator
+  source_type: upload
+  status: failed
+  error_code: terminal_processing_error
+  error_category: integration
+  request_id: req_fixture_external
+  trace_id: trace_fixture_external
+  quarantined_records_count: 0

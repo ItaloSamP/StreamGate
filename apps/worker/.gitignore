@@ -4,7 +4,8 @@
 /coverage/
 /doc/
 /pkg/
-/spec/reports/
+/spec/reports/*
+!/spec/reports/.gitkeep
 /tmp/
 
 # rspec failure tracking

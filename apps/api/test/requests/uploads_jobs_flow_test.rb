@@ -154,17 +154,19 @@ class UploadsJobsFlowTest < ActionDispatch::IntegrationTest
     assert_equal "dependency_unavailable", parsed_json.dig("error", "code")
   end
 
-  test "uploads index returns pagination and actor-scoped data" do
+  test "uploads index returns pagination and organization-scoped data" do
     token = login_as("operator@example.com", "StrongPass123!")
 
     get "/api/v1/uploads", params: { page: 1, per_page: 10 }, headers: auth_header(token)
 
     assert_response :ok
-    assert_equal 1, parsed_json.dig("meta", "pagination", "total_count")
-    assert_equal "upload_fixture_registered", parsed_json.dig("data", 0, "id")
+    assert_equal 2, parsed_json.dig("meta", "pagination", "total_count")
+    ids = parsed_json.fetch("data").map { |entry| entry.fetch("id") }
+    assert_includes ids, "upload_fixture_registered"
+    assert_includes ids, "upload_fixture_peer"
   end
 
-  test "jobs index returns pagination and actor-scoped data" do
+  test "jobs index returns pagination and organization-scoped data" do
     token = login_as("operator@example.com", "StrongPass123!")
 
     get "/api/v1/jobs", params: { page: 1, per_page: 10, status: "pending" }, headers: auth_header(token)
@@ -172,6 +174,17 @@ class UploadsJobsFlowTest < ActionDispatch::IntegrationTest
     assert_response :ok
     assert_equal 1, parsed_json.dig("meta", "pagination", "total_count")
     assert_equal "job_fixture_pending", parsed_json.dig("data", 0, "id")
+  end
+
+  test "jobs index search can match related upload filename" do
+    token = login_as("operator@example.com", "StrongPass123!")
+
+    get "/api/v1/jobs", params: { page: 1, per_page: 10, search: "orders.csv" }, headers: auth_header(token)
+
+    assert_response :ok
+    ids = parsed_json.fetch("data").map { |entry| entry.fetch("id") }
+    assert_includes ids, "job_fixture_pending"
+    assert_includes ids, "job_fixture_peer_completed"
   end
 
   private
