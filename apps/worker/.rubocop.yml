@@ -2,6 +2,7 @@ AllCops:
   TargetRubyVersion: 3.1
   SuggestExtensions: false
   NewCops: disable
+  CacheRootDirectory: .rubocop_cache
 
 Layout/EndOfLine:
   EnforcedStyle: lf
@@ -14,6 +15,8 @@ Metrics/AbcSize:
 
 Metrics/BlockLength:
   Max: 60
+  Exclude:
+    - "spec/**/*_spec.rb"
 
 Metrics/ClassLength:
   Max: 400

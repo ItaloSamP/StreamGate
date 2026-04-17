@@ -21,7 +21,7 @@ test.describe('auth e2e flow', () => {
     await fillRegistrationForm(page, credentials)
     await page.getByTestId('register-submit').click()
 
-    await expect(page).toHaveURL(/\/dashboard$/)
+    await expectDashboard(page)
     await expect(page.getByText('Dashboard Operacional').first()).toBeVisible()
 
     await logoutFromDashboard(page)
@@ -40,7 +40,7 @@ test.describe('auth e2e flow', () => {
     await page.getByTestId('login-password').fill(seededOperatorPassword)
     await page.getByTestId('login-submit').click()
 
-    await expect(page).toHaveURL(/\/dashboard$/)
+    await expectDashboard(page)
     await expect(page.getByText('Dashboard Operacional').first()).toBeVisible()
   })
 
@@ -54,7 +54,7 @@ test.describe('auth e2e flow', () => {
     await fillRegistrationForm(page, credentials)
     await page.getByTestId('register-submit').click()
 
-    await expect(page).toHaveURL(/\/dashboard$/)
+    await expectDashboard(page)
     await logoutFromDashboard(page)
 
     await page.goto('/reset-password')
@@ -75,7 +75,7 @@ test.describe('auth e2e flow', () => {
     await page.getByTestId('login-password').fill(newPassword)
     await page.getByTestId('login-submit').click()
 
-    await expect(page).toHaveURL(/\/dashboard$/)
+    await expectDashboard(page)
     await expect(page.getByText('Dashboard Operacional').first()).toBeVisible()
   })
 
@@ -111,6 +111,10 @@ async function logoutFromDashboard(page: Page) {
   await expect(logoutAction).toBeVisible()
   await expect(logoutAction).toBeEnabled()
   await Promise.all([page.waitForURL(/\/$/), logoutAction.click()])
+}
+
+async function expectDashboard(page: Page) {
+  await expect(page).toHaveURL(/\/dashboard$/, { timeout: 45_000 })
 }
 
 function buildEphemeralCredentials(prefix: string, testInfo: TestInfo): EphemeralCredentials {

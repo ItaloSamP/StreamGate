@@ -30,6 +30,7 @@ storage/
 apps/api/.ruby-lsp/
 apps/api/.yardoc/
 apps/api/.bundle/
+apps/api/.rubocop_cache/
 apps/api/.kamal/
 apps/api/log/*
 !apps/api/log/.keep
@@ -51,6 +52,7 @@ apps/web/e2e/reports/*
 apps/worker/.ruby-lsp/
 apps/worker/.yardoc/
 apps/worker/.bundle/
+apps/worker/.rubocop_cache/
 apps/worker/spec/reports/*
 !apps/worker/spec/reports/.gitkeep
 apps/worker/vendor/bundle/
