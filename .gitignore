@@ -21,9 +21,11 @@ dist/
 .bundle/
 vendor/bundle/
 log/
-tmp/
 storage/
-.tmp/dev-up-build/
+
+# Workspace-local temporary artifacts.
+/tmp/
+/.tmp/
 
 apps/api/.ruby-lsp/
 apps/api/.yardoc/
@@ -31,27 +33,36 @@ apps/api/.bundle/
 apps/api/.kamal/
 apps/api/log/*
 !apps/api/log/.keep
-apps/api/tmp/*
-!apps/api/tmp/.keep
-apps/api/tmp/pids/*
-!apps/api/tmp/pids/.keep
-apps/api/tmp/storage/*
-!apps/api/tmp/storage/.keep
+apps/api/tmp/
 apps/api/storage/*
 !apps/api/storage/.keep
+apps/api/test/reports/*
+!apps/api/test/reports/.gitkeep
 apps/api/vendor/bundle/
 apps/api/config/master.key
 
 apps/web/node_modules/
 apps/web/dist/
+apps/web/reports/*
+!apps/web/reports/.gitkeep
+apps/web/e2e/reports/*
+!apps/web/e2e/reports/.gitkeep
 
 apps/worker/.ruby-lsp/
 apps/worker/.yardoc/
 apps/worker/.bundle/
+apps/worker/spec/reports/*
+!apps/worker/spec/reports/.gitkeep
 apps/worker/vendor/bundle/
+
+docs/reports/*
+!docs/reports/.gitkeep
+scripts/ci/reports/*
+!scripts/ci/reports/.gitkeep
+scripts/smokes/reports/*
+!scripts/smokes/reports/.gitkeep
 
 infra/volumes/
 
 !/.agents/skills/
 !/.agents/skills/**
-

@@ -9,9 +9,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "node ./scripts/vitest-safe-runner.mjs",
-    "test:run": "node ./scripts/vitest-safe-runner.mjs run --config vitest.config.ts",
-    "test:integration": "node ./scripts/vitest-safe-runner.mjs run --config vitest.integration.config.ts",
-    "test:e2e": "playwright test"
+    "test:run": "node ../../scripts/reports/run-command.mjs --name \"Frontend unit tests\" --out apps/web/reports/unit --cwd apps/web --coverage apps/web/reports/unit/coverage/index.html -- node ./scripts/vitest-safe-runner.mjs run --config vitest.config.ts --coverage.enabled true --coverage.provider=v8 --coverage.reportsDirectory=reports/unit/coverage --reporter=verbose --reporter=json --outputFile=reports/unit/vitest-results.json",
+    "test:integration": "node ../../scripts/reports/run-command.mjs --name \"Frontend integration tests\" --out apps/web/reports/integration --cwd apps/web --coverage apps/web/reports/integration/coverage/index.html -- node ./scripts/vitest-safe-runner.mjs run --config vitest.integration.config.ts --coverage.enabled true --coverage.provider=v8 --coverage.reportsDirectory=reports/integration/coverage --reporter=verbose --reporter=json --outputFile=reports/integration/vitest-results.json",
+    "test:e2e": "node ../../scripts/reports/run-command.mjs --name \"Frontend E2E tests\" --out apps/web/e2e/reports --cwd apps/web --html-report apps/web/e2e/reports/playwright-report/index.html -- playwright test"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",
@@ -35,6 +35,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/coverage-v8": "^4.1.2",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
