@@ -12,6 +12,7 @@
         "required": ["payload", "routing_key", "retry_count", "headers"],
         "properties": {
           "payload": {
+            "description": "Snapshot sanitizado do payload presente na DLQ; chaves sensiveis sao mascaradas como [REDACTED].",
             "type": ["object", "string"]
           },
           "exchange": { "type": "string" },
@@ -20,6 +21,7 @@
           "retry_count": { "type": "integer", "minimum": 0 },
           "dead_letter_reason": { "type": ["string", "null"] },
           "headers": {
+            "description": "Headers sanitizados antes da exposicao pela API.",
             "type": "object",
             "additionalProperties": true
           }

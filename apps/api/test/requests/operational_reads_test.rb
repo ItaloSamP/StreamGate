@@ -27,6 +27,7 @@ class OperationalReadsTest < ActionDispatch::IntegrationTest
 
   test "quarantine index enforces organization scope and supports filters" do
     token = login_as("operator@example.com", "StrongPass123!")
+    quarantine_records(:warning_record).update!(payload: { cpf: "12345678900", row_number: 3 })
 
     get "/api/v1/quarantine",
         params: { severity: "warning", preset: "last_30d", sort_by: "created_at", sort_order: "desc" },
@@ -37,6 +38,9 @@ class OperationalReadsTest < ActionDispatch::IntegrationTest
     ids = parsed_json.fetch("data").map { |entry| entry.fetch("id") }
     assert_includes ids, "quarantine_fixture_warning"
     assert_includes ids, "quarantine_fixture_peer_warning"
+    warning = parsed_json.fetch("data").find { |entry| entry.fetch("id") == "quarantine_fixture_warning" }
+    assert_equal "[REDACTED]", warning.dig("payload", "cpf")
+    assert_equal 3, warning.dig("payload", "row_number")
   end
 
   test "audit index is admin-only and enforces retention metadata" do
@@ -57,7 +61,7 @@ class OperationalReadsTest < ActionDispatch::IntegrationTest
       queue_depth: 3,
       messages: [
         {
-          payload: { "event_id" => "event_fixture_dlq", "event_name" => "upload.received", "job_id" => "job_fixture_pending", "trace_id" => "trace_fixture_1" },
+          payload: { "event_id" => "event_fixture_dlq", "event_name" => "upload.received", "job_id" => "job_fixture_pending", "trace_id" => "trace_fixture_1", "cpf" => "12345678900" },
           exchange: "streamgate.events",
           routing_key: "upload.received.v1.dlq",
           redelivered: true,
@@ -80,6 +84,7 @@ class OperationalReadsTest < ActionDispatch::IntegrationTest
     assert_response :ok
     assert_equal 3, parsed_json.dig("meta", "queue", "queue_depth")
     assert_equal "event_fixture_dlq", parsed_json.dig("data", 0, "payload", "event_id")
+    assert_equal "[REDACTED]", parsed_json.dig("data", 0, "payload", "cpf")
   end
 
   test "operational endpoints validate invalid sort and preset filters" do

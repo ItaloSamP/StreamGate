@@ -29,7 +29,7 @@ module Api
         records, sort_by, sort_order = sorted
 
         render_success(
-          data: records,
+          data: records.map { |record| sanitize_record(record) },
           meta: {
             pagination: {
               page: 1,
@@ -109,6 +109,13 @@ module Api
         return "" if value.nil?
 
         value.is_a?(String) ? value.downcase : value
+      end
+
+      def sanitize_record(record)
+        record.merge(
+          payload: OperationalPayloadSanitizer.sanitize(record[:payload]),
+          headers: OperationalPayloadSanitizer.sanitize(record[:headers])
+        )
       end
     end
   end

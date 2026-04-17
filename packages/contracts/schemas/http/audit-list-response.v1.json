@@ -27,7 +27,11 @@
           "request_id": { "type": "string" },
           "trace_id": { "type": "string" },
           "occurred_at": { "type": "string", "format": "date-time" },
-          "metadata": { "type": "object", "additionalProperties": true },
+          "metadata": {
+            "description": "Metadata sanitizada por allowlist; chaves fora do contrato sao mascaradas.",
+            "type": "object",
+            "additionalProperties": true
+          },
           "created_at": { "type": "string", "format": "date-time" },
           "updated_at": { "type": "string", "format": "date-time" }
         },

@@ -9,7 +9,7 @@ class AuditEventSerializer < ApplicationSerializer
       request_id: record.request_id,
       trace_id: record.trace_id,
       occurred_at: record.occurred_at&.iso8601,
-      metadata: record.metadata,
+      metadata: OperationalPayloadSanitizer.sanitize(record.metadata),
       created_at: record.created_at&.iso8601,
       updated_at: record.updated_at&.iso8601
     }

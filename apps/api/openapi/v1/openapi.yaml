@@ -1529,6 +1529,7 @@ components:
           type: integer
           nullable: true
         payload:
+          description: Payload operacional com chaves sensiveis mascaradas como `[REDACTED]`.
           type: object
           additionalProperties: true
         trace_id:
@@ -1570,6 +1571,7 @@ components:
           type: string
           format: date-time
         metadata:
+          description: Metadata de auditoria sanitizada por allowlist; chaves fora do contrato sao mascaradas.
           type: object
           additionalProperties: true
         created_at:
@@ -1588,6 +1590,7 @@ components:
         - headers
       properties:
         payload:
+          description: Snapshot do payload na DLQ com chaves sensiveis mascaradas como `[REDACTED]`.
           oneOf:
             - type: object
               additionalProperties: true
@@ -1605,6 +1608,7 @@ components:
           type: string
           nullable: true
         headers:
+          description: Headers da mensagem sanitizados antes da exposicao pela API.
           type: object
           additionalProperties: true
 

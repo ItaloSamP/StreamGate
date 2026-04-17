@@ -18,7 +18,11 @@
           "code": { "type": "string" },
           "message": { "type": "string" },
           "row_number": { "type": ["integer", "null"], "minimum": 1 },
-          "payload": { "type": "object", "additionalProperties": true },
+          "payload": {
+            "description": "Payload operacional sanitizado; chaves sensiveis sao mascaradas como [REDACTED].",
+            "type": "object",
+            "additionalProperties": true
+          },
           "trace_id": { "type": "string" },
           "created_at": { "type": "string", "format": "date-time" },
           "updated_at": { "type": "string", "format": "date-time" }

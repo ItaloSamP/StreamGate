@@ -6,7 +6,8 @@
         "event_name": "upload.received.v1",
         "job_id": "job_6f51b476d7274d6d94c7943ee6d88515",
         "upload_id": "upload_52dc1cd9d40c472ebd63408d8d7b866f",
-        "trace_id": "trace_3c3b72fe95be45e48dcc9f944d5fb6d8"
+        "trace_id": "trace_3c3b72fe95be45e48dcc9f944d5fb6d8",
+        "cpf": "[REDACTED]"
       },
       "exchange": "streamgate.events",
       "routing_key": "upload.received.v1.dlq",

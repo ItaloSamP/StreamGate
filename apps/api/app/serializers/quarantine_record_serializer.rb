@@ -8,7 +8,7 @@ class QuarantineRecordSerializer < ApplicationSerializer
       code: record.code,
       message: record.message,
       row_number: record.row_number,
-      payload: record.payload,
+      payload: OperationalPayloadSanitizer.sanitize(record.payload),
       trace_id: record.trace_id,
       created_at: record.created_at&.iso8601,
       updated_at: record.updated_at&.iso8601

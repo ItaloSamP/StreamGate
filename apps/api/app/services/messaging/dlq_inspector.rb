@@ -64,13 +64,13 @@ module Messaging
       headers = item.dig("properties", "headers") || {}
 
       {
-        payload: parsed_payload,
+        payload: OperationalPayloadSanitizer.sanitize(parsed_payload),
         exchange: item["exchange"],
         routing_key: item["routing_key"],
         redelivered: item["redelivered"],
         retry_count: headers["x-retry-count"].to_i,
         dead_letter_reason: headers["x-dead-letter-reason"],
-        headers: headers
+        headers: OperationalPayloadSanitizer.sanitize(headers)
       }
     rescue JSON::ParserError
       {
@@ -80,7 +80,7 @@ module Messaging
         redelivered: item["redelivered"],
         retry_count: 0,
         dead_letter_reason: nil,
-        headers: item.dig("properties", "headers") || {}
+        headers: OperationalPayloadSanitizer.sanitize(item.dig("properties", "headers") || {})
       }
     end
   end
