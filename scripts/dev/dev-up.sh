@@ -81,6 +81,59 @@ get_build_services_for_mode() {
   esac
 }
 
+get_infra_image_services() {
+  echo "postgres redis rabbitmq minio minio-init clickhouse"
+}
+
+get_infra_image_for_service() {
+  local service="$1"
+  case "$service" in
+    postgres) echo "postgres:16" ;;
+    redis) echo "redis:7-alpine" ;;
+    rabbitmq) echo "rabbitmq:3.13-management" ;;
+    minio) echo "minio/minio:RELEASE.2025-02-18T16-25-55Z" ;;
+    minio-init) echo "minio/mc:RELEASE.2025-03-12T17-29-24Z" ;;
+    clickhouse) echo "clickhouse/clickhouse-server:25.3" ;;
+    *) echo "" ;;
+  esac
+}
+
+test_docker_image_exists() {
+  local image="$1"
+  docker image inspect "$image" >/dev/null 2>&1
+}
+
+run_conditional_compose_pull() {
+  local services_to_pull=()
+  local service=""
+  local image=""
+  local infra_services_raw=""
+  local infra_services=()
+
+  infra_services_raw="$(get_infra_image_services)"
+  read -r -a infra_services <<< "$infra_services_raw"
+
+  for service in "${infra_services[@]}"; do
+    image="$(get_infra_image_for_service "$service")"
+    [[ -z "$image" ]] && continue
+
+    if ! test_docker_image_exists "$image"; then
+      services_to_pull+=("$service")
+    fi
+  done
+
+  if (( ${#services_to_pull[@]} == 0 )); then
+    echo "Imagens de infraestrutura ja disponiveis. Pulando docker compose pull."
+    return 0
+  fi
+
+  echo "Imagens de infraestrutura ausentes. Executando docker compose pull:"
+  for service in "${services_to_pull[@]}"; do
+    echo " - $service"
+  done
+  invoke_compose_command pull "${services_to_pull[@]}"
+}
+
 get_service_fingerprint_files() {
   local service="$1"
   case "$service" in
@@ -242,6 +295,7 @@ if [[ "$mode" != "infra" ]]; then
 fi
 compose_args+=(up -d)
 
+run_conditional_compose_pull
 run_conditional_compose_build "$mode"
 
 set +e

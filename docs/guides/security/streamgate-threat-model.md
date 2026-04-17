@@ -2,7 +2,7 @@
 Este guia consolida diretrizes de streamgate threat model para uso consistente no projeto.
 
 ## Estado atual
-Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+Conteudo alinhado ao fechamento da Sprint 4. Este threat model mantem o historico da Sprint 0 como contexto, mas a leitura vigente passa a considerar auth real na API, upload assinado, worker RabbitMQ real, DLQ read-only, analytics/quarantine/audit reais e masking backend de payloads operacionais.
 
 ## Regras/Contratos
 - As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
@@ -18,8 +18,35 @@ Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atual
 
 ## Executive summary
 
-O StreamGate ainda esta em fase de fundacao, entao o risco mais importante da Sprint 0 nao e uma vulnerabilidade de negocio ja exploravel, e sim a chance de as proximas sprints herdarem defaults inseguros nas fronteiras que ja estao desenhadas no repo: auth, upload, storage, broker e dashboards. Os maiores riscos atuais sao promover o auth mock do frontend para um contexto indevido, reutilizar credenciais simples do ambiente local em ambientes compartilhados e abrir as superficies futuras de upload e mensageria sem contrato, validacao e revisao de seguranca proporcionais.
+O StreamGate ja possui, apos a Sprint 4, um primeiro fluxo operacional real: `signed-url -> storage -> upload/job -> RabbitMQ -> worker -> analytics/quarantine/audit`. Os maiores riscos agora se concentram em proteger essa cadeia contra defaults locais promovidos indevidamente, payloads sensiveis em superficies read-only, eventos invalidos/replayados/venenosos no broker e abuso operacional de retry/DLQ. O hardening aplicado na Sprint 4 adicionou sanitizacao backend para payloads operacionais, role gating para audit/DLQ, idempotencia por `event_id`, retry limitado e smokes/reports oficiais para evidenciar o runtime.
 
+
+## Sprint 4 security addendum
+
+### Novas superficies materializadas
+
+- API Rails com endpoints reais de `analytics`, `quarantine`, `quarantine/dlq`, `audit`, `jobs` e `uploads`.
+- Broker RabbitMQ com exchange `streamgate.events`, routing key `upload.received.v1`, fila `streamgate.worker.upload.received.v1` e DLQ `streamgate.worker.upload.received.v1.dlq`.
+- Worker Ruby consumindo eventos reais, processando CSV/ZIP inicial, criando `processing_attempt`, atualizando jobs e gravando auditoria.
+- Frontend autenticado com command center real, role gating para `audit`/DLQ, rotas de detalhe e masking visual.
+- Reports locais e smokes full runtime como evidencias operacionais.
+
+### Controles confirmados
+
+- `audit` e `quarantine/dlq` sao admin-only na API e no frontend.
+- `analytics` e `quarantine` aplicam escopo por organizacao para operadores.
+- Eventos do worker sao idempotentes por `event_id`; duplicatas sao ignoradas.
+- Erros transientes tem retry limitado por `WORKER_MAX_RETRIES`; poison messages vao para DLQ.
+- Erros terminais marcam job como `failed` e sao ackados sem requeue.
+- `audit_event.metadata`, payloads de quarantine e snapshots da DLQ sao sanitizados antes de exposicao.
+- `scripts/smokes/run-smokes` cobre CSV valido `completed`, CSV com linha vazia `quarantined_with_warnings`, analytics e quarantine.
+
+### Riscos residuais aceitos para Sprint 5+
+
+- Autenticacao/autorizacao entre servicos internos ainda depende da rede local/Compose; assinatura forte de eventos fica para uma evolucao posterior.
+- Replay prevention e suficiente para o corte atual por `event_id`, mas ainda nao ha janela temporal assinada nem nonce externo.
+- DLQ permanece read-only; replay/resolve operacional deve ter threat model proprio antes de qualquer mutacao.
+- Conectores externos (`external_link`, `oauth_delegated`, `google_drive`, `s3`, `http_url`) seguem fora do runtime principal e exigem revisao separada.
 ## Scope and assumptions
 
 ### In-scope paths
@@ -43,8 +70,8 @@ O StreamGate ainda esta em fase de fundacao, entao o risco mais importante da Sp
 ### Assumptions
 
 - o estado atual do repositorio representa um baseline de desenvolvimento local, nao um ambiente de producao
-- a aplicacao ainda nao esta exposta publicamente com auth real ou upload real
-- o dashboard autenticado atual usa sessao simulada apenas para UX e nao deve ser tratado como controle real de acesso
+- a aplicacao ainda nao esta exposta publicamente como producao
+- o dashboard autenticado usa sessao/token emitido pela API no ambiente local; politicas de cookie/CSRF/TLS ainda dependem do desenho de deploy
 - os servicos do `compose.yaml` podem ficar acessiveis apenas em ambiente local controlado
 - multi-tenant, segredos de producao e dados sensiveis reais ainda nao fazem parte da stack materializada
 
@@ -60,13 +87,13 @@ O StreamGate ainda esta em fase de fundacao, entao o risco mais importante da Sp
 
 - `web`: SPA React/Vite com landing, auth mock, route guard e dashboard shell
 - `api`: Rails API-only com health check, OpenAPI base e configuracao para PostgreSQL/Redis
-- `worker`: app Ruby separado, ainda sem runtime real de fila
+- `worker`: app Ruby separado com runtime real de fila RabbitMQ para `upload.received.v1`
 - `postgres`: estado operacional
 - `redis`: cache/estado volatil de suporte
 - `rabbitmq`: broker planejado para eventos de ingestao e processamento
 - `minio`: object storage para arquivos brutos
 - `clickhouse`: leitura analitica planejada
-- `contracts`: placeholder documental para eventos e rastreabilidade
+- `contracts`: schemas e exemplos HTTP/eventos usados para rastreabilidade e sincronizacao com OpenAPI
 
 Evidence anchors principais:
 
@@ -82,7 +109,7 @@ Evidence anchors principais:
 - Browser storage -> Web SPA
   Dados: sessao e perfil mockados. Canal: `localStorage` e `sessionStorage`. Garantias atuais: nenhuma integridade forte; dados sao controlaveis pelo usuario do browser.
 - Web SPA -> API
-  Dados: no estado atual, apenas leitura futura planejada e health/docs locais. Canal: HTTP. Garantias atuais: nenhuma auth real documentada; OpenAPI ainda minima.
+  Dados: auth, upload/jobs e leituras operacionais. Canal: HTTP. Garantias atuais: bearer token emitido pela API, OpenAPI sincronizado, erros padronizados e role gating para audit/DLQ.
 - API -> PostgreSQL / Redis
   Dados: estado operacional e suporte. Canal: conexoes internas de servico. Garantias atuais: credenciais via env e rede Docker local.
 - API -> RabbitMQ
@@ -134,8 +161,8 @@ flowchart LR
 ### Non-capabilities
 
 - nao assumimos acesso direto do atacante ao host local do desenvolvedor sem outra falha previa
-- nao assumimos hoje auth real, multi-tenancy ou dados regulados ja em producao
-- nao assumimos que o worker atual executa ETL real ou manipula arquivos de usuarios, porque isso ainda nao foi implementado
+- nao assumimos multi-tenancy produtivo ou dados regulados ja em producao
+- nao assumimos conectores externos nem mutacoes operacionais de replay/resolve na DLQ
 
 ## Entry points and attack surfaces
 
@@ -163,12 +190,12 @@ flowchart LR
 
 | Threat ID | Threat source | Prerequisites | Threat action | Impact | Impacted assets | Existing controls (evidence) | Gaps | Recommended mitigations | Detection ideas | Likelihood | Impact severity | Priority |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| TM-001 | usuario remoto no browser | acesso ao frontend e capacidade de editar storage local | forja sessao mock e contorna o gate visual do dashboard | acesso indevido ao workspace mock e narrativa errada sobre autenticacao | sessao, perfil, dashboard | `ProtectedRoute` existe, mas depende de sessao local; evidencias em `apps/web/src/lib/auth.ts` e `apps/web/src/features/auth/protected-route.tsx` | nao existe auth real nem assinatura de sessao | manter auth mock explicitamente fora de ambientes compartilhados; trocar por auth real antes de qualquer dado real; registrar isso como restricao de release | teste manual e automatizado garantindo que ambientes reais nao usem o mock; revisar rotas protegidas antes da Sprint 2 | high | medium | high |
+| TM-001 | usuario remoto no browser | acesso ao frontend e capacidade de editar storage local | manipula sessao/token local ou tenta reutilizar token expirado | acesso indevido ao workspace se a API aceitar sessao invalida ou se o frontend mascarar falha de auth | sessao, perfil, dashboard | API valida bearer token e retorna `401/403`; frontend reage a auth failure; evidencias em `apps/api/app/controllers/application_controller.rb`, `apps/web/src/lib/api-client.ts` e `apps/web/src/features/auth/protected-route.tsx` | hardening produtivo de cookies/CSRF/TLS ainda depende do desenho de deploy | manter token local apenas no contexto atual; revisar politica de sessao antes de preview/producao; cobrir regressao de auth em CI | testes de auth flow, logs de `request_id`, falhas `session_expired` e revisao de rotas protegidas | medium | high | high |
 | TM-002 | operador ou atacante com acesso de rede ao host exposto | ambiente compartilhado usando defaults locais ou portas abertas | acessa MinIO, RabbitMQ ou banco com credenciais fracas de baseline | takeover operacional, leitura/escrita indevida e indisponibilidade | segredos, storage, broker, banco | docs dizem que `.env` real nao sobe para Git; MinIO raw inicia privado; evidencias em `.env.example`, `compose.yaml` e `docs/guides/platform/setup.md` | credenciais de exemplo sao simples e portas administrativas estao publicadas no host local | proibir promocao de `.env.example`; usar segredos unicos por ambiente; reduzir portas expostas fora de dev; revisar perfis antes de preview/producao | alertar quando compose compartilhar management ports; revisar envs e portas no PR | medium | high | high |
-| TM-003 | futuro usuario de upload ou atacante explorando entrada de arquivo | endpoint assinado e confirmacao de upload implementados sem limites adequados | envia arquivos fora do contrato, volumetria abusiva ou conteudo inesperado | abuso de armazenamento, custo, falha operacional e pipeline contaminado | bucket bruto, worker, disponibilidade | bucket privado ja previsto; fluxo assinado ainda nao existe; evidencias em `docs/product/vision.md` e `docs/guides/platform/architecture.md` | faltam limites, validacao, tipos aceitos, tamanho, checksum e idempotencia implementados | exigir contrato de upload, limites por arquivo, tipos permitidos, checksum, confirmacao pos-upload e observabilidade antes de liberar a feature | metricas por bucket, alertas de volume, logs por `upload_id`, falhas de validacao | medium | high | high |
-| TM-004 | futuro produtor/consumidor interno mal configurado ou comprometido | broker ativo e eventos sem validacao forte | publica ou consome evento invalido, replayado ou forjado | estados falsos de job, processamento indevido ou duplicacao | eventos, jobs, auditoria, disponibilidade | nomenclatura e rastreabilidade iniciais documentadas em `packages/contracts/README.md` e `docs/guides/backend/backend-foundations.md` | contratos ainda sao placeholder e nao ha validacao executavel nem authz entre servicos | materializar contratos versionados, validar payloads na borda, amarrar producer/consumer a ids rastreaveis e politicas de replay | logs estruturados por `event_id`, `trace_id`, `job_id`; alarmes para eventos rejeitados | medium | high | high |
+| TM-003 | usuario de upload ou atacante explorando entrada de arquivo | signed URL e registro de upload disponiveis | envia arquivo fora do contrato, volumetria abusiva ou conteudo inesperado | abuso de armazenamento, custo, falha operacional e pipeline contaminado | bucket bruto, worker, disponibilidade | tipos permitidos, TTL, storage_key controlado, confirmacao pos-upload, checksum/idempotencia e smoke assinado existem | politica de malware scanning, quotas por organizacao e conectores externos ainda nao existem | manter allowlist de content type/tamanho, evoluir quotas/scanning antes de dados reais sensiveis e revisar conectores separadamente | metricas por bucket, alertas de volume, logs por `upload_id`, falhas de validacao | medium | high | high |
+| TM-004 | produtor/consumidor interno mal configurado ou comprometido | broker ativo e acesso interno ao exchange | publica ou consome evento invalido, replayado ou forjado | estados falsos de job, processamento indevido ou duplicacao | eventos, jobs, auditoria, disponibilidade | evento `upload.received.v1`, idempotencia por `event_id`, validacao de campos obrigatorios, retry limitado e DLQ existem | assinatura/autenticacao forte entre servicos e janela temporal anti-replay ainda nao existem | evoluir schema validation executavel, assinatura de evento e alertas de rejeicao/DLQ antes de novos produtores | logs estruturados por `event_id`, `trace_id`, `job_id`; metricas de retry/DLQ | medium | high | high |
 | TM-005 | erro operacional interno ou vazamento em PR/log | uso de segredos reais no repo, docs ou exemplos | expoe credenciais em Git, screenshots, logs ou fixtures | comprometimento de servicos e perda de confianca operacional | segredos, banco, storage, broker | Rails filtra parametros sensiveis em logs; docs avisam para nao subir `.env`; evidencias em `apps/api/config/initializers/filter_parameter_logging.rb` e `.env.example` | ainda nao existe politica formal de segredos antes desta sprint | adotar politica minima de segredos, revisar arquivos sensiveis em PR e usar scanners de dependencia/config proporcionais | checklist de PR, busca por padroes sensiveis, revisao de docs e envs | medium | medium | medium |
-| TM-006 | futuro consumidor autenticado com permissao mal definida | dashboard e analytics reais entram sem authz por superficie | acessa mais dado operacional ou analitico do que deveria | exposicao de informacao e quebra de segregacao funcional | dashboards, analytics, auditoria | a arquitetura separa operacional e analitico no desenho; evidencias em `docs/product/vision.md` e `docs/guides/platform/architecture.md` | nao existe politica de authz ou classificacao de dados do dominio ainda | classificar dados sensiveis na Sprint 1, definir papeis de leitura e revisar authz antes de dashboards reais | auditoria de consultas, logs por usuario, testes de autorizacao | low | high | medium |
+| TM-006 | consumidor autenticado com permissao mal definida | dashboard, analytics, quarantine, audit e DLQ reais | acessa mais dado operacional ou analitico do que deveria | exposicao de informacao e quebra de segregacao funcional | dashboards, analytics, auditoria, quarantine, DLQ | audit/DLQ admin-only; analytics/quarantine escopados por organizacao; frontend oculta Auditoria para operador; serializers sanitizam payloads | classificacao de dados do dominio ainda precisa aprofundar dado real de cliente | manter testes de autorizacao por role, revisar novos campos antes de expor e classificar payloads de conectores externos | auditoria de consultas, logs por usuario, testes de autorizacao | medium | high | high |
 
 ## Criticality calibration
 
@@ -203,8 +230,8 @@ Exemplos para este repo:
 
 ## Quality check
 
-- entry points descobertos foram cobertos: frontend auth mock, browser storage, API health/docs, compose ports, superfícies futuras de upload e broker
-- cada trust boundary principal apareceu nas ameaças: browser, API, storage, broker, analytics e segredos operacionais
+- entry points descobertos foram cobertos: frontend auth mock, browser storage, API health/docs, compose ports, superfÃ­cies futuras de upload e broker
+- cada trust boundary principal apareceu nas ameaÃ§as: browser, API, storage, broker, analytics e segredos operacionais
 - runtime foi separado de tooling/dev: risco de compose local foi tratado como baseline operacional, nao como producao
 - este documento foi fechado com suposicoes explicitas porque o contexto de exposicao e deploy real ainda nao foi validado pelo time
 - conclusoes condicionais foram marcadas especialmente nas trilhas de upload, broker e analytics, que ainda nao possuem runtime real

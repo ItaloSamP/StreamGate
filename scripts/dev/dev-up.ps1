@@ -39,6 +39,75 @@ function Get-BuildServicesForMode {
   }
 }
 
+function Get-InfraImageServices {
+  return @('postgres', 'redis', 'rabbitmq', 'minio', 'minio-init', 'clickhouse')
+}
+
+function Get-InfraImageForService {
+  param(
+    [string]$Service
+  )
+
+  switch ($Service) {
+    'postgres' { return 'postgres:16' }
+    'redis' { return 'redis:7-alpine' }
+    'rabbitmq' { return 'rabbitmq:3.13-management' }
+    'minio' { return 'minio/minio:RELEASE.2025-02-18T16-25-55Z' }
+    'minio-init' { return 'minio/mc:RELEASE.2025-03-12T17-29-24Z' }
+    'clickhouse' { return 'clickhouse/clickhouse-server:25.3' }
+    default { return $null }
+  }
+}
+
+function Test-DockerImageExists {
+  param(
+    [string]$Image
+  )
+
+  $previousPreference = $ErrorActionPreference
+  try {
+    $ErrorActionPreference = 'Continue'
+    & cmd.exe /d /c "docker image inspect $Image >NUL 2>NUL"
+    return ($LASTEXITCODE -eq 0)
+  }
+  finally {
+    $ErrorActionPreference = $previousPreference
+  }
+}
+
+function Invoke-ConditionalComposePull {
+  $servicesToPull = @()
+
+  foreach ($service in (Get-InfraImageServices)) {
+    $image = Get-InfraImageForService -Service $service
+    if ([string]::IsNullOrWhiteSpace($image)) {
+      continue
+    }
+
+    if (-not (Test-DockerImageExists -Image $image)) {
+      $servicesToPull += $service
+    }
+  }
+
+  if ($servicesToPull.Count -eq 0) {
+    Write-Host "Imagens de infraestrutura ja disponiveis. Pulando docker compose pull." -ForegroundColor DarkGray
+    return
+  }
+
+  Write-Host "Imagens de infraestrutura ausentes. Executando docker compose pull:" -ForegroundColor Yellow
+  foreach ($service in $servicesToPull) {
+    Write-Host " - $service" -ForegroundColor Yellow
+  }
+
+  $pullArgs = @('pull') + $servicesToPull
+  $pullResult = Invoke-ComposeCommand -Arguments ($pullArgs -join ' ')
+  $pullResult.Output | Out-Host
+
+  if ($pullResult.ExitCode -ne 0) {
+    throw "docker compose $($pullArgs -join ' ') falhou."
+  }
+}
+
 function Get-ServiceFingerprintFiles {
   param(
     [string]$Service
@@ -241,6 +310,7 @@ $composeArgs += 'up'
 $composeArgs += '-d'
 
 try {
+  Invoke-ConditionalComposePull
   Invoke-ConditionalComposeBuild -Mode $Mode
 
   $composeUpResult = Invoke-ComposeCommand -Arguments ($composeArgs -join ' ')

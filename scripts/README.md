@@ -51,3 +51,5 @@ powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1
 
 Esse runner executa frontend unit/integration/E2E, backend API/worker com SimpleCov, smokes operacionais e atualiza o hub `docs/reports/index.html`.
 Os reports sao sobrescritos a cada execucao e ficam fora do Git; apenas `.gitkeep` mantem a estrutura de pastas.
+
+Antes de subir ambientes Docker, os scripts oficiais passam pelo `scripts/dev/dev-up`, que verifica imagens externas ausentes e fingerprints de build. Se voce apagou imagens/volumes do Docker, o fluxo oficial tenta puxar infra e rebuildar API/Web/Worker seletivamente antes do `compose up`.

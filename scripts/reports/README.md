@@ -27,17 +27,18 @@ Ele tambem e o melhor ponto de partida quando um teste falha e voce precisa de u
 O runner executa, em ordem fail-fast:
 
 1. Testes unitarios do frontend com Vitest e coverage HTML.
-2. Subida da infra local via Docker Compose.
-3. Preparacao do banco de teste da API.
-4. Testes Rails/Minitest da API com SimpleCov.
-5. Specs RSpec do worker com SimpleCov.
-6. Subida do perfil `app` para testes integrados.
-7. Seed de credenciais operacionais sem imprimir segredos.
-8. Testes de integracao do frontend contra backend real.
-9. E2E Playwright contra a aplicacao local.
-10. Smokes operacionais, incluindo upload assinado e worker real.
-11. CI local completo (`frontend-ci`, `backend-ci`, `e2e-auth`, `docker-ci`).
-12. Atualizacao do hub visual em `docs/reports/index.html`.
+2. Preparacao Docker via `scripts/dev/dev-up`: puxa imagens de infraestrutura ausentes e rebuilda API/Web/Worker quando fingerprints ou imagens locais exigirem.
+3. Subida da infra local via Docker Compose.
+4. Preparacao do banco de teste da API.
+5. Testes Rails/Minitest da API com SimpleCov.
+6. Specs RSpec do worker com SimpleCov.
+7. Subida do perfil `app` para testes integrados.
+8. Seed de credenciais operacionais sem imprimir segredos.
+9. Testes de integracao do frontend contra backend real.
+10. E2E Playwright contra a aplicacao local.
+11. Smokes operacionais, incluindo upload assinado e worker real.
+12. CI local completo (`frontend-ci`, `backend-ci`, `e2e-auth`, `docker-ci`).
+13. Atualizacao do hub visual em `docs/reports/index.html`.
 
 Se qualquer etapa falhar, o runner interrompe a execucao imediatamente, atualiza o indice de reports com o que ja foi gerado e retorna exit code diferente de zero.
 
@@ -154,3 +155,12 @@ Se o `run-all` falhar:
 5. Rode novamente o `run-all` para sobrescrever os reports com o estado atual.
 
 Se a falha envolver Docker, confira tambem os reports de smokes e CI local, pois eles preservam logs recentes de servicos como `api`, `web`, `worker`, `rabbitmq` e `minio`.
+
+Se voce limpou imagens/volumes do Docker Desktop, rode o mesmo comando normalmente. O `run-all` usa `scripts/dev/dev-up`, que agora:
+
+- verifica imagens externas de infraestrutura (`postgres`, `redis`, `rabbitmq`, `minio`, `minio-init`, `clickhouse`);
+- executa `docker compose pull` quando alguma delas estiver ausente;
+- verifica fingerprints de build para `api`, `web` e `worker`;
+- executa rebuild seletivo quando a imagem local nao existe ou quando arquivos Docker/dependencias mudaram.
+
+Se mesmo assim aparecer `500 Internal Server Error` na API do Docker Engine, reinicie o Docker Desktop antes de repetir o runner. Esse erro acontece antes do Compose conseguir puxar/buildar imagens e deve ser classificado como falha ambiental do host.

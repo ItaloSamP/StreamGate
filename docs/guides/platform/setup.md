@@ -139,6 +139,14 @@ Comandos principais:
 ./scripts/dev/dev-down.sh
 ```
 
+O `dev-up` faz preparacao incremental do Docker antes de subir:
+
+- puxa imagens externas de infraestrutura quando elas nao existem mais no host;
+- calcula fingerprints de build de `api`, `web` e `worker`;
+- rebuilda seletivamente quando uma imagem local sumiu ou quando `Dockerfile`, `.dockerignore`, manifestos de dependencias ou `compose.yaml` mudaram.
+
+Assim, limpar dados/imagens do Docker nao exige decorar comandos extras: rode o `dev-up` ou o `run-all-reports` novamente e o script decide entre pull, rebuild seletivo e compose up.
+
 Ou diretamente com Docker Compose:
 
 ```bash

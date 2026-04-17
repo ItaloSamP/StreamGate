@@ -1052,7 +1052,7 @@ Evidencias registradas (2026-04-10):
 
 ## Sprint 4 - Worker runtime real e modulos operacionais reais
 
-**Status atual:** `Em andamento`
+**Status atual:** `Concluida`
 
 **Dependencias**
 
@@ -1141,15 +1141,15 @@ Fronteira explicita (fora da Sprint 4): `external_link`, `oauth_delegated`, `goo
 
 - Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
 - [x] Planejar padrao oficial de reports/coverage sobrescritos por execucao, com hub local em `docs/reports/index.html`.
-- [ ] Planejar cobertura de consumo real do worker e transicao de estados.
-- [ ] Planejar request/integration tests para endpoints de `analytics`, `quarantine` e `audit`.
-- [ ] Planejar E2E minimo do fluxo completo com processamento real refletido no workspace.
+- [x] Planejar cobertura de consumo real do worker e transicao de estados (`worker-operational-smoke.py`, specs de consumer, request tests de upload/job e snapshots de analytics).
+- [x] Planejar request/integration tests para endpoints de `analytics`, `quarantine`, `quarantine/dlq` e `audit` (`apps/api/test/requests/operational_reads_test.rb`).
+- [x] Planejar E2E minimo do fluxo completo com processamento real refletido no workspace via Playwright + smokes full runtime.
 
 ### Test execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
 - [x] Instrumentar geracao de reports para Vitest, Playwright, Rails/Minitest, RSpec, smokes e CI local.
-- [ ] Executar suites backend/web/worker da trilha com classificacao ambiente vs implementacao.
+- [x] Executar suites backend/web/worker da trilha com classificacao ambiente vs implementacao.
 - [x] Executar smoke operacional completo com broker e worker reais.
 - [x] Registrar evidencias de DevOps com comandos e resultados da trilha.
 
@@ -1168,12 +1168,31 @@ Evidencias de reports locais registradas (2026-04-16):
 - `node scripts/reports/generate-index.mjs`: PASS com hub local gerado em `docs/reports/index.html`.
 - `bash -n` para scripts `.sh`: bloqueado por ambiente Windows/WSL (`E_ACCESSDENIED`), mesma classe de falha ja registrada no baseline.
 
+Evidencias finais de hardening/Test/Security registradas (2026-04-17):
+
+- `powershell -ExecutionPolicy Bypass -File scripts/dev/dev-up.ps1 -Mode full -TimeoutSeconds 600`: PASS; stack `full` saudavel com API, web, worker, Postgres, Redis, RabbitMQ, MinIO e ClickHouse.
+- `powershell -ExecutionPolicy Bypass -File scripts/reports/run-all-reports.ps1`: PASS; pacote completo executado e hub `docs/reports/index.html` regenerado.
+- `pnpm test:run` via `run-all-reports.ps1`: PASS (`11` arquivos, `53` testes), coverage e hub atualizados.
+- `pnpm test:integration` via `run-all-reports.ps1`: PASS (`3` testes de auth real).
+- `pnpm test:e2e` via `run-all-reports.ps1`: PASS (`8` testes Playwright em Chromium + Firefox).
+- `bundle exec rails test` via `run-all-reports.ps1`: PASS (`44` tests, `211` assertions).
+- `bundle exec rspec` em `apps/worker`: PASS (`13` examples, `0` failures), incluindo specs de retry, ack, erro terminal e DLQ do consumer.
+- `powershell -ExecutionPolicy Bypass -File scripts/ci/ci-local.ps1 all` via `run-all-reports.ps1`: PASS; `frontend-ci`, `backend-ci`, `e2e-auth` e `docker-ci` passaram.
+- `powershell -ExecutionPolicy Bypass -File scripts/smokes/run-smokes.ps1` via `run-all-reports.ps1`: PASS; infra, upload assinado, profile `full`, worker operacional, analytics e quarantine validados.
+- `node -e "...JSON.parse..."` para schemas/examples HTTP em `packages/contracts`: PASS.
+- `ruby -c` nos arquivos Ruby alterados da API: PASS.
+- `ruby -e "require './apps/api/app/services/operational_payload_sanitizer'..."`: PASS, validando masking recursivo isolado.
+- `powershell -NoProfile -Command '$null = [scriptblock]::Create(...)'` para `scripts/dev/dev-up.ps1`: PASS.
+- ajuste aplicado: `scripts/dev/dev-up.ps1` e `.sh` agora checam imagens externas de infra, executam `docker compose pull` quando ausentes e preservam rebuild seletivo por fingerprint para `api`, `web` e `worker`.
+- ajuste aplicado: E2E de auth agora usa timeout explicito para transicoes reais de cadastro/login no Firefox, preservando o timeout global mais estrito para as demais assercoes.
+- ajuste aplicado: RuboCop da API/worker usa cache local ao projeto para nao depender de `C:/Users/.../.cache`, e specs do worker excluem `Metrics/BlockLength` sem afrouxar codigo de producao.
+
 ### Security
 
 - Skills obrigatorias para todas as tasks desta trilha: `review-architecture`, `review-codebase`, `openapi`, `docker`, `kubernetes`, `security-best-practices`, `security-threat-model`.
-- [ ] Revisar superficie de broker/eventos para payload invalido, replay e poison message.
-- [ ] Revisar dados sensiveis de `quarantine` e `audit` com controles de acesso e logging.
-- [ ] Revisar estrategia de retry/backoff e limites para prevenir abuso operacional.
+- [x] Revisar superficie de broker/eventos para payload invalido, replay e poison message; controles atuais: validacao de `event_name`, campos obrigatorios, idempotencia por `event_id`, ack terminal e DLQ apos limite.
+- [x] Revisar dados sensiveis de `quarantine`, `audit` e DLQ com controles de acesso e logging; hardening aplicado com `OperationalPayloadSanitizer`, audit/DLQ admin-only e quarantine/analytics escopados por organizacao.
+- [x] Revisar estrategia de retry/backoff e limites para prevenir abuso operacional; `WORKER_MAX_RETRIES` controla limite, backoff exponencial tem teto e poison messages vao para DLQ read-only.
 
 ### Skills da sprint
 
@@ -1191,45 +1210,45 @@ Evidencias de reports locais registradas (2026-04-16):
 - [x] Atualizar guias tecnicos com estado pos-Sprint 3 e fronteiras da Sprint 4.
 - [x] Atualizar roadmap, README do web e guias de frontend no mesmo ciclo da entrega.
 - [x] Documentar padrao oficial de reports/coverage e registrar uso de `documentation-writer` para mudancas em testes/CI.
-- [ ] Preparar closeout final da Sprint 4 quando DevOps/Test/Security tambem forem encerradas.
+- [x] Preparar closeout final da Sprint 4 quando DevOps/Test/Security tambem forem encerradas.
 
 ### Checklist de saida
 
 - [x] Delta por trilha registrado para Back planning, Back execution, Front planning, Front execution, DevOps, Documentation, Test planning, Test execution, Security e Skills da sprint.
-- [ ] Trilhas nao tocadas na sprint marcadas explicitamente como nao tocada nesta sprint no closeout final.
+- [x] Trilhas nao tocadas na sprint marcadas explicitamente como nao aplicavel no closeout final.
 - [x] Worker runtime real executando consumo de fila no fluxo oficial.
 - [x] Modulos `analytics`, `quarantine`, `quarantine/dlq`, `audit`, `events`, `jobs` e `uploads` consumindo dados reais no frontend.
 - [x] OpenAPI, contratos e documentacao sincronizados sem drift conhecido para as trilhas tocadas.
 - [x] Evidencias de DevOps registradas com runner local, docker-ci local e smoke operacional do worker.
 - [x] Hub local de reports definido em `docs/reports/index.html`, com artefatos ignorados pelo Git e `.gitkeep` preservando estrutura.
-- [ ] Evidencias de teste e operacao finais registradas com classificacao de risco residual apos DevOps/Test/Security.
+- [x] Evidencias de teste e operacao finais registradas com classificacao de risco residual apos DevOps/Test/Security.
 
 ### Reavaliacao de transicao por trilha
 
-- [ ] `Back planning`: validar contrato planejado vs implementado para worker e modulos operacionais.
-- [ ] `Back execution`: registrar debitos tecnicos movidos para a sprint seguinte.
-- [ ] `Worker execution`: validar retry, idempotencia e rastreabilidade operacional.
+- [x] `Back planning`: validar contrato planejado vs implementado para worker e modulos operacionais.
+- [x] `Back execution`: registrar debitos tecnicos movidos para a sprint seguinte.
+- [x] `Worker execution`: validar retry, idempotencia e rastreabilidade operacional.
 - [x] `Front planning`: validar jornada e usabilidade dos modulos operacionais.
 - [x] `Front execution`: validar estados de UI, a11y e performance.
 - [x] `DevOps`: revisar smoke, readiness e maturidade para ciclo continuo.
 - [x] `Documentation`: registrar atualizacao documental da trilha DevOps com `documentation-writer`.
-- [ ] `Test planning`: confirmar cobertura obrigatoria da sprint seguinte.
-- [ ] `Test execution`: registrar resultados e risco residual.
-- [ ] `Security`: registrar superficies sensiveis, mitigacoes e pendencias.
+- [x] `Test planning`: confirmar cobertura obrigatoria da sprint seguinte.
+- [x] `Test execution`: registrar resultados e risco residual.
+- [x] `Security`: registrar superficies sensiveis, mitigacoes e pendencias.
 - [x] `Skills da sprint`: registrar uso de `docker`, `github-actions-expert`, `monitoring-observability` e `documentation-writer` na trilha DevOps.
 
-### Delta por trilha (Sprint 4 - em andamento)
+### Delta por trilha (Sprint 4 - fechamento)
 
 - Back planning: concluida para backend; contrato de evento, outbox, retry/backoff, DLQ read-only e analytics materializado foram fechados.
 - Back execution: concluida para o corte atual; runtime inicial de fila, transicoes de job, idempotencia por evento, endpoints operacionais read-only e contratos foram implementados.
 - Front planning: concluida; command center real, URL state, refresh manual, stale state, role gating, masking, export CSV e rotas de detalhe foram fechados.
 - Front execution: concluida; mocks de `dashboard/analytics/quarantine/audit/events` foram substituidos por dados reais via `streamgate-api`, com detalhes compartilhaveis e badges reais.
 - DevOps: concluida para a Sprint 4; smokes foram centralizados em `scripts/smokes`, runner unico gerencia lifecycle completo, profile `full` sobe worker real healthy, `ci-local.ps1 docker` passou com todos os smokes e a camada de reports agregados foi adicionada em `scripts/reports`.
-- Documentation: em andamento; README do web, fundacoes de frontend, mapa do workspace, runbook do worker, setup, baseline de testes/reports, governanca documental e roadmap mestre foram atualizados com `documentation-writer`.
-- Test planning: parcialmente coberta; alem da matriz de paginas/adapters/detalhes, existe agora padrao oficial de reports/coverage por camada e hub local agregado.
-- Test execution: parcialmente executada; `pnpm.cmd test:run`, `pnpm.cmd lint`, `pnpm.cmd build`, `pnpm.cmd test:e2e`, request test de upload/jobs e `ci-local.ps1 docker` passaram anteriormente; a instrumentacao de reports foi entregue, mas o fechamento formal de Test/Security ainda permanece pendente.
-- Security: parcialmente coberta no frontend por role gating e masking visual; revisao formal de seguranca permanece pendente.
-- Skills da sprint: em andamento; stack obrigatoria aplicada nas trilhas backend/frontend/DevOps/documentacao tocadas.
+- Documentation: concluida; README do web, fundacoes de frontend, mapa do workspace, runbook do worker, setup, baseline de testes/reports, governanca documental, threat model, baseline de seguranca, closeout e roadmap mestre foram atualizados com `documentation-writer`.
+- Test planning: concluida; matriz de worker/API/frontend/smokes/reports fechada, incluindo consumo real, transicoes de estado, endpoints operacionais e E2E minimo.
+- Test execution: concluida; `run-all-reports.ps1` passou completo, incluindo frontend unit/integration, API, worker, Playwright E2E, smokes e CI local.
+- Security: concluida; broker/eventos, retry/DLQ, RBAC, masking backend/frontend e superficies sensiveis foram revisados, com riscos residuais movidos para Sprint 5+.
+- Skills da sprint: concluida; stack obrigatoria aplicada nas trilhas backend/frontend/DevOps/Test/Security/documentacao tocadas.
 
 ## Pos-v1 e backlog estrategico
 

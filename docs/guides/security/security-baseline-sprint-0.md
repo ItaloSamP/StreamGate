@@ -4,11 +4,11 @@
 Este guia consolida diretrizes de security baseline sprint 0 para uso consistente no projeto.
 
 ## Estado atual
-Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+Conteudo alinhado ao fechamento da Sprint 4. O baseline historico da Sprint 0 continua valido como metodo, mas o estado operacional atual ja inclui auth real na API, upload assinado, worker RabbitMQ real, analytics/quarantine/audit reais e reports/smokes oficiais.
 
 
 ## Estado atual detalhado
-Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+Conteudo alinhado ao fechamento da Sprint 4; atualizar em cada mudanca relevante de auth, upload, worker, broker, auditoria, quarentena, CI, smokes ou reports.
 
 ## Regras/Contratos
 - As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
@@ -27,31 +27,32 @@ A Sprint 0 nao fecha seguranca de produto. Ela fecha o metodo minimo para que as
 
 ## Leitura do estado atual
 
-Hoje o repositorio ainda esta em fase de fundacao:
+Hoje o repositorio saiu do baseline puramente estrutural e ja possui um primeiro runtime operacional real:
 
-- a API expoe apenas `GET /up` e uma base inicial de OpenAPI
-- o frontend possui auth mock armazenado no browser para viabilizar a UX inicial
-- o worker ainda nao possui runtime real de fila nem processamento de arquivo
-- o `compose.yaml` ja sobe PostgreSQL, Redis, RabbitMQ, MinIO, ClickHouse, API, frontend e worker de smoke
-- o fluxo real de upload, auth real, autorizacao e analytics real ainda nao existem
+- a API expoe auth, upload assinado, jobs, analytics, quarantine, DLQ read-only e audit no namespace `/api/v1`
+- o frontend autenticado consome dados reais da API; o armazenamento local guarda apenas sessao/token de desenvolvimento
+- o worker possui runtime real de fila RabbitMQ para `upload.received.v1`, com CSV/ZIP inicial, retry e DLQ
+- o `compose.yaml` sobe PostgreSQL, Redis, RabbitMQ, MinIO, ClickHouse, API, frontend e worker real no profile `full`
+- o fluxo real de upload, leitura operacional e auditoria existe para o corte Sprint 4, ainda sem conectores externos
 
 Isso significa que a maior parte do risco atual esta em:
 
-- defaults inseguros reaproveitados fora do ambiente local
-- confusao entre mock de frontend e autenticacao real
+- defaults locais reaproveitados fora do ambiente local
 - segredos e portas administrativas expostos por configuracao operacional ruim
-- futuras superficies ainda nao implementadas entrando sem trilha de revisao proporcional
+- payloads operacionais de quarantine/DLQ/audit expondo dado sensivel sem masking ou escopo correto
+- eventos de broker invalidos, replayados ou venenosos afetando integridade de jobs
+- futuras superficies de conectores externos entrando sem trilha de revisao proporcional
 
 ## Superficies de ataque oficiais da Sprint 0
 
 | Superficie | Estado atual | Principal risco nesta fase | Evidencia base |
 | --- | --- | --- | --- |
-| Auth | mock no frontend via `localStorage` e `sessionStorage` | sessao forjada no cliente se o mock for tratado como auth real | `apps/web/src/lib/auth.ts`, `apps/web/src/features/auth/protected-route.tsx` |
-| Upload | previsto na visao do produto e no dashboard, mas sem endpoint real | entrar na Sprint 3 sem limites, validacao e contrato claros | `docs/product/vision.md`, `apps/web/src/components/app/dashboard-surface.tsx` |
+| Auth | API Rails com sessao bearer e frontend guardado por token local | token local indevido em ambiente compartilhado ou sessao expirada tratada incorretamente | `apps/api/app/controllers/api/v1/auth`, `apps/web/src/lib/auth.ts` |
+| Upload | fluxo assinado real com registro idempotente e limites de tipo/tamanho | abuso de signed URL, storage_key ou metadata se validacao regredir | `apps/api/app/controllers/api/v1/uploads_controller.rb`, `apps/api/openapi/v1/openapi.yaml` |
 | Storage | MinIO local com bucket privado e Active Storage local na API | reuso de credenciais simples e exposicao indevida de console/storage | `compose.yaml`, `apps/api/config/storage.yml` |
-| Broker | RabbitMQ ja sobe no compose, mas sem produtor/consumidor reais | mensagens futuras sem contrato, authz ou naming rastreavel | `compose.yaml`, `packages/contracts/README.md` |
-| Dashboard | shell autenticado e dados mockados | confundir UX protegida com autorizacao real de dados | `apps/web/src/pages/DashboardPage.tsx`, `docs/guides/frontend/frontend-foundations.md` |
-| Analytics | ClickHouse previsto em compose e visao de produto | leitura analitica sem classificacao de dado e sem fronteira de acesso definida | `compose.yaml`, `docs/product/vision.md` |
+| Broker | RabbitMQ com evento `upload.received.v1`, fila oficial e DLQ | payload invalido, replay, poison message ou abuso de retry | `apps/worker/lib/worker/runtime/consumer.rb`, `packages/contracts/README.md` |
+| Dashboard | workspace autenticado com dados reais e role gating | exposicao indevida de auditoria/DLQ ou regressao de masking visual | `apps/web/src/pages/DashboardPage.tsx`, `apps/web/src/components/app/workspace-config.ts` |
+| Analytics/Audit/Quarantine | endpoints read-only reais com filtros, paginacao e masking server-side para payload operacional | vazamento por contrato, serializer ou fixture sensivel | `apps/api/app/controllers/api/v1`, `apps/api/app/services/operational_payload_sanitizer.rb` |
 
 ## Threat model inicial
 
@@ -64,6 +65,8 @@ Ele deve ser tratado como referencia obrigatoria antes de abrir sprints que mate
 - runtime real do worker
 - dashboards com dados reais
 - reprocessamento, auditoria ou analytics de producao
+
+Na Sprint 4, auth real, upload assinado, runtime inicial do worker, dashboards operacionais, analytics, quarantine, DLQ read-only e audit foram materializados para o ambiente local/CI. Por isso, novas mudancas nessas superficies devem tratar este baseline como controle vivo, nao como apenas planejamento.
 
 ## Scanners oficiais por camada
 
@@ -83,7 +86,7 @@ A Sprint 0 define os scanners oficiais do projeto por camada, mesmo quando parte
 ### Worker Ruby
 
 - `bundle exec bundle-audit check --update` para dependencias Ruby do worker quando a gem estiver disponivel
-- revisao manual obrigatoria de contratos, retries, storage e broker enquanto o runtime ainda e pequeno
+- revisao manual obrigatoria de contratos, retries, storage, broker, DLQ e idempotencia enquanto o runtime ainda e pequeno
 
 ### Docker e Compose
 
@@ -159,14 +162,15 @@ A partir da Sprint 0, revisao de seguranca deixa de ser opcional e passa a ser o
 - filtros de parametros sensiveis configurados no Rails em [filter_parameter_logging.rb](C:/estudos/StreamGate/apps/api/config/initializers/filter_parameter_logging.rb)
 - docs ja orientam que `.env` real nao deve subir para o Git
 - bucket, fila, eventos e rastreabilidade ja possuem linguagem inicial consolidada em `packages/contracts` e nas fundacoes do backend
+- payloads de quarantine, audit metadata e DLQ passam por sanitizacao backend antes de serem expostos por endpoints operacionais
+- audit e DLQ sao admin-only; quarantine e analytics respeitam escopo por organizacao para operadores
 
 ## Gaps conscientes que seguem para as proximas sprints
 
-- auth real ainda nao existe
-- nao ha autorizacao de dados reais no dashboard
-- upload assinado ainda nao foi implementado
-- broker e worker ainda nao validam eventos reais
-- nao existe classificacao formal de dados sensiveis do dominio
+- auth real ainda precisa de hardening para ambiente compartilhado/producao, incluindo politica de cookies/CSRF/TLS conforme deploy
+- conectores externos ainda nao existem e precisam de threat model proprio antes de entrar na v1
+- replay prevention hoje depende de idempotencia por `event_id`; assinatura/autenticacao forte entre servicos ainda deve evoluir
+- classificacao formal de dados sensiveis do dominio precisa ser aprofundada antes de dados reais de cliente
 - scanners de dependencia e imagem ainda nao foram incorporados como gate automatizado em toda a stack
 
 ## Referencias
