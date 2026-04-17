@@ -87,6 +87,20 @@ bundle exec rubocop
 bundle exec brakeman
 ```
 
+Para gerar logs, resumo HTML e coverage SimpleCov no padrao oficial, rode o runner unico na raiz:
+
+```bash
+bash scripts/reports/run-all-reports.sh
+```
+
+No PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/reports/run-all-reports.ps1
+```
+
+Os artefatos da API ficam em `apps/api/test/reports/` e sao sobrescritos a cada execucao.
+
 ## Proximo passo esperado
 
 A API deve evoluir nesta ordem:
@@ -96,6 +110,8 @@ A API deve evoluir nesta ordem:
 3. abrir ingestao por link/conector em sprint posterior (3.x/4)
 
 O backlog executivo detalhado dessa evolucao esta em [docs/planning/streamgate-full-sprints-roadmap.md](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md).
+
+O padrao completo de reports locais esta em [docs/guides/quality/testing-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/quality/testing-baseline-sprint-0.md).
 
 ## Gate de prontidao da Sprint 2.5
 

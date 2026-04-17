@@ -76,10 +76,50 @@ A cobertura minima da Sprint 0 e orientada por tipo de entrega, nao por percentu
 
 ## Comandos fonte de verdade por stack
 
+### Runner unico reportado
+
+O caminho oficial para uma varredura completa local e gerar reports de frontend, backend, E2E, smokes e CI local em um unico ciclo:
+
+```bash
+bash scripts/reports/run-all-reports.sh
+```
+
+No PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/reports/run-all-reports.ps1
+```
+
+Esse runner sobrescreve os reports antigos antes de cada execucao, preserva logs de falha e atualiza o hub visual em `docs/reports/index.html`.
+Os comandos individuais continuam existindo para desenvolvimento rapido, mas o runner acima e a fonte de verdade para evidencia agregada do estado do produto.
+
+### Reports e coverage oficiais
+
+| Escopo | Saida oficial | Tipo de evidencia |
+| --- | --- | --- |
+| Front unit | `apps/web/reports/unit/` | logs, `summary.json`, `report.html`, resultado Vitest e coverage HTML |
+| Front integration | `apps/web/reports/integration/` | logs, `summary.json`, `report.html`, resultado Vitest e coverage HTML |
+| E2E | `apps/web/e2e/reports/` | logs, Playwright HTML report, traces/screenshots/videos em falha |
+| API | `apps/api/test/reports/` | logs, `summary.json`, `report.html` e SimpleCov HTML |
+| Worker | `apps/worker/spec/reports/` | logs, `summary.json`, `report.html` e SimpleCov HTML |
+| Smokes | `scripts/smokes/reports/` | resumo de cada smoke, logs por etapa e diagnostico Compose em falha |
+| CI local | `scripts/ci/reports/` | resumo por workflow, logs por step e `report.html` |
+| Hub global | `docs/reports/index.html` | indice navegavel com status e links para todos os reports gerados |
+
+Regra operacional:
+
+- reports e coverages sao artefatos locais e ficam fora do Git;
+- cada execucao sobrescreve a execucao anterior para evitar lixo acumulado;
+- `.gitkeep` preserva apenas a estrutura das pastas oficiais;
+- coverage de E2E significa cobertura de execucao do Playwright, nao cobertura JS instrumentada no navegador;
+- quando testes ou CI mudarem de estrutura, o mapa acima e o hub de reports devem ser atualizados no mesmo ciclo.
+
 ### Frontend
 
 - `pnpm lint` em `apps/web`
-- `pnpm test:run` em `apps/web`
+- `pnpm test:run` em `apps/web` gera report em `apps/web/reports/unit/`
+- `pnpm test:integration` em `apps/web` gera report em `apps/web/reports/integration/`
+- `pnpm test:e2e` em `apps/web` gera report em `apps/web/e2e/reports/`
 - `pnpm build` em `apps/web`
 
 ### API
@@ -106,6 +146,8 @@ A cobertura minima da Sprint 0 e orientada por tipo de entrega, nao por percentu
 
 - `./scripts/ci/ci-local.sh`
 - `.\scripts\ci\ci-local.ps1`
+
+Os scripts de CI local tambem geram `scripts/ci/reports/summary.json`, `scripts/ci/reports/report.html` e logs por step.
 
 ## Criterio para aceitar falha causada exclusivamente por ambiente
 

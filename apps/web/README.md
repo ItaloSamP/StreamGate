@@ -137,9 +137,17 @@ Validacoes executadas na trilha de frontend Sprint 4:
 
 Para validar E2E localmente, suba o web server antes do comando ou use `scripts/dev/dev-up.ps1 -Mode app`.
 
+## Reports locais
+
+- `pnpm test:run` gera logs, resumo HTML e coverage em `apps/web/reports/unit/`.
+- `pnpm test:integration` gera logs, resumo HTML e coverage em `apps/web/reports/integration/`.
+- `pnpm test:e2e` gera logs e Playwright HTML report em `apps/web/e2e/reports/`.
+- Para uma varredura completa do produto, use `scripts/reports/run-all-reports.ps1` ou `scripts/reports/run-all-reports.sh` na raiz.
+
 ## Referencias
 
 - [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
 - [Fundacoes do frontend](C:/estudos/StreamGate/docs/guides/frontend/frontend-foundations.md)
 - [Mapa do workspace frontend](C:/estudos/StreamGate/docs/guides/frontend/frontend-workspace-map.md)
 - [Guia de autenticacao](C:/estudos/StreamGate/docs/guides/backend/authentication-guide.md)
+- [Baseline de testes e reports](C:/estudos/StreamGate/docs/guides/quality/testing-baseline-sprint-0.md)

@@ -37,7 +37,7 @@ A baseline operacional da Sprint 0 continua registrada em [docs/guides/platform/
 
 ### O que ja esta fechado na trilha DevOps
 
-- [x] scripts oficiais consolidados em `scripts/bootstrap`, `scripts/dev`, `scripts/ci`, `scripts/compose` e `scripts/smokes`.
+- [x] scripts oficiais consolidados em `scripts/bootstrap`, `scripts/dev`, `scripts/ci`, `scripts/compose`, `scripts/reports` e `scripts/smokes`.
 - [x] matriz de ambiente formalizada com recomendacao `WSL-first`.
 - [x] falha de `vitest` no Windows classificada como limitacao de ambiente local.
 - [x] falha antiga do worker por `git ls-files` tratada no gemspec.
@@ -45,6 +45,7 @@ A baseline operacional da Sprint 0 continua registrada em [docs/guides/platform/
 - [x] workflows separados (`frontend-ci`, `backend-ci`, `docker-ci`) e alinhados ao estado real do projeto.
 - [x] profile `full` executa worker runtime real.
 - [x] smokes operacionais centralizados em `scripts/smokes`, com runner unico para `infra`, `app` e `full`.
+- [x] reports locais centralizados em `scripts/reports`, com runner unico para frontend, backend, E2E, smokes e CI local.
 
 ### Fechamento especifico da Sprint 2 (DevOps)
 
@@ -74,6 +75,7 @@ Skills aplicadas nesta trilha: `docker`, `github-actions-expert`, `monitoring-ob
 - [x] criar runner unico (`run-smokes.ps1` e `run-smokes.sh`) que derruba, sobe, valida e derruba a stack;
 - [x] incluir smoke operacional do worker real no profile `full`;
 - [x] conectar o pacote completo de smokes ao CI local e ao workflow `docker-ci`;
+- [x] criar runner unico de reports (`run-all-reports.ps1` e `run-all-reports.sh`) para consolidar logs, HTML e coverage por camada;
 - [x] documentar evidencias, comandos publicos e diagnostico de falha por logs recentes.
 
 ## Planejamento da trilha DevOps na Sprint 2
@@ -132,6 +134,8 @@ Comandos de referencia para validar essa trilha:
 - `powershell -ExecutionPolicy Bypass -File .\scripts\compose\compose-health.tests.ps1`
 - `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1`
 - `bash scripts/smokes/run-smokes.sh`
+- `powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1`
+- `bash scripts/reports/run-all-reports.sh`
 - `python scripts/smokes/worker-operational-smoke.py`
 - `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 docker`
 

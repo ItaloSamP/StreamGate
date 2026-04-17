@@ -32,7 +32,7 @@ No Windows, a recomendacao pratica e:
 
 Os scripts `.ps1` continuam disponiveis apenas como fallback para Windows puro.
 
-A raiz de `scripts/` agora expoe apenas os comandos principais; helpers internos ficam organizados em `scripts/bootstrap`, `scripts/dev`, `scripts/ci`, `scripts/compose` e `scripts/smokes`.
+A raiz de `scripts/` agora expoe apenas os comandos principais; helpers internos ficam organizados em `scripts/bootstrap`, `scripts/dev`, `scripts/ci`, `scripts/compose`, `scripts/reports` e `scripts/smokes`.
 
 A classificacao operacional real da Sprint 0 para ambientes, checks e falhas conhecidas esta em [docs/guides/platform/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/platform/devops-baseline-sprint-0.md).
 
@@ -219,6 +219,7 @@ Na raiz do projeto:
 ./scripts/dev/dev-up.sh full
 ./scripts/dev/dev-down.sh
 ./scripts/compose/compose-health-tests.sh
+./scripts/reports/run-all-reports.sh
 ./scripts/smokes/run-smokes.sh
 ./scripts/ci/ci-local.sh
 ```
@@ -244,6 +245,7 @@ Se voce precisar rodar o projeto fora do WSL, ainda existem os scripts PowerShel
 .\\scripts\\dev\\dev-up.ps1 -Mode full
 .\\scripts\\dev\\dev-down.ps1
 .\\scripts\\compose\\compose-health.tests.ps1
+powershell -ExecutionPolicy Bypass -File .\\scripts\\reports\\run-all-reports.ps1
 powershell -ExecutionPolicy Bypass -File .\\scripts\\smokes\\run-smokes.ps1
 .\\scripts\\ci\\ci-local.ps1
 ```
@@ -258,6 +260,30 @@ No PowerShell, para escolher workflow especifico:
 ```
 
 Mas o fluxo recomendado segue sendo o `WSL-first`.
+
+## Como abrir os reports locais
+
+Para gerar todos os reports de uma vez:
+
+```bash
+bash scripts/reports/run-all-reports.sh
+```
+
+No PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1
+```
+
+Depois da execucao, abra `docs/reports/index.html` no navegador. Esse hub aponta para:
+
+- coverage HTML do frontend unit/integration;
+- Playwright HTML report do E2E;
+- SimpleCov HTML da API e do worker;
+- logs e resumo dos smokes;
+- logs e resumo do CI local.
+
+Os reports sao artefatos locais, sobrescritos em cada nova execucao e ignorados pelo Git.
 
 ## CI atual
 

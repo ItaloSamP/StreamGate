@@ -1135,10 +1135,12 @@ Fronteira explicita (fora da Sprint 4): `external_link`, `oauth_delegated`, `goo
 - [x] Criar runner unico `scripts/smokes/run-smokes.ps1` e `scripts/smokes/run-smokes.sh` para lifecycle completo da stack.
 - [x] Incluir smoke operacional cobrindo `upload -> fila -> worker -> leitura operacional`.
 - [x] Conectar o pacote completo de smokes ao CI local e ao workflow `docker-ci`.
+- [x] Criar runner unico `scripts/reports/run-all-reports.ps1` e `scripts/reports/run-all-reports.sh` para gerar reports agregados de front, back, E2E, smokes e CI local.
 
 ### Test planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
+- [x] Planejar padrao oficial de reports/coverage sobrescritos por execucao, com hub local em `docs/reports/index.html`.
 - [ ] Planejar cobertura de consumo real do worker e transicao de estados.
 - [ ] Planejar request/integration tests para endpoints de `analytics`, `quarantine` e `audit`.
 - [ ] Planejar E2E minimo do fluxo completo com processamento real refletido no workspace.
@@ -1146,6 +1148,7 @@ Fronteira explicita (fora da Sprint 4): `external_link`, `oauth_delegated`, `goo
 ### Test execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
+- [x] Instrumentar geracao de reports para Vitest, Playwright, Rails/Minitest, RSpec, smokes e CI local.
 - [ ] Executar suites backend/web/worker da trilha com classificacao ambiente vs implementacao.
 - [x] Executar smoke operacional completo com broker e worker reais.
 - [x] Registrar evidencias de DevOps com comandos e resultados da trilha.
@@ -1158,6 +1161,12 @@ Evidencias DevOps registradas (2026-04-15):
 - `powershell -ExecutionPolicy Bypass -File scripts/compose/compose-health.tests.ps1`: PASS.
 - `docker compose exec -T -e RAILS_ENV=test api bundle exec rails test test/requests/uploads_jobs_flow_test.rb`: PASS (`9 runs`, `50 assertions`, `0 failures`, `0 errors`).
 - classificacao ambiente vs implementacao: o CI local PowerShell classifica ausencia de `jq` no WSL Bash local como `SKIP` apenas para o helper Bash; o `docker-ci` remoto continua estrito porque instala `jq` antes de validar esse helper.
+
+Evidencias de reports locais registradas (2026-04-16):
+
+- `pnpm.cmd test:run` em `apps/web`: PASS (`11` arquivos, `53` testes) com report HTML, `summary.json`, logs e coverage em `apps/web/reports/unit/`.
+- `node scripts/reports/generate-index.mjs`: PASS com hub local gerado em `docs/reports/index.html`.
+- `bash -n` para scripts `.sh`: bloqueado por ambiente Windows/WSL (`E_ACCESSDENIED`), mesma classe de falha ja registrada no baseline.
 
 ### Security
 
@@ -1181,6 +1190,7 @@ Evidencias DevOps registradas (2026-04-15):
 - [x] Criar runbook operacional do worker e guia de governanca de documentacao.
 - [x] Atualizar guias tecnicos com estado pos-Sprint 3 e fronteiras da Sprint 4.
 - [x] Atualizar roadmap, README do web e guias de frontend no mesmo ciclo da entrega.
+- [x] Documentar padrao oficial de reports/coverage e registrar uso de `documentation-writer` para mudancas em testes/CI.
 - [ ] Preparar closeout final da Sprint 4 quando DevOps/Test/Security tambem forem encerradas.
 
 ### Checklist de saida
@@ -1191,6 +1201,7 @@ Evidencias DevOps registradas (2026-04-15):
 - [x] Modulos `analytics`, `quarantine`, `quarantine/dlq`, `audit`, `events`, `jobs` e `uploads` consumindo dados reais no frontend.
 - [x] OpenAPI, contratos e documentacao sincronizados sem drift conhecido para as trilhas tocadas.
 - [x] Evidencias de DevOps registradas com runner local, docker-ci local e smoke operacional do worker.
+- [x] Hub local de reports definido em `docs/reports/index.html`, com artefatos ignorados pelo Git e `.gitkeep` preservando estrutura.
 - [ ] Evidencias de teste e operacao finais registradas com classificacao de risco residual apos DevOps/Test/Security.
 
 ### Reavaliacao de transicao por trilha
@@ -1213,10 +1224,10 @@ Evidencias DevOps registradas (2026-04-15):
 - Back execution: concluida para o corte atual; runtime inicial de fila, transicoes de job, idempotencia por evento, endpoints operacionais read-only e contratos foram implementados.
 - Front planning: concluida; command center real, URL state, refresh manual, stale state, role gating, masking, export CSV e rotas de detalhe foram fechados.
 - Front execution: concluida; mocks de `dashboard/analytics/quarantine/audit/events` foram substituidos por dados reais via `streamgate-api`, com detalhes compartilhaveis e badges reais.
-- DevOps: concluida para a Sprint 4; smokes foram centralizados em `scripts/smokes`, runner unico gerencia lifecycle completo, profile `full` sobe worker real healthy e `ci-local.ps1 docker` passou com todos os smokes.
-- Documentation: em andamento; README do web, fundacoes de frontend, mapa do workspace, runbook do worker, setup, roadmap DevOps e roadmap mestre foram atualizados com `documentation-writer`.
-- Test planning: parcialmente coberta pela trilha frontend; matriz de testes de paginas/adapters/detalhes foi aplicada no codigo, mas o fechamento formal permanece para a trilha de testes.
-- Test execution: parcialmente executada; `pnpm.cmd test:run`, `pnpm.cmd lint`, `pnpm.cmd build`, `pnpm.cmd test:e2e`, request test de upload/jobs e `ci-local.ps1 docker` passaram; fechamento formal de Test/Security ainda permanece pendente.
+- DevOps: concluida para a Sprint 4; smokes foram centralizados em `scripts/smokes`, runner unico gerencia lifecycle completo, profile `full` sobe worker real healthy, `ci-local.ps1 docker` passou com todos os smokes e a camada de reports agregados foi adicionada em `scripts/reports`.
+- Documentation: em andamento; README do web, fundacoes de frontend, mapa do workspace, runbook do worker, setup, baseline de testes/reports, governanca documental e roadmap mestre foram atualizados com `documentation-writer`.
+- Test planning: parcialmente coberta; alem da matriz de paginas/adapters/detalhes, existe agora padrao oficial de reports/coverage por camada e hub local agregado.
+- Test execution: parcialmente executada; `pnpm.cmd test:run`, `pnpm.cmd lint`, `pnpm.cmd build`, `pnpm.cmd test:e2e`, request test de upload/jobs e `ci-local.ps1 docker` passaram anteriormente; a instrumentacao de reports foi entregue, mas o fechamento formal de Test/Security ainda permanece pendente.
 - Security: parcialmente coberta no frontend por role gating e masking visual; revisao formal de seguranca permanece pendente.
 - Skills da sprint: em andamento; stack obrigatoria aplicada nas trilhas backend/frontend/DevOps/documentacao tocadas.
 

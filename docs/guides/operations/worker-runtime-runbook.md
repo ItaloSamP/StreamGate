@@ -84,6 +84,8 @@ Padronizar operacao, diagnostico e resposta a incidentes da trilha de runtime re
 - comandos de referencia:
   - `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1`
   - `bash scripts/smokes/run-smokes.sh`
+  - `powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1`
+  - `bash scripts/reports/run-all-reports.sh`
   - `python scripts/smokes/compose-smoke.py`
   - `python scripts/smokes/upload-signed-smoke.py`
   - `python scripts/smokes/worker-operational-smoke.py`
@@ -96,6 +98,7 @@ Padronizar operacao, diagnostico e resposta a incidentes da trilha de runtime re
   - a listagem de quarantine mostra o registro do arquivo com aviso;
   - analytics reflete o delta de jobs apos o processamento;
   - o runner derruba a stack ao final, inclusive em falha.
+- o runner de reports consolida logs, SimpleCov do worker e smokes em `docs/reports/index.html`; estes artefatos sao locais e sobrescritos a cada execucao.
 
 ## Playbook de incidente (fila)
 

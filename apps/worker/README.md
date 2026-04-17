@@ -33,6 +33,20 @@ bundle exec rspec
 bundle exec ruby -e 'require "worker"; Worker.run!'
 ```
 
+Para gerar logs, resumo HTML e coverage SimpleCov no padrao oficial, rode o runner unico na raiz:
+
+```bash
+bash scripts/reports/run-all-reports.sh
+```
+
+No PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/reports/run-all-reports.ps1
+```
+
+Os artefatos do worker ficam em `apps/worker/spec/reports/` e sao sobrescritos a cada execucao.
+
 ## Observacao importante
 
 O gap antigo do `gemspec` baseado em `git ls-files` ja foi removido na Sprint 0.
@@ -46,3 +60,8 @@ A evolucao apos este baseline deve focar em:
 1. parser por dominio e regras de validacao ricas
 2. reprocessamento operacional com controles de seguranca
 3. observabilidade mais profunda (metricas e alertas por fila/tentativa)
+
+## Referencias
+
+- [Baseline de testes e reports](C:/estudos/StreamGate/docs/guides/quality/testing-baseline-sprint-0.md)
+- [Runbook do worker](C:/estudos/StreamGate/docs/guides/operations/worker-runtime-runbook.md)

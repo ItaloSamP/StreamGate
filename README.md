@@ -76,7 +76,8 @@ O repositorio trabalha com dois modos principais:
 - worker Ruby isolado como app do monorepo
 - compose validado com perfis `infra` e `full`
 - CI separado em quatro workflows
-- scripts de bootstrap, dev, ci e compose organizados por trilha
+- scripts de bootstrap, dev, ci, compose, smokes e reports organizados por trilha
+- hub local de reports/coverage gerado em `docs/reports/index.html`
 - roadmap executivo e ADRs de autenticacao documentados
 - base de skills ampliada para arquitetura, modelagem de backend, OpenAPI, estrategia de testes, testes de integracao/contrato, CI/CD, infra e seguranca
 
@@ -96,7 +97,7 @@ Os workflows atuais ficam em `.github/workflows`:
 - [Arquitetura](C:/estudos/StreamGate/docs/guides/platform/architecture.md)
 - [Guia de autenticacao](C:/estudos/StreamGate/docs/guides/backend/authentication-guide.md)
 - [Definition of Done](C:/estudos/StreamGate/docs/guides/quality/definition-of-done.md)
-- [Baseline de testes da Sprint 0](C:/estudos/StreamGate/docs/guides/quality/testing-baseline-sprint-0.md)
+- [Baseline de testes e reports](C:/estudos/StreamGate/docs/guides/quality/testing-baseline-sprint-0.md)
 - [Baseline de seguranca da Sprint 0](C:/estudos/StreamGate/docs/guides/security/security-baseline-sprint-0.md)
 - [Threat model inicial do repositorio](C:/estudos/StreamGate/docs/guides/security/streamgate-threat-model.md)
 - [Setup do ambiente](C:/estudos/StreamGate/docs/guides/platform/setup.md)

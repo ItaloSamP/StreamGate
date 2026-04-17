@@ -34,6 +34,8 @@ Garantir documentacao profissional, consistente e intuitiva de ponta a ponta no 
 - toda task de documentacao deve usar `documentation-writer` como skill obrigatoria base.
 - reestruturacoes editoriais amplas exigem `brainstorming` antes da mudanca.
 - mudancas de contrato/API exigem `api-documenter` + `openapi` no mesmo ciclo.
+- mudancas em testes, coverage, smokes ou CI devem atualizar o mapa de reports em [docs/guides/quality/testing-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/quality/testing-baseline-sprint-0.md) quando criarem, moverem ou removerem saidas oficiais.
+- o hub `docs/reports/index.html` e artefato local gerado; a documentacao deve apontar para o fluxo que o gera, nao versionar o HTML produzido.
 - docs historicos de sprint (closeout) permanecem como registro factual.
 
 ## Stack de skills para documentacao
@@ -58,8 +60,9 @@ Cada guia ativo deve, sempre que aplicavel, manter:
 1. identificar impacto documental da mudanca.
 2. atualizar arquivos do dominio afetado.
 3. atualizar `README.md`, `docs/README.md` e roadmap quando houver impacto transversal.
-4. validar links internos e coerencia entre docs.
-5. registrar no closeout da sprint os documentos atualizados.
+4. atualizar o mapa de reports quando a mudanca tocar testes, coverage, smokes ou CI.
+5. validar links internos e coerencia entre docs.
+6. registrar no closeout da sprint os documentos atualizados.
 
 ## Validacao e evidencias
 
