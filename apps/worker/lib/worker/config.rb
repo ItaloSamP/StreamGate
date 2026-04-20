@@ -22,7 +22,9 @@ module Worker
                 :storage_region,
                 :storage_bucket,
                 :storage_access_key,
-                :storage_secret_key
+                :storage_secret_key,
+                :job_artifact_retention_days,
+                :notification_retention_days
 
     def initialize(env: ENV)
       @broker_host = env.fetch("BROKER_HOST", "rabbitmq")
@@ -48,6 +50,8 @@ module Worker
       @storage_bucket = env.fetch("UPLOAD_STORAGE_BUCKET", "streamgate-uploads")
       @storage_access_key = env.fetch("UPLOAD_STORAGE_ACCESS_KEY", env.fetch("MINIO_ROOT_USER", "streamgate"))
       @storage_secret_key = env.fetch("UPLOAD_STORAGE_SECRET_KEY", env.fetch("MINIO_ROOT_PASSWORD", "streamgate123"))
+      @job_artifact_retention_days = env.fetch("JOB_ARTIFACT_RETENTION_DAYS", "30").to_i
+      @notification_retention_days = env.fetch("NOTIFICATION_RETENTION_DAYS", "30").to_i
     end
   end
 end
