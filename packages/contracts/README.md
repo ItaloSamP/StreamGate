@@ -57,7 +57,7 @@ Todo contrato de evento deve prever, quando aplicavel:
 - `operational-reads`: jobs, analytics, quarantine, audit e DLQ read-only.
 - `operations`: retry, resolve e ciclo de replay DLQ.
 - `artifacts`: listagem e URL assinada curta de download.
-- `notifications`: inbox, settings e webhook/email deliveries.
+- `notifications`: inbox, leitura/arquivo/delete, acoes em massa essenciais, settings e webhook/email deliveries.
 
 Exemplos correspondentes ficam no mesmo dominio em `examples/http`.
 ## Fonte de verdade complementar

@@ -218,6 +218,86 @@ class OperationalActionsTest < ActionDispatch::IntegrationTest
     assert_nil parsed_json.dig("data", "webhook_secret")
   end
 
+  test "notifications can be read archived restored and deleted only by owner" do
+    token = login_as("operator@example.com", "StrongPass123!")
+    external_token = login_as("external@example.com", "StrongPass123!")
+    notification = Notification.create!(
+      recipient: users(:operator),
+      event_name: "job.completed",
+      title: "Job concluido",
+      body: "O job terminou com artefatos disponiveis.",
+      metadata: { job_id: jobs(:pending_job).id },
+      trace_id: "trace_notification_fixture",
+      request_id: "req_notification_fixture"
+    )
+
+    get "/api/v1/notifications", headers: auth_header(token)
+    assert_response :ok
+    assert_equal notification.id, parsed_json.dig("data", 0, "id")
+
+    patch "/api/v1/notifications/#{notification.id}/read", headers: auth_header(external_token), as: :json
+    assert_response :not_found
+
+    patch "/api/v1/notifications/#{notification.id}/read", headers: auth_header(token), as: :json
+    assert_response :ok
+    assert_equal "read", parsed_json.dig("data", "status")
+    assert parsed_json.dig("data", "read_at").present?
+
+    patch "/api/v1/notifications/#{notification.id}/archive", headers: auth_header(token), as: :json
+    assert_response :ok
+    assert_equal "archived", parsed_json.dig("data", "status")
+
+    get "/api/v1/notifications", headers: auth_header(token)
+    assert_response :ok
+    assert_empty parsed_json.fetch("data")
+
+    get "/api/v1/notifications", params: { status: "archived" }, headers: auth_header(token)
+    assert_response :ok
+    assert_equal notification.id, parsed_json.dig("data", 0, "id")
+
+    patch "/api/v1/notifications/#{notification.id}/unarchive", headers: auth_header(token), as: :json
+    assert_response :ok
+    assert_equal "read", parsed_json.dig("data", "status")
+
+    delete "/api/v1/notifications/#{notification.id}", headers: auth_header(token), as: :json
+    assert_response :ok
+    assert_equal true, parsed_json.dig("data", "deleted")
+    assert_not Notification.exists?(notification.id)
+  end
+
+  test "notification bulk actions are scoped to current actor" do
+    token = login_as("operator@example.com", "StrongPass123!")
+    mine = Notification.create!(
+      recipient: users(:operator),
+      event_name: "job.failed",
+      title: "Job falhou",
+      body: "Falha operacional.",
+      trace_id: "trace_bulk_1"
+    )
+    other = Notification.create!(
+      recipient: users(:external_operator),
+      event_name: "job.failed",
+      title: "Job externo",
+      body: "Falha externa.",
+      trace_id: "trace_bulk_2"
+    )
+
+    patch "/api/v1/notifications/mark-all-read", headers: auth_header(token), as: :json
+    assert_response :ok
+    assert_equal 1, parsed_json.dig("data", "updated_count")
+    assert_equal "read", mine.reload.status
+    assert_equal "unread", other.reload.status
+
+    patch "/api/v1/notifications/bulk-archive",
+          params: { notifications: { ids: [ mine.id, other.id ] } },
+          headers: auth_header(token),
+          as: :json
+    assert_response :ok
+    assert_equal 1, parsed_json.dig("data", "archived_count")
+    assert_equal "archived", mine.reload.status
+    assert_equal "unread", other.reload.status
+  end
+
   private
 
   def dlq_payload

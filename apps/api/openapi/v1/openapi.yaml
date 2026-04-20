@@ -1026,6 +1026,13 @@ paths:
       summary: Lista notificacoes in-app do usuario atual
       operationId: listNotifications
       tags: [Notifications]
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [active, unread, read, archived]
       responses:
         '200':
           description: Notificacoes do usuario
@@ -1033,6 +1040,105 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotificationListResponseEnvelope'
+
+  /api/v1/notifications/mark-all-read:
+    patch:
+      summary: Marca notificacoes visiveis como lidas
+      operationId: markAllNotificationsRead
+      tags: [Notifications]
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [active, unread, read, archived]
+      responses:
+        '200':
+          description: Notificacoes atualizadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationBulkActionResponseEnvelope'
+
+  /api/v1/notifications/bulk-archive:
+    patch:
+      summary: Arquiva notificacoes selecionadas
+      operationId: bulkArchiveNotifications
+      tags: [Notifications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationBulkArchiveRequest'
+      responses:
+        '200':
+          description: Notificacoes arquivadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationBulkActionResponseEnvelope'
+
+  /api/v1/notifications/{notification_id}/read:
+    patch:
+      summary: Marca notificacao como lida
+      operationId: markNotificationRead
+      tags: [Notifications]
+      parameters:
+        - $ref: '#/components/parameters/NotificationIdPath'
+      responses:
+        '200':
+          description: Notificacao atualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationResponseEnvelope'
+
+  /api/v1/notifications/{notification_id}/archive:
+    patch:
+      summary: Arquiva notificacao
+      operationId: archiveNotification
+      tags: [Notifications]
+      parameters:
+        - $ref: '#/components/parameters/NotificationIdPath'
+      responses:
+        '200':
+          description: Notificacao arquivada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationResponseEnvelope'
+
+  /api/v1/notifications/{notification_id}/unarchive:
+    patch:
+      summary: Restaura notificacao arquivada
+      operationId: unarchiveNotification
+      tags: [Notifications]
+      parameters:
+        - $ref: '#/components/parameters/NotificationIdPath'
+      responses:
+        '200':
+          description: Notificacao restaurada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationResponseEnvelope'
+
+  /api/v1/notifications/{notification_id}:
+    delete:
+      summary: Deleta notificacao propria
+      operationId: deleteNotification
+      tags: [Notifications]
+      parameters:
+        - $ref: '#/components/parameters/NotificationIdPath'
+      responses:
+        '200':
+          description: Notificacao deletada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationDeleteResponseEnvelope'
 
   /api/v1/notification-settings:
     get:
@@ -1109,6 +1215,12 @@ components:
         type: string
     QuarantineIdPath:
       name: quarantine_id
+      in: path
+      required: true
+      schema:
+        type: string
+    NotificationIdPath:
+      name: notification_id
       in: path
       required: true
       schema:
@@ -2105,6 +2217,50 @@ components:
           items:
             $ref: '#/components/schemas/Notification'
 
+    NotificationResponseEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/Notification'
+
+    NotificationBulkArchiveRequest:
+      type: object
+      required: [notifications]
+      properties:
+        notifications:
+          type: object
+          required: [ids]
+          properties:
+            ids:
+              type: array
+              items:
+                type: string
+
+    NotificationBulkActionResponseEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          properties:
+            updated_count: { type: integer, minimum: 0 }
+            archived_count: { type: integer, minimum: 0 }
+            ids:
+              type: array
+              items:
+                type: string
+
+    NotificationDeleteResponseEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          properties:
+            deleted: { type: boolean }
+            id: { type: string }
+
     Notification:
       type: object
       properties:
@@ -2157,4 +2313,3 @@ components:
             status: { type: string, enum: [pending, delivered, failed] }
             attempts_count: { type: integer, minimum: 0 }
             webhook_secret: { nullable: true }
-

@@ -1,0 +1,17 @@
+{
+  "$id": "https://streamgate.local/contracts/http/notification-bulk-action-response.v1.json",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "object",
+      "properties": {
+        "updated_count": { "type": "integer", "minimum": 0 },
+        "archived_count": { "type": "integer", "minimum": 0 },
+        "ids": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
