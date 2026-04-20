@@ -19,11 +19,23 @@ Rails.application.routes.draw do
         end
       end
 
-      resources :jobs, only: [ :index ]
+      resources :jobs, only: [ :index ] do
+        post "retry", to: "job_retries#create"
+      end
+      get "jobs/:job_id/artifacts", to: "job_artifacts#index"
+      post "jobs/:job_id/artifacts/:artifact_id/download-url", to: "job_artifacts#download_url"
       get "analytics", to: "analytics#index"
       get "quarantine", to: "quarantine#index"
+      post "quarantine/:id/resolve", to: "quarantine_resolutions#create"
       get "quarantine/dlq", to: "dlq#index"
+      post "quarantine/dlq/:message_id/replay-requests", to: "dlq_replay_requests#create"
+      post "dlq-replay-requests/:id/approve", to: "dlq_replay_requests#approve"
+      post "dlq-replay-requests/:id/execute", to: "dlq_replay_requests#execute"
       get "audit", to: "audit#index"
+      get "notifications", to: "notifications#index"
+      get "notification-settings", to: "notification_settings#show"
+      patch "notification-settings", to: "notification_settings#update"
+      post "notification-settings/webhook/test", to: "notification_settings#test_webhook"
     end
   end
 

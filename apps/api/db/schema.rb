@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_15_000100) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_20_000100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -75,6 +75,33 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_15_000100) do
     t.check_constraint "expires_at > created_at", name: "auth_sessions_expires_after_create"
   end
 
+  create_table "dlq_replay_requests", id: :string, force: :cascade do |t|
+    t.string "approved_by_id"
+    t.datetime "approved_at"
+    t.text "approval_reason"
+    t.datetime "created_at", null: false
+    t.string "executed_by_id"
+    t.datetime "executed_at"
+    t.text "execution_reason"
+    t.datetime "expires_at"
+    t.text "last_error"
+    t.string "message_id", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.string "outbox_event_id"
+    t.jsonb "payload", default: {}, null: false
+    t.text "reason", null: false
+    t.string "request_id"
+    t.string "requested_by_id", null: false
+    t.string "status", default: "requested", null: false
+    t.string "trace_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["approved_by_id"], name: "index_dlq_replay_requests_on_approved_by_id"
+    t.index ["executed_by_id"], name: "index_dlq_replay_requests_on_executed_by_id"
+    t.index ["message_id"], name: "index_dlq_replay_requests_on_message_id"
+    t.index ["requested_by_id"], name: "index_dlq_replay_requests_on_requested_by_id"
+    t.index ["status", "created_at"], name: "index_dlq_replay_requests_on_status_and_created_at"
+  end
+
   create_table "integration_outbox_events", id: :string, force: :cascade do |t|
     t.integer "attempts_count", default: 0, null: false
     t.datetime "available_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
@@ -93,6 +120,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_15_000100) do
     t.index ["event_id"], name: "index_integration_outbox_events_on_event_id", unique: true
     t.index ["status", "available_at"], name: "index_integration_outbox_events_on_status_and_available_at"
     t.index ["trace_id"], name: "index_integration_outbox_events_on_trace_id"
+  end
+
+  create_table "job_artifacts", id: :string, force: :cascade do |t|
+    t.string "artifact_type", null: false
+    t.bigint "byte_size", default: 0, null: false
+    t.string "checksum_sha256"
+    t.string "content_type", null: false
+    t.datetime "created_at", null: false
+    t.datetime "expires_at"
+    t.string "filename", null: false
+    t.datetime "generated_at"
+    t.string "job_id", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.string "request_id"
+    t.string "status", default: "pending", null: false
+    t.string "storage_key", null: false
+    t.string "trace_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["job_id", "artifact_type"], name: "index_job_artifacts_on_job_id_and_artifact_type"
+    t.index ["job_id"], name: "index_job_artifacts_on_job_id"
+    t.index ["status", "expires_at"], name: "index_job_artifacts_on_status_and_expires_at"
+    t.check_constraint "byte_size >= 0", name: "job_artifacts_byte_size_non_negative"
   end
 
   create_table "job_batches", id: :string, force: :cascade do |t|
@@ -133,6 +182,54 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_15_000100) do
     t.index ["upload_id"], name: "index_jobs_on_upload_id"
   end
 
+  create_table "notification_settings", id: :string, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "email_enabled", default: false, null: false
+    t.boolean "in_app_enabled", default: true, null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.datetime "updated_at", null: false
+    t.string "user_id", null: false
+    t.boolean "webhook_enabled", default: false, null: false
+    t.string "webhook_secret_digest"
+    t.string "webhook_url"
+    t.index ["user_id"], name: "index_notification_settings_on_user_id", unique: true
+  end
+
+  create_table "notifications", id: :string, force: :cascade do |t|
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.string "event_name", null: false
+    t.datetime "expires_at"
+    t.jsonb "metadata", default: {}, null: false
+    t.datetime "read_at"
+    t.string "recipient_id", null: false
+    t.string "request_id"
+    t.string "status", default: "unread", null: false
+    t.string "title", null: false
+    t.string "trace_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["recipient_id", "created_at"], name: "index_notifications_on_recipient_id_and_created_at"
+    t.index ["recipient_id"], name: "index_notifications_on_recipient_id"
+    t.index ["status", "expires_at"], name: "index_notifications_on_status_and_expires_at"
+  end
+
+  create_table "operational_action_idempotency_keys", id: :string, force: :cascade do |t|
+    t.string "actor_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "key", null: false
+    t.string "request_fingerprint", null: false
+    t.string "request_id"
+    t.jsonb "response_body", default: {}, null: false
+    t.integer "response_status", null: false
+    t.string "scope", null: false
+    t.string "trace_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["actor_id", "scope", "key"], name: "idx_idempotency_actor_scope_key", unique: true
+    t.index ["actor_id"], name: "index_operational_action_idempotency_keys_on_actor_id"
+    t.index ["expires_at"], name: "index_operational_action_idempotency_keys_on_expires_at"
+  end
+
   create_table "processing_attempts", id: :string, force: :cascade do |t|
     t.integer "attempt_number", null: false
     t.datetime "created_at", null: false
@@ -164,6 +261,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_15_000100) do
     t.string "job_id", null: false
     t.text "message", null: false
     t.jsonb "payload", default: {}, null: false
+    t.datetime "resolved_at"
+    t.string "resolved_by_id"
+    t.text "resolution_reason"
+    t.string "resolution_status", default: "open", null: false
     t.integer "row_number"
     t.string "severity", default: "error", null: false
     t.string "trace_id", null: false
@@ -172,6 +273,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_15_000100) do
     t.index ["job_batch_id"], name: "index_quarantine_records_on_job_batch_id"
     t.index ["job_id", "severity"], name: "index_quarantine_records_on_job_id_and_severity"
     t.index ["job_id"], name: "index_quarantine_records_on_job_id"
+    t.index ["resolution_status", "created_at"], name: "index_quarantine_records_on_resolution_status_and_created_at"
+    t.index ["resolved_by_id"], name: "index_quarantine_records_on_resolved_by_id"
     t.index ["severity", "created_at"], name: "index_quarantine_records_on_severity_and_created_at"
     t.index ["trace_id"], name: "index_quarantine_records_on_trace_id"
     t.check_constraint "row_number IS NULL OR row_number > 0", name: "quarantine_records_row_number_positive"
@@ -215,6 +318,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_15_000100) do
     t.index ["password_reset_token_digest"], name: "index_users_on_password_reset_token_digest", unique: true
   end
 
+  create_table "webhook_deliveries", id: :string, force: :cascade do |t|
+    t.integer "attempts_count", default: 0, null: false
+    t.string "channel", null: false
+    t.datetime "created_at", null: false
+    t.datetime "delivered_at"
+    t.string "event_name", null: false
+    t.text "last_error"
+    t.datetime "next_attempt_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.string "notification_id"
+    t.string "notification_setting_id", null: false
+    t.jsonb "payload", default: {}, null: false
+    t.integer "response_status"
+    t.string "request_id"
+    t.string "signature"
+    t.string "status", default: "pending", null: false
+    t.string "trace_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_name", "created_at"], name: "index_webhook_deliveries_on_event_name_and_created_at"
+    t.index ["notification_id"], name: "index_webhook_deliveries_on_notification_id"
+    t.index ["notification_setting_id"], name: "index_webhook_deliveries_on_notification_setting_id"
+    t.index ["status", "next_attempt_at"], name: "index_webhook_deliveries_on_status_and_next_attempt_at"
+  end
+
   create_table "worker_consumed_events", id: :string, force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "event_id", null: false
@@ -256,6 +382,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_15_000100) do
   add_foreign_key "analytics_job_snapshots", "uploads"
   add_foreign_key "analytics_job_snapshots", "users", column: "actor_id"
   add_foreign_key "audit_events", "users", column: "actor_id"
+  add_foreign_key "dlq_replay_requests", "users", column: "approved_by_id"
+  add_foreign_key "dlq_replay_requests", "users", column: "executed_by_id"
+  add_foreign_key "dlq_replay_requests", "users", column: "requested_by_id"
+  add_foreign_key "job_artifacts", "jobs"
+  add_foreign_key "notification_settings", "users"
+  add_foreign_key "notifications", "users", column: "recipient_id"
+  add_foreign_key "operational_action_idempotency_keys", "users", column: "actor_id"
   add_foreign_key "auth_sessions", "users"
   add_foreign_key "job_batches", "jobs"
   add_foreign_key "jobs", "uploads"
@@ -265,7 +398,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_15_000100) do
   add_foreign_key "processing_attempts", "users", column: "initiated_by_id"
   add_foreign_key "quarantine_records", "job_batches"
   add_foreign_key "quarantine_records", "jobs"
+  add_foreign_key "quarantine_records", "users", column: "resolved_by_id"
   add_foreign_key "uploads", "users"
+  add_foreign_key "webhook_deliveries", "notification_settings"
+  add_foreign_key "webhook_deliveries", "notifications"
   add_foreign_key "worker_consumed_events", "jobs"
   add_foreign_key "worker_consumed_events", "uploads"
   add_foreign_key "worker_processing_metrics", "jobs"

@@ -8,7 +8,19 @@ class JobPolicy < ApplicationPolicy
   end
 
   def retry?
+    retry_job?
+  end
+
+  def retry_job?
     admin?
+  end
+
+  def read_job_artifacts?
+    admin? || same_organization?
+  end
+
+  def download_job_artifact?
+    read_job_artifacts?
   end
 
   private
