@@ -1,0 +1,32 @@
+{
+  "$id": "https://streamgate.local/contracts/http/artifact-list-response.v1.json",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "job_id", "artifact_type", "status", "filename", "content_type", "byte_size", "trace_id"],
+        "properties": {
+          "id": { "type": "string" },
+          "job_id": { "type": "string" },
+          "artifact_type": { "type": "string", "enum": ["processed_dataset", "quality_report", "audit_report"] },
+          "status": { "type": "string", "enum": ["pending", "generating", "available", "failed", "expired"] },
+          "filename": { "type": "string" },
+          "content_type": { "type": "string" },
+          "byte_size": { "type": "integer", "minimum": 0 },
+          "checksum_sha256": { "type": ["string", "null"] },
+          "generated_at": { "type": ["string", "null"], "format": "date-time" },
+          "expires_at": { "type": ["string", "null"], "format": "date-time" },
+          "metadata": { "type": "object" },
+          "trace_id": { "type": "string" },
+          "created_at": { "type": ["string", "null"], "format": "date-time" },
+          "updated_at": { "type": ["string", "null"], "format": "date-time" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,31 @@
+{
+  "$id": "https://streamgate.local/contracts/http/dlq-replay-request-response.v1.json",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": ["id", "message_id", "status", "requested_by_id", "reason", "trace_id"],
+      "properties": {
+        "id": { "type": "string" },
+        "message_id": { "type": "string" },
+        "status": { "type": "string", "enum": ["requested", "approved", "executing", "executed", "rejected", "failed"] },
+        "requested_by_id": { "type": "string" },
+        "approved_by_id": { "type": ["string", "null"] },
+        "executed_by_id": { "type": ["string", "null"] },
+        "reason": { "type": "string" },
+        "approval_reason": { "type": ["string", "null"] },
+        "execution_reason": { "type": ["string", "null"] },
+        "approved_at": { "type": ["string", "null"], "format": "date-time" },
+        "executed_at": { "type": ["string", "null"], "format": "date-time" },
+        "expires_at": { "type": ["string", "null"], "format": "date-time" },
+        "outbox_event_id": { "type": ["string", "null"] },
+        "trace_id": { "type": "string" },
+        "created_at": { "type": ["string", "null"], "format": "date-time" },
+        "updated_at": { "type": ["string", "null"], "format": "date-time" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

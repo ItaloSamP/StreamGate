@@ -7,9 +7,9 @@
   "properties": {
     "data": {
       "type": "array",
-      "items": { "$ref": "./resources/upload.v1.json" }
+      "items": { "$ref": "../shared/resources/upload.v1.json" }
     },
-    "meta": { "$ref": "./success-envelope.v1.json#/properties/meta" }
+    "meta": { "$ref": "../shared/envelopes/success-envelope.v1.json#/properties/meta" }
   },
   "additionalProperties": false
 }

@@ -192,10 +192,15 @@ Envelope de erro:
 
 ## Relacao com contratos compartilhados
 
-Os schemas/examples HTTP da trilha ficam em:
+Os schemas/examples HTTP ficam organizados por dominio em:
 
-- `packages/contracts/schemas/http`
-- `packages/contracts/examples/http`
+- `packages/contracts/schemas/http/uploads`
+- `packages/contracts/schemas/http/operational-reads`
+- `packages/contracts/schemas/http/operations`
+- `packages/contracts/schemas/http/artifacts`
+- `packages/contracts/schemas/http/notifications`
+- `packages/contracts/schemas/http/shared`
+- `packages/contracts/examples/http/<dominio-correspondente>`
 
 Compatibilidade de contrato deve seguir sincronizada com OpenAPI no mesmo ciclo de mudanca.
 
