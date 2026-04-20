@@ -1330,24 +1330,24 @@ Fronteira explicita (fora da Sprint 5 funcional): `external_link`, `oauth_delega
 ### Front planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`, `vercel-react-best-practices`, `test-driven-development`.
-- [ ] Manter o command center existente, sem redesenho amplo da identidade visual da Sprint 4.
-- [ ] Definir UX de acoes admin-only com confirmacao para retry/replay/resolve.
-- [ ] Definir estados de UI para mutacoes sensiveis: disponivel, bloqueada por regra, loading, sucesso, erro acionavel e acesso negado.
-- [ ] Planejar experiencia completa de artefatos: lista por job, status de geracao, download, erro acionavel e historico basico.
-- [ ] Planejar centro de notificacoes `in_app` no workspace.
-- [ ] Planejar configuracao visual para email/webhook com validacao, teste de envio quando viavel e estados de erro.
-- [ ] Manter operadores sem acesso a acoes sensiveis e sem exposicao indevida de payloads.
+- [x] Manter o command center existente, sem redesenho amplo da identidade visual da Sprint 4.
+- [x] Definir UX de acoes admin-only com confirmacao para retry/replay/resolve.
+- [x] Definir estados de UI para mutacoes sensiveis: disponivel, bloqueada por regra, loading, sucesso, erro acionavel e acesso negado.
+- [x] Planejar experiencia completa de artefatos: lista por job, status de geracao, download, erro acionavel e historico basico.
+- [x] Planejar centro de notificacoes `in_app` no workspace.
+- [x] Planejar configuracao visual para email/webhook com validacao, teste de envio quando viavel e estados de erro.
+- [x] Manter operadores sem acesso a acoes sensiveis e sem exposicao indevida de payloads.
 
 ### Front execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`, `vercel-react-best-practices`, `vitest`, `playwright`, `test-driven-development`.
-- [ ] Adicionar acoes operacionais admin-only nas telas de jobs, quarantine e DLQ.
-- [ ] Adicionar confirmacoes explicitas para retry/replay/resolve com motivo obrigatorio quando aplicavel.
-- [ ] Adicionar secao de artefatos em detalhes de job com lista, status, download e erro acionavel.
-- [ ] Adicionar area de notificacoes `in_app` no workspace.
-- [ ] Adicionar configuracao visual para email/webhook, preservando validacao, masking e estados de falha.
-- [ ] Atualizar `streamgate-api` e componentes consumidores sem espalhar chamadas HTTP fora da fronteira oficial.
-- [ ] Validar que operadores nao veem ou executam acoes sensiveis.
+- [x] Adicionar acoes operacionais admin-only nas telas de jobs, quarantine e DLQ.
+- [x] Adicionar confirmacoes explicitas para retry/replay/resolve com motivo obrigatorio quando aplicavel.
+- [x] Adicionar secao de artefatos em detalhes de job com lista, status, download e erro acionavel.
+- [x] Adicionar area de notificacoes `in_app` no workspace.
+- [x] Adicionar configuracao visual para email/webhook, preservando validacao, masking e estados de falha.
+- [x] Atualizar `streamgate-api` e componentes consumidores sem espalhar chamadas HTTP fora da fronteira oficial.
+- [x] Validar que operadores nao veem ou executam acoes sensiveis.
 
 ### DevOps
 
@@ -1368,16 +1368,16 @@ Fronteira explicita (fora da Sprint 5 funcional): `external_link`, `oauth_delega
 - [ ] Planejar request tests para retry/replay/resolve admin-only.
 - [ ] Planejar testes de estados invalidos, motivo obrigatorio, autorizacao e auditoria gerada.
 - [ ] Planejar testes de endpoints de artefatos, permissao e download seguro.
-- [ ] Planejar testes de configuracao/envio de notificacoes `in_app`, `email` e `webhook`.
+- [x] Planejar testes de configuracao/envio de notificacoes `in_app`, `email` e `webhook`.
 - [x] Planejar specs do worker para geracao de artefatos, replay controlado, idempotencia e notificacoes.
-- [ ] Planejar Vitest para acoes admin-only, confirmacoes, erro, permissao, artefatos e notificacoes.
+- [x] Planejar Vitest para acoes admin-only, confirmacoes, erro, permissao, artefatos e notificacoes.
 - [ ] Planejar Playwright cobrindo fluxo feliz de job processado com artefato baixavel.
 - [ ] Planejar smoke de operacao segura: upload, processamento, artefato final, retry/replay controlado, notificacao emitida e audit trail consultavel.
 
 ### Test execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Executar `pnpm test:run` em `apps/web`.
+- [x] Executar `pnpm test:run` em `apps/web`.
 - [x] Executar `bundle exec rails test` em `apps/api`.
 - [x] Executar `bundle exec rspec` em `apps/worker`.
 - [x] Executar validacao de OpenAPI, schemas e examples de contratos novos.
@@ -1385,7 +1385,7 @@ Fronteira explicita (fora da Sprint 5 funcional): `external_link`, `oauth_delega
 - [ ] Executar `powershell -ExecutionPolicy Bypass -File scripts/smokes/run-smokes.ps1`.
 - [ ] Executar `powershell -ExecutionPolicy Bypass -File scripts/reports/run-all-reports.ps1`.
 - [x] Registrar falhas classificadas como ambiente vs implementacao.
-- [ ] Registrar evidencias finais no closeout da Sprint 5.
+- [x] Registrar evidencias finais no closeout da Sprint 5.
 
 ### Security
 
@@ -1393,8 +1393,8 @@ Fronteira explicita (fora da Sprint 5 funcional): `external_link`, `oauth_delega
 - [ ] Atualizar threat model antes da implementacao de mutacoes operacionais.
 - [ ] Classificar dados sensiveis em artefatos, audit, quarantine, DLQ, email e webhook.
 - [ ] Exigir assinatura para webhook e registrar regra de rotacao/segredo em documentacao.
-- [ ] Garantir masking de payloads em notificacoes, auditoria e telas operacionais.
-- [ ] Validar RBAC admin-only para retry/replay/resolve, DLQ mutavel e configuracoes sensiveis.
+- [x] Garantir masking de payloads em notificacoes, auditoria e telas operacionais.
+- [x] Validar RBAC admin-only para retry/replay/resolve, DLQ mutavel e configuracoes sensiveis.
 - [ ] Registrar riscos residuais de notificacao externa, replay e conectores de entrada.
 - [ ] Manter conectores externos como discovery apenas: `google_drive`, `s3`, `http_url` e `oauth_delegated`.
 
@@ -1405,7 +1405,7 @@ Fronteira explicita (fora da Sprint 5 funcional): `external_link`, `oauth_delega
 - [ ] Usar `security-best-practices` para webhook, email, masking e autorizacao.
 - [x] Usar `api-designer`, `api-documenter`, `openapi` e `api-contract-testing` para endpoints e contratos novos.
 - [x] Usar `monitoring-observability` para alertas, metricas e runbook operacional.
-- [ ] Usar `breakdown-test`, `integration-testing`, `vitest` e `playwright` para matriz de cobertura.
+- [x] Usar `breakdown-test`, `integration-testing`, `vitest` e `playwright` para matriz de cobertura.
 - [ ] Usar `github-actions-expert` e `generate-github-workflow` quando a readiness de repositorio tocar CI/workflows.
 
 ### Documentation
@@ -1427,7 +1427,7 @@ Fronteira explicita (fora da Sprint 5 funcional): `external_link`, `oauth_delega
 - [x] Artefatos `processed_dataset`, `quality_report` e `audit_report` gerados, persistidos, listados e baixaveis com autorizacao correta.
 - [x] Notificacoes `in_app`, `email` e `webhook` funcionando para eventos criticos definidos.
 - [x] Webhook possui assinatura, segredo, timeout, retry limitado, auditoria e masking.
-- [ ] Frontend expoe acoes sensiveis apenas para admin e preserva command center existente.
+- [x] Frontend expoe acoes sensiveis apenas para admin e preserva command center existente.
 - [x] OpenAPI, contratos, schemas e examples sincronizados sem drift conhecido.
 - [ ] Smokes cobrem operacao segura, artefatos, notificacoes e audit trail.
 - [ ] Repo readiness completo entregue com `CODEOWNERS`, Dependabot, issue templates, `AGENTS.md` e checklist de release/rollback.
@@ -1439,8 +1439,8 @@ Fronteira explicita (fora da Sprint 5 funcional): `external_link`, `oauth_delega
 - [x] `Back planning`: validar contratos planejados vs implementados para mutacoes, artefatos e notificacoes.
 - [x] `Back execution`: registrar regras de estado, debitos tecnicos e riscos residuais de operacao mutavel.
 - [x] `Worker execution`: validar artefatos, replay, idempotencia, metricas e notificacoes emitidas.
-- [ ] `Front planning`: validar jornada de admin, artefatos e notificacoes sem redesenho indevido.
-- [ ] `Front execution`: validar permissao, acessibilidade, estados de erro, masking e regressao visual.
+- [x] `Front planning`: validar jornada de admin, artefatos e notificacoes sem redesenho indevido.
+- [x] `Front execution`: validar permissao, acessibilidade, estados de erro, masking e regressao visual.
 - [ ] `DevOps`: validar readiness do repo, smokes, reports, release/rollback e variaveis de ambiente.
 - [ ] `Documentation`: confirmar documentos atualizados com `documentation-writer`.
 - [ ] `Test planning`: confirmar matriz de cobertura para Sprint 6 com base nos riscos restantes.
@@ -1448,17 +1448,17 @@ Fronteira explicita (fora da Sprint 5 funcional): `external_link`, `oauth_delega
 - [ ] `Security`: registrar controles entregues, riscos aceitos e bloqueios para conectores funcionais.
 - [ ] `Skills da sprint`: registrar skills usadas e lacunas de skill para a sprint seguinte.
 
-### Delta por trilha (Sprint 5 - validacao Back/Worker)
+### Delta por trilha (Sprint 5 - validacao Back/Worker/Front)
 
 - Back planning: concluida; contratos de operacao mutavel, artefatos finais, notificacoes e taxonomia de contratos foram congelados e validados.
 - Back execution: concluida; retry/resolve/replay aprovado, artefatos, download-url, notificacoes, idempotencia e auditoria foram implementados e validados por `bundle exec rails test` com `PARALLEL_WORKERS=1`.
 - Worker execution: concluida; worker gera artefatos finais, registra metricas/auditoria, preserva idempotencia por `event_id` e emite notificacoes operacionais; validado por `bundle exec rspec`.
-- Front planning: planejada para acoes admin-only, experiencia completa de artefatos e centro de notificacoes.
-- Front execution: planejada para UI operacional sem redesenho amplo, mantendo role gating e fronteira unica de API.
+- Front planning: concluida; sino topbar, inbox, arquivadas, regras/canais, wizard admin-only e historico de artefatos foram refinados sem redesenho amplo.
+- Front execution: concluida; `/notifications`, `/operations`, artefatos em detalhe de job, adapter oficial, role gating e mutacoes de notificacao foram implementados e validados por `pnpm.cmd test:run`, `pnpm.cmd lint`, `pnpm.cmd build` e `pnpm.cmd test:integration`.
 - DevOps: planejada para smokes ampliados, reports, env checks e repo readiness completo.
 - Documentation: planejada para roadmap, threat model, security baseline, runbook, devops roadmap e READMEs afetados.
 - Test planning: planejada para cobertura integrada de mutacoes, artefatos, notificacoes, contratos e smoke seguro.
-- Test execution: planejada para gates oficiais herdados da Sprint 4 e novos cenarios da Sprint 5.
+- Test execution: parcial concluida para Front; `pnpm.cmd test:run`, `pnpm.cmd lint`, `pnpm.cmd build`, `pnpm.cmd test:integration`, `bundle exec rails test`, OpenAPI/JSON parse e `validate-operational-contracts.rb` passaram.
 - Security: planejada para threat model previo, webhook seguro, masking e bloqueio funcional de conectores de entrada.
 - Skills da sprint: planejada com stack obrigatoria de documentacao, API, contrato, seguranca, observabilidade, testes e DevOps.
 

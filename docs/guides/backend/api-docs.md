@@ -199,6 +199,20 @@ Os schemas/examples HTTP ficam organizados por dominio em:
 - `packages/contracts/schemas/http/operations`
 - `packages/contracts/schemas/http/artifacts`
 - `packages/contracts/schemas/http/notifications`
+
+### Notificacoes in-app
+
+A Sprint 5 expande a inbox sem expor payload sensivel:
+
+- `GET /api/v1/notifications?status=active|unread|read|archived`
+- `PATCH /api/v1/notifications/:id/read`
+- `PATCH /api/v1/notifications/:id/archive`
+- `PATCH /api/v1/notifications/:id/unarchive`
+- `DELETE /api/v1/notifications/:id`
+- `PATCH /api/v1/notifications/mark-all-read`
+- `PATCH /api/v1/notifications/bulk-archive`
+
+Todas as mutacoes sao escopadas ao ator autenticado. `active` lista notificacoes nao arquivadas; arquivadas continuam sujeitas a expiracao por retencao.
 - `packages/contracts/schemas/http/shared`
 - `packages/contracts/examples/http/<dominio-correspondente>`
 
