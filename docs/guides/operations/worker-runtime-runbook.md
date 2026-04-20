@@ -25,6 +25,7 @@ Padronizar operacao, diagnostico e resposta a incidentes da trilha de runtime re
 - Sprint 4 backend ativou runtime real de consumo RabbitMQ.
 - fluxo oficial agora opera com outbox transacional na API + consumidor real no worker.
 - leitura operacional de DLQ disponivel em `GET /api/v1/quarantine/dlq` (admin-only).
+- Sprint 5 adiciona geracao de artefatos finais, notificacoes operacionais e replay controlado sobre a mesma idempotencia por `event_id`.
 
 ## Regras e contratos operacionais
 
@@ -34,6 +35,12 @@ Padronizar operacao, diagnostico e resposta a incidentes da trilha de runtime re
   - idempotencia por `event_id` (`worker_consumed_events`);
   - retry com backoff exponencial e DLQ apos limite;
   - registro de erros com `trace_id`, `request_id`, `correlation_id`, `job_id` e `upload_id`.
+- extensao da Sprint 5:
+  - geracao de `processed_dataset`, `quality_report` e `audit_report` em `job_artifacts`;
+  - escrita dos artefatos no storage em `artifacts/<job_id>/<event_id>/`;
+  - metricas `artifact_generated` e `artifact_failed` em `worker_processing_metrics`;
+  - notificacoes `job.completed`, `job.quarantined_with_warnings` e `job.failed` via inbox/outbox;
+  - falha de artefato registrada como auditoria sem alterar o estado final do job.
 - escopo fora da Sprint 4:
   - conectores `external_link`, `oauth_delegated`, `google_drive`, `s3`, `http_url`;
   - automacao de cluster e reprocessamento avancado.
@@ -73,6 +80,15 @@ Padronizar operacao, diagnostico e resposta a incidentes da trilha de runtime re
 3. ao exceder limite, evento vai para DLQ com `x-dead-letter-reason`.
 4. erro terminal marca `job.failed` e segue com `ack` sem requeue.
 5. evitar duplicacao de carga com idempotencia por `event_id`.
+6. replay aprovado deve passar pelo mesmo fluxo de idempotencia; evento ja consumido retorna como duplicado e nao gera novos artefatos.
+
+### 4. Artefatos e notificacoes
+
+1. apos sucesso do processamento, consultar `GET /api/v1/jobs/:job_id/artifacts`.
+2. conferir os tres tipos oficiais: `processed_dataset`, `quality_report` e `audit_report`.
+3. para download, usar a URL assinada curta gerada pela API, nao proxy direto pelo worker.
+4. se houver `worker.artifacts.failed` em audit, o job pode permanecer `completed` ou `quarantined_with_warnings`; tratar a falha do artefato como incidente operacional.
+5. notificacoes externas ficam em `webhook_deliveries` como outbox persistido; falha de envio nao bloqueia o processamento principal.
 
 ## Validacao e evidencias
 
@@ -95,6 +111,8 @@ Padronizar operacao, diagnostico e resposta a incidentes da trilha de runtime re
 - o smoke operacional do worker deve comprovar, no minimo:
   - CSV valido publicado via signed URL termina como `job.completed`;
   - CSV com linha vazia termina como `job.quarantined_with_warnings`;
+  - os tres artefatos finais ficam persistidos e listaveis por job;
+  - uma notificacao operacional e/ou delivery pendente e criado para a transicao final;
   - a listagem de quarantine mostra o registro do arquivo com aviso;
   - analytics reflete o delta de jobs apos o processamento;
   - o runner derruba a stack ao final, inclusive em falha.
