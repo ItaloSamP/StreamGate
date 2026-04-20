@@ -11,6 +11,8 @@ import { JobsPage } from '@/pages/JobsPage'
 import { LandingPage } from '@/pages/LandingPage'
 import { AuditDetailPage, DlqDetailPage, JobDetailPage, QuarantineDetailPage } from '@/pages/OperationalDetailPages'
 import { LoginPage } from '@/pages/LoginPage'
+import { NotificationsPage } from '@/pages/NotificationsPage'
+import { OperationsPage } from '@/pages/OperationsPage'
 import { QuarantinePage } from '@/pages/QuarantinePage'
 import { RegisterPage } from '@/pages/RegisterPage'
 import { ResetPasswordPage } from '@/pages/ResetPasswordPage'
@@ -38,6 +40,8 @@ function App() {
         <Route path="/events" element={protectedPage(<EventLogPage />)} />
         <Route path="/audit" element={protectedPage(<AuditPage />)} />
         <Route path="/audit/:id" element={protectedPage(<AuditDetailPage />)} />
+        <Route path="/operations" element={protectedPage(<OperationsPage />)} />
+        <Route path="/notifications" element={protectedPage(<NotificationsPage />)} />
         <Route path="/settings" element={protectedPage(<SettingsPage />)} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

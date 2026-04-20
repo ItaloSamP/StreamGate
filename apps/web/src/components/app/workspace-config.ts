@@ -6,6 +6,8 @@ export type WorkspaceRoute =
   | '/quarantine'
   | '/events'
   | '/audit'
+  | '/operations'
+  | '/notifications'
   | '/settings'
 
 export type WorkspaceIcon =
@@ -18,6 +20,8 @@ export type WorkspaceIcon =
   | 'etl'
   | 'events'
   | 'audit'
+  | 'operations'
+  | 'notifications'
   | 'settings'
 
 export type WorkspaceNavItem = {
@@ -61,6 +65,8 @@ export const workspaceNavGroups: { label: string; items: WorkspaceNavItem[] }[] 
     label: 'Sistema',
     items: [
       { label: 'Auditoria', href: '/audit', icon: 'audit', adminOnly: true },
+      { label: 'Operacoes Seguras', href: '/operations', icon: 'operations', adminOnly: true },
+      { label: 'Notificacoes', href: '/notifications', icon: 'notifications' },
       { label: 'Configuracoes', href: '/settings', icon: 'settings' },
     ],
   },
@@ -114,6 +120,20 @@ export const workspaceModules: WorkspaceModuleDefinition[] = [
     eyebrow: 'Governanca e trilha',
     description: 'Consulta de acoes sensiveis, atores, recursos e contexto de requisicao para rastreabilidade forte.',
     route: '/audit',
+    family: 'system',
+  },
+  {
+    title: 'Operacoes Seguras',
+    eyebrow: 'Governanca operacional',
+    description: 'Wizard admin-only para retry, resolve e replay DLQ com motivo obrigatorio e idempotencia.',
+    route: '/operations',
+    family: 'system',
+  },
+  {
+    title: 'Notificacoes',
+    eyebrow: 'Inbox operacional',
+    description: 'Centro de notificacoes in-app, canais de entrega e regras de eventos criticos.',
+    route: '/notifications',
     family: 'system',
   },
   {

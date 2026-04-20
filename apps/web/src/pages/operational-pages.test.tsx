@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -128,6 +128,58 @@ describe('Sprint 4 operational pages', () => {
     expect(await screen.findByText('Detalhe da DLQ')).toBeInTheDocument()
     expect(await screen.findByText('max_retries_exceeded')).toBeInTheDocument()
   })
+
+  it('renders notification bell and full notification center with rules and channel settings', async () => {
+    const { unmount } = renderApp('/dashboard', 'admin')
+
+    expect(await screen.findByLabelText(/notificacoes nao lidas/i)).toBeInTheDocument()
+
+    unmount()
+    renderApp('/notifications', 'admin')
+
+    expect(await screen.findByText('Centro de notificacoes')).toBeInTheDocument()
+    expect(await screen.findByText('Falha no job')).toBeInTheDocument()
+    expect(screen.getByText('critico')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Abrir job/i })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /Regras e canais/i }))
+
+    expect(await screen.findByText('Regras de notificacao')).toBeInTheDocument()
+    expect(screen.getByLabelText('Webhook URL')).toHaveValue('https://hooks.example.test/streamgate')
+  })
+
+  it('protects operations wizard from operators and lets admins review a retry', async () => {
+    const { unmount } = renderApp('/operations', 'operator')
+
+    await waitFor(() => {
+      expect(screen.queryByText('Wizard admin-only')).not.toBeInTheDocument()
+    })
+
+    unmount()
+    renderApp('/operations', 'admin')
+
+    expect(await screen.findByText('Wizard admin-only')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Buscar ou colar alvo'), { target: { value: 'job_fixture_pending' } })
+    fireEvent.click(screen.getByRole('button', { name: /Revisar regras/i }))
+
+    expect(await screen.findByText('Backend aplica cooldown e limite diario')).toBeInTheDocument()
+  })
+
+  it('renders artifact history on job detail and requests signed download url', async () => {
+    const open = vi.spyOn(window, 'open').mockImplementation(() => null)
+    renderApp('/jobs/job_fixture_pending', 'admin')
+
+    expect(await screen.findByText('Artefatos finais')).toBeInTheDocument()
+    expect(await screen.findByText('quality-report.json')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /Download/i }))
+
+    await waitFor(() => {
+      expect(open).toHaveBeenCalledWith('https://signed.example.test/quality-report.json', '_blank', 'noopener,noreferrer')
+    })
+
+    open.mockRestore()
+  })
 })
 
 function seedSession(role: 'operator' | 'admin') {
@@ -194,6 +246,30 @@ function createOperationalFetchMock() {
       return Promise.resolve(jsonResponse(200, auditResponse()))
     }
 
+    if (url.includes('/api/v1/notification-settings/webhook/test')) {
+      return Promise.resolve(jsonResponse(202, webhookDeliveryResponse()))
+    }
+
+    if (url.includes('/api/v1/notification-settings')) {
+      return Promise.resolve(jsonResponse(200, notificationSettingsResponse()))
+    }
+
+    if (url.includes('/api/v1/notifications/')) {
+      return Promise.resolve(jsonResponse(200, notificationSingleResponse()))
+    }
+
+    if (url.includes('/api/v1/notifications')) {
+      return Promise.resolve(jsonResponse(200, notificationsResponse(url)))
+    }
+
+    if (url.includes('/api/v1/jobs/job_fixture_pending/artifacts/artifact_fixture_quality/download-url')) {
+      return Promise.resolve(jsonResponse(200, artifactDownloadResponse()))
+    }
+
+    if (url.includes('/api/v1/jobs/job_fixture_pending/artifacts')) {
+      return Promise.resolve(jsonResponse(200, artifactsResponse()))
+    }
+
     if (url.includes('/api/v1/jobs')) {
       return Promise.resolve(jsonResponse(200, jobsResponse()))
     }
@@ -211,6 +287,112 @@ function createOperationalFetchMock() {
       },
     }))
   })
+}
+
+function notificationsResponse(url: string) {
+  const archived = url.includes('status=archived')
+  return {
+    data: archived ? [] : [
+      {
+        id: 'notification_fixture_failed',
+        event_name: 'job.failed',
+        title: 'Falha no job',
+        body: 'O job job_fixture_pending falhou e requer investigacao.',
+        status: 'unread',
+        read_at: null,
+        expires_at: '2026-05-20T00:00:00Z',
+        metadata: { job_id: 'job_fixture_pending' },
+        trace_id: 'trace_fixture_1',
+        created_at: '2026-04-20T10:00:00Z',
+      },
+    ],
+    meta: { pagination: { page: 1, per_page: 50, total_count: archived ? 0 : 1, total_pages: archived ? 0 : 1 } },
+  }
+}
+
+function notificationSingleResponse() {
+  return {
+    data: {
+      id: 'notification_fixture_failed',
+      event_name: 'job.failed',
+      title: 'Falha no job',
+      body: 'O job job_fixture_pending falhou e requer investigacao.',
+      status: 'read',
+      read_at: '2026-04-20T11:00:00Z',
+      expires_at: '2026-05-20T00:00:00Z',
+      metadata: { job_id: 'job_fixture_pending' },
+      trace_id: 'trace_fixture_1',
+      created_at: '2026-04-20T10:00:00Z',
+    },
+  }
+}
+
+function notificationSettingsResponse() {
+  return {
+    data: {
+      id: 'notifset_fixture',
+      user_id: 'user_fixture_admin',
+      in_app_enabled: true,
+      email_enabled: true,
+      webhook_enabled: true,
+      webhook_url: 'https://hooks.example.test/streamgate',
+      webhook_secret: null,
+      created_at: '2026-04-20T10:00:00Z',
+      updated_at: '2026-04-20T10:00:00Z',
+    },
+  }
+}
+
+function webhookDeliveryResponse() {
+  return {
+    data: {
+      id: 'delivery_fixture',
+      notification_id: null,
+      channel: 'webhook',
+      event_name: 'notification.webhook_test',
+      status: 'pending',
+      attempts_count: 0,
+      next_attempt_at: null,
+      delivered_at: null,
+      response_status: null,
+      trace_id: 'trace_fixture_1',
+      created_at: '2026-04-20T10:00:00Z',
+      webhook_secret: null,
+    },
+  }
+}
+
+function artifactsResponse() {
+  return {
+    data: [
+      {
+        id: 'artifact_fixture_quality',
+        job_id: 'job_fixture_pending',
+        artifact_type: 'quality_report',
+        status: 'available',
+        filename: 'quality-report.json',
+        content_type: 'application/json',
+        byte_size: 512,
+        checksum_sha256: 'f'.repeat(64),
+        generated_at: '2026-04-20T10:00:00Z',
+        expires_at: '2026-05-20T10:00:00Z',
+        metadata: { rows: 12 },
+        trace_id: 'trace_fixture_1',
+        created_at: '2026-04-20T10:00:00Z',
+        updated_at: '2026-04-20T10:00:00Z',
+      },
+    ],
+  }
+}
+
+function artifactDownloadResponse() {
+  return {
+    data: {
+      artifact_id: 'artifact_fixture_quality',
+      download_url: 'https://signed.example.test/quality-report.json',
+      expires_at: '2026-04-20T10:05:00Z',
+    },
+  }
 }
 
 function readRoleFromStoredSession() {

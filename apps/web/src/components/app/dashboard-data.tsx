@@ -125,6 +125,10 @@ export function dashboardNavIcon(icon: WorkspaceIcon): ReactElement {
       return <svg viewBox="0 0 15 15" fill="none"><path d="M2 4h11M2 7.5h11M2 11h7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" /></svg>
     case 'audit':
       return <svg viewBox="0 0 15 15" fill="none"><path d="M5.5 2h4v2.5l2.5 3-2.5 3V13h-4v-2.5L3 7.5 5.5 5V2z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" /></svg>
+    case 'operations':
+      return <svg viewBox="0 0 15 15" fill="none"><path d="M2 4.5h7M11 4.5h2M2 10.5h2M6 10.5h7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" /><circle cx="10" cy="4.5" r="1.4" stroke="currentColor" strokeWidth="1.1" /><circle cx="5" cy="10.5" r="1.4" stroke="currentColor" strokeWidth="1.1" /></svg>
+    case 'notifications':
+      return <svg viewBox="0 0 15 15" fill="none"><path d="M3.5 11h8l-.9-1.2V6.8c0-2-1.2-3.5-3.1-3.5S4.4 4.8 4.4 6.8v3L3.5 11z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" /><path d="M6.2 12.2c.3.5.7.8 1.3.8s1-.3 1.3-.8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" /></svg>
     case 'settings':
       return <svg viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="2.2" stroke="currentColor" strokeWidth="1.2" /><path d="M7.5 1.5v1.8M7.5 11.7v1.8M1.5 7.5h1.8M11.7 7.5h1.8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" /></svg>
   }

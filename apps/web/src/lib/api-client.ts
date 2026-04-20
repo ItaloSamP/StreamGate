@@ -165,10 +165,13 @@ export function createApiClient(baseUrl = resolveApiBaseUrl()) {
     request,
     get: <T>(path: string, options?: RequestOptions) => request<T>(path, { ...options, method: 'GET' }),
     post: <T>(path: string, options?: RequestOptions) => request<T>(path, { ...options, method: 'POST' }),
+    patch: <T>(path: string, options?: RequestOptions) => request<T>(path, { ...options, method: 'PATCH' }),
+    delete: <T>(path: string, options?: RequestOptions) => request<T>(path, { ...options, method: 'DELETE' }),
     getEnvelope: <T>(path: string, options?: RequestOptions) => requestEnvelope<T>(path, { ...options, method: 'GET' }),
     postEnvelope: <T>(path: string, options?: RequestOptions) => requestEnvelope<T>(path, { ...options, method: 'POST' }),
+    patchEnvelope: <T>(path: string, options?: RequestOptions) => requestEnvelope<T>(path, { ...options, method: 'PATCH' }),
+    deleteEnvelope: <T>(path: string, options?: RequestOptions) => requestEnvelope<T>(path, { ...options, method: 'DELETE' }),
   }
 }
 
 export const apiClient = createApiClient()
-

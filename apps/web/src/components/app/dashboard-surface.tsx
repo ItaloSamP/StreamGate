@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { LogOut } from 'lucide-react'
+import { Bell, LogOut } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
 import '@/components/app/dashboard-surface.css'
@@ -114,6 +114,7 @@ export function DashboardSurface({
   const userRole = locked ? 'Data Engineer' : email
   const visibleNavGroups = getVisibleWorkspaceNavGroups(role)
   const [navBadges, setNavBadges] = useState<Record<string, number>>({})
+  const [unreadNotifications, setUnreadNotifications] = useState(0)
   const content = children ?? <WorkspaceOverview />
 
   useEffect(() => {
@@ -151,6 +152,24 @@ export function DashboardSurface({
       active = false
     }
   }, [enableOperationalBadges, locked, role])
+
+  useEffect(() => {
+    if (locked) return
+
+    let active = true
+
+    streamgateApi.listNotifications({ status: 'unread' })
+      .then((response) => {
+        if (active) setUnreadNotifications(response.meta?.pagination?.total_count ?? response.data.length)
+      })
+      .catch(() => {
+        if (active) setUnreadNotifications(0)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [locked, pathname])
 
   return (
     <div className={`dash-frame ${locked ? 'dash-frame--locked' : ''}`}>
@@ -242,6 +261,16 @@ export function DashboardSurface({
             ))}
             <div className="dash-topbar-spacer" />
             <div className="dash-topbar-actions">
+              {!locked ? (
+                <NavLink
+                  to="/notifications"
+                  className={`dash-notification-button ${pathname.startsWith('/notifications') ? 'active' : ''}`}
+                  aria-label={unreadNotifications > 0 ? `${unreadNotifications} notificacoes nao lidas` : 'Notificacoes'}
+                >
+                  <Bell size={15} />
+                  {unreadNotifications > 0 ? <span className="dash-notification-dot" /> : null}
+                </NavLink>
+              ) : null}
               <button type="button" className="dash-btn">{secondaryActionLabel}</button>
               <button type="button" className="dash-btn dash-btn--primary">{primaryActionLabel}</button>
             </div>

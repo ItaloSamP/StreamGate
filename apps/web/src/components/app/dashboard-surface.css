@@ -403,6 +403,38 @@
   gap: 8px;
 }
 
+.dash-notification-button {
+  position: relative;
+  width: 31px;
+  height: 31px;
+  border-radius: 7px;
+  border: 1px solid #2c2c2c;
+  background: #1a1a1a;
+  color: #d4d4d4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.12s, background-color 0.12s, color 0.12s;
+}
+
+.dash-notification-button:hover,
+.dash-notification-button.active {
+  border-color: #4d9de0;
+  background: rgba(77, 157, 224, 0.1);
+  color: #ffffff;
+}
+
+.dash-notification-dot {
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #e05c5c;
+  box-shadow: 0 0 0 2px #1a1a1a;
+}
+
 .dash-content--module {
   padding-top: 18px;
 }
@@ -857,6 +889,40 @@
 .dash-pill--failed { background: rgba(224, 92, 92, 0.1); color: #e05c5c; border: 1px solid rgba(224, 92, 92, 0.2); }
 .dash-pill--neutral { background: #202020; color: #5a5a5a; border: 1px solid #2c2c2c; }
 .dash-pill--quarantine { background: rgba(155, 127, 232, 0.1); color: #9b7fe8; border: 1px solid rgba(155, 127, 232, 0.2); }
+
+.notification-card {
+  border-left-width: 3px;
+}
+
+.notification-card--info {
+  border-left-color: #4d9de0;
+}
+
+.notification-card--alerta {
+  border-left-color: #f0c040;
+}
+
+.notification-card--critico {
+  border-left-color: #e05c5c;
+}
+
+.notification-severity--info {
+  background: rgba(77, 157, 224, 0.1);
+  border: 1px solid rgba(77, 157, 224, 0.2);
+  color: #4d9de0;
+}
+
+.notification-severity--alerta {
+  background: rgba(240, 192, 64, 0.1);
+  border: 1px solid rgba(240, 192, 64, 0.2);
+  color: #f0c040;
+}
+
+.notification-severity--critico {
+  background: rgba(224, 92, 92, 0.1);
+  border: 1px solid rgba(224, 92, 92, 0.2);
+  color: #e05c5c;
+}
 
 .dash-metric-block {
   display: flex;
