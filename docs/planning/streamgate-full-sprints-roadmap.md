@@ -1252,13 +1252,13 @@ Evidencias finais de hardening/Test/Security registradas (2026-04-17):
 
 ## Sprint 5 - Operacao segura, artefatos finais, notificacoes e readiness do repositorio
 
-**Status atual:** `Planejada`
+**Status atual:** `Em andamento`
 
 **Dependencias**
 
 - Sprint 4 concluida com worker real, DLQ read-only, dashboards operacionais, smokes, reports e contratos sincronizados.
 - Threat model da Sprint 4 ja registra riscos residuais de replay, DLQ, eventos forjados, dados sensiveis e conectores.
-- `scripts/reports/run-all-reports.ps1`, `scripts/smokes/run-smokes.ps1` e `scripts/ci/ci-local.ps1 all` sao gates oficiais herdados.
+- `scripts/smokes/run-smokes.ps1`, `scripts/reports/run-all-reports.ps1` e `scripts/ci/ci-local.ps1` ja existem como runners oficiais herdados e foram refinados nesta sprint para perfis `fast`, `operational` e `full-closeout`.
 - OpenAPI e `packages/contracts` ja existem como fonte de verdade para payloads HTTP/eventos.
 - Frontend ja possui command center operacional real, rotas de detalhe e role gating inicial.
 
@@ -1353,14 +1353,17 @@ Fronteira explicita (fora da Sprint 5 funcional): `external_link`, `oauth_delega
 
 - Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
 - Documentos de apoio: [docs/guides/platform/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/platform/devops-baseline-sprint-0.md), [docs/guides/platform/setup.md](C:/estudos/StreamGate/docs/guides/platform/setup.md), [docs/guides/platform/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/platform/devops-roadmap.md) e [docs/guides/operations/worker-runtime-runbook.md](C:/estudos/StreamGate/docs/guides/operations/worker-runtime-runbook.md).
-- [ ] Adicionar checks locais para variaveis obrigatorias/opcionais de email e webhook.
-- [ ] Garantir que smokes cubram operacao segura, artefatos e notificacoes.
-- [ ] Registrar evidencias no hub de reports.
-- [ ] Preparar `CODEOWNERS` com ownership minimo por app, contratos, docs e infra.
-- [ ] Preparar `dependabot.yml` para ecossistemas relevantes do repositorio.
-- [ ] Preparar issue templates e revisar PR template quando necessario.
-- [ ] Criar `AGENTS.md` raiz com mapa de comandos, regras de trabalho, verificacoes e docs de referencia.
-- [ ] Documentar checklist de release/rollback para o estado pre-cluster.
+- [x] Adicionar checks locais para variaveis obrigatorias/opcionais de email, webhook, smoke e artefatos.
+- [x] Garantir que smokes cubram operacao segura, artefatos, notificacoes e audit trail.
+- [x] Registrar evidencias no hub de reports com tempos, workflows e playbook de gates.
+- [x] Preparar `CODEOWNERS` com ownership minimo por app, contratos, docs e infra.
+- [x] Preparar `dependabot.yml` para ecossistemas relevantes do repositorio.
+- [x] Preparar issue templates e revisar PR template para refletir perfis oficiais de gate.
+- [x] Criar `AGENTS.md` raiz com mapa de comandos, regras de trabalho, verificacoes e docs de referencia.
+- [x] Documentar checklist de release/rollback para o estado pre-cluster.
+- [x] Formalizar politica `WSL/Compose-first` para gates pesados e `ci-local all` apenas como fechamento/diagnostico.
+- [x] Refatorar `run-all-reports` para agir como orquestrador de evidencias, sem rerodar `ci-local all` em cascata.
+- [x] Adicionar suporte a `-SkipInstallSteps` e `-ResumeFromStep` nos runners locais com `summary.json` incremental.
 
 ### Test planning
 
@@ -1381,9 +1384,9 @@ Fronteira explicita (fora da Sprint 5 funcional): `external_link`, `oauth_delega
 - [x] Executar `bundle exec rails test` em `apps/api`.
 - [x] Executar `bundle exec rspec` em `apps/worker`.
 - [x] Executar validacao de OpenAPI, schemas e examples de contratos novos.
-- [ ] Executar `powershell -ExecutionPolicy Bypass -File scripts/ci/ci-local.ps1 all`.
-- [ ] Executar `powershell -ExecutionPolicy Bypass -File scripts/smokes/run-smokes.ps1`.
-- [ ] Executar `powershell -ExecutionPolicy Bypass -File scripts/reports/run-all-reports.ps1`.
+- [x] Executar workflows oficiais de `ci-local` sem duplicacao desnecessaria (`frontend`, `backend`, `e2e`, `docker`).
+- [x] Executar `powershell -ExecutionPolicy Bypass -File scripts/smokes/run-smokes.ps1`.
+- [x] Executar `powershell -ExecutionPolicy Bypass -File scripts/reports/run-all-reports.ps1 -Profile full-closeout`.
 - [x] Registrar falhas classificadas como ambiente vs implementacao.
 - [x] Registrar evidencias finais no closeout da Sprint 5.
 
@@ -1416,9 +1419,9 @@ Fronteira explicita (fora da Sprint 5 funcional): `external_link`, `oauth_delega
 - [ ] Atualizar `docs/guides/security/streamgate-threat-model.md` antes das mutacoes operacionais e webhooks.
 - [ ] Atualizar `docs/guides/security/security-baseline-sprint-0.md` com controles de Sprint 5.
 - [x] Atualizar `docs/guides/operations/worker-runtime-runbook.md` com retry/replay/resolve, artefatos, notificacoes e DLQ.
-- [ ] Atualizar `docs/guides/platform/devops-roadmap.md` com readiness, release/rollback e proximos gates.
+- [x] Atualizar `docs/guides/platform/devops-roadmap.md` com readiness, release/rollback e proximos gates.
 - [x] Atualizar READMEs afetados de API, web e worker quando endpoints, env vars, comandos ou fluxos mudarem.
-- [ ] Criar closeout da Sprint 5 com evidencias, riscos aceitos e delta por trilha.
+- [x] Criar closeout da Sprint 5 com evidencias, riscos aceitos e delta por trilha.
 
 ### Checklist de saida
 
@@ -1429,10 +1432,10 @@ Fronteira explicita (fora da Sprint 5 funcional): `external_link`, `oauth_delega
 - [x] Webhook possui assinatura, segredo, timeout, retry limitado, auditoria e masking.
 - [x] Frontend expoe acoes sensiveis apenas para admin e preserva command center existente.
 - [x] OpenAPI, contratos, schemas e examples sincronizados sem drift conhecido.
-- [ ] Smokes cobrem operacao segura, artefatos, notificacoes e audit trail.
-- [ ] Repo readiness completo entregue com `CODEOWNERS`, Dependabot, issue templates, `AGENTS.md` e checklist de release/rollback.
+- [x] Smokes cobrem operacao segura, artefatos, notificacoes e audit trail.
+- [x] Repo readiness completo entregue com `CODEOWNERS`, Dependabot, issue templates, `AGENTS.md` e checklist de release/rollback.
 - [ ] Conectores de entrada permanecem sem implementacao funcional; discovery registrado quando realizado.
-- [ ] Reports finais executados e evidencias registradas no closeout.
+- [x] Reports finais executados e evidencias registradas no closeout.
 
 ### Reavaliacao de transicao por trilha
 
@@ -1441,8 +1444,8 @@ Fronteira explicita (fora da Sprint 5 funcional): `external_link`, `oauth_delega
 - [x] `Worker execution`: validar artefatos, replay, idempotencia, metricas e notificacoes emitidas.
 - [x] `Front planning`: validar jornada de admin, artefatos e notificacoes sem redesenho indevido.
 - [x] `Front execution`: validar permissao, acessibilidade, estados de erro, masking e regressao visual.
-- [ ] `DevOps`: validar readiness do repo, smokes, reports, release/rollback e variaveis de ambiente.
-- [ ] `Documentation`: confirmar documentos atualizados com `documentation-writer`.
+- [x] `DevOps`: validar readiness do repo, smokes, reports, release/rollback e variaveis de ambiente.
+- [x] `Documentation`: confirmar documentos atualizados com `documentation-writer` para a trilha DevOps.
 - [ ] `Test planning`: confirmar matriz de cobertura para Sprint 6 com base nos riscos restantes.
 - [ ] `Test execution`: registrar resultados finais e classificacao de falhas.
 - [ ] `Security`: registrar controles entregues, riscos aceitos e bloqueios para conectores funcionais.
@@ -1455,12 +1458,22 @@ Fronteira explicita (fora da Sprint 5 funcional): `external_link`, `oauth_delega
 - Worker execution: concluida; worker gera artefatos finais, registra metricas/auditoria, preserva idempotencia por `event_id` e emite notificacoes operacionais; validado por `bundle exec rspec`.
 - Front planning: concluida; sino topbar, inbox, arquivadas, regras/canais, wizard admin-only e historico de artefatos foram refinados sem redesenho amplo.
 - Front execution: concluida; `/notifications`, `/operations`, artefatos em detalhe de job, adapter oficial, role gating e mutacoes de notificacao foram implementados e validados por `pnpm.cmd test:run`, `pnpm.cmd lint`, `pnpm.cmd build` e `pnpm.cmd test:integration`.
-- DevOps: planejada para smokes ampliados, reports, env checks e repo readiness completo.
-- Documentation: planejada para roadmap, threat model, security baseline, runbook, devops roadmap e READMEs afetados.
+- DevOps: concluida; env checks de Sprint 5, smoke seguro ponta a ponta, perfis `fast/operational/full-closeout`, resume incremental, hub de reports e repo readiness completo foram entregues e validados.
+- Documentation: concluida para a trilha DevOps; `devops-roadmap`, `release-rollback-checklist`, `SPRINT-05-closeout`, `AGENTS.md`, templates e READMEs foram sincronizados com a nova politica operacional.
 - Test planning: planejada para cobertura integrada de mutacoes, artefatos, notificacoes, contratos e smoke seguro.
-- Test execution: parcial concluida para Front; `pnpm.cmd test:run`, `pnpm.cmd lint`, `pnpm.cmd build`, `pnpm.cmd test:integration`, `bundle exec rails test`, OpenAPI/JSON parse e `validate-operational-contracts.rb` passaram.
+- Test execution: concluida para Back/Worker/Front/DevOps; `ci-local` por workflow, `run-smokes.ps1` e `run-all-reports.ps1 -Profile full-closeout` passaram sem duplicacao desnecessaria, alem dos gates unitarios e contratuais anteriores.
 - Security: planejada para threat model previo, webhook seguro, masking e bloqueio funcional de conectores de entrada.
 - Skills da sprint: planejada com stack obrigatoria de documentacao, API, contrato, seguranca, observabilidade, testes e DevOps.
+
+**Evidencias DevOps registradas (2026-04-21)**
+
+- `powershell -ExecutionPolicy Bypass -File scripts/ci/ci-local.ps1 frontend -SkipInstallSteps`: PASS; fast gate do frontend com reports incrementais.
+- `powershell -ExecutionPolicy Bypass -File scripts/ci/ci-local.ps1 backend -SkipInstallSteps -ResumeFromStep "backend-ci :: Worker RuboCop"`: PASS; backend/worker validados com retomar por etapa e `PARALLEL_WORKERS=1`.
+- `powershell -ExecutionPolicy Bypass -File scripts/ci/ci-local.ps1 e2e -SkipInstallSteps`: PASS; fast gate E2E local estabilizado em Chromium.
+- `powershell -ExecutionPolicy Bypass -File scripts/ci/ci-local.ps1 docker`: PASS; Compose/build/smokes locais verdes.
+- `powershell -ExecutionPolicy Bypass -File scripts/smokes/run-smokes.ps1`: PASS; cobriu upload assinado, worker operacional, artefatos finais, notificacoes, retry/resolve/replay e audit trail.
+- `powershell -ExecutionPolicy Bypass -File scripts/reports/run-all-reports.ps1 -Profile full-closeout`: PASS; orquestrou unit, backend, worker, integracao, E2E estavel e smokes sem rerodar `ci-local all`.
+- `docs/reports/index.html`: regenerado com tempos, workflows, `lastCompletedStep` e playbook `fast / operational / full-closeout`.
 
 ## Pos-v1 e backlog estrategico
 

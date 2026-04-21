@@ -4,41 +4,49 @@
 
 Esta pasta concentra a automacao de reports locais do StreamGate. A proposta e transformar uma execucao de testes em um pacote de evidencias navegavel, com logs, HTML, summaries em JSON e coverage por camada.
 
-O comando principal e:
+O comando principal para fechamento pesado e:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -Profile full-closeout
 ```
 
 Em ambientes Bash/WSL/Linux:
 
 ```bash
-bash scripts/reports/run-all-reports.sh
+PROFILE=full-closeout bash scripts/reports/run-all-reports.sh
 ```
 
 ## Quando usar
 
-Use o `run-all-reports` antes de fechar uma entrega relevante, antes de commits grandes, antes de pushs que mexem em runtime, CI, testes, Docker ou contrato entre frontend/backend.
+Use o `run-all-reports` como gate `full-closeout`: fechamento de sprint, PR grande, alteracao critica de runtime/CI ou quando voce precisar regenerar o hub oficial de evidencias sem rerodar `ci-local all` em cascata.
 
-Ele tambem e o melhor ponto de partida quando um teste falha e voce precisa de um rastro persistente para investigar depois.
+Para o dia a dia:
+
+- `fast`: rode `scripts/ci/ci-local.(ps1|sh)` por workflow.
+- `operational`: rode `scripts/smokes/run-smokes.(ps1|sh)` quando a trilha tocar runtime.
+- `full-closeout`: rode `run-all-reports` quando precisar do pacote final.
 
 ## O que o run-all faz
 
-O runner executa, em ordem fail-fast:
+O runner agora trabalha por perfil:
 
-1. Testes unitarios do frontend com Vitest e coverage HTML.
-2. Preparacao Docker via `scripts/dev/dev-up`: puxa imagens de infraestrutura ausentes e rebuilda API/Web/Worker quando fingerprints ou imagens locais exigirem.
-3. Subida da infra local via Docker Compose.
-4. Preparacao do banco de teste da API.
-5. Testes Rails/Minitest da API com SimpleCov.
-6. Specs RSpec do worker com SimpleCov.
-7. Subida do perfil `app` para testes integrados.
-8. Seed de credenciais operacionais sem imprimir segredos.
-9. Testes de integracao do frontend contra backend real.
-10. E2E Playwright contra a aplicacao local.
-11. Smokes operacionais, incluindo upload assinado e worker real.
-12. CI local completo (`frontend-ci`, `backend-ci`, `e2e-auth`, `docker-ci`).
-13. Atualizacao do hub visual em `docs/reports/index.html`.
+1. `fast`
+   - frontend unit com coverage;
+   - infra para backend;
+   - `rails test`;
+   - `rspec`;
+   - atualizacao do hub.
+2. `operational`
+   - smoke operacional completo da Sprint 5;
+   - atualizacao do hub.
+3. `full-closeout`
+   - tudo de `fast`;
+   - integracao do frontend;
+   - Playwright E2E;
+   - smokes operacionais;
+   - atualizacao do hub.
+
+`ci-local all` continua existindo, mas roda separado quando voce quiser fechar ou diagnosticar os workflows locais sem duplicar esse trabalho dentro do `run-all-reports`.
 
 Se qualquer etapa falhar, o runner interrompe a execucao imediatamente, atualiza o indice de reports com o que ja foi gerado e retorna exit code diferente de zero.
 
@@ -72,10 +80,11 @@ Runner oficial para Windows/PowerShell. Ele gerencia variaveis de ambiente, sobe
 Parametros:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -TimeoutSeconds 480
+powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -Profile full-closeout -TimeoutSeconds 480
 ```
 
 - `TimeoutSeconds`: tempo maximo usado pelas subidas de ambiente via `scripts/dev/dev-up.ps1`.
+- `Profile`: `fast`, `operational` ou `full-closeout`.
 - Valor padrao: `480`.
 - Faixa aceita: `30` a `3600`.
 
@@ -84,7 +93,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -
 Equivalente Bash do runner completo. Usa `TIMEOUT_SECONDS` como variavel opcional.
 
 ```bash
-TIMEOUT_SECONDS=480 bash scripts/reports/run-all-reports.sh
+PROFILE=full-closeout TIMEOUT_SECONDS=480 bash scripts/reports/run-all-reports.sh
 ```
 
 ### `run-command.mjs`
@@ -143,6 +152,7 @@ O runner nao deve imprimir segredos nos logs. Quando precisa passar senha para c
 - Qualquer nova suite oficial deve gerar `summary.json` e, quando possivel, `report.html`.
 - Mudancas em testes, smokes ou CI devem manter o hub `docs/reports/index.html` funcionando.
 - O comportamento esperado do `run-all` e fail-fast: primeira falha interrompe as proximas etapas.
+- O caminho pesado oficial para os perfis `operational` e `full-closeout` e `WSL/Compose-first`.
 
 ## Troubleshooting rapido
 

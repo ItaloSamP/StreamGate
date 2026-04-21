@@ -100,7 +100,7 @@ Padronizar operacao, diagnostico e resposta a incidentes da trilha de runtime re
 - comandos de referencia:
   - `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1`
   - `bash scripts/smokes/run-smokes.sh`
-  - `powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1`
+  - `powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -Profile full-closeout`
   - `bash scripts/reports/run-all-reports.sh`
   - `python scripts/smokes/compose-smoke.py`
   - `python scripts/smokes/upload-signed-smoke.py`
