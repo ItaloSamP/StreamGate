@@ -21,9 +21,7 @@ module Worker
           status: status
         }
 
-        if truthy?(setting.fetch("in_app_enabled"))
-          notification_id = insert_notification!(connection, setting, ids, event_name, title, body, metadata)
-        end
+        notification_id = insert_notification!(connection, setting, ids, event_name, title, body, metadata) if truthy?(setting.fetch("in_app_enabled"))
 
         insert_delivery!(connection, setting, notification_id, ids, event_name, title, body, metadata, "email") if truthy?(setting.fetch("email_enabled"))
         insert_delivery!(connection, setting, notification_id, ids, event_name, title, body, metadata, "webhook") if truthy?(setting.fetch("webhook_enabled"))

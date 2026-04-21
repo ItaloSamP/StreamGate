@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+source "$ROOT_DIR/scripts/compose/compose-health.sh"
 TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-480}"
 REPORTS_DIR="$ROOT_DIR/scripts/smokes/reports"
 LOGS_DIR="$REPORTS_DIR/logs"
@@ -24,12 +25,6 @@ init_reports() {
   rm -f "$REPORTS_DIR/summary.json" "$REPORTS_DIR/report.html" "$LOGS_DIR"/*.log
 }
 
-get_dotenv_value() {
-  local key="$1"
-  [[ -f .env ]] || return 0
-  grep -E "^[[:space:]]*$key=" .env | head -n 1 | cut -d= -f2- | xargs || true
-}
-
 ensure_seed_password_env() {
   if [[ -n "${SEED_OPERATOR_PASSWORD:-}" ]]; then
     if [[ -z "${SEED_ADMIN_PASSWORD:-}" ]]; then
@@ -50,6 +45,31 @@ ensure_seed_password_env() {
   elif [[ -n "${SEED_OPERATOR_PASSWORD:-}" ]]; then
     export SEED_ADMIN_PASSWORD="$SEED_OPERATOR_PASSWORD"
   fi
+}
+
+ensure_sprint5_smoke_env() {
+  local env_path="$ROOT_DIR/.env"
+  local key value
+
+  for key in \
+    SMOKE_ADMIN_EMAIL \
+    SMOKE_SECOND_ADMIN_EMAIL \
+    SMOKE_SECOND_ADMIN_PASSWORD \
+    SMOKE_NOTIFICATION_EMAIL \
+    SMOKE_WEBHOOK_URL \
+    SMOKE_HTTP_TIMEOUT_SECONDS \
+    SMOKE_WORKER_TIMEOUT_SECONDS \
+    SMOKE_POLL_INTERVAL_SECONDS
+  do
+    if [[ -z "${!key:-}" ]]; then
+      value="$(get_dotenv_value "$env_path" "$key")"
+      if [[ -n "$value" ]]; then
+        export "$key=$value"
+      fi
+    fi
+  done
+
+  assert_sprint5_operational_env "$env_path"
 }
 
 stop_stack() {
@@ -158,6 +178,7 @@ trap 'print_summary; stop_stack; write_reports' EXIT
 
 init_reports
 ensure_seed_password_env
+ensure_sprint5_smoke_env
 
 echo "Preparando ambiente limpo para smokes..."
 stop_stack
@@ -169,6 +190,8 @@ if [[ "$FAILED" -eq 0 ]]; then run_step "Seed auth fixtures" docker compose exec
 if [[ "$FAILED" -eq 0 ]]; then run_step "Signed upload smoke" python scripts/smokes/upload-signed-smoke.py || FAILED=1; fi
 if [[ "$FAILED" -eq 0 ]]; then run_step "Start full stack" bash scripts/dev/dev-up.sh full "$TIMEOUT_SECONDS" || FAILED=1; fi
 if [[ "$FAILED" -eq 0 ]]; then run_step "Worker operational smoke" python scripts/smokes/worker-operational-smoke.py || FAILED=1; fi
+if [[ "$FAILED" -eq 0 ]]; then run_step "Seed second admin fixture" docker compose exec -T -e SMOKE_SECOND_ADMIN_EMAIL -e SMOKE_SECOND_ADMIN_PASSWORD api bundle exec rails runner "email = ENV.fetch('SMOKE_SECOND_ADMIN_EMAIL'); password = ENV.fetch('SMOKE_SECOND_ADMIN_PASSWORD'); user = User.find_or_initialize_by(email: email); user.full_name = 'Operational Approver'; user.organization_id ||= ENV.fetch('DEFAULT_ORGANIZATION_ID', 'org_default'); user.role = :admin; user.status = :active; user.password = password; user.save!" || FAILED=1; fi
+if [[ "$FAILED" -eq 0 ]]; then run_step "Safe operations smoke" python scripts/smokes/safe-operations-smoke.py || FAILED=1; fi
 
 if [[ "$FAILED" -ne 0 ]]; then
   docker compose ps || true

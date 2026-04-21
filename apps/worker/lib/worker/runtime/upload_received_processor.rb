@@ -2,7 +2,7 @@
 
 module Worker
   module Runtime
-    class UploadReceivedProcessor
+    class UploadReceivedProcessor # rubocop:disable Metrics/ClassLength
       OPERATION = "worker.upload_received.consume"
       AUDIT_ALLOWLIST = %w[
         action
@@ -32,7 +32,11 @@ module Worker
         @storage_client = storage_client
         @parser = parser
         @logger = logger
-        @artifact_writer = artifact_writer || ArtifactWriter.new(storage_client: storage_client, logger: logger, retention_days: config.job_artifact_retention_days)
+        @artifact_writer = artifact_writer || ArtifactWriter.new(
+          storage_client: storage_client,
+          logger: logger,
+          retention_days: config.job_artifact_retention_days
+        )
         @notifier = notifier || OperationalNotifier.new(retention_days: config.notification_retention_days)
       end
 
@@ -285,8 +289,14 @@ module Worker
           status: new_status,
           event_name: event_name,
           title: parse_result.invalid_rows.positive? ? "Job concluido com quarentena" : "Job concluido",
-          body: parse_result.invalid_rows.positive? ? "O job #{ids[:job_id]} foi concluido com registros em quarentena." : "O job #{ids[:job_id]} foi concluido."
+          body: notification_body(ids, parse_result)
         )
+      end
+
+      def notification_body(ids, parse_result)
+        return "O job #{ids[:job_id]} foi concluido." unless parse_result.invalid_rows.positive?
+
+        "O job #{ids[:job_id]} foi concluido com registros em quarentena."
       end
 
       def generate_artifacts_safely!(connection, ids, batch_id, status, parse_result)

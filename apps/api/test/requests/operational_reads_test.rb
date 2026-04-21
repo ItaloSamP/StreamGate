@@ -56,6 +56,29 @@ class OperationalReadsTest < ActionDispatch::IntegrationTest
     assert_equal 180, parsed_json.dig("meta", "filters", "retention_days")
   end
 
+  test "audit index returns events and honors action query filter" do
+    admin = users(:admin)
+    audit = AuditEvent.create!(
+      actor: admin,
+      auditable: jobs(:pending_job),
+      action: "job.retry_requested",
+      metadata: { reason: "Filtro de auditoria" },
+      occurred_at: Time.current,
+      request_id: "req_audit_filter",
+      trace_id: "trace_audit_filter"
+    )
+
+    admin_token = login_as("admin@example.com", "StrongPass123!")
+    get "/api/v1/audit",
+        params: { preset: "last_7d", action: "job.retry_requested", sort_by: "occurred_at", sort_order: "desc" },
+        headers: auth_header(admin_token)
+
+    assert_response :ok
+    ids = parsed_json.fetch("data").map { |entry| entry.fetch("id") }
+    assert_includes ids, audit.id
+    assert_equal "job.retry_requested", parsed_json.dig("meta", "filters", "action")
+  end
+
   test "dlq inspection is admin-only and returns broker payload snapshot" do
     sample = Messaging::DlqInspector::Result.new(
       queue_depth: 3,

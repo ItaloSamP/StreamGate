@@ -10,6 +10,8 @@ module Worker
       ARTIFACTS = %w[processed_dataset quality_report audit_report].freeze
       CONTENT_TYPE = "application/json"
 
+      attr_reader :storage_client, :logger, :retention_days
+
       def initialize(storage_client:, logger:, retention_days: 30)
         @storage_client = storage_client
         @logger = logger
@@ -44,8 +46,6 @@ module Worker
       end
 
       private
-
-      attr_reader :storage_client, :logger
 
       def artifact_body(artifact_type, ids, batch_id, status, parse_result, generated_at)
         metadata = {
@@ -127,8 +127,6 @@ module Worker
           ]
         )
       end
-
-      attr_reader :retention_days
     end
   end
 end

@@ -51,6 +51,116 @@ function Get-DotEnvValue {
   return ($line -split '=', 2)[1].Trim()
 }
 
+function Get-EnvOrDotEnvValue {
+  param(
+    [Parameter(Mandatory)]
+    [string]$Path,
+    [Parameter(Mandatory)]
+    [string]$Key
+  )
+
+  $currentValue = [Environment]::GetEnvironmentVariable($Key)
+  if (-not [string]::IsNullOrWhiteSpace($currentValue)) {
+    return $currentValue.Trim()
+  }
+
+  return Get-DotEnvValue -Path $Path -Key $Key
+}
+
+function Test-PositiveIntegerValue {
+  param([string]$Value)
+
+  if ([string]::IsNullOrWhiteSpace($Value)) {
+    return $false
+  }
+
+  $parsed = 0
+  return [int]::TryParse($Value, [ref]$parsed) -and $parsed -gt 0
+}
+
+function Test-EmailValue {
+  param([string]$Value)
+
+  if ([string]::IsNullOrWhiteSpace($Value)) {
+    return $false
+  }
+
+  try {
+    $mailAddress = [System.Net.Mail.MailAddress]::new($Value)
+    return $mailAddress.Address -eq $Value
+  }
+  catch {
+    return $false
+  }
+}
+
+function Test-HttpsUrlValue {
+  param([string]$Value)
+
+  if ([string]::IsNullOrWhiteSpace($Value)) {
+    return $false
+  }
+
+  $uri = $null
+  if (-not [Uri]::TryCreate($Value, [UriKind]::Absolute, [ref]$uri)) {
+    return $false
+  }
+
+  return $uri.Scheme -eq 'https' -and -not [string]::IsNullOrWhiteSpace($uri.Host)
+}
+
+function Assert-Sprint5OperationalEnv {
+  param(
+    [Parameter(Mandatory)]
+    [string]$Path
+  )
+
+  $issues = New-Object System.Collections.Generic.List[string]
+  $numericKeys = @(
+    'OPERATIONAL_ACTION_COOLDOWN_SECONDS',
+    'OPERATIONAL_ACTION_DAILY_LIMIT',
+    'IDEMPOTENCY_KEY_TTL_SECONDS',
+    'JOB_ARTIFACT_RETENTION_DAYS',
+    'NOTIFICATION_RETENTION_DAYS',
+    'NOTIFICATION_DELIVERY_RETENTION_DAYS',
+    'DLQ_REPLAY_REQUEST_RETENTION_DAYS',
+    'ARTIFACT_DOWNLOAD_URL_TTL_SECONDS',
+    'SMOKE_HTTP_TIMEOUT_SECONDS',
+    'SMOKE_WORKER_TIMEOUT_SECONDS',
+    'SMOKE_POLL_INTERVAL_SECONDS'
+  )
+
+  foreach ($key in $numericKeys) {
+    $value = Get-EnvOrDotEnvValue -Path $Path -Key $key
+    if (-not (Test-PositiveIntegerValue -Value $value)) {
+      $issues.Add("$key deve estar definido com inteiro positivo no ambiente local.") | Out-Null
+    }
+  }
+
+  foreach ($key in @('SEED_OPERATOR_PASSWORD', 'SEED_ADMIN_PASSWORD', 'SMOKE_ADMIN_EMAIL', 'SMOKE_SECOND_ADMIN_EMAIL', 'SMOKE_SECOND_ADMIN_PASSWORD', 'SMOKE_NOTIFICATION_EMAIL', 'SMOKE_WEBHOOK_URL')) {
+    $value = Get-EnvOrDotEnvValue -Path $Path -Key $key
+    if ([string]::IsNullOrWhiteSpace($value)) {
+      $issues.Add("$key deve estar definido antes de rodar CI local, smokes ou reports da Sprint 5.") | Out-Null
+    }
+  }
+
+  foreach ($key in @('SMOKE_ADMIN_EMAIL', 'SMOKE_SECOND_ADMIN_EMAIL', 'SMOKE_NOTIFICATION_EMAIL')) {
+    $value = Get-EnvOrDotEnvValue -Path $Path -Key $key
+    if (-not [string]::IsNullOrWhiteSpace($value) -and -not (Test-EmailValue -Value $value)) {
+      $issues.Add("$key precisa ser um e-mail valido.") | Out-Null
+    }
+  }
+
+  $webhookUrl = Get-EnvOrDotEnvValue -Path $Path -Key 'SMOKE_WEBHOOK_URL'
+  if (-not [string]::IsNullOrWhiteSpace($webhookUrl) -and -not (Test-HttpsUrlValue -Value $webhookUrl)) {
+    $issues.Add('SMOKE_WEBHOOK_URL precisa usar HTTPS e host valido para o teste de notificacao.') | Out-Null
+  }
+
+  if ($issues.Count -gt 0) {
+    throw ("Configuracao Sprint 5 incompleta:`n- " + ($issues -join "`n- ") + "`nSincronize seu .env com .env.example antes de continuar.")
+  }
+}
+
 function Get-ComposeUpFriendlyError {
   param(
     [AllowEmptyString()]

@@ -8,6 +8,7 @@ CI_LOCAL_STEP_RESULTS=()
 CI_LOCAL_STEP_OUTPUT=''
 CI_LOCAL_STARTED_AT="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 CI_LOCAL_START_SECONDS="$(date +%s)"
+CI_LOCAL_LAST_COMPLETED_STEP=''
 
 ci_local_report_slug() {
   printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-|-$//g'
@@ -17,6 +18,16 @@ ci_local_init_reports() {
   local reports_dir="$1"
   mkdir -p "$reports_dir/logs"
   rm -f "$reports_dir/summary.json" "$reports_dir/report.html" "$reports_dir/logs"/*.log
+}
+
+ci_local_escape_json() {
+  local value="${1:-}"
+  value="${value//\\/\\\\}"
+  value="${value//\"/\\\"}"
+  value="${value//$'\n'/\\n}"
+  value="${value//$'\r'/\\r}"
+  value="${value//$'\t'/\\t}"
+  printf '%s' "$value"
 }
 
 ci_local_print_rule() {
@@ -63,7 +74,7 @@ ci_local_run_step() {
     slug="$(ci_local_report_slug "$workflow-$step")"
     log_path="$CI_LOCAL_REPORTS_DIR/logs/$slug.log"
     printf '%s\n' "${output:-"(sem output)"}" > "$log_path"
-    CI_LOCAL_STEP_RESULTS+=("$workflow|$step|$status|$exit_code|$duration|scripts/ci/reports/logs/$slug.log")
+    CI_LOCAL_STEP_RESULTS+=("$workflow|$step|$status|$exit_code|$duration|scripts/ci/reports/logs/$slug.log||implementation")
   fi
 
   if [[ -n "$output" ]]; then
@@ -83,7 +94,22 @@ ci_local_run_step() {
   fi
 
   CI_LOCAL_STEP_OUTPUT="$output"
+  if [[ $exit_code -eq 0 ]]; then
+    CI_LOCAL_LAST_COMPLETED_STEP="$workflow :: $step"
+  fi
   return $exit_code
+}
+
+ci_local_record_step_result() {
+  local workflow="$1"
+  local step="$2"
+  local status="$3"
+  local exit_code="$4"
+  local duration="$5"
+  local log_path="$6"
+  local detail="${7:-}"
+  local classification="${8:-implementation}"
+  CI_LOCAL_STEP_RESULTS+=("$workflow|$step|$status|$exit_code|$duration|$log_path|$detail|$classification")
 }
 
 ci_local_write_reports() {
@@ -119,12 +145,30 @@ ci_local_write_reports() {
     printf '  "command": "scripts/ci/ci-local.sh %s",\n' "$mode"
     printf '  "reportPath": "scripts/ci/reports/report.html",\n'
     printf '  "artifacts": [{"label": "CI logs", "path": "scripts/ci/reports/logs"}],\n'
+    printf '  "lastCompletedStep": "%s",\n' "$(ci_local_escape_json "$CI_LOCAL_LAST_COMPLETED_STEP")"
+    printf '  "workflows": [\n'
+    for index in "${!CI_LOCAL_RESULTS[@]}"; do
+      [[ "$index" -gt 0 ]] && printf ',\n'
+      IFS='|' read -r workflow workflow_status detail <<< "${CI_LOCAL_RESULTS[$index]}"
+      printf '    {"Workflow": "%s", "Status": "%s", "Detail": "%s"}' \
+        "$(ci_local_escape_json "$workflow")" \
+        "$(ci_local_escape_json "$workflow_status")" \
+        "$(ci_local_escape_json "$detail")"
+    done
+    printf '\n  ],\n'
     printf '  "steps": [\n'
     for index in "${!CI_LOCAL_STEP_RESULTS[@]}"; do
       [[ "$index" -gt 0 ]] && printf ',\n'
-      IFS='|' read -r workflow step step_status step_exit step_duration step_log <<< "${CI_LOCAL_STEP_RESULTS[$index]}"
-      printf '    {"Workflow": "%s", "Step": "%s", "Status": "%s", "ExitCode": %s, "DurationSeconds": %s, "LogPath": "%s"}' \
-        "$workflow" "$step" "$step_status" "$step_exit" "$step_duration" "$step_log"
+      IFS='|' read -r workflow step step_status step_exit step_duration step_log step_detail step_classification <<< "${CI_LOCAL_STEP_RESULTS[$index]}"
+      printf '    {"Workflow": "%s", "Step": "%s", "Status": "%s", "ExitCode": %s, "DurationSeconds": %s, "LogPath": "%s", "Detail": "%s", "Classification": "%s"}' \
+        "$(ci_local_escape_json "$workflow")" \
+        "$(ci_local_escape_json "$step")" \
+        "$(ci_local_escape_json "$step_status")" \
+        "$step_exit" \
+        "$step_duration" \
+        "$(ci_local_escape_json "$step_log")" \
+        "$(ci_local_escape_json "$step_detail")" \
+        "$(ci_local_escape_json "$step_classification")"
     done
     printf '\n  ]\n'
     printf '}\n'

@@ -164,9 +164,25 @@ function Ensure-SeedPasswordEnv {
   }
 }
 
+function Ensure-Sprint5SmokeEnv {
+  $envPath = Join-Path $root '.env'
+
+  foreach ($key in @('SMOKE_ADMIN_EMAIL', 'SMOKE_SECOND_ADMIN_EMAIL', 'SMOKE_SECOND_ADMIN_PASSWORD', 'SMOKE_NOTIFICATION_EMAIL', 'SMOKE_WEBHOOK_URL', 'SMOKE_HTTP_TIMEOUT_SECONDS', 'SMOKE_WORKER_TIMEOUT_SECONDS', 'SMOKE_POLL_INTERVAL_SECONDS')) {
+    if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($key))) {
+      $value = Get-DotEnvValue -Path $envPath -Key $key
+      if (-not [string]::IsNullOrWhiteSpace($value)) {
+        [Environment]::SetEnvironmentVariable($key, $value)
+      }
+    }
+  }
+
+  Assert-Sprint5OperationalEnv -Path $envPath
+}
+
 try {
   Initialize-SmokeReports
   Ensure-SeedPasswordEnv
+  Ensure-Sprint5SmokeEnv
 
   Write-Host "Preparando ambiente limpo para smokes..." -ForegroundColor Cyan
   Stop-StreamGateStack
@@ -180,6 +196,8 @@ try {
 
   Invoke-SmokeCommand -Name 'Start full stack' -Command "powershell -ExecutionPolicy Bypass -File scripts/dev/dev-up.ps1 -Mode full -TimeoutSeconds $TimeoutSeconds"
   Invoke-SmokeCommand -Name 'Worker operational smoke' -Command 'python scripts/smokes/worker-operational-smoke.py'
+  Invoke-SmokeCommand -Name 'Seed second admin fixture' -Command "docker compose exec -T -e SMOKE_SECOND_ADMIN_EMAIL -e SMOKE_SECOND_ADMIN_PASSWORD api bundle exec rails runner `"email = ENV.fetch('SMOKE_SECOND_ADMIN_EMAIL'); password = ENV.fetch('SMOKE_SECOND_ADMIN_PASSWORD'); user = User.find_or_initialize_by(email: email); user.full_name = 'Operational Approver'; user.organization_id ||= ENV.fetch('DEFAULT_ORGANIZATION_ID', 'org_default'); user.role = :admin; user.status = :active; user.password = password; user.save!`""
+  Invoke-SmokeCommand -Name 'Safe operations smoke' -Command 'python scripts/smokes/safe-operations-smoke.py'
 }
 catch {
   $failed = $true

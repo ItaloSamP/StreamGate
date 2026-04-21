@@ -1,6 +1,8 @@
 param(
   [ValidateSet('all', 'frontend', 'backend', 'docker', 'e2e')]
-  [string]$Workflow = 'all'
+  [string]$Workflow = 'all',
+  [switch]$SkipInstallSteps,
+  [string]$ResumeFromStep
 )
 
 $ErrorActionPreference = "Stop"
@@ -14,6 +16,8 @@ $results = New-Object System.Collections.Generic.List[object]
 $stepResults = New-Object System.Collections.Generic.List[object]
 $createdEnv = $false
 $ciStartedAt = Get-Date
+$lastCompletedStep = $null
+$resumeReached = [string]::IsNullOrWhiteSpace($ResumeFromStep)
 
 function Initialize-CiReports {
   New-Item -ItemType Directory -Force -Path $ciLogsDir | Out-Null
@@ -53,6 +57,7 @@ function Add-WorkflowResult {
     Status = $Status
     Detail = $Detail
   }) | Out-Null
+  Write-CiReports
 }
 
 function Test-WorkflowFailure {
@@ -76,13 +81,45 @@ function Ensure-EnvFile {
   Write-Host 'Arquivo .env nao encontrado; copia temporaria criada a partir de .env.example.' -ForegroundColor Yellow
 }
 
+function Ensure-Sprint5OperationalEnv {
+  $envPath = Join-Path $root '.env'
+  Assert-Sprint5OperationalEnv -Path $envPath
+}
+
 function Invoke-WorkflowStep {
   param(
     [string]$WorkflowName,
     [string]$StepName,
     [string]$WorkingDirectory,
-    [string]$Command
+    [string]$Command,
+    [switch]$AlwaysRun
   )
+
+  $skipReason = Get-StepSkipReason -WorkflowName $WorkflowName -StepName $StepName -AlwaysRun:$AlwaysRun
+  if ($skipReason) {
+    $logPath = Join-Path $ciLogsDir "$((ConvertTo-ReportSlug -Value "$WorkflowName-$StepName")).log"
+    $skipReason | Set-Content -Path $logPath -Encoding utf8
+    $script:stepResults.Add([pscustomobject]@{
+      Workflow = $WorkflowName
+      Step = $StepName
+      Status = 'SKIP'
+      ExitCode = 0
+      DurationSeconds = 0
+      LogPath = ($logPath.Substring($root.Length + 1) -replace '\\', '/')
+      Detail = $skipReason
+      Classification = 'skip'
+    }) | Out-Null
+    Write-Host ''
+    Write-Host ">>> [$WorkflowName] $StepName"
+    Write-Host 'Status: SKIP' -ForegroundColor Yellow
+    Write-Host $skipReason
+    Write-CiReports
+    return [pscustomobject]@{
+      ExitCode = 0
+      Output = @($skipReason)
+      Status = 'SKIP'
+    }
+  }
 
   Write-Host ''
   Write-Host ">>> [$WorkflowName] $StepName"
@@ -119,6 +156,8 @@ function Invoke-WorkflowStep {
     ExitCode = $exitCode
     DurationSeconds = $duration
     LogPath = ($logPath.Substring($root.Length + 1) -replace '\\', '/')
+    Detail = ''
+    Classification = (Get-StepClassification -WorkflowName $WorkflowName -StepName $StepName)
   }) | Out-Null
 
   Write-Host '--- output start ---'
@@ -132,14 +171,18 @@ function Invoke-WorkflowStep {
 
   if ($exitCode -eq 0) {
     Write-Host 'Status: PASS' -ForegroundColor Green
+    $script:lastCompletedStep = "$WorkflowName :: $StepName"
   }
   else {
     Write-Host "Status: FAIL (exit code $exitCode)" -ForegroundColor Red
   }
 
+  Write-CiReports
+
   return [pscustomobject]@{
     ExitCode = $exitCode
     Output = @($output)
+    Status = $status
   }
 }
 
@@ -161,6 +204,7 @@ function Write-CiReports {
     artifacts = @(
       [ordered]@{ label = 'CI logs'; path = 'scripts/ci/reports/logs' }
     )
+    lastCompletedStep = $lastCompletedStep
     workflows = $results.ToArray()
     steps = $stepResults.ToArray()
   }
@@ -192,6 +236,63 @@ function Write-CiReports {
 "@
   $html | Set-Content -Path (Join-Path $ciReportsDir 'report.html') -Encoding utf8
   try { & node (Join-Path $root 'scripts/reports/generate-index.mjs') | Out-Host } catch {}
+}
+
+function Normalize-StepToken {
+  param([string]$Value)
+  if ($null -eq $Value) {
+    return ''
+  }
+
+  return $Value.ToLowerInvariant().Trim()
+}
+
+function Test-InstallStep {
+  param([string]$StepName)
+  return $StepName -match 'Install'
+}
+
+function Get-StepClassification {
+  param(
+    [string]$WorkflowName,
+    [string]$StepName
+  )
+
+  if ($WorkflowName -eq 'docker-ci' -or $StepName -match '^(Infra|Start|Stop|Build|Validate compose|Validate WSL|Validate PowerShell|Seed|Install Playwright)') {
+    return 'environment'
+  }
+
+  return 'implementation'
+}
+
+function Get-StepSkipReason {
+  param(
+    [string]$WorkflowName,
+    [string]$StepName,
+    [switch]$AlwaysRun
+  )
+
+  if ($AlwaysRun) {
+    return $null
+  }
+
+  if (-not $script:resumeReached) {
+    $normalizedTarget = Normalize-StepToken -Value $ResumeFromStep
+    $normalizedStep = Normalize-StepToken -Value $StepName
+    $normalizedCompound = Normalize-StepToken -Value "$WorkflowName :: $StepName"
+    if ($normalizedTarget -eq $normalizedStep -or $normalizedTarget -eq $normalizedCompound) {
+      $script:resumeReached = $true
+    }
+    else {
+      return "Skipped until resume target '$ResumeFromStep' is reached."
+    }
+  }
+
+  if ($SkipInstallSteps -and (Test-InstallStep -StepName $StepName)) {
+    return 'Skipped because -SkipInstallSteps was enabled.'
+  }
+
+  return $null
 }
 
 Initialize-CiReports
@@ -258,6 +359,7 @@ function Run-BackendWorkflow {
   }
 
   Ensure-EnvFile
+  Ensure-Sprint5OperationalEnv
 
     $postgresHost = Get-DotEnvValue -Path (Join-Path $root '.env') -Key 'POSTGRES_HOST'
   if ([string]::IsNullOrWhiteSpace($postgresHost)) { $postgresHost = 'localhost' }
@@ -291,7 +393,7 @@ function Run-BackendWorkflow {
   $seedAdminPassword = Get-DotEnvValue -Path (Join-Path $root '.env') -Key 'SEED_ADMIN_PASSWORD'
   if ([string]::IsNullOrWhiteSpace($seedAdminPassword)) { $seedAdminPassword = $seedOperatorPassword }
 
-  $apiEnvPrefix = 'set "RAILS_ENV=test" && set "POSTGRES_HOST=' + $postgresHost + '" && set "POSTGRES_PORT=' + $postgresPort + '" && set "POSTGRES_TEST_DB=' + $postgresTestDb + '" && set "POSTGRES_USER=' + $postgresUser + '" && set "POSTGRES_PASSWORD=' + $postgresPassword + '" && set "AUTH_SESSION_TTL_HOURS=' + $authSessionTtlHours + '" && set "AUTH_PASSWORD_RESET_TTL_MINUTES=' + $authPasswordResetTtlMinutes + '" && set "AUTH_TOKEN_PEPPER=' + $authTokenPepper + '" && set "AUTH_SESSION_TRANSPORT=' + $authSessionTransport + '" && set "AUTH_COOKIE_ENABLED=' + $authCookieEnabled + '" && set "AUTH_CSRF_MODE=' + $authCsrfMode + '" && set "API_CORS_ALLOWED_ORIGINS=' + $apiCorsAllowedOrigins + '" && set "API_CORS_ALLOW_CREDENTIALS=' + $apiCorsAllowCredentials + '" && set "BUNDLE_WITHOUT=production"'
+  $apiEnvPrefix = 'set "RAILS_ENV=test" && set "PARALLEL_WORKERS=1" && set "POSTGRES_HOST=' + $postgresHost + '" && set "POSTGRES_PORT=' + $postgresPort + '" && set "POSTGRES_TEST_DB=' + $postgresTestDb + '" && set "POSTGRES_USER=' + $postgresUser + '" && set "POSTGRES_PASSWORD=' + $postgresPassword + '" && set "AUTH_SESSION_TTL_HOURS=' + $authSessionTtlHours + '" && set "AUTH_PASSWORD_RESET_TTL_MINUTES=' + $authPasswordResetTtlMinutes + '" && set "AUTH_TOKEN_PEPPER=' + $authTokenPepper + '" && set "AUTH_SESSION_TRANSPORT=' + $authSessionTransport + '" && set "AUTH_COOKIE_ENABLED=' + $authCookieEnabled + '" && set "AUTH_CSRF_MODE=' + $authCsrfMode + '" && set "API_CORS_ALLOWED_ORIGINS=' + $apiCorsAllowedOrigins + '" && set "API_CORS_ALLOW_CREDENTIALS=' + $apiCorsAllowCredentials + '" && set "BUNDLE_WITHOUT=production"'
 
   $apiPrepareCommand = $apiEnvPrefix + ' && bundle exec rails db:prepare'
   $apiSeedIdempotencyChecks = ' && bundle exec rails runner "abort(''operator seed missing'') unless User.exists?(email: ''operator@streamgate.local'')" && bundle exec rails runner "abort(''admin seed missing'') unless User.exists?(email: ''admin@streamgate.local'')"'
@@ -325,7 +427,7 @@ function Run-BackendWorkflow {
   }
 
   try {
-    Invoke-WorkflowStep -WorkflowName $workflowName -StepName 'Stop backend infra' -WorkingDirectory $root -Command 'powershell -ExecutionPolicy Bypass -File .\\scripts\\dev\\dev-down.ps1' | Out-Null
+    Invoke-WorkflowStep -WorkflowName $workflowName -StepName 'Stop backend infra' -WorkingDirectory $root -Command 'powershell -ExecutionPolicy Bypass -File .\\scripts\\dev\\dev-down.ps1' -AlwaysRun | Out-Null
   }
   catch {
   }
@@ -345,6 +447,7 @@ function Run-E2EWorkflow {
   }
 
   Ensure-EnvFile
+  Ensure-Sprint5OperationalEnv
 
   $seedOperatorPassword = Get-DotEnvValue -Path (Join-Path $root '.env') -Key 'SEED_OPERATOR_PASSWORD'
   if ([string]::IsNullOrWhiteSpace($seedOperatorPassword)) { $seedOperatorPassword = 'ChangeMe123!' }
@@ -355,7 +458,7 @@ function Run-E2EWorkflow {
   $env:SEED_ADMIN_PASSWORD = $seedAdminPassword
 
   $integrationCommand = 'set "AUTH_INTEGRATION_BASE_URL=http://localhost:3000" && pnpm test:integration'
-  $e2eCommand = 'set "E2E_BASE_URL=http://localhost:5173" && pnpm test:e2e'
+  $e2eCommand = 'set "E2E_BASE_URL=http://localhost:5173" && pnpm exec playwright test --project=chromium'
 
   $failed = $false
   $reason = 'Todos os passos passaram.'
@@ -378,7 +481,7 @@ function Run-E2EWorkflow {
   }
 
   try {
-    Invoke-WorkflowStep -WorkflowName $workflowName -StepName 'Stop auth app stack' -WorkingDirectory $root -Command 'powershell -ExecutionPolicy Bypass -File .\scripts\dev\dev-down.ps1' | Out-Null
+    Invoke-WorkflowStep -WorkflowName $workflowName -StepName 'Stop auth app stack' -WorkingDirectory $root -Command 'powershell -ExecutionPolicy Bypass -File .\scripts\dev\dev-down.ps1' -AlwaysRun | Out-Null
   }
   catch {
   }
@@ -395,6 +498,7 @@ function Run-DockerWorkflow {
   }
 
   Ensure-EnvFile
+  Ensure-Sprint5OperationalEnv
 
   $composeHealthCommand = Get-PowerShellFileCommand -FilePath '.\\scripts\\compose\\compose-health.tests.ps1'
   $bashHealthCommand = 'bash -lc "if ! command -v jq >/dev/null 2>&1; then echo ''SKIP: jq is not available in local WSL bash; GitHub docker-ci installs jq and validates this helper.''; exit 0; fi; bash scripts/compose/compose-health-tests.sh"'
@@ -424,7 +528,7 @@ function Run-DockerWorkflow {
   }
 
   try {
-    Invoke-WorkflowStep -WorkflowName $workflowName -StepName 'Stop compose stack' -WorkingDirectory $root -Command 'docker compose down -v' | Out-Null
+    Invoke-WorkflowStep -WorkflowName $workflowName -StepName 'Stop compose stack' -WorkingDirectory $root -Command 'docker compose down -v' -AlwaysRun | Out-Null
   }
   catch {
   }

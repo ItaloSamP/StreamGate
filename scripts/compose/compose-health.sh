@@ -30,6 +30,96 @@ get_dotenv_value() {
   awk -F '=' -v key="$key" '$1 ~ "^[[:space:]]*" key "$" { sub(/^[[:space:]]+/, "", $2); print $2; exit }' "$path"
 }
 
+get_env_or_dotenv_value() {
+  local path="$1"
+  local key="$2"
+
+  if [[ -n "${!key:-}" ]]; then
+    printf '%s\n' "${!key}"
+    return 0
+  fi
+
+  get_dotenv_value "$path" "$key"
+}
+
+is_positive_integer() {
+  local value="${1:-}"
+  [[ "$value" =~ ^[1-9][0-9]*$ ]]
+}
+
+is_valid_email() {
+  local value="${1:-}"
+  [[ "$value" =~ ^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$ ]]
+}
+
+is_valid_https_url() {
+  local value="${1:-}"
+  [[ "$value" =~ ^https://[^[:space:]]+$ ]]
+}
+
+assert_sprint5_operational_env() {
+  local path="$1"
+  local issues=()
+  local key value
+
+  local numeric_keys=(
+    OPERATIONAL_ACTION_COOLDOWN_SECONDS
+    OPERATIONAL_ACTION_DAILY_LIMIT
+    IDEMPOTENCY_KEY_TTL_SECONDS
+    JOB_ARTIFACT_RETENTION_DAYS
+    NOTIFICATION_RETENTION_DAYS
+    NOTIFICATION_DELIVERY_RETENTION_DAYS
+    DLQ_REPLAY_REQUEST_RETENTION_DAYS
+    ARTIFACT_DOWNLOAD_URL_TTL_SECONDS
+    SMOKE_HTTP_TIMEOUT_SECONDS
+    SMOKE_WORKER_TIMEOUT_SECONDS
+    SMOKE_POLL_INTERVAL_SECONDS
+  )
+
+  for key in "${numeric_keys[@]}"; do
+    value="$(get_env_or_dotenv_value "$path" "$key")"
+    if ! is_positive_integer "$value"; then
+      issues+=("$key deve estar definido com inteiro positivo no ambiente local.")
+    fi
+  done
+
+  local required_keys=(
+    SEED_OPERATOR_PASSWORD
+    SEED_ADMIN_PASSWORD
+    SMOKE_ADMIN_EMAIL
+    SMOKE_SECOND_ADMIN_EMAIL
+    SMOKE_SECOND_ADMIN_PASSWORD
+    SMOKE_NOTIFICATION_EMAIL
+    SMOKE_WEBHOOK_URL
+  )
+
+  for key in "${required_keys[@]}"; do
+    value="$(get_env_or_dotenv_value "$path" "$key")"
+    if [[ -z "$value" ]]; then
+      issues+=("$key deve estar definido antes de rodar CI local, smokes ou reports da Sprint 5.")
+    fi
+  done
+
+  for key in SMOKE_ADMIN_EMAIL SMOKE_SECOND_ADMIN_EMAIL SMOKE_NOTIFICATION_EMAIL; do
+    value="$(get_env_or_dotenv_value "$path" "$key")"
+    if [[ -n "$value" ]] && ! is_valid_email "$value"; then
+      issues+=("$key precisa ser um e-mail valido.")
+    fi
+  done
+
+  value="$(get_env_or_dotenv_value "$path" "SMOKE_WEBHOOK_URL")"
+  if [[ -n "$value" ]] && ! is_valid_https_url "$value"; then
+    issues+=("SMOKE_WEBHOOK_URL precisa usar HTTPS e host valido para o teste de notificacao.")
+  fi
+
+  if [[ ${#issues[@]} -gt 0 ]]; then
+    printf 'Configuracao Sprint 5 incompleta:\n' >&2
+    printf -- '- %s\n' "${issues[@]}" >&2
+    printf 'Sincronize seu .env com .env.example antes de continuar.\n' >&2
+    return 1
+  fi
+}
+
 get_compose_up_friendly_error() {
   local compose_output="${1:-}"
 

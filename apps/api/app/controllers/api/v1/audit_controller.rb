@@ -16,8 +16,8 @@ module Api
         scope = AuditEvent.where(occurred_at: window[:from]..window[:to])
         scope = scope.where("occurred_at >= ?", retention_cutoff)
 
-        action = params[:action].to_s.strip
-        scope = scope.where(action: action) if action.present?
+        event_action = request.query_parameters["action"].to_s.strip
+        scope = scope.where(action: event_action) if event_action.present?
 
         actor_id = params[:actor_id].to_s.strip
         scope = scope.where(actor_id: actor_id) if actor_id.present?
@@ -70,7 +70,7 @@ module Api
               from: window[:from].iso8601,
               to: window[:to].iso8601,
               timezone: window[:timezone],
-              action: action.presence,
+              action: event_action.presence,
               actor_id: actor_id.presence,
               auditable_type: auditable_type.presence,
               trace_id: trace_id.presence,
