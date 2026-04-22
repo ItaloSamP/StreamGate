@@ -2,7 +2,7 @@
 Este guia consolida diretrizes de streamgate threat model para uso consistente no projeto.
 
 ## Estado atual
-Conteudo alinhado ao fechamento da Sprint 4. Este threat model mantem o historico da Sprint 0 como contexto, mas a leitura vigente passa a considerar auth real na API, upload assinado, worker RabbitMQ real, DLQ read-only, analytics/quarantine/audit reais e masking backend de payloads operacionais.
+Conteudo alinhado ao fechamento integral da Sprint 5. Este threat model mantem o historico da Sprint 0 como contexto, mas a leitura vigente passa a considerar auth real na API, upload assinado, worker RabbitMQ real, operacao segura mutavel (`retry`, `resolve`, `dlq replay request/approve/execute`), artefatos finais com signed URL curta, notificacoes `in_app/email/webhook`, readiness operacional do repositorio e masking backend/frontend de payloads operacionais.
 
 ## Regras/Contratos
 - As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
@@ -18,35 +18,35 @@ Conteudo alinhado ao fechamento da Sprint 4. Este threat model mantem o historic
 
 ## Executive summary
 
-O StreamGate ja possui, apos a Sprint 4, um primeiro fluxo operacional real: `signed-url -> storage -> upload/job -> RabbitMQ -> worker -> analytics/quarantine/audit`. Os maiores riscos agora se concentram em proteger essa cadeia contra defaults locais promovidos indevidamente, payloads sensiveis em superficies read-only, eventos invalidos/replayados/venenosos no broker e abuso operacional de retry/DLQ. O hardening aplicado na Sprint 4 adicionou sanitizacao backend para payloads operacionais, role gating para audit/DLQ, idempotencia por `event_id`, retry limitado e smokes/reports oficiais para evidenciar o runtime.
+O StreamGate ja possui, apos a Sprint 5, um fluxo operacional real mais completo: `signed-url -> storage -> upload/job -> RabbitMQ -> worker -> artefatos finais -> notificacoes -> command center/admin operations -> auditoria`. Os maiores riscos agora se concentram em proteger mutacoes operacionais sensiveis, signed download URLs curtas, entregas externas de notificacao e o replay aprovado de DLQ contra abuso, reuso indevido e vazamento de payload. O hardening aplicado na Sprint 5 adicionou `Idempotency-Key` obrigatoria para mutacoes sensiveis, replay em tres etapas, auditoria de mutacoes/download/notificacoes, notificacoes persistidas com outbox interno, masking de payloads e signed URLs curtas para artefatos.
 
 
-## Sprint 4 security addendum
+## Sprint 5 security addendum
 
 ### Novas superficies materializadas
 
-- API Rails com endpoints reais de `analytics`, `quarantine`, `quarantine/dlq`, `audit`, `jobs` e `uploads`.
-- Broker RabbitMQ com exchange `streamgate.events`, routing key `upload.received.v1`, fila `streamgate.worker.upload.received.v1` e DLQ `streamgate.worker.upload.received.v1.dlq`.
-- Worker Ruby consumindo eventos reais, processando CSV/ZIP inicial, criando `processing_attempt`, atualizando jobs e gravando auditoria.
-- Frontend autenticado com command center real, role gating para `audit`/DLQ, rotas de detalhe e masking visual.
-- Reports locais e smokes full runtime como evidencias operacionais.
+- API Rails com endpoints reais de `retry`, `resolve`, `dlq replay request/approve/execute`, `job artifacts`, `artifact download-url`, `notifications` e `notification-settings`.
+- Worker Ruby gerando `processed_dataset`, `quality_report` e `audit_report`, registrando falhas nao bloqueantes de artefato e emitindo notificacoes operacionais.
+- Frontend autenticado com inbox de notificacoes, painel admin-only de `Operacoes Seguras`, historico de artefatos e role gating para superficies sensiveis.
+- Outbox interno para `email` e `webhook`, com deliveries persistidos, retry/backoff e payload sanitizado.
+- Reports locais, E2E do caminho novo de notificacoes/operations e smoke ponta a ponta de Sprint 5 como evidencias operacionais.
 
 ### Controles confirmados
 
-- `audit` e `quarantine/dlq` sao admin-only na API e no frontend.
-- `analytics` e `quarantine` aplicam escopo por organizacao para operadores.
-- Eventos do worker sao idempotentes por `event_id`; duplicatas sao ignoradas.
-- Erros transientes tem retry limitado por `WORKER_MAX_RETRIES`; poison messages vao para DLQ.
-- Erros terminais marcam job como `failed` e sao ackados sem requeue.
-- `audit_event.metadata`, payloads de quarantine e snapshots da DLQ sao sanitizados antes de exposicao.
-- `scripts/smokes/run-smokes` cobre CSV valido `completed`, CSV com linha vazia `quarantined_with_warnings`, analytics e quarantine.
+- `retry_job?`, `resolve_quarantine?`, `request_dlq_replay?`, `approve_dlq_replay?`, `execute_dlq_replay?`, `download_job_artifact?` e `manage_notification_settings?` formalizam RBAC por acao.
+- `retry`, `resolve` e `webhook test` exigem `reason` e `Idempotency-Key`; replay da DLQ exige `request -> approve -> execute`, com bloqueio de self-approval.
+- Eventos do worker continuam idempotentes por `event_id`; replay aprovado nao deve duplicar consumo nem artefatos ja consumidos.
+- `audit_event.metadata`, payloads de notificacao/delivery e payloads de quarantine/DLQ passam por sanitizacao antes de exposicao ou envio.
+- Download de artefato usa signed URL curta com `expires_at`; a API audita a geracao do link antes da entrega.
+- `Notification`, `NotificationSetting`, `WebhookDelivery` e `OperationalActionIdempotencyKey` persistem trilha operacional, canais e reuso seguro de resposta.
+- `scripts/smokes/run-smokes` cobre artifacts list/download-url, notificacoes, deliveries persistidos, retry/resolve/replay e audit trail coerente com o fluxo Sprint 5.
 
 ### Riscos residuais aceitos para Sprint 5+
 
-- Autenticacao/autorizacao entre servicos internos ainda depende da rede local/Compose; assinatura forte de eventos fica para uma evolucao posterior.
-- Replay prevention e suficiente para o corte atual por `event_id`, mas ainda nao ha janela temporal assinada nem nonce externo.
-- DLQ permanece read-only; replay/resolve operacional deve ter threat model proprio antes de qualquer mutacao.
-- Conectores externos (`external_link`, `oauth_delegated`, `google_drive`, `s3`, `http_url`) seguem fora do runtime principal e exigem revisao separada.
+- Autenticacao/autorizacao entre servicos internos ainda depende da rede local/Compose; assinatura forte de eventos e webhook receiver real ficam para evolucao posterior.
+- Replay prevention e suficiente para o corte atual por `event_id` + aprovacao humana + idempotencia, mas ainda nao ha janela temporal assinada nem nonce externo entre servicos.
+- Deliveries `email/webhook` sao persistidos e auditados, mas ainda dependem de politicas futuras de rate limiting externo, allowlist de destino e observabilidade remota.
+- Conectores externos de entrada (`external_link`, `oauth_delegated`, `google_drive`, `s3`, `http_url`) seguem discovery-only e exigem revisao separada antes de implementacao funcional.
 ## Scope and assumptions
 
 ### In-scope paths
@@ -235,4 +235,3 @@ Exemplos para este repo:
 - runtime foi separado de tooling/dev: risco de compose local foi tratado como baseline operacional, nao como producao
 - este documento foi fechado com suposicoes explicitas porque o contexto de exposicao e deploy real ainda nao foi validado pelo time
 - conclusoes condicionais foram marcadas especialmente nas trilhas de upload, broker e analytics, que ainda nao possuem runtime real
-

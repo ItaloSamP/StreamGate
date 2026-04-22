@@ -4,11 +4,11 @@
 Este guia consolida diretrizes de security baseline sprint 0 para uso consistente no projeto.
 
 ## Estado atual
-Conteudo alinhado ao fechamento da Sprint 4. O baseline historico da Sprint 0 continua valido como metodo, mas o estado operacional atual ja inclui auth real na API, upload assinado, worker RabbitMQ real, analytics/quarantine/audit reais e reports/smokes oficiais.
+Conteudo alinhado ao fechamento integral da Sprint 5. O baseline historico da Sprint 0 continua valido como metodo, mas o estado operacional atual ja inclui auth real na API, upload assinado, worker RabbitMQ real, operacao segura mutavel, artefatos finais, notificacoes `in_app/email/webhook`, reports/smokes oficiais e repo readiness operacional.
 
 
 ## Estado atual detalhado
-Conteudo alinhado ao fechamento da Sprint 4; atualizar em cada mudanca relevante de auth, upload, worker, broker, auditoria, quarentena, CI, smokes ou reports.
+Conteudo alinhado ao fechamento da Sprint 5; atualizar em cada mudanca relevante de auth, upload, worker, broker, artefatos, notificacoes, auditoria, quarentena, CI, smokes ou reports.
 
 ## Regras/Contratos
 - As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
@@ -27,20 +27,21 @@ A Sprint 0 nao fecha seguranca de produto. Ela fecha o metodo minimo para que as
 
 ## Leitura do estado atual
 
-Hoje o repositorio saiu do baseline puramente estrutural e ja possui um primeiro runtime operacional real:
+Hoje o repositorio saiu do baseline puramente estrutural e ja possui um runtime operacional real expandido:
 
-- a API expoe auth, upload assinado, jobs, analytics, quarantine, DLQ read-only e audit no namespace `/api/v1`
-- o frontend autenticado consome dados reais da API; o armazenamento local guarda apenas sessao/token de desenvolvimento
-- o worker possui runtime real de fila RabbitMQ para `upload.received.v1`, com CSV/ZIP inicial, retry e DLQ
+- a API expoe auth, upload assinado, jobs, analytics, quarantine, DLQ, audit, mutacoes operacionais, artefatos e notificacoes no namespace `/api/v1`
+- o frontend autenticado consome dados reais da API; o armazenamento local guarda apenas sessao/token de desenvolvimento e o command center ja inclui inbox de notificacoes, artefatos e operacoes admin-only
+- o worker possui runtime real de fila RabbitMQ para `upload.received.v1`, com CSV/ZIP, retry, DLQ, artefatos finais e emissao de notificacoes operacionais
 - o `compose.yaml` sobe PostgreSQL, Redis, RabbitMQ, MinIO, ClickHouse, API, frontend e worker real no profile `full`
-- o fluxo real de upload, leitura operacional e auditoria existe para o corte Sprint 4, ainda sem conectores externos
+- o fluxo real de upload, leitura operacional, artefatos, notificacoes e auditoria existe para o corte Sprint 5, ainda sem conectores externos funcionais
 
 Isso significa que a maior parte do risco atual esta em:
 
 - defaults locais reaproveitados fora do ambiente local
 - segredos e portas administrativas expostos por configuracao operacional ruim
-- payloads operacionais de quarantine/DLQ/audit expondo dado sensivel sem masking ou escopo correto
-- eventos de broker invalidos, replayados ou venenosos afetando integridade de jobs
+- payloads operacionais de quarantine/DLQ/audit/notificacoes expondo dado sensivel sem masking ou escopo correto
+- eventos de broker invalidos, replayados ou venenosos afetando integridade de jobs e artefatos
+- mutacoes sensiveis sendo executadas sem trilha forte de motivo, auditoria e idempotencia
 - futuras superficies de conectores externos entrando sem trilha de revisao proporcional
 
 ## Superficies de ataque oficiais da Sprint 0
@@ -51,8 +52,10 @@ Isso significa que a maior parte do risco atual esta em:
 | Upload | fluxo assinado real com registro idempotente e limites de tipo/tamanho | abuso de signed URL, storage_key ou metadata se validacao regredir | `apps/api/app/controllers/api/v1/uploads_controller.rb`, `apps/api/openapi/v1/openapi.yaml` |
 | Storage | MinIO local com bucket privado e Active Storage local na API | reuso de credenciais simples e exposicao indevida de console/storage | `compose.yaml`, `apps/api/config/storage.yml` |
 | Broker | RabbitMQ com evento `upload.received.v1`, fila oficial e DLQ | payload invalido, replay, poison message ou abuso de retry | `apps/worker/lib/worker/runtime/consumer.rb`, `packages/contracts/README.md` |
-| Dashboard | workspace autenticado com dados reais e role gating | exposicao indevida de auditoria/DLQ ou regressao de masking visual | `apps/web/src/pages/DashboardPage.tsx`, `apps/web/src/components/app/workspace-config.ts` |
-| Analytics/Audit/Quarantine | endpoints read-only reais com filtros, paginacao e masking server-side para payload operacional | vazamento por contrato, serializer ou fixture sensivel | `apps/api/app/controllers/api/v1`, `apps/api/app/services/operational_payload_sanitizer.rb` |
+| Dashboard | workspace autenticado com dados reais, inbox e painel admin-only | exposicao indevida de auditoria/DLQ/operations ou regressao de masking visual | `apps/web/src/pages/DashboardPage.tsx`, `apps/web/src/components/app/workspace-config.ts` |
+| Analytics/Audit/Quarantine | endpoints reais com filtros, paginacao, mutacoes controladas e masking server-side | vazamento por contrato, serializer, state machine ou fixture sensivel | `apps/api/app/controllers/api/v1`, `apps/api/app/services/operational_payload_sanitizer.rb` |
+| Artefatos | listagem e download seguro de saida final | signed URL longa demais, auditoria ausente ou metadata sensivel exposta | `apps/api/app/controllers/api/v1/job_artifacts_controller.rb`, `apps/api/app/services/artifacts/download_url_service.rb` |
+| Notificacoes | inbox persistida e outbox de deliveries | abuso de webhook/email, payload sensivel sem masking ou ownership quebrado | `apps/api/app/controllers/api/v1/notifications_controller.rb`, `apps/api/app/services/notifications` |
 
 ## Threat model inicial
 
@@ -66,7 +69,17 @@ Ele deve ser tratado como referencia obrigatoria antes de abrir sprints que mate
 - dashboards com dados reais
 - reprocessamento, auditoria ou analytics de producao
 
-Na Sprint 4, auth real, upload assinado, runtime inicial do worker, dashboards operacionais, analytics, quarantine, DLQ read-only e audit foram materializados para o ambiente local/CI. Por isso, novas mudancas nessas superficies devem tratar este baseline como controle vivo, nao como apenas planejamento.
+Na Sprint 5, auth real, upload assinado, runtime do worker, dashboards operacionais, analytics, quarantine, DLQ, audit, artefatos finais, notificacoes persistidas e operacoes seguras foram materializados para o ambiente local/CI. Por isso, novas mudancas nessas superficies devem tratar este baseline como controle vivo, nao como apenas planejamento.
+
+## Controles entregues na Sprint 5
+
+- `Idempotency-Key` obrigatoria em `retry`, `resolve`, `replay request/approve/execute` e `webhook test`, com persistencia de reuso equivalente.
+- Replay de DLQ em tres etapas (`request -> approve -> execute`) com bloqueio de self-approval.
+- Auditoria obrigatoria para mutacoes sensiveis, `download-url` de artefatos e envio de notificacoes.
+- `Notification`, `NotificationSetting` e `WebhookDelivery` persistidos; `email/webhook` saem por outbox interno com retry/backoff.
+- Signed URL curta para download de artefatos, sempre acompanhada de `expires_at`.
+- Retencao configuravel para artefatos, notificacoes, deliveries, replay requests e idempotency keys.
+- Masking de payload em auditoria, notificacoes e deliveries, alem de role gating admin-only nas superficies sensiveis.
 
 ## Scanners oficiais por camada
 
@@ -168,9 +181,10 @@ A partir da Sprint 0, revisao de seguranca deixa de ser opcional e passa a ser o
 ## Gaps conscientes que seguem para as proximas sprints
 
 - auth real ainda precisa de hardening para ambiente compartilhado/producao, incluindo politica de cookies/CSRF/TLS conforme deploy
-- conectores externos ainda nao existem e precisam de threat model proprio antes de entrar na v1
-- replay prevention hoje depende de idempotencia por `event_id`; assinatura/autenticacao forte entre servicos ainda deve evoluir
+- conectores externos continuam discovery-only e precisam de threat model proprio antes de entrar na v1 funcional
+- replay prevention hoje depende de idempotencia por `event_id`, aprovacao humana e auditoria; assinatura/autenticacao forte entre servicos ainda deve evoluir
 - classificacao formal de dados sensiveis do dominio precisa ser aprofundada antes de dados reais de cliente
+- politicas externas de allowlist/rate limit/observabilidade para deliveries `email/webhook` ainda precisam evoluir
 - scanners de dependencia e imagem ainda nao foram incorporados como gate automatizado em toda a stack
 
 ## Referencias
