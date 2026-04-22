@@ -9,6 +9,7 @@ import {
 } from '@/components/app/operational-readout'
 import { WorkspacePageFrame } from '@/components/app/workspace-page-frame'
 import { useOperationalQueryState } from '@/hooks/use-operational-query-state'
+import { ApiClientError } from '@/lib/api-client'
 import { buildCsv, buildOperationalQuery, downloadCsv, formatDateTime, humanizeOperationalError } from '@/lib/operational-utils'
 import { streamgateApi, type AuditEvent, type PaginationMeta } from '@/lib/streamgate-api'
 
@@ -54,10 +55,14 @@ export function EventLogPage() {
       } catch (error) {
         if (!active) return
 
+        const denied = error instanceof ApiClientError && error.status === 403 && error.code === 'access_denied'
+
         setViewState((current) => ({
           ...current,
-          status: 'error',
-          errorMessage: humanizeOperationalError(error, 'Nao foi possivel carregar event log.'),
+          status: denied ? 'denied' : 'error',
+          errorMessage: denied
+            ? 'Sem permissao para consultar o audit trail desta superficie.'
+            : humanizeOperationalError(error, 'Nao foi possivel carregar event log.'),
           lastUpdatedAt: new Date(),
         }))
       }

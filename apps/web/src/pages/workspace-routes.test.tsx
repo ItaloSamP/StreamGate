@@ -126,5 +126,6 @@ describe('workspace routes', () => {
 
     expect((await screen.findAllByText('Analytics Workspace')).length).toBeGreaterThan(0)
     expect(screen.getByText('Command Center Analytics')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /ClickHouse/i })).toBeInTheDocument()
   })
 })

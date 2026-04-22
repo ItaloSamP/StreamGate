@@ -28,6 +28,7 @@ class Job < ApplicationRecord
   has_many :job_batches, dependent: :restrict_with_exception
   has_many :quarantine_records, dependent: :restrict_with_exception
   has_many :processing_attempts, dependent: :restrict_with_exception
+  has_many :job_artifacts, dependent: :restrict_with_exception
   has_many :audit_events, as: :auditable, dependent: :restrict_with_exception
   has_one :analytics_job_snapshot, dependent: :restrict_with_exception
 

@@ -1250,6 +1250,236 @@ Evidencias finais de hardening/Test/Security registradas (2026-04-17):
 - Security: concluida; broker/eventos, retry/DLQ, RBAC, masking backend/frontend e superficies sensiveis foram revisados, com riscos residuais movidos para Sprint 5+.
 - Skills da sprint: concluida; stack obrigatoria aplicada nas trilhas backend/frontend/DevOps/Test/Security/documentacao tocadas.
 
+## Sprint 5 - Operacao segura, artefatos finais, notificacoes e readiness do repositorio
+
+**Status atual:** `Concluida`
+
+**Dependencias**
+
+- Sprint 4 concluida com worker real, DLQ read-only, dashboards operacionais, smokes, reports e contratos sincronizados.
+- Threat model da Sprint 4 ja registra riscos residuais de replay, DLQ, eventos forjados, dados sensiveis e conectores.
+- `scripts/smokes/run-smokes.ps1`, `scripts/reports/run-all-reports.ps1` e `scripts/ci/ci-local.ps1` ja existem como runners oficiais herdados e foram refinados nesta sprint para perfis `fast`, `operational` e `full-closeout`.
+- OpenAPI e `packages/contracts` ja existem como fonte de verdade para payloads HTTP/eventos.
+- Frontend ja possui command center operacional real, rotas de detalhe e role gating inicial.
+
+**Bloqueadores conhecidos**
+
+- Mutacao operacional de DLQ/retry/replay ainda nao tem threat model especifico.
+- Webhook real exige assinatura, retry, limite, timeout, auditoria e masking para nao virar vetor de abuso.
+- Email real exige configuracao segura e ambiente local/CI previsivel.
+- Artefatos finais ainda nao possuem modelo persistido, contrato HTTP, geracao pelo worker nem download seguro.
+- Conectores de entrada seguem bloqueados para implementacao funcional nesta sprint.
+
+**O que nao pode ficar para depois**
+
+- Threat model antes de qualquer mutacao operacional.
+- Auditoria obrigatoria para retry/replay/resolve, download de artefatos e envio de notificacoes.
+- OpenAPI + `packages/contracts` sincronizados no mesmo ciclo de endpoints novos.
+- Experiencia completa de artefatos finais para fechar o ciclo de valor do job.
+- Assinatura e limites de webhook antes de qualquer envio real.
+- Repo readiness completo para suportar crescimento do projeto, revisoes futuras e trabalho assistido por agentes.
+
+**Contexto e intencao**
+
+A Sprint 4 provou o fluxo operacional real: upload assinado, registro de job, evento no RabbitMQ, worker real, leitura operacional, DLQ read-only, dashboards e reports. O proximo risco nao e mais ausencia de runtime, e sim operar esse runtime com seguranca quando algo falha, quando um job precisa ser reprocessado, quando o usuario precisa baixar resultado final e quando eventos relevantes precisam ser comunicados fora da tela atual.
+
+Esta sprint transforma a operacao de read-only para operacao controlada. O objetivo e permitir retry/replay/resolve com trilha de auditoria forte, entregar artefatos finais de processamento, abrir notificacoes `in_app`, `email` e `webhook`, e elevar a readiness do repositorio para que o projeto consiga crescer sem depender de memoria implicita.
+
+Fronteira explicita (fora da Sprint 5 funcional): `external_link`, `oauth_delegated`, `google_drive`, `s3` e `http_url` continuam sem implementacao de ingestao. A sprint permite apenas discovery, threat model e contrato preliminar para conectores de entrada. Webhook nesta sprint e saida de notificacao, nao conector de entrada.
+
+**Ja existe hoje**
+
+- [x] Worker real consumindo `upload.received.v1` com retry, DLQ e idempotencia por `event_id`.
+- [x] Endpoints read-only reais de `jobs`, `analytics`, `quarantine`, `quarantine/dlq`, `audit` e `uploads`.
+- [x] Frontend operacional consumindo dados reais com URL state, stale state, masking visual, rotas de detalhe e export CSV.
+- [x] Smokes, CI local e reports centralizados em `scripts/smokes`, `scripts/ci` e `scripts/reports`.
+- [x] Threat model e baseline de seguranca atualizados para o estado pos-Sprint 4.
+
+### Back planning
+
+- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `architecture-patterns`, `domain-modeling`, `api-designer`, `supabase-postgres-best-practices`.
+- [x] Congelar contratos de mutacao operacional para `POST /api/v1/jobs/:id/retry`, `POST /api/v1/quarantine/:id/resolve` e fluxo aprovado de replay DLQ.
+- [x] Definir matriz de estados permitidos para retry/replay/resolve, incluindo rejeicoes explicitas para estados invalidos.
+- [x] Definir motivo operacional obrigatorio, formato de auditoria e campos minimos de rastreabilidade para toda acao sensivel.
+- [x] Congelar modelo de artefatos finais: `processed_dataset`, `quality_report` e `audit_report`.
+- [x] Definir contratos de artefatos para `GET /api/v1/jobs/:job_id/artifacts` e URL assinada curta de download.
+- [x] Definir modelo de notificacoes para `in_app`, `email` e `webhook`, incluindo preferencias/configuracao por escopo permitido.
+- [x] Definir politica de webhook: assinatura, segredo, retry limitado, timeout, auditoria, masking e protecao contra envio duplicado.
+- [x] Planejar discovery de conectores de entrada apenas como threat model/contrato preliminar, sem entrega funcional.
+
+### Back execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
+- [x] Implementar services de retry/replay/resolve com motivo obrigatorio, autorizacao admin-only e regras de estado.
+- [x] Registrar auditoria para retry, replay, resolve, download de artefato, envio de notificacao e falha de notificacao.
+- [x] Persistir artefatos finais gerados pelo processamento com tipo, status, checksum/tamanho quando disponivel e vinculo ao job.
+- [x] Expor listagem e download seguro de artefatos finais, respeitando organizacao, papel e estado do job.
+- [x] Implementar notificacoes `in_app`, `email` e `webhook` para eventos criticos: job concluido, job falhou, job concluido com quarentena, mensagem enviada para DLQ e retry/replay/resolve executado.
+- [x] Implementar seguranca minima de webhook com assinatura, segredo, timeout, retry limitado e masking de payload.
+- [x] Atualizar OpenAPI, schemas, examples e compatibilidade de contratos no mesmo ciclo da implementacao.
+
+### Worker execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `integration-testing`, `monitoring-observability`.
+- [x] Gerar `processed_dataset`, `quality_report` e `audit_report` ao final do processamento quando o estado do job permitir.
+- [x] Registrar metricas de geracao de artefatos, falhas de artefato e tempo de processamento.
+- [x] Permitir replay controlado sem quebrar idempotencia, trilha de auditoria ou consistencia de estado.
+- [x] Enfileirar eventos de notificacao operacional apos transicoes relevantes do worker.
+- [x] Garantir que falha de artefato ou notificacao nao corrompa o estado principal do job sem registro explicito.
+
+### Front planning
+
+- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`, `vercel-react-best-practices`, `test-driven-development`.
+- [x] Manter o command center existente, sem redesenho amplo da identidade visual da Sprint 4.
+- [x] Definir UX de acoes admin-only com confirmacao para retry/replay/resolve.
+- [x] Definir estados de UI para mutacoes sensiveis: disponivel, bloqueada por regra, loading, sucesso, erro acionavel e acesso negado.
+- [x] Planejar experiencia completa de artefatos: lista por job, status de geracao, download, erro acionavel e historico basico.
+- [x] Planejar centro de notificacoes `in_app` no workspace.
+- [x] Planejar configuracao visual para email/webhook com validacao, teste de envio quando viavel e estados de erro.
+- [x] Manter operadores sem acesso a acoes sensiveis e sem exposicao indevida de payloads.
+
+### Front execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`, `vercel-react-best-practices`, `vitest`, `playwright`, `test-driven-development`.
+- [x] Adicionar acoes operacionais admin-only nas telas de jobs, quarantine e DLQ.
+- [x] Adicionar confirmacoes explicitas para retry/replay/resolve com motivo obrigatorio quando aplicavel.
+- [x] Adicionar secao de artefatos em detalhes de job com lista, status, download e erro acionavel.
+- [x] Adicionar area de notificacoes `in_app` no workspace.
+- [x] Adicionar configuracao visual para email/webhook, preservando validacao, masking e estados de falha.
+- [x] Atualizar `streamgate-api` e componentes consumidores sem espalhar chamadas HTTP fora da fronteira oficial.
+- [x] Validar que operadores nao veem ou executam acoes sensiveis.
+
+### DevOps
+
+- Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
+- Documentos de apoio: [docs/guides/platform/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/platform/devops-baseline-sprint-0.md), [docs/guides/platform/setup.md](C:/estudos/StreamGate/docs/guides/platform/setup.md), [docs/guides/platform/devops-roadmap.md](C:/estudos/StreamGate/docs/guides/platform/devops-roadmap.md) e [docs/guides/operations/worker-runtime-runbook.md](C:/estudos/StreamGate/docs/guides/operations/worker-runtime-runbook.md).
+- [x] Adicionar checks locais para variaveis obrigatorias/opcionais de email, webhook, smoke e artefatos.
+- [x] Garantir que smokes cubram operacao segura, artefatos, notificacoes e audit trail.
+- [x] Registrar evidencias no hub de reports com tempos, workflows e playbook de gates.
+- [x] Preparar `CODEOWNERS` com ownership minimo por app, contratos, docs e infra.
+- [x] Preparar `dependabot.yml` para ecossistemas relevantes do repositorio.
+- [x] Preparar issue templates e revisar PR template para refletir perfis oficiais de gate.
+- [x] Criar `AGENTS.md` raiz com mapa de comandos, regras de trabalho, verificacoes e docs de referencia.
+- [x] Documentar checklist de release/rollback para o estado pre-cluster.
+- [x] Formalizar politica `WSL/Compose-first` para gates pesados e `ci-local all` apenas como fechamento/diagnostico.
+- [x] Refatorar `run-all-reports` para agir como orquestrador de evidencias, sem rerodar `ci-local all` em cascata.
+- [x] Adicionar suporte a `-SkipInstallSteps` e `-ResumeFromStep` nos runners locais com `summary.json` incremental.
+
+### Test planning
+
+- Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
+- [x] Planejar request tests para retry/replay/resolve admin-only.
+- [x] Planejar testes de estados invalidos, motivo obrigatorio, autorizacao e auditoria gerada.
+- [x] Planejar testes de endpoints de artefatos, permissao e download seguro.
+- [x] Planejar testes de configuracao/envio de notificacoes `in_app`, `email` e `webhook`.
+- [x] Planejar specs do worker para geracao de artefatos, replay controlado, idempotencia e notificacoes.
+- [x] Planejar Vitest para acoes admin-only, confirmacoes, erro, permissao, artefatos e notificacoes.
+- [x] Planejar Playwright cobrindo fluxo feliz de job processado com artefato baixavel.
+- [x] Planejar smoke de operacao segura: upload, processamento, artefato final, retry/replay controlado, notificacao emitida e audit trail consultavel.
+
+### Test execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
+- [x] Executar `pnpm test:run` em `apps/web`.
+- [x] Executar `bundle exec rails test` em `apps/api`.
+- [x] Executar `bundle exec rspec` em `apps/worker`.
+- [x] Executar validacao de OpenAPI, schemas e examples de contratos novos.
+- [x] Executar workflows oficiais de `ci-local` sem duplicacao desnecessaria (`frontend`, `backend`, `e2e`, `docker`).
+- [x] Executar smoke operacional Sprint 5 por runner oficial e validacao step-by-step do caminho expandido quando o host Windows apresentar flake de Compose health.
+- [x] Executar `powershell -ExecutionPolicy Bypass -File scripts/reports/run-all-reports.ps1 -Profile full-closeout` para o baseline da trilha e classificar o residual local do rerun agregado mais recente.
+- [x] Registrar falhas classificadas como ambiente vs implementacao.
+- [x] Registrar evidencias finais no closeout da Sprint 5.
+
+### Security
+
+- Skills obrigatorias para todas as tasks desta trilha: `review-codebase`, `openapi`, `docker`, `security-best-practices`, `security-threat-model`.
+- [x] Atualizar threat model antes da implementacao de mutacoes operacionais.
+- [x] Classificar dados sensiveis em artefatos, audit, quarantine, DLQ, email e webhook.
+- [x] Exigir assinatura para webhook e registrar regra de rotacao/segredo em documentacao.
+- [x] Garantir masking de payloads em notificacoes, auditoria e telas operacionais.
+- [x] Validar RBAC admin-only para retry/replay/resolve, DLQ mutavel e configuracoes sensiveis.
+- [x] Registrar riscos residuais de notificacao externa, replay e conectores de entrada.
+- [x] Manter conectores externos como discovery apenas: `google_drive`, `s3`, `http_url` e `oauth_delegated`.
+
+### Skills da sprint
+
+- [x] Usar `documentation-writer` como skill obrigatoria para qualquer atualizacao documental.
+- [x] Usar `security-threat-model` antes de mutacoes operacionais, webhooks e discovery de conectores.
+- [x] Usar `security-best-practices` para webhook, email, masking e autorizacao.
+- [x] Usar `api-designer`, `api-documenter`, `openapi` e `api-contract-testing` para endpoints e contratos novos.
+- [x] Usar `monitoring-observability` para alertas, metricas e runbook operacional.
+- [x] Usar `breakdown-test`, `integration-testing`, `vitest` e `playwright` para matriz de cobertura.
+- [x] Usar `github-actions-expert` e `generate-github-workflow` quando a readiness de repositorio tocar CI/workflows.
+
+### Documentation
+
+- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `documentation-writer`, `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
+- [x] Atualizar este roadmap mestre com escopo, fronteiras e checklist da Sprint 5.
+- [x] Atualizar `docs/product/vision.md` se artefatos/notificacoes precisarem ajustar a visao viva.
+- [x] Atualizar `docs/guides/security/streamgate-threat-model.md` antes das mutacoes operacionais e webhooks.
+- [x] Atualizar `docs/guides/security/security-baseline-sprint-0.md` com controles de Sprint 5.
+- [x] Atualizar `docs/guides/operations/worker-runtime-runbook.md` com retry/replay/resolve, artefatos, notificacoes e DLQ.
+- [x] Atualizar `docs/guides/platform/devops-roadmap.md` com readiness, release/rollback e proximos gates.
+- [x] Atualizar READMEs afetados de API, web e worker quando endpoints, env vars, comandos ou fluxos mudarem.
+- [x] Criar closeout da Sprint 5 com evidencias, riscos aceitos e delta por trilha.
+
+### Checklist de saida
+
+- [x] Threat model atualizado antes de qualquer mutacao operacional ou webhook funcional.
+- [x] Retry/replay/resolve implementados como admin-only, com motivo obrigatorio, auditoria e regras de estado.
+- [x] Artefatos `processed_dataset`, `quality_report` e `audit_report` gerados, persistidos, listados e baixaveis com autorizacao correta.
+- [x] Notificacoes `in_app`, `email` e `webhook` funcionando para eventos criticos definidos.
+- [x] Webhook possui assinatura, segredo, timeout, retry limitado, auditoria e masking.
+- [x] Frontend expoe acoes sensiveis apenas para admin e preserva command center existente.
+- [x] OpenAPI, contratos, schemas e examples sincronizados sem drift conhecido.
+- [x] Smokes cobrem operacao segura, artefatos, notificacoes e audit trail.
+- [x] Repo readiness completo entregue com `CODEOWNERS`, Dependabot, issue templates, `AGENTS.md` e checklist de release/rollback.
+- [x] Conectores de entrada permanecem sem implementacao funcional; discovery registrado quando realizado.
+- [x] Reports finais executados e evidencias registradas no closeout.
+
+### Reavaliacao de transicao por trilha
+
+- [x] `Back planning`: validar contratos planejados vs implementados para mutacoes, artefatos e notificacoes.
+- [x] `Back execution`: registrar regras de estado, debitos tecnicos e riscos residuais de operacao mutavel.
+- [x] `Worker execution`: validar artefatos, replay, idempotencia, metricas e notificacoes emitidas.
+- [x] `Front planning`: validar jornada de admin, artefatos e notificacoes sem redesenho indevido.
+- [x] `Front execution`: validar permissao, acessibilidade, estados de erro, masking e regressao visual.
+- [x] `DevOps`: validar readiness do repo, smokes, reports, release/rollback e variaveis de ambiente.
+- [x] `Documentation`: confirmar documentos atualizados com `documentation-writer` para a trilha DevOps.
+- [x] `Test planning`: confirmar matriz de cobertura para Sprint 6 com base nos riscos restantes.
+- [x] `Test execution`: registrar resultados finais e classificacao de falhas.
+- [x] `Security`: registrar controles entregues, riscos aceitos e bloqueios para conectores funcionais.
+- [x] `Skills da sprint`: registrar skills usadas e lacunas de skill para a sprint seguinte.
+
+### Delta por trilha (Sprint 5 - validacao Back/Worker/Front)
+
+- Back planning: concluida; contratos de operacao mutavel, artefatos finais, notificacoes e taxonomia de contratos foram congelados e validados.
+- Back execution: concluida; retry/resolve/replay aprovado, artefatos, download-url, notificacoes, idempotencia e auditoria foram implementados e validados por `bundle exec rails test` com `PARALLEL_WORKERS=1`.
+- Worker execution: concluida; worker gera artefatos finais, registra metricas/auditoria, preserva idempotencia por `event_id` e emite notificacoes operacionais; validado por `bundle exec rspec`.
+- Front planning: concluida; sino topbar, inbox, arquivadas, regras/canais, wizard admin-only e historico de artefatos foram refinados sem redesenho amplo.
+- Front execution: concluida; `/notifications`, `/operations`, artefatos em detalhe de job, adapter oficial, role gating e mutacoes de notificacao foram implementados e validados por `pnpm.cmd test:run`, `pnpm.cmd lint`, `pnpm.cmd build` e `pnpm.cmd test:integration`.
+- DevOps: concluida; env checks de Sprint 5, smoke seguro ponta a ponta, perfis `fast/operational/full-closeout`, resume incremental, hub de reports e repo readiness completo foram entregues e validados.
+- Documentation: concluida; vision, threat model, baseline, closeout e roadmap mestre foram sincronizados com o estado final da sprint.
+- Test planning: concluida; matriz Sprint 5 foi fechada por risco real em API, worker, frontend, E2E e smoke operacional expandido.
+- Test execution: concluida; suites backend/frontend/worker passaram, Playwright ganhou fluxo Sprint 5 e o smoke expandido foi validado step-by-step, com residual do runner agregado classificado como ambiente no host Windows.
+- Security: concluida; mutacoes operacionais, signed download URLs, notificacoes externas, masking, RBAC e discovery-only de conectores foram registrados com riscos residuais explicitos.
+- Skills da sprint: concluida; stack de documentacao, API, contrato, seguranca, observabilidade, testes e DevOps foi aplicada nas trilhas tocadas.
+
+**Evidencias finais registradas (2026-04-22)**
+
+- `powershell -ExecutionPolicy Bypass -File scripts/ci/ci-local.ps1 frontend -SkipInstallSteps`: PASS; fast gate do frontend com reports incrementais.
+- `powershell -ExecutionPolicy Bypass -File scripts/ci/ci-local.ps1 backend -SkipInstallSteps -ResumeFromStep "backend-ci :: Worker RuboCop"`: PASS; backend/worker validados com retomar por etapa e `PARALLEL_WORKERS=1`.
+- `powershell -ExecutionPolicy Bypass -File scripts/ci/ci-local.ps1 e2e -SkipInstallSteps`: PASS; fast gate E2E local estabilizado em Chromium.
+- `powershell -ExecutionPolicy Bypass -File scripts/ci/ci-local.ps1 docker`: PASS; Compose/build/smokes locais verdes.
+- `pnpm test:run`: PASS; `60` testes, com `66.08%` linhas no report unitario do frontend.
+- `pnpm test:integration`: PASS; `4` testes contra backend real, com cobertura focada no adapter oficial e settings/notificacoes.
+- `pnpm exec playwright test e2e/operational-flow.spec.ts --project=chromium`: PASS; fluxo feliz de `/notifications` e `/operations`.
+- `bundle exec rails test`: PASS; `86.67%` linhas e `59.96%` branches no report da API.
+- `bundle exec rspec`: PASS; `83.17%` linhas e `48.24%` branches no report do worker.
+- `python scripts/smokes/upload-signed-smoke.py`, `python scripts/smokes/worker-operational-smoke.py`, `python scripts/smokes/safe-operations-smoke.py` e `powershell -ExecutionPolicy Bypass -File scripts/smokes/verify-safe-operations-records.ps1`: PASS; cobriram upload assinado, processamento, artefatos, signed download-url, notificacoes persistidas, deliveries `email/webhook`, retry, resolve, replay aprovado e audit trail.
+- `powershell -ExecutionPolicy Bypass -File scripts/reports/run-all-reports.ps1 -Profile full-closeout`: baseline DevOps da trilha passou antes da expansao final do smoke; o rerun agregado mais recente no host Windows ficou classificado como flake de ambiente/Compose health, sem evidenciar regressao funcional da Sprint 5.
+- `docs/reports/index.html`: regenerado com tempos, workflows, `lastCompletedStep` e playbook `fast / operational / full-closeout`.
+
 ## Pos-v1 e backlog estrategico
 
 Os itens abaixo nao entram na trilha critica da v1, mas ja estao visiveis pelo estado atual do produto e devem permanecer no horizonte oficial para evitar reinvencao desordenada depois do cluster.

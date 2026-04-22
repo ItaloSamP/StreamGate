@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { LogOut } from 'lucide-react'
+import { Bell, LogOut, Menu, X } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
 import '@/components/app/dashboard-surface.css'
@@ -106,7 +106,7 @@ export function DashboardSurface({
   title?: string
   pathname?: string
   primaryActionLabel?: string
-  secondaryActionLabel?: string
+  secondaryActionLabel?: string | null
   enableOperationalBadges?: boolean
   children?: ReactNode
 }) {
@@ -114,6 +114,8 @@ export function DashboardSurface({
   const userRole = locked ? 'Data Engineer' : email
   const visibleNavGroups = getVisibleWorkspaceNavGroups(role)
   const [navBadges, setNavBadges] = useState<Record<string, number>>({})
+  const [unreadNotifications, setUnreadNotifications] = useState(0)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const content = children ?? <WorkspaceOverview />
 
   useEffect(() => {
@@ -152,18 +154,59 @@ export function DashboardSurface({
     }
   }, [enableOperationalBadges, locked, role])
 
+  useEffect(() => {
+    if (locked) return
+
+    let active = true
+
+    streamgateApi.listNotifications({ status: 'unread' })
+      .then((response) => {
+        if (active) setUnreadNotifications(response.meta?.pagination?.total_count ?? response.data.length)
+      })
+      .catch(() => {
+        if (active) setUnreadNotifications(0)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [locked, pathname])
+
+  useEffect(() => {
+    setSidebarOpen(false)
+  }, [pathname])
+
+  const quarantineBadge = navBadges['/quarantine'] ?? 7
+  const alertCopy = quarantineBadge > 0
+    ? `${quarantineBadge} registros em quarentena aguardam triagem enquanto o command center segue auditavel.`
+    : 'Pipeline estabilizado, com trilha auditavel, notificacoes ativas e operacoes seguras prontas.'
+
   return (
     <div className={`dash-frame ${locked ? 'dash-frame--locked' : ''}`}>
+      <button
+        type="button"
+        className={`dash-sidebar-backdrop ${sidebarOpen ? 'is-open' : ''}`}
+        aria-label="Fechar navegacao"
+        onClick={() => setSidebarOpen(false)}
+      />
       <div className={`dash-root ${locked ? 'dash-root--locked' : ''}`}>
-        <aside className="dash-sidebar">
+        <aside className={`dash-sidebar ${sidebarOpen ? 'is-open' : ''}`}>
           <div className="dash-logo-area">
             <StreamGateMark />
             <div>
               <div className="dash-logo-main">
                 Stream<em>Gate</em>
               </div>
-              <div className="dash-logo-sub">data pipeline workspace</div>
+              <div className="dash-logo-sub">data pipeline · v1.0</div>
             </div>
+            <button
+              type="button"
+              className="dash-sidebar-close"
+              aria-label="Fechar menu"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <X size={15} />
+            </button>
           </div>
 
           <nav className="dash-nav">
@@ -229,6 +272,14 @@ export function DashboardSurface({
 
         <div className="dash-main">
           <header className="dash-topbar">
+            <button
+              type="button"
+              className="dash-sidebar-toggle"
+              aria-label="Abrir navegacao"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu size={15} />
+            </button>
             <div className="dash-topbar-left">
               <div className="dash-topbar-eyebrow">{eyebrow}</div>
               <div className="dash-topbar-title">{title}</div>
@@ -242,15 +293,39 @@ export function DashboardSurface({
             ))}
             <div className="dash-topbar-spacer" />
             <div className="dash-topbar-actions">
-              <button type="button" className="dash-btn">{secondaryActionLabel}</button>
-              <button type="button" className="dash-btn dash-btn--primary">{primaryActionLabel}</button>
+              {!locked ? (
+                <NavLink
+                  to="/notifications"
+                  className={`dash-notification-button ${pathname.startsWith('/notifications') ? 'active' : ''}`}
+                  aria-label={unreadNotifications > 0 ? `${unreadNotifications} notificacoes nao lidas` : 'Notificacoes'}
+                >
+                  <Bell size={15} />
+                  {unreadNotifications > 0 ? <span className="dash-notification-dot" /> : null}
+                </NavLink>
+              ) : null}
+              {secondaryActionLabel ? <button type="button" className="dash-btn">{secondaryActionLabel}</button> : null}
+              {!locked ? (
+                <NavLink to="/upload" className="dash-btn dash-btn--primary">
+                  {primaryActionLabel}
+                </NavLink>
+              ) : (
+                <button type="button" className="dash-btn dash-btn--primary">
+                  {primaryActionLabel}
+                </button>
+              )}
             </div>
           </header>
 
           <div className="dash-alert-strip">
-            <span className="dash-alert-icon">Sprint 4</span>
-            <span><strong>Leitura operacional real</strong> conectada a analytics, jobs, quarentena e auditoria. Use Recarregar para atualizar a janela atual.</span>
-            <span className="dash-alert-link">Read-only</span>
+            <span className="dash-alert-icon">Alertas</span>
+            <span>
+              <strong>Operacao segura</strong> {alertCopy}
+            </span>
+            {!locked ? (
+              <NavLink to="/quarantine" className="dash-alert-link">
+                Abrir triagem
+              </NavLink>
+            ) : null}
             <span className="dash-alert-close">Sem polling</span>
           </div>
 

@@ -1,0 +1,16 @@
+{
+  "$id": "https://streamgate.local/contracts/http/operation-action-request.v1.json",
+  "type": "object",
+  "required": ["operation"],
+  "properties": {
+    "operation": {
+      "type": "object",
+      "required": ["reason"],
+      "properties": {
+        "reason": { "type": "string", "minLength": 1, "maxLength": 500 }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

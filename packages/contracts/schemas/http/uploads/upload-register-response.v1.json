@@ -9,8 +9,8 @@
       "type": "object",
       "required": ["upload", "job"],
       "properties": {
-        "upload": { "$ref": "./resources/upload.v1.json" },
-        "job": { "$ref": "./resources/job.v1.json" }
+        "upload": { "$ref": "../shared/resources/upload.v1.json" },
+        "job": { "$ref": "../shared/resources/job.v1.json" }
       },
       "additionalProperties": false
     },

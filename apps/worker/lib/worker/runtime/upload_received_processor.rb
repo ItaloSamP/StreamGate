@@ -2,7 +2,7 @@
 
 module Worker
   module Runtime
-    class UploadReceivedProcessor
+    class UploadReceivedProcessor # rubocop:disable Metrics/ClassLength
       OPERATION = "worker.upload_received.consume"
       AUDIT_ALLOWLIST = %w[
         action
@@ -26,12 +26,18 @@ module Worker
         valid_rows
       ].freeze
 
-      def initialize(config:, db_client:, storage_client:, parser:, logger:)
+      def initialize(config:, db_client:, storage_client:, parser:, logger:, artifact_writer: nil, notifier: nil)
         @config = config
         @db_client = db_client
         @storage_client = storage_client
         @parser = parser
         @logger = logger
+        @artifact_writer = artifact_writer || ArtifactWriter.new(
+          storage_client: storage_client,
+          logger: logger,
+          retention_days: config.job_artifact_retention_days
+        )
+        @notifier = notifier || OperationalNotifier.new(retention_days: config.notification_retention_days)
       end
 
       def process(event, retry_count:)
@@ -110,7 +116,7 @@ module Worker
 
       private
 
-      attr_reader :config, :db_client, :storage_client, :parser, :logger
+      attr_reader :config, :db_client, :storage_client, :parser, :logger, :artifact_writer, :notifier
 
       def validate_event!(event)
         required = %w[event_id event_name payload upload_id job_id trace_id]
@@ -244,6 +250,7 @@ module Worker
       def finalize_success!(connection, ids, attempt_id, batch_id, parse_result)
         new_status = parse_result.invalid_rows.positive? ? "quarantined_with_warnings" : "completed"
         action = parse_result.invalid_rows.positive? ? "worker.job.quarantined" : "worker.job.completed"
+        event_name = parse_result.invalid_rows.positive? ? "job.quarantined_with_warnings" : "job.completed"
 
         connection.exec_params(
           "UPDATE jobs SET status = $1, quarantined_records_count = $2, updated_at = NOW() WHERE id = $3",
@@ -274,6 +281,62 @@ module Worker
             valid_rows: parse_result.valid_rows,
             invalid_rows: parse_result.invalid_rows
           }
+        )
+        generate_artifacts_safely!(connection, ids, batch_id, new_status, parse_result)
+        notifier.emit_job_transition(
+          connection: connection,
+          ids: ids,
+          status: new_status,
+          event_name: event_name,
+          title: parse_result.invalid_rows.positive? ? "Job concluido com quarentena" : "Job concluido",
+          body: notification_body(ids, parse_result)
+        )
+      end
+
+      def notification_body(ids, parse_result)
+        return "O job #{ids[:job_id]} foi concluido." unless parse_result.invalid_rows.positive?
+
+        "O job #{ids[:job_id]} foi concluido com registros em quarentena."
+      end
+
+      def generate_artifacts_safely!(connection, ids, batch_id, status, parse_result)
+        artifact_writer.call(connection: connection, ids: ids, batch_id: batch_id, status: status, parse_result: parse_result)
+      rescue StandardError => e
+        create_audit_event!(
+          connection,
+          auditable_type: "Job",
+          auditable_id: ids[:job_id],
+          action: "worker.artifacts.failed",
+          actor_id: nil,
+          request_id: ids[:request_id],
+          trace_id: ids[:trace_id],
+          metadata: {
+            job_id: ids[:job_id],
+            upload_id: ids[:upload_id],
+            event_id: ids[:event_id],
+            error_code: "artifact_generation_failed",
+            error_category: "artifact",
+            status: status
+          }
+        )
+        record_artifact_failure_metric!(connection, ids, e)
+      end
+
+      def record_artifact_failure_metric!(connection, ids, error)
+        connection.exec_params(
+          <<~SQL,
+            INSERT INTO worker_processing_metrics
+              (id, event_id, job_id, status, retry_count, moved_to_dlq, processing_latency_ms, error_code, error_class, trace_id, processed_at, created_at, updated_at)
+            VALUES
+              ($1, $2, $3, 'artifact_failed', 0, FALSE, 0, 'artifact_generation_failed', $4, $5, NOW(), NOW(), NOW())
+          SQL
+          [
+            Worker::Id.generate("wmetric"),
+            "#{ids[:event_id]}:artifact_failed",
+            ids[:job_id],
+            error.class.name,
+            ids[:trace_id]
+          ]
         )
       end
 
@@ -341,6 +404,14 @@ module Worker
               error_category: error_category,
               status: "failed"
             }
+          )
+          notifier.emit_job_transition(
+            connection: connection,
+            ids: ids,
+            status: "failed",
+            event_name: "job.failed",
+            title: "Job falhou",
+            body: "O job #{ids[:job_id]} falhou durante o processamento."
           )
         end
       end

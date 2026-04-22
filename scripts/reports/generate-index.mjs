@@ -72,6 +72,12 @@ function card(summary) {
   const artifactLinks = artifacts.length
     ? artifacts.map((artifact) => `<a href="${escapeHtml(hrefFromDocsReports(artifact.path))}">${escapeHtml(artifact.label)}</a>`).join('')
     : '<span class="muted">Sem artefatos ainda</span>'
+  const workflowItems = Array.isArray(summary.workflows) && summary.workflows.length
+    ? `<ul class="workflow-list">${summary.workflows.map((workflow) => `<li><strong>${escapeHtml(workflow.Workflow)}</strong><span class="${escapeHtml(String(workflow.Status ?? '').toLowerCase())}">${escapeHtml(workflow.Status ?? 'UNKNOWN')}</span><em>${escapeHtml(workflow.Detail ?? '')}</em></li>`).join('')}</ul>`
+    : ''
+  const lastStep = summary.lastCompletedStep
+    ? `<p class="last-step">Ultima etapa concluida: ${escapeHtml(summary.lastCompletedStep)}</p>`
+    : ''
 
   return `<article class="card ${statusClass}">
     <div class="card-top">
@@ -80,6 +86,8 @@ function card(summary) {
     </div>
     <h2>${escapeHtml(summary.label)}</h2>
     <p>${summary.startedAt ? `Ultima execucao: ${escapeHtml(summary.startedAt)}` : 'Ainda nao executado nesta workspace.'}</p>
+    ${lastStep}
+    ${workflowItems}
     <div class="links">${artifactLinks}</div>
   </article>`
 }
@@ -112,6 +120,11 @@ export function generateIndex() {
     .pill { border: 1px solid var(--line); border-radius: 999px; padding: 9px 13px; background: rgba(255,255,255,.05); color: var(--muted); }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; margin-top: 24px; }
     .card { border: 1px solid var(--line); border-radius: 24px; padding: 20px; background: rgba(27,33,24,.8); min-height: 220px; display: flex; flex-direction: column; box-shadow: 0 18px 52px rgba(0,0,0,.18); }
+    .playbook { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-top:24px; }
+    .playbook-card { border:1px solid var(--line); border-radius:22px; padding:18px; background:rgba(27,33,24,.72); }
+    .playbook-card h2 { margin:0 0 10px; font-size:1.2rem; }
+    .playbook-card p { margin:0 0 12px; }
+    .playbook-card code { color: var(--accent); font-family: Consolas, monospace; }
     .card.pass { border-color: rgba(152,230,162,.45); }
     .card.fail { border-color: rgba(255,140,118,.58); }
     .card.neutral { border-color: rgba(255,211,107,.35); }
@@ -122,6 +135,12 @@ export function generateIndex() {
     .neutral .status { color: var(--warn); }
     h2 { margin: 20px 0 8px; font-size: 1.45rem; letter-spacing: -.03em; }
     p { color: var(--muted); line-height: 1.55; }
+    .last-step { margin-top: 0; font-size: .94rem; }
+    .workflow-list { list-style:none; margin:0 0 12px; padding:0; display:grid; gap:8px; }
+    .workflow-list li { display:grid; gap:4px; padding:10px 12px; border-radius:16px; background:rgba(255,255,255,.04); }
+    .workflow-list strong { font-size:.95rem; }
+    .workflow-list span { font-size:.82rem; letter-spacing:.06em; font-weight:800; }
+    .workflow-list em { color: var(--muted); font-style:normal; font-size:.85rem; }
     .links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: auto; padding-top: 16px; }
     a { display: inline-flex; align-items: center; border: 1px solid rgba(215,255,114,.32); border-radius: 999px; padding: 8px 11px; color: var(--accent); text-decoration: none; background: rgba(215,255,114,.06); }
     .muted { color: var(--muted); }
@@ -138,6 +157,23 @@ export function generateIndex() {
         <span class="pill">FAIL: ${totals.FAIL ?? 0}</span>
         <span class="pill">NOT_RUN: ${totals.NOT_RUN ?? 0}</span>
       </div>
+    </section>
+    <section class="playbook">
+      <article class="playbook-card">
+        <h2>Fast</h2>
+        <p>Use no dia a dia para validar uma trilha sem pagar o custo do pacote completo.</p>
+        <code>scripts/ci/ci-local.ps1 frontend|backend|e2e|docker</code>
+      </article>
+      <article class="playbook-card">
+        <h2>Operational</h2>
+        <p>Use quando a entrega tocar runtime, worker, notificacoes, artefatos ou operacao mutavel.</p>
+        <code>scripts/smokes/run-smokes.ps1</code>
+      </article>
+      <article class="playbook-card">
+        <h2>Full-closeout</h2>
+        <p>Use no fechamento de sprint, PR grande ou mudanca critica de runtime/CI. O caminho pesado oficial e WSL/Compose-first.</p>
+        <code>scripts/reports/run-all-reports.ps1 -Profile full-closeout</code>
+      </article>
     </section>
     <section class="grid">
       ${summaries.map(card).join('\n')}

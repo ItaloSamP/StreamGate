@@ -1,0 +1,17 @@
+{
+  "$id": "https://streamgate.local/contracts/http/notification-delete-response.v1.json",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": ["deleted", "id"],
+      "properties": {
+        "deleted": { "type": "boolean" },
+        "id": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

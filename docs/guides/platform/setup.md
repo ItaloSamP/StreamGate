@@ -253,7 +253,7 @@ Se voce precisar rodar o projeto fora do WSL, ainda existem os scripts PowerShel
 .\\scripts\\dev\\dev-up.ps1 -Mode full
 .\\scripts\\dev\\dev-down.ps1
 .\\scripts\\compose\\compose-health.tests.ps1
-powershell -ExecutionPolicy Bypass -File .\\scripts\\reports\\run-all-reports.ps1
+powershell -ExecutionPolicy Bypass -File .\\scripts\\reports\\run-all-reports.ps1 -Profile full-closeout
 powershell -ExecutionPolicy Bypass -File .\\scripts\\smokes\\run-smokes.ps1
 .\\scripts\\ci\\ci-local.ps1
 ```
@@ -267,20 +267,20 @@ No PowerShell, para escolher workflow especifico:
 .\\scripts\\ci\\ci-local.ps1 -Workflow e2e
 ```
 
-Mas o fluxo recomendado segue sendo o `WSL-first`.
+Mas o fluxo recomendado segue sendo o `WSL/Compose-first`, deixando o host Windows para checks rapidos, suporte local e diagnostico.
 
 ## Como abrir os reports locais
 
-Para gerar todos os reports de uma vez:
+Para gerar o pacote final de evidencias:
 
 ```bash
-bash scripts/reports/run-all-reports.sh
+PROFILE=full-closeout bash scripts/reports/run-all-reports.sh
 ```
 
 No PowerShell:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -Profile full-closeout
 ```
 
 Depois da execucao, abra `docs/reports/index.html` no navegador. Esse hub aponta para:
@@ -290,6 +290,12 @@ Depois da execucao, abra `docs/reports/index.html` no navegador. Esse hub aponta
 - SimpleCov HTML da API e do worker;
 - logs e resumo dos smokes;
 - logs e resumo do CI local.
+
+Perfis oficiais de gate:
+
+- `fast`: `ci-local` por workflow (`frontend`, `backend`, `e2e`, `docker`);
+- `operational`: `scripts/smokes/run-smokes.(ps1|sh)` para runtime, artefatos, notificacoes e operacao segura;
+- `full-closeout`: `scripts/reports/run-all-reports.(ps1|sh)` no fechamento relevante, sem rerodar `ci-local all` em cascata.
 
 Os reports sao artefatos locais, sobrescritos em cada nova execucao e ignorados pelo Git.
 

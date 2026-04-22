@@ -78,7 +78,7 @@ A cobertura minima da Sprint 0 e orientada por tipo de entrega, nao por percentu
 
 ### Runner unico reportado
 
-O caminho oficial para uma varredura completa local e gerar reports de frontend, backend, E2E, smokes e CI local em um unico ciclo:
+O caminho oficial para um fechamento relevante local e gerar reports de frontend, backend, E2E e smokes em um unico ciclo e o perfil `full-closeout`:
 
 ```bash
 bash scripts/reports/run-all-reports.sh
@@ -87,11 +87,17 @@ bash scripts/reports/run-all-reports.sh
 No PowerShell:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/reports/run-all-reports.ps1
+powershell -ExecutionPolicy Bypass -File scripts/reports/run-all-reports.ps1 -Profile full-closeout
 ```
 
 Esse runner sobrescreve os reports antigos antes de cada execucao, preserva logs de falha e atualiza o hub visual em `docs/reports/index.html`.
-Os comandos individuais continuam existindo para desenvolvimento rapido, mas o runner acima e a fonte de verdade para evidencia agregada do estado do produto.
+Os comandos individuais continuam existindo para desenvolvimento rapido, mas o runner acima virou o fechamento oficial de evidencias sem rerodar `ci-local all` em cascata.
+
+Perfis oficiais:
+
+- `fast`: `ci-local` por workflow para trilhas pequenas;
+- `operational`: `run-smokes` para validar runtime, worker, artefatos e operacao segura;
+- `full-closeout`: `run-all-reports` para fechamento de sprint, PR grande ou mudanca critica de runtime/CI.
 
 ### Reports e coverage oficiais
 

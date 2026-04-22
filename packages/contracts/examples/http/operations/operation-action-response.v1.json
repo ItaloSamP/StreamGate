@@ -1,0 +1,8 @@
+{
+  "data": {
+    "job_id": "job_fixture_external_failed",
+    "status": "retry_requested",
+    "attempt_id": "attempt_fixture_retry",
+    "outbox_id": "outbox_fixture_retry"
+  }
+}

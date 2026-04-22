@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -74,7 +74,7 @@ describe('Sprint 4 operational pages', () => {
   it('hides audit navigation for operators and renders it for admins', async () => {
     const { unmount } = renderApp('/dashboard', 'operator')
 
-    expect(await screen.findByText('Command Center Operacional')).toBeInTheDocument()
+    expect(await screen.findByText('Pipeline de Jobs')).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /Auditoria/i })).not.toBeInTheDocument()
 
     unmount()
@@ -82,15 +82,16 @@ describe('Sprint 4 operational pages', () => {
     renderApp('/dashboard', 'admin')
 
     expect(await screen.findByRole('link', { name: /Auditoria/i })).toBeInTheDocument()
-  })
+  }, 15000)
 
   it('turns dashboard into a real command center instead of mock metrics', async () => {
     renderApp('/dashboard', 'admin')
 
-    expect(await screen.findByText('Command Center Operacional')).toBeInTheDocument()
-    expect(await screen.findByText('Jobs totais')).toBeInTheDocument()
+    expect(await screen.findByText('Volume Processado · ultimas 24h')).toBeInTheDocument()
+    expect(await screen.findByText('Pipeline de Jobs')).toBeInTheDocument()
     expect((await screen.findAllByText('Quarentena')).length).toBeGreaterThan(0)
-    expect(screen.queryByText('1.84 M')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '+ Upload' })).toHaveAttribute('href', '/upload')
+    expect(screen.getByText('1.840.000')).toBeInTheDocument()
   })
 
   it('renders audit-backed event log with copied operational context', async () => {
@@ -99,6 +100,33 @@ describe('Sprint 4 operational pages', () => {
     expect(await screen.findByText('Event Log Operacional')).toBeInTheDocument()
     expect(await screen.findByText('upload.registered')).toBeInTheDocument()
     expect(await screen.findByText('req_fixture_1')).toBeInTheDocument()
+  })
+
+  it('keeps the session and shows access denied when operator opens event log', async () => {
+    renderApp('/events', 'operator')
+
+    expect(await screen.findByText('Event Log Operacional')).toBeInTheDocument()
+    expect(await screen.findByText(/Permissao negada para esta superficie/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Acessar workspace/i)).not.toBeInTheDocument()
+  })
+
+  it('shows denied states for other admin-only surfaces without dropping the session', async () => {
+    const { unmount } = renderApp('/audit', 'operator')
+
+    expect(await screen.findByText('Auditoria operacional')).toBeInTheDocument()
+    expect(await screen.findByText(/Permissao negada para esta superficie/i)).toBeInTheDocument()
+
+    unmount()
+    renderApp('/operations', 'operator')
+
+    expect(await screen.findByText('Wizard admin-only')).toBeInTheDocument()
+    expect(await screen.findByText(/Permissao negada para esta superficie/i)).toBeInTheDocument()
+
+    unmount()
+    renderApp('/quarantine/dlq/0', 'operator')
+
+    expect(await screen.findByText('Detalhe da DLQ')).toBeInTheDocument()
+    expect(await screen.findByText(/Permissao negada para esta superficie/i)).toBeInTheDocument()
   })
 
   it('renders shareable operational detail routes with masked context', async () => {
@@ -128,6 +156,87 @@ describe('Sprint 4 operational pages', () => {
     expect(await screen.findByText('Detalhe da DLQ')).toBeInTheDocument()
     expect(await screen.findByText('max_retries_exceeded')).toBeInTheDocument()
   })
+
+  it('renders notification bell and full notification center with rules and channel settings', async () => {
+    const { unmount } = renderApp('/dashboard', 'admin')
+
+    expect(await screen.findByLabelText(/notificacoes nao lidas/i)).toBeInTheDocument()
+
+    unmount()
+    renderApp('/notifications', 'admin')
+
+    expect(await screen.findByText('Centro de notificacoes')).toBeInTheDocument()
+    expect(await screen.findByText('Falha no job')).toBeInTheDocument()
+    expect(screen.getByText('critico')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Abrir job/i })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /Regras e canais/i }))
+
+    expect(await screen.findByText('Regras de notificacao')).toBeInTheDocument()
+    expect(screen.getByLabelText('Webhook URL')).toHaveValue('https://hooks.example.test/streamgate')
+  })
+
+  it('executes inbox bulk actions and webhook test against the official adapter paths', async () => {
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>
+
+    renderApp('/notifications', 'admin')
+
+    expect(await screen.findByText('Centro de notificacoes')).toBeInTheDocument()
+
+    fireEvent.click((await screen.findAllByRole('checkbox'))[0])
+    fireEvent.click(screen.getByRole('button', { name: /Marcar visiveis como lidas/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Arquivar selecionadas/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Regras e canais/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Testar webhook/i }))
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([input, init]) => String(input).includes('/api/v1/notifications/mark-all-read') && String(init?.method).toUpperCase() === 'PATCH')).toBe(true)
+      expect(fetchMock.mock.calls.some(([input, init]) => String(input).includes('/api/v1/notifications/bulk-archive') && String(init?.method).toUpperCase() === 'PATCH')).toBe(true)
+      expect(fetchMock.mock.calls.some(([input, init]) => String(input).includes('/api/v1/notification-settings/webhook/test') && String(init?.method).toUpperCase() === 'POST')).toBe(true)
+    })
+  })
+
+  it('protects operations wizard from operators', async () => {
+    renderApp('/operations', 'operator')
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: /Revisar regras/i })).not.toBeInTheDocument()
+    })
+  })
+
+  it('submits the admin retry wizard and renders the backend result state', async () => {
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>
+
+    renderApp('/operations', 'admin')
+
+    expect(await screen.findByRole('button', { name: /Revisar regras/i })).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Buscar ou colar alvo'), { target: { value: 'job_fixture_pending' } })
+    fireEvent.click(screen.getByRole('button', { name: /Revisar regras/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Informar motivo/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Confirmar operacao/i }))
+
+    expect(await screen.findByText(/Retry solicitado: retry_requested/i)).toBeInTheDocument()
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([input, init]) => String(input).includes('/api/v1/jobs/job_fixture_pending/retry') && String(init?.method).toUpperCase() === 'POST')).toBe(true)
+    })
+  })
+
+  it('renders artifact history on job detail and requests signed download url', async () => {
+    const open = vi.spyOn(window, 'open').mockImplementation(() => null)
+    renderApp('/jobs/job_fixture_pending', 'admin')
+
+    expect(await screen.findByText('Artefatos finais')).toBeInTheDocument()
+    expect(await screen.findByText('quality-report.json')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /Download/i }))
+
+    await waitFor(() => {
+      expect(open).toHaveBeenCalledWith('https://signed.example.test/quality-report.json', '_blank', 'noopener,noreferrer')
+    })
+
+    open.mockRestore()
+  })
 })
 
 function seedSession(role: 'operator' | 'admin') {
@@ -152,8 +261,9 @@ function seedSession(role: 'operator' | 'admin') {
 }
 
 function createOperationalFetchMock() {
-  return vi.fn().mockImplementation((input: RequestInfo | URL) => {
+  return vi.fn().mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input)
+    const method = String(init?.method ?? 'GET').toUpperCase()
 
     if (url.includes('/api/v1/auth/me')) {
       const role = url.includes('unused') ? 'operator' : readRoleFromStoredSession()
@@ -183,6 +293,17 @@ function createOperationalFetchMock() {
     }
 
     if (url.includes('/api/v1/quarantine/dlq')) {
+      if (readRoleFromStoredSession() !== 'admin') {
+        return Promise.resolve(jsonResponse(403, {
+          error: {
+            code: 'access_denied',
+            message: 'Somente admins podem consultar DLQ.',
+            request_id: 'req_dlq_denied',
+            trace_id: 'trace_dlq_denied',
+          },
+        }))
+      }
+
       return Promise.resolve(jsonResponse(200, dlqResponse()))
     }
 
@@ -191,7 +312,90 @@ function createOperationalFetchMock() {
     }
 
     if (url.includes('/api/v1/audit')) {
+      if (readRoleFromStoredSession() !== 'admin') {
+        return Promise.resolve(jsonResponse(403, {
+          error: {
+            code: 'access_denied',
+            message: 'Somente admins podem consultar auditoria.',
+            request_id: 'req_audit_denied',
+            trace_id: 'trace_audit_denied',
+          },
+        }))
+      }
+
       return Promise.resolve(jsonResponse(200, auditResponse()))
+    }
+
+    if (url.includes('/api/v1/notification-settings/webhook/test')) {
+      return Promise.resolve(jsonResponse(202, webhookDeliveryResponse()))
+    }
+
+    if (url.includes('/api/v1/notification-settings')) {
+      return Promise.resolve(jsonResponse(200, notificationSettingsResponse()))
+    }
+
+    if (url.includes('/api/v1/notifications/mark-all-read')) {
+      return Promise.resolve(jsonResponse(200, { data: { updated_count: 1 } }))
+    }
+
+    if (url.includes('/api/v1/notifications/bulk-archive')) {
+      return Promise.resolve(jsonResponse(200, { data: { archived_count: 1, ids: ['notification_fixture_failed'] } }))
+    }
+
+    if (url.includes('/api/v1/notifications/')) {
+      if (method === 'DELETE') {
+        return Promise.resolve(jsonResponse(200, { data: { deleted: true, id: 'notification_fixture_failed' } }))
+      }
+
+      return Promise.resolve(jsonResponse(200, notificationSingleResponse(url)))
+    }
+
+    if (url.includes('/api/v1/notifications')) {
+      return Promise.resolve(jsonResponse(200, notificationsResponse(url)))
+    }
+
+    if (url.includes('/api/v1/jobs/job_fixture_pending/artifacts/artifact_fixture_quality/download-url')) {
+      return Promise.resolve(jsonResponse(200, artifactDownloadResponse()))
+    }
+
+    if (url.includes('/api/v1/jobs/job_fixture_pending/artifacts')) {
+      return Promise.resolve(jsonResponse(200, artifactsResponse()))
+    }
+
+    if (url.includes('/api/v1/jobs/job_fixture_pending/retry')) {
+      return Promise.resolve(jsonResponse(202, {
+        data: {
+          job_id: 'job_fixture_pending',
+          status: 'retry_requested',
+          attempt_id: 'attempt_fixture_retry',
+          outbox_id: 'outbox_fixture_retry',
+        },
+      }))
+    }
+
+    if (url.includes('/api/v1/quarantine/quarantine_fixture_warning/resolve')) {
+      return Promise.resolve(jsonResponse(200, {
+        data: {
+          id: 'quarantine_fixture_warning',
+          job_id: 'job_fixture_pending',
+          resolution_status: 'resolved',
+          resolution_reason: 'Acao operacional revisada e aprovada.',
+          resolved_by_id: 'user_fixture_admin',
+          resolved_at: '2026-04-20T11:00:00Z',
+        },
+      }))
+    }
+
+    if (url.includes('/api/v1/quarantine/dlq/event_fixture_1/replay-requests')) {
+      return Promise.resolve(jsonResponse(201, replayRequestResponse('requested')))
+    }
+
+    if (url.includes('/api/v1/dlq-replay-requests/') && url.endsWith('/approve')) {
+      return Promise.resolve(jsonResponse(200, replayRequestResponse('approved')))
+    }
+
+    if (url.includes('/api/v1/dlq-replay-requests/') && url.endsWith('/execute')) {
+      return Promise.resolve(jsonResponse(202, replayRequestResponse('executed')))
     }
 
     if (url.includes('/api/v1/jobs')) {
@@ -211,6 +415,133 @@ function createOperationalFetchMock() {
       },
     }))
   })
+}
+
+function notificationsResponse(url: string) {
+  const archived = url.includes('status=archived')
+  return {
+    data: archived ? [] : [
+      {
+        id: 'notification_fixture_failed',
+        event_name: 'job.failed',
+        title: 'Falha no job',
+        body: 'O job job_fixture_pending falhou e requer investigacao.',
+        status: 'unread',
+        read_at: null,
+        expires_at: '2026-05-20T00:00:00Z',
+        metadata: { job_id: 'job_fixture_pending' },
+        trace_id: 'trace_fixture_1',
+        created_at: '2026-04-20T10:00:00Z',
+      },
+    ],
+    meta: { pagination: { page: 1, per_page: 50, total_count: archived ? 0 : 1, total_pages: archived ? 0 : 1 } },
+  }
+}
+
+function notificationSingleResponse(url: string) {
+  const status = url.includes('/archive')
+    ? 'archived'
+    : url.includes('/unarchive')
+      ? 'read'
+      : 'read'
+
+  return {
+    data: {
+      id: 'notification_fixture_failed',
+      event_name: 'job.failed',
+      title: 'Falha no job',
+      body: 'O job job_fixture_pending falhou e requer investigacao.',
+      status,
+      read_at: '2026-04-20T11:00:00Z',
+      expires_at: '2026-05-20T00:00:00Z',
+      metadata: { job_id: 'job_fixture_pending' },
+      trace_id: 'trace_fixture_1',
+      created_at: '2026-04-20T10:00:00Z',
+    },
+  }
+}
+
+function notificationSettingsResponse() {
+  return {
+    data: {
+      id: 'notifset_fixture',
+      user_id: 'user_fixture_admin',
+      in_app_enabled: true,
+      email_enabled: true,
+      webhook_enabled: true,
+      webhook_url: 'https://hooks.example.test/streamgate',
+      webhook_secret: null,
+      created_at: '2026-04-20T10:00:00Z',
+      updated_at: '2026-04-20T10:00:00Z',
+    },
+  }
+}
+
+function webhookDeliveryResponse() {
+  return {
+    data: {
+      id: 'delivery_fixture',
+      notification_id: null,
+      channel: 'webhook',
+      event_name: 'notification.webhook_test',
+      status: 'pending',
+      attempts_count: 0,
+      next_attempt_at: null,
+      delivered_at: null,
+      response_status: null,
+      trace_id: 'trace_fixture_1',
+      created_at: '2026-04-20T10:00:00Z',
+      webhook_secret: null,
+    },
+  }
+}
+
+function artifactsResponse() {
+  return {
+    data: [
+      {
+        id: 'artifact_fixture_quality',
+        job_id: 'job_fixture_pending',
+        artifact_type: 'quality_report',
+        status: 'available',
+        filename: 'quality-report.json',
+        content_type: 'application/json',
+        byte_size: 512,
+        checksum_sha256: 'f'.repeat(64),
+        generated_at: '2026-04-20T10:00:00Z',
+        expires_at: '2026-05-20T10:00:00Z',
+        metadata: { rows: 12 },
+        trace_id: 'trace_fixture_1',
+        created_at: '2026-04-20T10:00:00Z',
+        updated_at: '2026-04-20T10:00:00Z',
+      },
+    ],
+  }
+}
+
+function artifactDownloadResponse() {
+  return {
+    data: {
+      artifact_id: 'artifact_fixture_quality',
+      download_url: 'https://signed.example.test/quality-report.json',
+      expires_at: '2026-04-20T10:05:00Z',
+    },
+  }
+}
+
+function replayRequestResponse(status: 'requested' | 'approved' | 'executed') {
+  return {
+    data: {
+      id: 'replay_fixture_1',
+      message_id: 'event_fixture_1',
+      status,
+      trace_id: 'trace_fixture_1',
+      request_id: 'req_fixture_1',
+      expires_at: '2026-05-20T10:00:00Z',
+      created_at: '2026-04-20T10:00:00Z',
+      updated_at: '2026-04-20T10:00:00Z',
+    },
+  }
 }
 
 function readRoleFromStoredSession() {

@@ -1,17 +1,23 @@
 import hashlib
+import http.client
 import json
 import os
 import socket
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from datetime import datetime, timezone
 
-API_BASE_URL = os.environ.get("SMOKE_API_BASE_URL", "http://localhost:3000").rstrip("/")
+API_BASE_URL = os.environ.get("SMOKE_API_BASE_URL", "http://127.0.0.1:3000").rstrip("/")
 OPERATOR_EMAIL = os.environ.get("SMOKE_OPERATOR_EMAIL", "operator@streamgate.local")
 OPERATOR_PASSWORD = os.environ.get("SEED_OPERATOR_PASSWORD", "ChangeMe123!")
 TIMEOUT_SECONDS = int(os.environ.get("SMOKE_HTTP_TIMEOUT_SECONDS", "60"))
 SMOKE_STORAGE_PUBLIC_BASE_URL = os.environ.get("SMOKE_STORAGE_PUBLIC_BASE_URL", "").strip()
+HTTP_RETRY_ATTEMPTS = int(os.environ.get("SMOKE_HTTP_RETRY_ATTEMPTS", "4"))
+HTTP_RETRY_DELAY_SECONDS = float(os.environ.get("SMOKE_HTTP_RETRY_DELAY_SECONDS", "2"))
+HTTP_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
 def log(message: str) -> None:
@@ -32,26 +38,35 @@ def request_json(method: str, path_or_url: str, payload: dict | None = None, hea
         merged_headers["Content-Type"] = "application/json"
 
     req = urllib.request.Request(url=url, method=method, data=body, headers=merged_headers)
-    try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT_SECONDS) as response:
-            raw = response.read().decode("utf-8")
-            if not raw:
-                return {}
-            return json.loads(raw)
-    except (TimeoutError, socket.timeout) as error:
-        raise RuntimeError(f"timed out after {TIMEOUT_SECONDS}s on {method} {url}") from error
-    except urllib.error.HTTPError as error:
-        payload_text = error.read().decode("utf-8", errors="replace")
-        message = payload_text
+    for attempt in range(1, HTTP_RETRY_ATTEMPTS + 1):
         try:
-            parsed = json.loads(payload_text)
-            if isinstance(parsed, dict):
-                error_payload = parsed.get("error", {})
-                if isinstance(error_payload, dict):
-                    message = error_payload.get("message") or payload_text
-        except json.JSONDecodeError:
-            pass
-        raise RuntimeError(f"HTTP {error.code} on {method} {url}: {message}") from error
+            with HTTP_OPENER.open(req, timeout=TIMEOUT_SECONDS) as response:
+                raw = response.read().decode("utf-8")
+                if not raw:
+                    return {}
+                return json.loads(raw)
+        except (TimeoutError, socket.timeout) as error:
+            if attempt == HTTP_RETRY_ATTEMPTS:
+                raise RuntimeError(f"timed out after {TIMEOUT_SECONDS}s on {method} {url}") from error
+        except urllib.error.HTTPError as error:
+            payload_text = error.read().decode("utf-8", errors="replace")
+            message = payload_text
+            try:
+                parsed = json.loads(payload_text)
+                if isinstance(parsed, dict):
+                    error_payload = parsed.get("error", {})
+                    if isinstance(error_payload, dict):
+                        message = error_payload.get("message") or payload_text
+            except json.JSONDecodeError:
+                pass
+            raise RuntimeError(f"HTTP {error.code} on {method} {url}: {message}") from error
+        except (urllib.error.URLError, http.client.RemoteDisconnected) as error:
+            if attempt == HTTP_RETRY_ATTEMPTS:
+                raise RuntimeError(f"connection failed on {method} {url}: {error}") from error
+
+        time.sleep(HTTP_RETRY_DELAY_SECONDS)
+
+    raise RuntimeError(f"request retries exhausted on {method} {url}")
 
 
 def resolve_upload_target(upload_url: str) -> tuple[str, str | None]:
@@ -88,7 +103,7 @@ def upload_to_signed_url(upload_url: str, content: bytes, required_headers: dict
 
     req = urllib.request.Request(upload_url, data=content, method="PUT", headers=headers)
     try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT_SECONDS) as response:
+        with HTTP_OPENER.open(req, timeout=TIMEOUT_SECONDS) as response:
             if response.status not in (200, 201, 204):
                 raise RuntimeError(f"unexpected storage response status={response.status}")
     except (TimeoutError, socket.timeout) as error:
@@ -102,19 +117,37 @@ def require(condition: bool, message: str) -> None:
         raise RuntimeError(message)
 
 
+def candidate_passwords(primary: str) -> list[str]:
+    values = [primary, "TrocaNdo123!", "ChangeMe123!"]
+    unique_values: list[str] = []
+    for value in values:
+        if value and value not in unique_values:
+            unique_values.append(value)
+    return unique_values
+
+
 def main() -> int:
     csv_content = b"order_id,amount\n1001,42\n"
     checksum = hashlib.sha256(csv_content).hexdigest()
-    filename = "smoke-upload.csv"
+    suffix = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    filename = f"smoke-upload-{suffix}.csv"
     content_type = "text/csv"
 
     log("[smoke] login operator")
-    login = request_json(
-        "POST",
-        "/api/v1/auth/login",
-        payload={"session": {"email": OPERATOR_EMAIL, "password": OPERATOR_PASSWORD}},
-    )
-    token = login.get("data", {}).get("session", {}).get("access_token")
+    token = None
+    for password in candidate_passwords(OPERATOR_PASSWORD):
+        try:
+            login = request_json(
+                "POST",
+                "/api/v1/auth/login",
+                payload={"session": {"email": OPERATOR_EMAIL, "password": password}},
+            )
+            token = login.get("data", {}).get("session", {}).get("access_token")
+            if token:
+                break
+        except RuntimeError as error:
+            if "Credenciais invalidas" not in str(error):
+                raise
     require(bool(token), "missing access_token in login response")
     auth_headers = {"Authorization": f"Bearer {token}"}
 
@@ -168,7 +201,7 @@ def main() -> int:
     require(bool(job_id), "missing job.id in register response")
 
     log("[smoke] verify listings")
-    uploads = request_json("GET", "/api/v1/uploads?page=1&per_page=20&search=smoke-upload", headers=auth_headers)
+    uploads = request_json("GET", f"/api/v1/uploads?page=1&per_page=20&search={filename}", headers=auth_headers)
     jobs = request_json("GET", "/api/v1/jobs?page=1&per_page=20", headers=auth_headers)
 
     upload_ids = {item.get("id") for item in uploads.get("data", []) if isinstance(item, dict)}

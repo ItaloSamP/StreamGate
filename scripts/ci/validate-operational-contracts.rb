@@ -8,21 +8,21 @@ ROOT = File.expand_path("../..", __dir__)
 OPENAPI_PATH = File.join(ROOT, "apps/api/openapi/v1/openapi.yaml")
 
 HTTP_CONTRACTS = [
-  "packages/contracts/schemas/http/analytics-response.v1.json",
-  "packages/contracts/schemas/http/quarantine-list-response.v1.json",
-  "packages/contracts/schemas/http/audit-list-response.v1.json",
-  "packages/contracts/schemas/http/dlq-list-response.v1.json"
+  "packages/contracts/schemas/http/operational-reads/analytics-response.v1.json",
+  "packages/contracts/schemas/http/operational-reads/quarantine-list-response.v1.json",
+  "packages/contracts/schemas/http/operational-reads/audit-list-response.v1.json",
+  "packages/contracts/schemas/http/operational-reads/dlq-list-response.v1.json"
 ].freeze
 
 HTTP_EXAMPLES = [
-  "packages/contracts/examples/http/analytics-list.v1.json",
-  "packages/contracts/examples/http/quarantine-list.v1.json",
-  "packages/contracts/examples/http/audit-list.v1.json",
-  "packages/contracts/examples/http/dlq-list.v1.json"
+  "packages/contracts/examples/http/operational-reads/analytics-list.v1.json",
+  "packages/contracts/examples/http/operational-reads/quarantine-list.v1.json",
+  "packages/contracts/examples/http/operational-reads/audit-list.v1.json",
+  "packages/contracts/examples/http/operational-reads/dlq-list.v1.json"
 ].freeze
 
-EVENT_SCHEMA_PATH = "packages/contracts/schemas/events/upload.received.v1.json"
-EVENT_EXAMPLE_PATH = "packages/contracts/examples/events/upload.received.v1.json"
+EVENT_SCHEMA_PATH = "packages/contracts/schemas/events/uploads/upload.received.v1.json"
+EVENT_EXAMPLE_PATH = "packages/contracts/examples/events/uploads/upload.received.v1.json"
 
 REQUIRED_PATHS = {
   "/api/v1/analytics" => "#/components/schemas/AnalyticsEnvelope",

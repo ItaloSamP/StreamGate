@@ -21,6 +21,13 @@ A evolucao do produto segue uma estrategia equilibrada entre operacao e conectiv
 - manter confiabilidade operacional e rastreabilidade ponta a ponta;
 - ampliar flexibilidade de entrada e saida de dados sem perder governanca.
 
+Leitura de status em `2026-04-21`:
+
+- operacao segura (`retry`, `resolve`, `dlq replay request/approve/execute`) ja esta materializada;
+- artefatos finais (`processed_dataset`, `quality_report`, `audit_report`) ja estao materializados;
+- notificacoes `in_app`, `email` e `webhook` ja estao materializadas;
+- conectores de entrada `google_drive`, `s3`, `http_url` e `oauth_delegated` continuam discovery-only, sem implementacao funcional na v1 atual.
+
 ## Problema
 
 Organizacoes que ingerem grandes volumes de dados enfrentam friccao em tres frentes ao mesmo tempo:
@@ -69,8 +76,8 @@ Precisa investigar eventos, reprocessar cargas, auditar trilhas e manter o pipel
 ### Ingestao multicanal
 
 - upload local via SPA;
-- ingestao por link externo com suporte inicial a `public_link` e evolucao para `oauth_delegated`;
-- conectores wave 1 planejados: `google_drive`, `s3`, `http_url`;
+- ingestao por link externo segue como fronteira futura, com suporte inicial planejado para `public_link` e evolucao para `oauth_delegated`;
+- conectores wave 1 continuam planejados/discovery-only: `google_drive`, `s3`, `http_url`;
 - entrada inicial com foco em arquivo zipado e portabilidade para outras extensoes.
 
 ### Fluxo principal

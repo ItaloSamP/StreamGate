@@ -1,0 +1,18 @@
+{
+  "$id": "https://streamgate.local/contracts/http/artifact-download-url-response.v1.json",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": ["artifact_id", "download_url", "expires_at"],
+      "properties": {
+        "artifact_id": { "type": "string" },
+        "download_url": { "type": "string", "format": "uri" },
+        "expires_at": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

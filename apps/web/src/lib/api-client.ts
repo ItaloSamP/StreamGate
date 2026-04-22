@@ -81,11 +81,11 @@ export function configureApiClientAuth(config: ApiClientAuthConfig) {
 }
 
 function shouldHandleAuthFailure(error: ApiClientError) {
-  if (error.status !== 401 && error.status !== 403) {
+  if (error.status !== 401) {
     return false
   }
 
-  return error.code === 'session_expired' || error.code === 'access_denied'
+  return error.code === 'session_expired'
 }
 
 export function buildQueryString(query?: RequestOptions['query']) {
@@ -165,10 +165,13 @@ export function createApiClient(baseUrl = resolveApiBaseUrl()) {
     request,
     get: <T>(path: string, options?: RequestOptions) => request<T>(path, { ...options, method: 'GET' }),
     post: <T>(path: string, options?: RequestOptions) => request<T>(path, { ...options, method: 'POST' }),
+    patch: <T>(path: string, options?: RequestOptions) => request<T>(path, { ...options, method: 'PATCH' }),
+    delete: <T>(path: string, options?: RequestOptions) => request<T>(path, { ...options, method: 'DELETE' }),
     getEnvelope: <T>(path: string, options?: RequestOptions) => requestEnvelope<T>(path, { ...options, method: 'GET' }),
     postEnvelope: <T>(path: string, options?: RequestOptions) => requestEnvelope<T>(path, { ...options, method: 'POST' }),
+    patchEnvelope: <T>(path: string, options?: RequestOptions) => requestEnvelope<T>(path, { ...options, method: 'PATCH' }),
+    deleteEnvelope: <T>(path: string, options?: RequestOptions) => requestEnvelope<T>(path, { ...options, method: 'DELETE' }),
   }
 }
 
 export const apiClient = createApiClient()
-

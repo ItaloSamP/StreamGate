@@ -9,6 +9,7 @@ import {
   PaginationSummary,
 } from '@/components/app/operational-readout'
 import { WorkspacePageFrame } from '@/components/app/workspace-page-frame'
+import { ApiClientError } from '@/lib/api-client'
 import { useAuth } from '@/features/auth/auth-context'
 import { useOperationalQueryState } from '@/hooks/use-operational-query-state'
 import { buildCsv, buildOperationalQuery, downloadCsv, formatDateTime, humanizeOperationalError } from '@/lib/operational-utils'
@@ -63,10 +64,14 @@ export function AuditPage() {
       } catch (error) {
         if (!active) return
 
+        const denied = error instanceof ApiClientError && error.status === 403 && error.code === 'access_denied'
+
         setViewState((current) => ({
           ...current,
-          status: 'error',
-          errorMessage: humanizeOperationalError(error, 'Nao foi possivel carregar auditoria.'),
+          status: denied ? 'denied' : 'error',
+          errorMessage: denied
+            ? 'Sem permissao para consultar a trilha completa de auditoria.'
+            : humanizeOperationalError(error, 'Nao foi possivel carregar auditoria.'),
           lastUpdatedAt: new Date(),
         }))
       }

@@ -15,13 +15,15 @@ O worker sera responsavel por:
 
 ## Estado atual
 
-O worker agora executa runtime real de fila na Sprint 4:
+O worker executa runtime real de fila e fecha a trilha de artefatos/notificacoes da Sprint 5:
 
 - consumo RabbitMQ (`upload.received.v1`) com retry controlado e DLQ
 - idempotencia por `event_id` para evitar reprocessamento duplicado
 - leitura de objetos no MinIO via S3 API
 - parse inicial de `text/csv` (`,` e `;`) e `application/zip` (exatamente 1 CSV)
 - atualizacao de `jobs`, `processing_attempts`, `job_batches`, `quarantine_records` e `audit_events`
+- geracao dos artefatos `processed_dataset`, `quality_report` e `audit_report` em `job_artifacts`
+- notificacoes operacionais `job.completed`, `job.quarantined_with_warnings` e `job.failed`
 - sincronizacao de `analytics_job_snapshots` e metricas em `worker_processing_metrics`
 - rastreabilidade por `trace_id`, `request_id`, `upload_id` e `job_id`
 
@@ -51,15 +53,15 @@ Os artefatos do worker ficam em `apps/worker/spec/reports/` e sao sobrescritos a
 
 O gap antigo do `gemspec` baseado em `git ls-files` ja foi removido na Sprint 0.
 
-No ambiente Windows atual, o principal cuidado do worker passa a ser a validacao do setup Ruby local e do runtime real de fila entregue na Sprint 4.
+No ambiente Windows atual, o principal cuidado do worker passa a ser a validacao do setup Ruby local, do runtime real de fila e da disponibilidade de Postgres/MinIO quando a suite sair dos mocks.
 
 ## Proximo passo esperado
 
 A evolucao apos este baseline deve focar em:
 
 1. parser por dominio e regras de validacao ricas
-2. reprocessamento operacional com controles de seguranca
-3. observabilidade mais profunda (metricas e alertas por fila/tentativa)
+2. smoke completo de artefato baixavel ponta a ponta
+3. observabilidade mais profunda (metricas e alertas por fila/tentativa/artefato)
 
 ## Referencias
 

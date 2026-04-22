@@ -289,4 +289,77 @@ describe('streamgateApi auth adapter', () => {
       }),
     })
   })
+
+  it('maps operational mutations and artifacts with idempotency headers', async () => {
+    const postEnvelope = vi.fn()
+      .mockResolvedValueOnce({ data: { status: 'retry_requested' } })
+      .mockResolvedValueOnce({ data: { resolution_status: 'resolved' } })
+      .mockResolvedValueOnce({ data: { id: 'replay_1', status: 'requested' } })
+      .mockResolvedValueOnce({ data: { id: 'replay_1', status: 'approved' } })
+      .mockResolvedValueOnce({ data: { id: 'replay_1', status: 'executed' } })
+      .mockResolvedValueOnce({ data: { artifact_id: 'artifact_1', download_url: 'https://signed.test', expires_at: '2026-04-20T12:00:00Z' } })
+    const getEnvelope = vi.fn().mockResolvedValue({ data: [{ id: 'artifact_1', artifact_type: 'quality_report' }] })
+    const api = createStreamgateApi({ get: vi.fn(), post: vi.fn(), getEnvelope, postEnvelope })
+
+    await api.retryJob('job_1', { reason: 'Reprocessar com seguranca.', idempotencyKey: 'idem-retry' })
+    await api.resolveQuarantine('quarantine_1', { reason: 'Registro revisado manualmente.', idempotencyKey: 'idem-resolve' })
+    await api.createDlqReplayRequest('message_1', { reason: 'Replay inspecionado.', idempotencyKey: 'idem-request', payload: { event_name: 'upload.received.v1' } })
+    await api.approveDlqReplayRequest('replay_1', { reason: 'Aprovado por admin.', idempotencyKey: 'idem-approve' })
+    await api.executeDlqReplayRequest('replay_1', { reason: 'Executar aprovado.', idempotencyKey: 'idem-execute' })
+    await api.listJobArtifacts('job_1')
+    await api.createArtifactDownloadUrl('job_1', 'artifact_1')
+
+    expect(postEnvelope).toHaveBeenNthCalledWith(1, '/api/v1/jobs/job_1/retry', expect.objectContaining({ headers: { 'Idempotency-Key': 'idem-retry' } }))
+    expect(postEnvelope).toHaveBeenNthCalledWith(2, '/api/v1/quarantine/quarantine_1/resolve', expect.objectContaining({ headers: { 'Idempotency-Key': 'idem-resolve' } }))
+    expect(postEnvelope).toHaveBeenNthCalledWith(3, '/api/v1/quarantine/dlq/message_1/replay-requests', expect.objectContaining({ headers: { 'Idempotency-Key': 'idem-request' } }))
+    expect(postEnvelope).toHaveBeenNthCalledWith(4, '/api/v1/dlq-replay-requests/replay_1/approve', expect.objectContaining({ headers: { 'Idempotency-Key': 'idem-approve' } }))
+    expect(postEnvelope).toHaveBeenNthCalledWith(5, '/api/v1/dlq-replay-requests/replay_1/execute', expect.objectContaining({ headers: { 'Idempotency-Key': 'idem-execute' } }))
+    expect(getEnvelope).toHaveBeenCalledWith('/api/v1/jobs/job_1/artifacts')
+    expect(postEnvelope).toHaveBeenNthCalledWith(6, '/api/v1/jobs/job_1/artifacts/artifact_1/download-url')
+  })
+
+  it('maps notification inbox, bulk actions, settings and webhook test', async () => {
+    const getEnvelope = vi.fn()
+      .mockResolvedValueOnce({ data: [{ id: 'notification_1', status: 'unread' }] })
+      .mockResolvedValueOnce({ data: { id: 'notifset_1', in_app_enabled: true } })
+    const patchEnvelope = vi.fn()
+      .mockResolvedValueOnce({ data: { id: 'notification_1', status: 'read' } })
+      .mockResolvedValueOnce({ data: { id: 'notification_1', status: 'archived' } })
+      .mockResolvedValueOnce({ data: { id: 'notification_1', status: 'read' } })
+      .mockResolvedValueOnce({ data: { updated_count: 2 } })
+      .mockResolvedValueOnce({ data: { archived_count: 1 } })
+      .mockResolvedValueOnce({ data: { id: 'notifset_1', webhook_enabled: true } })
+    const deleteEnvelope = vi.fn().mockResolvedValue({ data: { deleted: true, id: 'notification_1' } })
+    const postEnvelope = vi.fn().mockResolvedValue({ data: { id: 'delivery_1', status: 'pending' } })
+    const api = createStreamgateApi({ get: vi.fn(), post: vi.fn(), getEnvelope, postEnvelope, patchEnvelope, deleteEnvelope })
+
+    await api.listNotifications({ status: 'unread' })
+    await api.getNotificationSettings()
+    await api.markNotificationRead('notification_1')
+    await api.archiveNotification('notification_1')
+    await api.unarchiveNotification('notification_1')
+    await api.markAllNotificationsRead('active')
+    await api.bulkArchiveNotifications(['notification_1'])
+    await api.updateNotificationSettings({ inAppEnabled: true, emailEnabled: false, webhookEnabled: true, webhookUrl: 'https://hooks.test/streamgate' })
+    await api.deleteNotification('notification_1')
+    await api.testWebhookNotification({ reason: 'Validar canal configurado.', idempotencyKey: 'idem-webhook' })
+
+    expect(getEnvelope).toHaveBeenNthCalledWith(1, '/api/v1/notifications', { query: { status: 'unread' } })
+    expect(getEnvelope).toHaveBeenNthCalledWith(2, '/api/v1/notification-settings')
+    expect(patchEnvelope).toHaveBeenNthCalledWith(1, '/api/v1/notifications/notification_1/read', undefined)
+    expect(patchEnvelope).toHaveBeenNthCalledWith(4, '/api/v1/notifications/mark-all-read', { query: { status: 'active' } })
+    expect(patchEnvelope).toHaveBeenNthCalledWith(5, '/api/v1/notifications/bulk-archive', { body: { notifications: { ids: ['notification_1'] } } })
+    expect(patchEnvelope).toHaveBeenNthCalledWith(6, '/api/v1/notification-settings', {
+      body: {
+        notification_setting: {
+          in_app_enabled: true,
+          email_enabled: false,
+          webhook_enabled: true,
+          webhook_url: 'https://hooks.test/streamgate',
+        },
+      },
+    })
+    expect(deleteEnvelope).toHaveBeenCalledWith('/api/v1/notifications/notification_1', undefined)
+    expect(postEnvelope).toHaveBeenCalledWith('/api/v1/notification-settings/webhook/test', expect.objectContaining({ headers: { 'Idempotency-Key': 'idem-webhook' } }))
+  })
 })

@@ -60,6 +60,19 @@ module Uploads
       PresignedUrlResult.new(reason: :dependency_unavailable)
     end
 
+    def presigned_get_for_object(storage_key:, expires_in:)
+      return PresignedUrlResult.new(reason: :dependency_unavailable) unless configured?
+
+      PresignedUrlResult.new(
+        upload_url: build_presigned_url(method: "GET", storage_key: storage_key, expires_in: expires_in, signed_headers: {}),
+        required_headers: {},
+        expires_at: Time.current + expires_in.to_i
+      )
+    rescue StandardError => error
+      Rails.logger.warn("uploads.storage_client.presign_get_failed reason=#{error.class} message=#{error.message}")
+      PresignedUrlResult.new(reason: :dependency_unavailable)
+    end
+
     def head_object(storage_key:)
       return HeadObjectResult.new(reason: :dependency_unavailable) unless configured?
 

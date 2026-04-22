@@ -21,6 +21,15 @@ module Worker
         response.body.read
       end
 
+      def write_object(storage_key:, body:, content_type:)
+        client.put_object(
+          bucket: config.storage_bucket,
+          key: storage_key,
+          body: body,
+          content_type: content_type
+        )
+      end
+
       private
 
       attr_reader :config, :client

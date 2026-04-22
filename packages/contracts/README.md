@@ -2,14 +2,19 @@
 
 Fonte compartilhada dos contratos do StreamGate entre API, worker e frontend.
 
-## Estrutura da Sprint 1
+## Estrutura atual
 
 - `version.json`: versao publicada do pacote e politica de compatibilidade.
-- `schemas/http`: envelopes e recursos HTTP.
-- `schemas/events`: contratos de eventos assincronos.
-- `examples/http`: exemplos concretos de respostas HTTP.
-- `examples/events`: exemplos concretos de eventos.
 - `COMPATIBILITY.md`: regra oficial de evolucao de contratos.
+- `schemas/http/shared/envelopes`: envelopes HTTP reutilizaveis.
+- `schemas/http/shared/resources`: recursos HTTP compartilhados.
+- `schemas/http/uploads`: contratos HTTP de upload e registro de job.
+- `schemas/http/operational-reads`: contratos HTTP de leituras operacionais.
+- `schemas/http/operations`: contratos HTTP de mutacoes operacionais.
+- `schemas/http/artifacts`: contratos HTTP de artefatos finais.
+- `schemas/http/notifications`: contratos HTTP de notificacoes e deliveries.
+- `schemas/events/uploads`: contratos de eventos assincronos de upload.
+- `examples/http/<dominio>` e `examples/events/<dominio>`: exemplos concretos espelhando a taxonomia dos schemas.
 
 ## Convencoes oficiais
 
@@ -46,20 +51,15 @@ Todo contrato de evento deve prever, quando aplicavel:
 - `job_id`
 - `batch_id`
 
-## Contratos HTTP adicionados na Sprint 3
+## Contratos HTTP por dominio
 
-- `upload-signed-url-request.v1.json`
-- `upload-signed-url-response.v1.json`
-- `upload-register-request.v1.json`
-- `upload-register-response.v1.json`
-- `upload-list-response.v1.json`
-- `job-list-response.v1.json`
-- `analytics-response.v1.json`
-- `quarantine-list-response.v1.json`
-- `audit-list-response.v1.json`
-- `dlq-list-response.v1.json`
+- `uploads`: signed URL, registro idempotente e listagem de uploads.
+- `operational-reads`: jobs, analytics, quarantine, audit e DLQ read-only.
+- `operations`: retry, resolve e ciclo de replay DLQ.
+- `artifacts`: listagem e URL assinada curta de download.
+- `notifications`: inbox, leitura/arquivo/delete, acoes em massa essenciais, settings e webhook/email deliveries.
 
-Exemplos correspondentes estao em `examples/http`.
+Exemplos correspondentes ficam no mesmo dominio em `examples/http`.
 ## Fonte de verdade complementar
 
 - [Glossario de dominio](C:/estudos/StreamGate/docs/guides/backend/domain-glossary.md)

@@ -3,8 +3,12 @@
 type StreamgateHttpClient = {
   get: <T>(path: string, options?: RequestOptions) => Promise<T>
   post: <T>(path: string, options?: RequestOptions) => Promise<T>
+  patch?: <T>(path: string, options?: RequestOptions) => Promise<T>
+  delete?: <T>(path: string, options?: RequestOptions) => Promise<T>
   getEnvelope?: <T>(path: string, options?: RequestOptions) => Promise<ApiSuccessEnvelope<T>>
   postEnvelope?: <T>(path: string, options?: RequestOptions) => Promise<ApiSuccessEnvelope<T>>
+  patchEnvelope?: <T>(path: string, options?: RequestOptions) => Promise<ApiSuccessEnvelope<T>>
+  deleteEnvelope?: <T>(path: string, options?: RequestOptions) => Promise<ApiSuccessEnvelope<T>>
 }
 
 export type HealthResponse = {
@@ -75,6 +79,10 @@ export type QuarantineRecord = {
   row_number: number | null
   payload?: Record<string, unknown>
   trace_id: string
+  resolution_status?: 'open' | 'resolved' | string
+  resolution_reason?: string | null
+  resolved_by_id?: string | null
+  resolved_at?: string | null
   created_at: string
   updated_at: string
 }
@@ -138,6 +146,124 @@ export type JobSummary = {
   trace_id: string
   created_at: string | null
   updated_at: string | null
+}
+
+export type OperationActionInput = {
+  reason: string
+  idempotencyKey?: string
+}
+
+export type OperationActionResponse = {
+  job_id?: string
+  status: string
+  attempt_id?: string
+  outbox_id?: string
+}
+
+export type QuarantineResolveResponse = {
+  id: string
+  job_id: string
+  resolution_status: string
+  resolution_reason: string | null
+  resolved_by_id: string | null
+  resolved_at: string | null
+}
+
+export type DlqReplayRequest = {
+  id: string
+  message_id: string
+  status: 'requested' | 'approved' | 'executing' | 'executed' | 'rejected' | 'failed' | string
+  requested_by_id: string
+  approved_by_id: string | null
+  executed_by_id: string | null
+  reason: string
+  approval_reason: string | null
+  execution_reason: string | null
+  approved_at: string | null
+  executed_at: string | null
+  expires_at: string | null
+  outbox_event_id: string | null
+  trace_id: string
+  created_at: string
+  updated_at: string
+}
+
+export type JobArtifact = {
+  id: string
+  job_id: string
+  artifact_type: 'processed_dataset' | 'quality_report' | 'audit_report' | string
+  status: 'pending' | 'available' | 'failed' | 'expired' | string
+  filename: string
+  content_type: string
+  byte_size: number
+  checksum_sha256: string | null
+  generated_at: string | null
+  expires_at: string | null
+  metadata?: Record<string, unknown>
+  trace_id: string
+  created_at: string
+  updated_at: string
+}
+
+export type ArtifactDownloadUrlResponse = {
+  artifact_id: string
+  download_url: string
+  expires_at: string
+}
+
+export type NotificationStatus = 'unread' | 'read' | 'archived'
+
+export type NotificationItem = {
+  id: string
+  event_name: string
+  title: string
+  body: string
+  status: NotificationStatus
+  read_at: string | null
+  expires_at: string | null
+  metadata?: Record<string, unknown>
+  trace_id: string
+  created_at: string
+}
+
+export type NotificationSettings = {
+  id: string
+  user_id: string
+  in_app_enabled: boolean
+  email_enabled: boolean
+  webhook_enabled: boolean
+  webhook_url: string | null
+  webhook_secret: null
+  created_at?: string
+  updated_at?: string
+}
+
+export type NotificationSettingsInput = {
+  inAppEnabled: boolean
+  emailEnabled: boolean
+  webhookEnabled: boolean
+  webhookUrl?: string | null
+}
+
+export type NotificationBulkResponse = {
+  updated_count?: number
+  archived_count?: number
+  ids?: string[]
+}
+
+export type WebhookDeliveryResponse = {
+  id: string
+  notification_id: string | null
+  channel: 'email' | 'webhook' | string
+  event_name: string
+  status: 'pending' | 'delivered' | 'failed' | string
+  attempts_count: number
+  next_attempt_at: string | null
+  delivered_at: string | null
+  response_status: number | null
+  trace_id: string
+  created_at: string
+  webhook_secret: null
 }
 
 export type UploadSummary = {
@@ -322,9 +448,47 @@ const endpoints = {
   jobs: '/api/v1/jobs',
   quarantine: '/api/v1/quarantine',
   quarantineDlq: '/api/v1/quarantine/dlq',
+  dlqReplayRequests: '/api/v1/dlq-replay-requests',
+  notifications: '/api/v1/notifications',
+  notificationSettings: '/api/v1/notification-settings',
   uploads: '/api/v1/uploads',
   uploadSignedUrl: '/api/v1/uploads/signed-url',
 } as const
+
+export function createIdempotencyKey(scope = 'operation') {
+  const randomId = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(16).slice(2)}`
+
+  return `streamgate:${scope}:${randomId}`
+}
+
+function operationBody(reason: string, payload?: Record<string, unknown>) {
+  return {
+    operation: {
+      reason,
+      ...(payload ? { payload } : {}),
+    },
+  }
+}
+
+function idempotencyHeaders(key?: string) {
+  return { 'Idempotency-Key': key ?? createIdempotencyKey() }
+}
+
+async function patchEnvelope<T>(client: StreamgateHttpClient, path: string, options?: RequestOptions): Promise<ApiSuccessEnvelope<T>> {
+  if (client.patchEnvelope) return client.patchEnvelope<T>(path, options)
+  if (!client.patch) throw new Error('HTTP PATCH is not available in this client.')
+  const data = await client.patch<T>(path, options)
+  return { data }
+}
+
+async function deleteEnvelope<T>(client: StreamgateHttpClient, path: string, options?: RequestOptions): Promise<ApiSuccessEnvelope<T>> {
+  if (client.deleteEnvelope) return client.deleteEnvelope<T>(path, options)
+  if (!client.delete) throw new Error('HTTP DELETE is not available in this client.')
+  const data = await client.delete<T>(path, options)
+  return { data }
+}
 
 export function createStreamgateApi(client: StreamgateHttpClient = apiClient) {
   return {
@@ -421,6 +585,174 @@ export function createStreamgateApi(client: StreamgateHttpClient = apiClient) {
 
       const data = await client.get<DlqMessage[]>(endpoints.quarantineDlq, { query: normalizedQuery })
       return { data }
+    },
+
+    retryJob: async (jobId: string, input: OperationActionInput): Promise<ApiSuccessEnvelope<OperationActionResponse>> => {
+      const path = `${endpoints.jobs}/${jobId}/retry`
+
+      if (client.postEnvelope) {
+        return client.postEnvelope<OperationActionResponse>(path, {
+          body: operationBody(input.reason),
+          headers: idempotencyHeaders(input.idempotencyKey),
+        })
+      }
+
+      const data = await client.post<OperationActionResponse>(path, {
+        body: operationBody(input.reason),
+        headers: idempotencyHeaders(input.idempotencyKey),
+      })
+      return { data }
+    },
+
+    resolveQuarantine: async (recordId: string, input: OperationActionInput): Promise<ApiSuccessEnvelope<QuarantineResolveResponse>> => {
+      const path = `${endpoints.quarantine}/${recordId}/resolve`
+
+      if (client.postEnvelope) {
+        return client.postEnvelope<QuarantineResolveResponse>(path, {
+          body: operationBody(input.reason),
+          headers: idempotencyHeaders(input.idempotencyKey),
+        })
+      }
+
+      const data = await client.post<QuarantineResolveResponse>(path, {
+        body: operationBody(input.reason),
+        headers: idempotencyHeaders(input.idempotencyKey),
+      })
+      return { data }
+    },
+
+    createDlqReplayRequest: async (messageId: string, input: OperationActionInput & { payload?: Record<string, unknown> }): Promise<ApiSuccessEnvelope<DlqReplayRequest>> => {
+      const path = `${endpoints.quarantineDlq}/${messageId}/replay-requests`
+
+      if (client.postEnvelope) {
+        return client.postEnvelope<DlqReplayRequest>(path, {
+          body: operationBody(input.reason, input.payload),
+          headers: idempotencyHeaders(input.idempotencyKey),
+        })
+      }
+
+      const data = await client.post<DlqReplayRequest>(path, {
+        body: operationBody(input.reason, input.payload),
+        headers: idempotencyHeaders(input.idempotencyKey),
+      })
+      return { data }
+    },
+
+    approveDlqReplayRequest: async (requestId: string, input: OperationActionInput): Promise<ApiSuccessEnvelope<DlqReplayRequest>> => {
+      const path = `${endpoints.dlqReplayRequests}/${requestId}/approve`
+
+      if (client.postEnvelope) {
+        return client.postEnvelope<DlqReplayRequest>(path, {
+          body: operationBody(input.reason),
+          headers: idempotencyHeaders(input.idempotencyKey),
+        })
+      }
+
+      const data = await client.post<DlqReplayRequest>(path, {
+        body: operationBody(input.reason),
+        headers: idempotencyHeaders(input.idempotencyKey),
+      })
+      return { data }
+    },
+
+    executeDlqReplayRequest: async (requestId: string, input: OperationActionInput): Promise<ApiSuccessEnvelope<DlqReplayRequest>> => {
+      const path = `${endpoints.dlqReplayRequests}/${requestId}/execute`
+
+      if (client.postEnvelope) {
+        return client.postEnvelope<DlqReplayRequest>(path, {
+          body: operationBody(input.reason),
+          headers: idempotencyHeaders(input.idempotencyKey),
+        })
+      }
+
+      const data = await client.post<DlqReplayRequest>(path, {
+        body: operationBody(input.reason),
+        headers: idempotencyHeaders(input.idempotencyKey),
+      })
+      return { data }
+    },
+
+    listJobArtifacts: async (jobId: string): Promise<ApiSuccessEnvelope<JobArtifact[]>> => {
+      const path = `${endpoints.jobs}/${jobId}/artifacts`
+
+      if (client.getEnvelope) {
+        return client.getEnvelope<JobArtifact[]>(path)
+      }
+
+      const data = await client.get<JobArtifact[]>(path)
+      return { data }
+    },
+
+    createArtifactDownloadUrl: async (jobId: string, artifactId: string): Promise<ApiSuccessEnvelope<ArtifactDownloadUrlResponse>> => {
+      const path = `${endpoints.jobs}/${jobId}/artifacts/${artifactId}/download-url`
+
+      if (client.postEnvelope) {
+        return client.postEnvelope<ArtifactDownloadUrlResponse>(path)
+      }
+
+      const data = await client.post<ArtifactDownloadUrlResponse>(path)
+      return { data }
+    },
+
+    listNotifications: async (query?: { status?: 'active' | NotificationStatus }): Promise<ApiSuccessEnvelope<NotificationItem[]>> => {
+      if (client.getEnvelope) {
+        return client.getEnvelope<NotificationItem[]>(endpoints.notifications, { query })
+      }
+
+      const data = await client.get<NotificationItem[]>(endpoints.notifications, { query })
+      return { data }
+    },
+
+    markNotificationRead: (notificationId: string) =>
+      patchEnvelope<NotificationItem>(client, `${endpoints.notifications}/${notificationId}/read`),
+
+    archiveNotification: (notificationId: string) =>
+      patchEnvelope<NotificationItem>(client, `${endpoints.notifications}/${notificationId}/archive`),
+
+    unarchiveNotification: (notificationId: string) =>
+      patchEnvelope<NotificationItem>(client, `${endpoints.notifications}/${notificationId}/unarchive`),
+
+    deleteNotification: (notificationId: string) =>
+      deleteEnvelope<{ deleted: boolean; id: string }>(client, `${endpoints.notifications}/${notificationId}`),
+
+    markAllNotificationsRead: (status: 'active' | NotificationStatus = 'active') =>
+      patchEnvelope<NotificationBulkResponse>(client, `${endpoints.notifications}/mark-all-read`, { query: { status } }),
+
+    bulkArchiveNotifications: (ids: string[]) =>
+      patchEnvelope<NotificationBulkResponse>(client, `${endpoints.notifications}/bulk-archive`, { body: { notifications: { ids } } }),
+
+    getNotificationSettings: async (): Promise<ApiSuccessEnvelope<NotificationSettings>> => {
+      if (client.getEnvelope) return client.getEnvelope<NotificationSettings>(endpoints.notificationSettings)
+      const data = await client.get<NotificationSettings>(endpoints.notificationSettings)
+      return { data }
+    },
+
+    updateNotificationSettings: (input: NotificationSettingsInput) =>
+      patchEnvelope<NotificationSettings>(client, endpoints.notificationSettings, {
+        body: {
+          notification_setting: {
+            in_app_enabled: input.inAppEnabled,
+            email_enabled: input.emailEnabled,
+            webhook_enabled: input.webhookEnabled,
+            webhook_url: input.webhookUrl,
+          },
+        },
+      }),
+
+    testWebhookNotification: (input: OperationActionInput) => {
+      const path = `${endpoints.notificationSettings}/webhook/test`
+
+      if (client.postEnvelope) {
+        return client.postEnvelope<WebhookDeliveryResponse>(path, {
+          body: operationBody(input.reason),
+          headers: idempotencyHeaders(input.idempotencyKey),
+        })
+      }
+
+      return client.post<WebhookDeliveryResponse>(path, {
+        body: operationBody(input.reason),
+        headers: idempotencyHeaders(input.idempotencyKey),
+      }).then((data) => ({ data }))
     },
 
     listAuditEvents: async (query?: AuditQuery): Promise<ApiSuccessEnvelope<AuditEvent[]>> => {

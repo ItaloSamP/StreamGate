@@ -166,4 +166,32 @@ describe('createApiClient', () => {
       }),
     )
   })
+
+  it('does not clear auth state on access denied responses for protected resources', async () => {
+    const onAuthFailure = vi.fn()
+
+    configureApiClientAuth({
+      getAccessToken: () => 'valid_token',
+      onAuthFailure,
+    })
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 403,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({
+        error: {
+          code: 'access_denied',
+          message: 'Sem permissao para acessar este recurso.',
+          request_id: 'req_denied',
+          trace_id: 'trace_denied',
+        },
+      }),
+    }) as typeof fetch
+
+    const client = createApiClient('http://localhost:3000')
+
+    await expect(client.get('/api/v1/audit')).rejects.toBeInstanceOf(ApiClientError)
+    expect(onAuthFailure).not.toHaveBeenCalled()
+  })
 })
