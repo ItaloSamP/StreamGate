@@ -5,6 +5,7 @@ import { Link, useParams } from 'react-router-dom'
 import { IdCopy, JsonPreview, OperationalStateBlock, statusPillClass } from '@/components/app/operational-readout'
 import { WorkspacePageFrame } from '@/components/app/workspace-page-frame'
 import { Button } from '@/components/ui/button'
+import { ApiClientError } from '@/lib/api-client'
 import { formatDateTime, humanizeOperationalError } from '@/lib/operational-utils'
 import {
   streamgateApi,
@@ -264,7 +265,13 @@ export function AuditDetailPage() {
         setState({ status: item ? 'success' : 'empty', item, errorMessage: null })
       } catch (error) {
         if (!active) return
-        setState({ status: 'error', item: null, errorMessage: humanizeOperationalError(error, 'Nao foi possivel carregar auditoria.') })
+        setState({
+          status: isAccessDenied(error) ? 'denied' : 'error',
+          item: null,
+          errorMessage: isAccessDenied(error)
+            ? 'Sem permissao para consultar este evento de auditoria.'
+            : humanizeOperationalError(error, 'Nao foi possivel carregar auditoria.'),
+        })
       }
     }
 
@@ -314,7 +321,13 @@ export function DlqDetailPage() {
         setState({ status: item ? 'success' : 'empty', item, errorMessage: null })
       } catch (error) {
         if (!active) return
-        setState({ status: 'error', item: null, errorMessage: humanizeOperationalError(error, 'DLQ indisponivel.') })
+        setState({
+          status: isAccessDenied(error) ? 'denied' : 'error',
+          item: null,
+          errorMessage: isAccessDenied(error)
+            ? 'Sem permissao para consultar detalhes da DLQ.'
+            : humanizeOperationalError(error, 'DLQ indisponivel.'),
+        })
       }
     }
 
@@ -394,4 +407,8 @@ function DetailPanel({ rows, children }: { rows: [string, string][]; children?: 
       <div className="flex flex-col gap-3">{children}</div>
     </div>
   )
+}
+
+function isAccessDenied(error: unknown) {
+  return error instanceof ApiClientError && error.status === 403 && error.code === 'access_denied'
 }

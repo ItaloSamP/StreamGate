@@ -81,11 +81,11 @@ export function configureApiClientAuth(config: ApiClientAuthConfig) {
 }
 
 function shouldHandleAuthFailure(error: ApiClientError) {
-  if (error.status !== 401 && error.status !== 403) {
+  if (error.status !== 401) {
     return false
   }
 
-  return error.code === 'session_expired' || error.code === 'access_denied'
+  return error.code === 'session_expired'
 }
 
 export function buildQueryString(query?: RequestOptions['query']) {

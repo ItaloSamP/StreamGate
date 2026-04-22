@@ -74,7 +74,7 @@ describe('Sprint 4 operational pages', () => {
   it('hides audit navigation for operators and renders it for admins', async () => {
     const { unmount } = renderApp('/dashboard', 'operator')
 
-    expect(await screen.findByText('Command Center Operacional')).toBeInTheDocument()
+    expect(await screen.findByText('Pipeline de Jobs')).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /Auditoria/i })).not.toBeInTheDocument()
 
     unmount()
@@ -87,10 +87,11 @@ describe('Sprint 4 operational pages', () => {
   it('turns dashboard into a real command center instead of mock metrics', async () => {
     renderApp('/dashboard', 'admin')
 
-    expect(await screen.findByText('Command Center Operacional')).toBeInTheDocument()
-    expect(await screen.findByText('Jobs totais')).toBeInTheDocument()
+    expect(await screen.findByText('Volume Processado · ultimas 24h')).toBeInTheDocument()
+    expect(await screen.findByText('Pipeline de Jobs')).toBeInTheDocument()
     expect((await screen.findAllByText('Quarentena')).length).toBeGreaterThan(0)
-    expect(screen.queryByText('1.84 M')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '+ Upload' })).toHaveAttribute('href', '/upload')
+    expect(screen.getByText('1.840.000')).toBeInTheDocument()
   })
 
   it('renders audit-backed event log with copied operational context', async () => {
@@ -99,6 +100,33 @@ describe('Sprint 4 operational pages', () => {
     expect(await screen.findByText('Event Log Operacional')).toBeInTheDocument()
     expect(await screen.findByText('upload.registered')).toBeInTheDocument()
     expect(await screen.findByText('req_fixture_1')).toBeInTheDocument()
+  })
+
+  it('keeps the session and shows access denied when operator opens event log', async () => {
+    renderApp('/events', 'operator')
+
+    expect(await screen.findByText('Event Log Operacional')).toBeInTheDocument()
+    expect(await screen.findByText(/Permissao negada para esta superficie/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Acessar workspace/i)).not.toBeInTheDocument()
+  })
+
+  it('shows denied states for other admin-only surfaces without dropping the session', async () => {
+    const { unmount } = renderApp('/audit', 'operator')
+
+    expect(await screen.findByText('Auditoria operacional')).toBeInTheDocument()
+    expect(await screen.findByText(/Permissao negada para esta superficie/i)).toBeInTheDocument()
+
+    unmount()
+    renderApp('/operations', 'operator')
+
+    expect(await screen.findByText('Wizard admin-only')).toBeInTheDocument()
+    expect(await screen.findByText(/Permissao negada para esta superficie/i)).toBeInTheDocument()
+
+    unmount()
+    renderApp('/quarantine/dlq/0', 'operator')
+
+    expect(await screen.findByText('Detalhe da DLQ')).toBeInTheDocument()
+    expect(await screen.findByText(/Permissao negada para esta superficie/i)).toBeInTheDocument()
   })
 
   it('renders shareable operational detail routes with masked context', async () => {
@@ -168,21 +196,12 @@ describe('Sprint 4 operational pages', () => {
     })
   })
 
-  it('protects operations wizard from operators and lets admins review a retry', async () => {
-    const { unmount } = renderApp('/operations', 'operator')
+  it('protects operations wizard from operators', async () => {
+    renderApp('/operations', 'operator')
 
     await waitFor(() => {
-      expect(screen.queryByText('Wizard admin-only')).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /Revisar regras/i })).not.toBeInTheDocument()
     })
-
-    unmount()
-    renderApp('/operations', 'admin')
-
-    expect(await screen.findByText('Wizard admin-only')).toBeInTheDocument()
-    fireEvent.change(screen.getByLabelText('Buscar ou colar alvo'), { target: { value: 'job_fixture_pending' } })
-    fireEvent.click(screen.getByRole('button', { name: /Revisar regras/i }))
-
-    expect(await screen.findByText('Backend aplica cooldown e limite diario')).toBeInTheDocument()
   })
 
   it('submits the admin retry wizard and renders the backend result state', async () => {
@@ -190,7 +209,7 @@ describe('Sprint 4 operational pages', () => {
 
     renderApp('/operations', 'admin')
 
-    expect(await screen.findByText('Wizard admin-only')).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /Revisar regras/i })).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText('Buscar ou colar alvo'), { target: { value: 'job_fixture_pending' } })
     fireEvent.click(screen.getByRole('button', { name: /Revisar regras/i }))
     fireEvent.click(screen.getByRole('button', { name: /Informar motivo/i }))
@@ -274,6 +293,17 @@ function createOperationalFetchMock() {
     }
 
     if (url.includes('/api/v1/quarantine/dlq')) {
+      if (readRoleFromStoredSession() !== 'admin') {
+        return Promise.resolve(jsonResponse(403, {
+          error: {
+            code: 'access_denied',
+            message: 'Somente admins podem consultar DLQ.',
+            request_id: 'req_dlq_denied',
+            trace_id: 'trace_dlq_denied',
+          },
+        }))
+      }
+
       return Promise.resolve(jsonResponse(200, dlqResponse()))
     }
 
@@ -282,6 +312,17 @@ function createOperationalFetchMock() {
     }
 
     if (url.includes('/api/v1/audit')) {
+      if (readRoleFromStoredSession() !== 'admin') {
+        return Promise.resolve(jsonResponse(403, {
+          error: {
+            code: 'access_denied',
+            message: 'Somente admins podem consultar auditoria.',
+            request_id: 'req_audit_denied',
+            trace_id: 'trace_audit_denied',
+          },
+        }))
+      }
+
       return Promise.resolve(jsonResponse(200, auditResponse()))
     }
 

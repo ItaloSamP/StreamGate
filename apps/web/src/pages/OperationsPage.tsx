@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Navigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 
+import { OperationalStateBlock } from '@/components/app/operational-readout'
 import { WorkspacePageFrame } from '@/components/app/workspace-page-frame'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -86,9 +87,7 @@ export function OperationsPage() {
     }
   }, [])
 
-  if (session?.user.role !== 'admin') {
-    return <Navigate to="/dashboard" replace />
-  }
+  const isAdmin = session?.user.role === 'admin'
 
   function chooseOperation(next: OperationKind) {
     setOperation(next)
@@ -188,92 +187,98 @@ export function OperationsPage() {
             </div>
           </section>
 
-          <div className="dash-grid-2">
-            <section className="dash-panel dash-module-card">
-              <div className="dash-panel-head">
-                <div>
-                  <div className="dash-panel-title">{selectedCopy.title}</div>
-                  <div className="dash-module-copy">Etapa atual: {step}</div>
+          <OperationalStateBlock
+            status={isAdmin ? 'success' : 'denied'}
+            errorMessage={null}
+            emptyMessage=""
+          >
+            <div className="dash-grid-2">
+              <section className="dash-panel dash-module-card">
+                <div className="dash-panel-head">
+                  <div>
+                    <div className="dash-panel-title">{selectedCopy.title}</div>
+                    <div className="dash-module-copy">Etapa atual: {step}</div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex flex-col gap-4 p-4">
-                {step === 'target' ? (
-                  <>
-                    <TargetPicker operation={operation} jobs={jobs} quarantine={quarantine} dlq={dlq} targetId={targetId} setTargetId={setTargetId} />
-                    <Button type="button" variant="panel" onClick={goReview}>Revisar regras</Button>
-                  </>
-                ) : null}
+                <div className="flex flex-col gap-4 p-4">
+                  {step === 'target' ? (
+                    <>
+                      <TargetPicker operation={operation} jobs={jobs} quarantine={quarantine} dlq={dlq} targetId={targetId} setTargetId={setTargetId} />
+                      <Button type="button" variant="panel" onClick={goReview}>Revisar regras</Button>
+                    </>
+                  ) : null}
 
-                {step === 'review' ? (
-                  <>
-                    <div className="dash-module-card rounded-lg border border-[var(--border)]">
-                      <div className="dash-module-label">{selectedCopy.targetLabel}</div>
-                      <div className="dash-module-value text-base">{targetId}</div>
-                      <ul className="dash-module-list">
-                        {selectedCopy.rules.map((rule) => <li key={rule}>{rule}</li>)}
-                      </ul>
-                    </div>
-                    <Button type="button" variant="panel" onClick={goConfirm}>Informar motivo</Button>
-                  </>
-                ) : null}
+                  {step === 'review' ? (
+                    <>
+                      <div className="dash-module-card rounded-lg border border-[var(--border)]">
+                        <div className="dash-module-label">{selectedCopy.targetLabel}</div>
+                        <div className="dash-module-value text-base">{targetId}</div>
+                        <ul className="dash-module-list">
+                          {selectedCopy.rules.map((rule) => <li key={rule}>{rule}</li>)}
+                        </ul>
+                      </div>
+                      <Button type="button" variant="panel" onClick={goConfirm}>Informar motivo</Button>
+                    </>
+                  ) : null}
 
-                {step === 'confirm' ? (
-                  <>
-                    <div className="flex flex-col gap-2">
-                      <Label htmlFor="operation-reason">Motivo operacional</Label>
-                      <Input id="operation-reason" value={reason} onChange={(event) => setReason(event.target.value)} />
-                    </div>
-                    <div className="rounded-lg border border-[rgba(224,92,92,0.35)] bg-[rgba(224,92,92,0.08)] p-3 text-mono text-[10px] text-[var(--signal-red)]">
-                      Confirme apenas se o alvo foi revisado. A acao sera auditada.
-                    </div>
-                    <Button type="button" variant="panel" disabled={loading} onClick={executeOperation}>
-                      {loading ? 'Executando...' : 'Confirmar operacao'}
-                    </Button>
-                  </>
-                ) : null}
+                  {step === 'confirm' ? (
+                    <>
+                      <div className="flex flex-col gap-2">
+                        <Label htmlFor="operation-reason">Motivo operacional</Label>
+                        <Input id="operation-reason" value={reason} onChange={(event) => setReason(event.target.value)} />
+                      </div>
+                      <div className="rounded-lg border border-[rgba(224,92,92,0.35)] bg-[rgba(224,92,92,0.08)] p-3 text-mono text-[10px] text-[var(--signal-red)]">
+                        Confirme apenas se o alvo foi revisado. A acao sera auditada.
+                      </div>
+                      <Button type="button" variant="panel" disabled={loading} onClick={executeOperation}>
+                        {loading ? 'Executando...' : 'Confirmar operacao'}
+                      </Button>
+                    </>
+                  ) : null}
 
-                {step === 'result' ? (
-                  <>
-                    <div className="dash-module-card rounded-lg border border-[var(--border)]">
-                      <div className="dash-panel-title">Resultado</div>
-                      <div className="dash-module-copy">{result}</div>
+                  {step === 'result' ? (
+                    <>
+                      <div className="dash-module-card rounded-lg border border-[var(--border)]">
+                        <div className="dash-panel-title">Resultado</div>
+                        <div className="dash-module-copy">{result}</div>
+                        {replayRequest ? (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <span className="dash-panel-tag">status {replayRequest.status}</span>
+                            <span className="dash-panel-tag">trace {replayRequest.trace_id}</span>
+                            <span className="dash-panel-tag">expira {formatDateTime(replayRequest.expires_at)}</span>
+                          </div>
+                        ) : null}
+                      </div>
                       {replayRequest ? (
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          <span className="dash-panel-tag">status {replayRequest.status}</span>
-                          <span className="dash-panel-tag">trace {replayRequest.trace_id}</span>
-                          <span className="dash-panel-tag">expira {formatDateTime(replayRequest.expires_at)}</span>
+                        <div className="flex flex-wrap gap-2">
+                          <Button type="button" variant="panel" disabled={loading || replayRequest.status !== 'requested'} onClick={() => void advanceReplay('approve')}>Aprovar replay</Button>
+                          <Button type="button" variant="panel" disabled={loading || replayRequest.status !== 'approved'} onClick={() => void advanceReplay('execute')}>Executar replay</Button>
                         </div>
                       ) : null}
-                    </div>
-                    {replayRequest ? (
-                      <div className="flex flex-wrap gap-2">
-                        <Button type="button" variant="panel" disabled={loading || replayRequest.status !== 'requested'} onClick={() => void advanceReplay('approve')}>Aprovar replay</Button>
-                        <Button type="button" variant="panel" disabled={loading || replayRequest.status !== 'approved'} onClick={() => void advanceReplay('execute')}>Executar replay</Button>
-                      </div>
-                    ) : null}
-                    <Button type="button" variant="panel" onClick={() => setStep('target')}>Nova operacao</Button>
-                  </>
-                ) : null}
+                      <Button type="button" variant="panel" onClick={() => setStep('target')}>Nova operacao</Button>
+                    </>
+                  ) : null}
 
-                {errorMessage ? <div className="text-mono text-[11px] text-[var(--signal-red)]">{errorMessage}</div> : null}
-              </div>
-            </section>
-
-            <section className="dash-panel dash-module-card">
-              <div className="dash-panel-head">
-                <div>
-                  <div className="dash-panel-title">Contexto e bloqueios</div>
-                  <div className="dash-module-copy">Busca recente reduz erro manual, mas o ID colado continua sendo a fonte da acao.</div>
+                  {errorMessage ? <div className="text-mono text-[11px] text-[var(--signal-red)]">{errorMessage}</div> : null}
                 </div>
-              </div>
-              <ul className="dash-module-list">
-                <li>Operadores nao acessam esta rota.</li>
-                <li>Retry e resolve sao diretos, sempre com motivo.</li>
-                <li>Replay DLQ exige solicitacao, aprovacao e execucao.</li>
-                <li>Self-approval e estados invalidos sao recusados pelo backend.</li>
-              </ul>
-            </section>
-          </div>
+              </section>
+
+              <section className="dash-panel dash-module-card">
+                <div className="dash-panel-head">
+                  <div>
+                    <div className="dash-panel-title">Contexto e bloqueios</div>
+                    <div className="dash-module-copy">Busca recente reduz erro manual, mas o ID colado continua sendo a fonte da acao.</div>
+                  </div>
+                </div>
+                <ul className="dash-module-list">
+                  <li>Operadores nao acessam esta rota.</li>
+                  <li>Retry e resolve sao diretos, sempre com motivo.</li>
+                  <li>Replay DLQ exige solicitacao, aprovacao e execucao.</li>
+                  <li>Self-approval e estados invalidos sao recusados pelo backend.</li>
+                </ul>
+              </section>
+            </div>
+          </OperationalStateBlock>
         </div>
       </div>
     </WorkspacePageFrame>
