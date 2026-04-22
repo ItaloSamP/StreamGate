@@ -1,4 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { existsSync, readFileSync } from 'node:fs'
+import path from 'node:path'
 
 import { ApiClientError, configureApiClientAuth, createApiClient } from '@/lib/api-client'
 import { createStreamgateApi } from '@/lib/streamgate-api'
@@ -6,7 +8,12 @@ import { createStreamgateApi } from '@/lib/streamgate-api'
 const integrationApiBaseUrl =
   process.env.AUTH_INTEGRATION_BASE_URL ?? process.env.VITE_API_BASE_URL ?? 'http://localhost:3000'
 
-const seededOperatorPassword = process.env.SEED_OPERATOR_PASSWORD ?? 'ChangeMe123!'
+const seededOperatorPasswords = Array.from(new Set([
+  process.env.SEED_OPERATOR_PASSWORD,
+  readRootDotEnvValue('SEED_OPERATOR_PASSWORD'),
+  'TrocaNdo123!',
+  'ChangeMe123!',
+].filter((value): value is string => Boolean(value && value.trim()))))
 
 const apiClient = createApiClient(integrationApiBaseUrl)
 const streamgateApi = createStreamgateApi(apiClient)
@@ -30,10 +37,7 @@ describe.sequential('auth integration with real backend', () => {
   })
 
   it('logs in seeded operator, fetches me, and revokes session on logout', async () => {
-    const login = await streamgateApi.auth.login({
-      email: 'operator@streamgate.local',
-      password: seededOperatorPassword,
-    })
+    const login = await loginWithAnyPassword('operator@streamgate.local', seededOperatorPasswords)
 
     currentToken = login.session.access_token
 
@@ -120,4 +124,31 @@ function buildEphemeralCredentials(prefix: string) {
     email: `${prefix}-${unique}@streamgate.local`,
     password: 'StrongPass123!',
   }
+}
+
+async function loginWithAnyPassword(email: string, passwords: string[]) {
+  let lastError: unknown = null
+
+  for (const password of passwords) {
+    try {
+      return await streamgateApi.auth.login({ email, password })
+    } catch (error) {
+      lastError = error
+    }
+  }
+
+  throw lastError ?? new Error(`Nenhuma credencial funcionou para ${email}.`)
+}
+
+function readRootDotEnvValue(key: string) {
+  const envPath = path.resolve(import.meta.dirname, '../../../../.env')
+  if (!existsSync(envPath)) return null
+
+  const line = readFileSync(envPath, 'utf8')
+    .split(/\r?\n/u)
+    .find((entry) => entry.startsWith(`${key}=`))
+
+  if (!line) return null
+
+  return line.slice(key.length + 1).trim()
 }

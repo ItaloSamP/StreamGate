@@ -24,6 +24,18 @@ class OperationalActionsTest < ActionDispatch::IntegrationTest
     assert_equal "idempotency_key_required", parsed_json.dig("error", "code")
   end
 
+  test "retry rejects jobs outside the allowed status matrix" do
+    token = login_as("admin@example.com", "StrongPass123!")
+
+    post "/api/v1/jobs/#{jobs(:pending_job).id}/retry",
+         params: { operation: { reason: "Nao deveria aceitar retry em job pendente." } },
+         headers: auth_header(token).merge("Idempotency-Key" => "retry-invalid-state-1"),
+         as: :json
+
+    assert_response :unprocessable_entity
+    assert_equal "invalid_state", parsed_json.dig("error", "code")
+  end
+
   test "admin retry creates attempt audit and outbox event idempotently" do
     token = login_as("admin@example.com", "StrongPass123!")
     job = jobs(:external_failed_job)
@@ -97,6 +109,27 @@ class OperationalActionsTest < ActionDispatch::IntegrationTest
     assert_equal "invalid_state", parsed_json.dig("error", "code")
   end
 
+  test "resolve quarantine is admin-only and requires idempotency key" do
+    record = quarantine_records(:warning_record)
+    operator_token = login_as("operator@example.com", "StrongPass123!")
+    admin_token = login_as("admin@example.com", "StrongPass123!")
+
+    post "/api/v1/quarantine/#{record.id}/resolve",
+         params: { operation: { reason: "Tentativa sem permissao." } },
+         headers: auth_header(operator_token).merge("Idempotency-Key" => "resolve-denied-1"),
+         as: :json
+
+    assert_response :forbidden
+
+    post "/api/v1/quarantine/#{record.id}/resolve",
+         params: { operation: { reason: "Tentativa sem chave." } },
+         headers: auth_header(admin_token),
+         as: :json
+
+    assert_response :unprocessable_entity
+    assert_equal "idempotency_key_required", parsed_json.dig("error", "code")
+  end
+
   test "dlq replay request approval and execution require separate admin" do
     creator_token = login_as("admin@example.com", "StrongPass123!")
     approver = User.create!(
@@ -150,6 +183,36 @@ class OperationalActionsTest < ActionDispatch::IntegrationTest
     end
     assert_response :accepted
     assert_equal "executed", parsed_json.dig("data", "status")
+  end
+
+  test "dlq replay request validates idempotency and payload contract" do
+    token = login_as("admin@example.com", "StrongPass123!")
+
+    post "/api/v1/quarantine/dlq/message-invalid/replay-requests",
+         params: {
+           operation: {
+             reason: "Tentativa sem chave.",
+             payload: dlq_payload
+           }
+         },
+         headers: auth_header(token),
+         as: :json
+
+    assert_response :unprocessable_entity
+    assert_equal "idempotency_key_required", parsed_json.dig("error", "code")
+
+    post "/api/v1/quarantine/dlq/message-invalid/replay-requests",
+         params: {
+           operation: {
+             reason: "Payload invalido.",
+             payload: dlq_payload.except(:trace_id)
+           }
+         },
+         headers: auth_header(token).merge("Idempotency-Key" => "replay-invalid-payload-1"),
+         as: :json
+
+    assert_response :unprocessable_entity
+    assert_equal "invalid_payload", parsed_json.dig("error", "code")
   end
 
   test "artifact list and download url are scoped and audited" do
@@ -216,6 +279,51 @@ class OperationalActionsTest < ActionDispatch::IntegrationTest
     assert_response :accepted
     assert_equal "pending", parsed_json.dig("data", "status")
     assert_nil parsed_json.dig("data", "webhook_secret")
+  end
+
+  test "webhook test requires idempotency key and enabled webhook channel" do
+    token = login_as("operator@example.com", "StrongPass123!")
+
+    patch "/api/v1/notification-settings",
+          params: {
+            notification_setting: {
+              in_app_enabled: true,
+              email_enabled: false,
+              webhook_enabled: false,
+              webhook_url: nil
+            }
+          },
+          headers: auth_header(token),
+          as: :json
+    assert_response :ok
+
+    post "/api/v1/notification-settings/webhook/test",
+         params: { operation: { reason: "Sem webhook habilitado." } },
+         headers: auth_header(token).merge("Idempotency-Key" => "webhook-disabled-1"),
+         as: :json
+    assert_response :unprocessable_entity
+    assert_equal "validation_failed", parsed_json.dig("error", "code")
+
+    patch "/api/v1/notification-settings",
+          params: {
+            notification_setting: {
+              in_app_enabled: true,
+              email_enabled: true,
+              webhook_enabled: true,
+              webhook_url: "https://hooks.example.test/streamgate"
+            }
+          },
+          headers: auth_header(token),
+          as: :json
+    assert_response :ok
+
+    post "/api/v1/notification-settings/webhook/test",
+         params: { operation: { reason: "Tentativa sem chave." } },
+         headers: auth_header(token),
+         as: :json
+
+    assert_response :unprocessable_entity
+    assert_equal "idempotency_key_required", parsed_json.dig("error", "code")
   end
 
   test "notifications can be read archived restored and deleted only by owner" do

@@ -148,6 +148,26 @@ describe('Sprint 4 operational pages', () => {
     expect(screen.getByLabelText('Webhook URL')).toHaveValue('https://hooks.example.test/streamgate')
   })
 
+  it('executes inbox bulk actions and webhook test against the official adapter paths', async () => {
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>
+
+    renderApp('/notifications', 'admin')
+
+    expect(await screen.findByText('Centro de notificacoes')).toBeInTheDocument()
+
+    fireEvent.click((await screen.findAllByRole('checkbox'))[0])
+    fireEvent.click(screen.getByRole('button', { name: /Marcar visiveis como lidas/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Arquivar selecionadas/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Regras e canais/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Testar webhook/i }))
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([input, init]) => String(input).includes('/api/v1/notifications/mark-all-read') && String(init?.method).toUpperCase() === 'PATCH')).toBe(true)
+      expect(fetchMock.mock.calls.some(([input, init]) => String(input).includes('/api/v1/notifications/bulk-archive') && String(init?.method).toUpperCase() === 'PATCH')).toBe(true)
+      expect(fetchMock.mock.calls.some(([input, init]) => String(input).includes('/api/v1/notification-settings/webhook/test') && String(init?.method).toUpperCase() === 'POST')).toBe(true)
+    })
+  })
+
   it('protects operations wizard from operators and lets admins review a retry', async () => {
     const { unmount } = renderApp('/operations', 'operator')
 
@@ -163,6 +183,24 @@ describe('Sprint 4 operational pages', () => {
     fireEvent.click(screen.getByRole('button', { name: /Revisar regras/i }))
 
     expect(await screen.findByText('Backend aplica cooldown e limite diario')).toBeInTheDocument()
+  })
+
+  it('submits the admin retry wizard and renders the backend result state', async () => {
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>
+
+    renderApp('/operations', 'admin')
+
+    expect(await screen.findByText('Wizard admin-only')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Buscar ou colar alvo'), { target: { value: 'job_fixture_pending' } })
+    fireEvent.click(screen.getByRole('button', { name: /Revisar regras/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Informar motivo/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Confirmar operacao/i }))
+
+    expect(await screen.findByText(/Retry solicitado: retry_requested/i)).toBeInTheDocument()
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([input, init]) => String(input).includes('/api/v1/jobs/job_fixture_pending/retry') && String(init?.method).toUpperCase() === 'POST')).toBe(true)
+    })
   })
 
   it('renders artifact history on job detail and requests signed download url', async () => {
@@ -204,8 +242,9 @@ function seedSession(role: 'operator' | 'admin') {
 }
 
 function createOperationalFetchMock() {
-  return vi.fn().mockImplementation((input: RequestInfo | URL) => {
+  return vi.fn().mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input)
+    const method = String(init?.method ?? 'GET').toUpperCase()
 
     if (url.includes('/api/v1/auth/me')) {
       const role = url.includes('unused') ? 'operator' : readRoleFromStoredSession()
@@ -254,8 +293,20 @@ function createOperationalFetchMock() {
       return Promise.resolve(jsonResponse(200, notificationSettingsResponse()))
     }
 
+    if (url.includes('/api/v1/notifications/mark-all-read')) {
+      return Promise.resolve(jsonResponse(200, { data: { updated_count: 1 } }))
+    }
+
+    if (url.includes('/api/v1/notifications/bulk-archive')) {
+      return Promise.resolve(jsonResponse(200, { data: { archived_count: 1, ids: ['notification_fixture_failed'] } }))
+    }
+
     if (url.includes('/api/v1/notifications/')) {
-      return Promise.resolve(jsonResponse(200, notificationSingleResponse()))
+      if (method === 'DELETE') {
+        return Promise.resolve(jsonResponse(200, { data: { deleted: true, id: 'notification_fixture_failed' } }))
+      }
+
+      return Promise.resolve(jsonResponse(200, notificationSingleResponse(url)))
     }
 
     if (url.includes('/api/v1/notifications')) {
@@ -268,6 +319,42 @@ function createOperationalFetchMock() {
 
     if (url.includes('/api/v1/jobs/job_fixture_pending/artifacts')) {
       return Promise.resolve(jsonResponse(200, artifactsResponse()))
+    }
+
+    if (url.includes('/api/v1/jobs/job_fixture_pending/retry')) {
+      return Promise.resolve(jsonResponse(202, {
+        data: {
+          job_id: 'job_fixture_pending',
+          status: 'retry_requested',
+          attempt_id: 'attempt_fixture_retry',
+          outbox_id: 'outbox_fixture_retry',
+        },
+      }))
+    }
+
+    if (url.includes('/api/v1/quarantine/quarantine_fixture_warning/resolve')) {
+      return Promise.resolve(jsonResponse(200, {
+        data: {
+          id: 'quarantine_fixture_warning',
+          job_id: 'job_fixture_pending',
+          resolution_status: 'resolved',
+          resolution_reason: 'Acao operacional revisada e aprovada.',
+          resolved_by_id: 'user_fixture_admin',
+          resolved_at: '2026-04-20T11:00:00Z',
+        },
+      }))
+    }
+
+    if (url.includes('/api/v1/quarantine/dlq/event_fixture_1/replay-requests')) {
+      return Promise.resolve(jsonResponse(201, replayRequestResponse('requested')))
+    }
+
+    if (url.includes('/api/v1/dlq-replay-requests/') && url.endsWith('/approve')) {
+      return Promise.resolve(jsonResponse(200, replayRequestResponse('approved')))
+    }
+
+    if (url.includes('/api/v1/dlq-replay-requests/') && url.endsWith('/execute')) {
+      return Promise.resolve(jsonResponse(202, replayRequestResponse('executed')))
     }
 
     if (url.includes('/api/v1/jobs')) {
@@ -310,14 +397,20 @@ function notificationsResponse(url: string) {
   }
 }
 
-function notificationSingleResponse() {
+function notificationSingleResponse(url: string) {
+  const status = url.includes('/archive')
+    ? 'archived'
+    : url.includes('/unarchive')
+      ? 'read'
+      : 'read'
+
   return {
     data: {
       id: 'notification_fixture_failed',
       event_name: 'job.failed',
       title: 'Falha no job',
       body: 'O job job_fixture_pending falhou e requer investigacao.',
-      status: 'read',
+      status,
       read_at: '2026-04-20T11:00:00Z',
       expires_at: '2026-05-20T00:00:00Z',
       metadata: { job_id: 'job_fixture_pending' },
@@ -391,6 +484,21 @@ function artifactDownloadResponse() {
       artifact_id: 'artifact_fixture_quality',
       download_url: 'https://signed.example.test/quality-report.json',
       expires_at: '2026-04-20T10:05:00Z',
+    },
+  }
+}
+
+function replayRequestResponse(status: 'requested' | 'approved' | 'executed') {
+  return {
+    data: {
+      id: 'replay_fixture_1',
+      message_id: 'event_fixture_1',
+      status,
+      trace_id: 'trace_fixture_1',
+      request_id: 'req_fixture_1',
+      expires_at: '2026-05-20T10:00:00Z',
+      created_at: '2026-04-20T10:00:00Z',
+      updated_at: '2026-04-20T10:00:00Z',
     },
   }
 }
