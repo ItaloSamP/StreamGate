@@ -147,6 +147,51 @@ function Wait-HttpReady {
   }
 }
 
+function Wait-TcpReady {
+  param(
+    [Parameter(Mandatory)]
+    [string]$Name,
+    [Parameter(Mandatory)]
+    [string]$Hostname,
+    [Parameter(Mandatory)]
+    [int]$Port,
+    [int]$Attempts = 30,
+    [int]$DelaySeconds = 2
+  )
+
+  Write-Host ""
+  Write-Host "==> Wait $Name readiness" -ForegroundColor Cyan
+
+  for ($attempt = 1; $attempt -le $Attempts; $attempt++) {
+    $client = $null
+    try {
+      $client = [System.Net.Sockets.TcpClient]::new()
+      $asyncConnect = $client.BeginConnect($Hostname, $Port, $null, $null)
+      $connected = $asyncConnect.AsyncWaitHandle.WaitOne([TimeSpan]::FromSeconds(5))
+      if ($connected) {
+        $client.EndConnect($asyncConnect)
+        Write-Host "Status: PASS" -ForegroundColor Green
+        return
+      }
+    }
+    catch {
+    }
+    finally {
+      if ($null -ne $client) {
+        $client.Dispose()
+      }
+    }
+
+    if ($attempt -ge $Attempts) {
+      $script:failure = "$Name readiness"
+      Write-Host "Status: FAIL" -ForegroundColor Red
+      throw "Falha ao aguardar $Name em ${Hostname}:$Port"
+    }
+
+    Start-Sleep -Seconds $DelaySeconds
+  }
+}
+
 function Write-ProfileBanner {
   Write-Host ""
   Write-Host "Perfil de reports: $Profile" -ForegroundColor Cyan
@@ -195,7 +240,7 @@ try {
     try {
       Invoke-ReportStepWithRetry -Name 'Start app for frontend integration reports' -Command "powershell -ExecutionPolicy Bypass -File scripts/dev/dev-up.ps1 -Mode app -TimeoutSeconds $TimeoutSeconds"
       Invoke-ReportStep -Name 'Seed auth fixtures' -Command 'docker compose exec -T -e SEED_OPERATOR_PASSWORD -e SEED_ADMIN_PASSWORD api bundle exec rails db:seed'
-      Wait-HttpReady -Name 'API app' -Url 'http://localhost:3000/up'
+      Wait-TcpReady -Name 'API app' -Hostname '127.0.0.1' -Port 3000
       Wait-HttpReady -Name 'Web app' -Url 'http://localhost:5173/login'
       Invoke-ReportStep -Name 'Frontend integration reports' -Command 'cd apps\web && pnpm test:integration'
       Invoke-ReportStep -Name 'Frontend E2E reports' -Command 'set "E2E_STABLE_MODE=1" && cd apps\web && pnpm test:e2e'

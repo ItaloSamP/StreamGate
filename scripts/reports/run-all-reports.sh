@@ -44,6 +44,77 @@ run_step_with_retry() {
   return 1
 }
 
+wait_tcp_ready() {
+  local name="$1"
+  local hostname="$2"
+  local port="$3"
+  local attempts="${4:-30}"
+  local delay_seconds="${5:-2}"
+  local attempt
+
+  echo
+  echo "==> Wait $name readiness"
+
+  for attempt in $(seq 1 "$attempts"); do
+    if python - "$hostname" "$port" <<'PY'
+import socket
+import sys
+
+host = sys.argv[1]
+port = int(sys.argv[2])
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.settimeout(5)
+try:
+    sock.connect((host, port))
+except OSError:
+    sys.exit(1)
+finally:
+    sock.close()
+PY
+    then
+      echo "Status: PASS"
+      return 0
+    fi
+
+    if [[ "$attempt" -ge "$attempts" ]]; then
+      FAILURES+=("$name readiness")
+      echo "Status: FAIL"
+      echo "Falha ao aguardar $name em ${hostname}:$port" >&2
+      return 1
+    fi
+
+    sleep "$delay_seconds"
+  done
+}
+
+wait_http_ready() {
+  local name="$1"
+  local url="$2"
+  local attempts="${3:-30}"
+  local delay_seconds="${4:-2}"
+  local attempt
+
+  echo
+  echo "==> Wait $name readiness"
+
+  for attempt in $(seq 1 "$attempts"); do
+    if curl --silent --show-error --fail --max-time 15 "$url" >/dev/null; then
+      echo "Status: PASS"
+      return 0
+    fi
+
+    if [[ "$attempt" -ge "$attempts" ]]; then
+      FAILURES+=("$name readiness")
+      echo "Status: FAIL"
+      echo "Falha ao aguardar $name em $url" >&2
+      return 1
+    fi
+
+    sleep "$delay_seconds"
+  done
+}
+
 stop_stack() {
   bash scripts/dev/dev-down.sh || true
 }
@@ -107,6 +178,8 @@ fi
 if [[ "$PROFILE" == "full-closeout" ]]; then
   run_step_with_retry "Start app for frontend integration reports" bash scripts/dev/dev-up.sh app "$TIMEOUT_SECONDS"
   run_step "Seed auth fixtures" docker compose exec -T -e SEED_OPERATOR_PASSWORD -e SEED_ADMIN_PASSWORD api bundle exec rails db:seed
+  wait_tcp_ready "API app" "127.0.0.1" "3000"
+  wait_http_ready "Web app" "http://localhost:5173/login"
   run_step "Frontend integration reports" bash -lc "cd apps/web && pnpm test:integration"
   run_step "Frontend E2E reports" bash -lc "cd apps/web && E2E_STABLE_MODE=1 pnpm test:e2e"
   stop_stack
