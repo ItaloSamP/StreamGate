@@ -1,16 +1,15 @@
 .dash-frame {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgb(255 255 255 / 0.08);
-  border-radius: 20px;
-  background: var(--surface-1);
-  box-shadow: 0 24px 80px rgb(0 0 0 / 0.34);
+  width: 100%;
+  height: 100vh;
+  background: #0a0a0a;
 }
 
 .dash-root {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
-  min-height: 920px;
+  height: 100vh;
   background: #0a0a0a;
   color: #ffffff;
   font-family: 'Plus Jakarta Sans', ui-sans-serif, sans-serif;
@@ -23,10 +22,13 @@
 
 .dash-sidebar {
   min-width: 220px;
+  height: 100vh;
   background: #0f0f0f;
   border-right: 1px solid #242424;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  z-index: 20;
 }
 
 .dash-logo-area {
@@ -35,6 +37,12 @@
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.dash-sidebar-close,
+.dash-sidebar-toggle,
+.dash-sidebar-backdrop {
+  display: none;
 }
 
 .dash-logo-main {
@@ -172,6 +180,7 @@
 
 .dash-sidebar-footer {
   position: relative;
+  margin-top: auto;
   padding: 10px 8px 12px;
   border-top: 1px solid #242424;
 }
@@ -323,6 +332,8 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  height: 100vh;
+  background: #0a0a0a;
 }
 
 .dash-topbar {
@@ -334,6 +345,9 @@
   padding: 0 22px;
   gap: 6px;
   flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .dash-topbar-left {
@@ -578,6 +592,9 @@
   border-bottom: 1px solid rgba(224, 92, 92, 0.14);
   font-size: 9.5px;
   flex-wrap: wrap;
+  position: sticky;
+  top: 50px;
+  z-index: 9;
 }
 
 .dash-alert-icon {
@@ -608,6 +625,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  background: #0a0a0a;
 }
 
 .dash-kpi-strip {
@@ -743,6 +761,10 @@
 }
 
 .dash-tab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  text-align: left;
   font-size: 9.5px;
   padding: 8px 14px;
   color: #5a5a5a;
@@ -1158,11 +1180,14 @@
 }
 
 .dash-upload-zone {
+  display: block;
   border: 1px dashed #383838;
   border-radius: 6px;
   padding: 18px 12px;
   text-align: center;
   transition: all 0.18s;
+  color: inherit;
+  text-decoration: none;
 }
 
 .dash-upload-zone:hover {
@@ -1436,19 +1461,56 @@
 
 @media (max-width: 1080px) {
   .dash-root { grid-template-columns: minmax(0, 1fr); }
-  .dash-sidebar { border-right: none; border-bottom: 1px solid #242424; }
-  .dash-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-  .dash-sidebar-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: end; }
+  .dash-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    transform: translateX(-100%);
+    transition: transform 0.18s ease;
+    box-shadow: 0 20px 80px rgb(0 0 0 / 0.46);
+  }
+  .dash-sidebar.is-open {
+    transform: translateX(0);
+  }
+  .dash-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    border: 0;
+    background: rgb(0 0 0 / 0.48);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+    z-index: 18;
+  }
+  .dash-sidebar-backdrop.is-open {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .dash-sidebar-toggle,
+  .dash-sidebar-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 31px;
+    height: 31px;
+    border-radius: 7px;
+    border: 1px solid #2c2c2c;
+    background: #1a1a1a;
+    color: #d4d4d4;
+    flex-shrink: 0;
+  }
+  .dash-sidebar-close {
+    margin-left: auto;
+  }
   .dash-grid-2, .dash-grid-3b { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 780px) {
   .dash-kpi-strip, .dash-grid-4, .dash-module-grid { grid-template-columns: minmax(0, 1fr); }
-  .dash-nav { grid-template-columns: minmax(0, 1fr); }
-  .dash-sidebar-footer { grid-template-columns: minmax(0, 1fr); }
   .dash-topbar { padding: 12px 16px; gap: 8px; }
   .dash-topbar-divider, .dash-topbar-spacer { display: none; }
-  .dash-topbar-actions { width: 100%; }
+  .dash-topbar-actions { width: 100%; justify-content: flex-end; flex-wrap: wrap; }
+  .dash-alert-strip { top: 74px; padding: 9px 16px; }
   .dash-alert-link { margin-left: 0; }
   .dash-content { padding: 14px 14px 20px; }
   .dash-event { flex-direction: column; gap: 5px; }

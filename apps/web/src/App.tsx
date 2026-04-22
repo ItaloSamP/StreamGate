@@ -7,6 +7,7 @@ import { AnalyticsPage } from '@/pages/AnalyticsPage'
 import { AuditPage } from '@/pages/AuditPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { EventLogPage } from '@/pages/EventLogPage'
+import { ClickHousePage, EtlExplorerPage } from '@/pages/ExplorationPages'
 import { JobsPage } from '@/pages/JobsPage'
 import { LandingPage } from '@/pages/LandingPage'
 import { AuditDetailPage, DlqDetailPage, JobDetailPage, QuarantineDetailPage } from '@/pages/OperationalDetailPages'
@@ -34,7 +35,9 @@ function App() {
         <Route path="/jobs" element={protectedPage(<JobsPage />)} />
         <Route path="/jobs/:id" element={protectedPage(<JobDetailPage />)} />
         <Route path="/analytics" element={protectedPage(<AnalyticsPage />)} />
+        <Route path="/clickhouse" element={protectedPage(<ClickHousePage />)} />
         <Route path="/quarantine" element={protectedPage(<QuarantinePage />)} />
+        <Route path="/etl-explorer" element={protectedPage(<EtlExplorerPage />)} />
         <Route path="/quarantine/dlq/:messageId" element={protectedPage(<DlqDetailPage />)} />
         <Route path="/quarantine/:id" element={protectedPage(<QuarantineDetailPage />)} />
         <Route path="/events" element={protectedPage(<EventLogPage />)} />

@@ -11,15 +11,15 @@ export function WorkspacePageFrame({
   eyebrow,
   title,
   children,
-  primaryActionLabel = '+ Upload',
-  secondaryActionLabel = 'Exportar',
+  primaryActionLabel: _primaryActionLabel = '+ Upload',
+  secondaryActionLabel,
 }: {
   pathname: WorkspaceRoute
   eyebrow: string
   title: string
   children: ReactNode
   primaryActionLabel?: string
-  secondaryActionLabel?: string
+  secondaryActionLabel?: string | null
 }) {
   const navigate = useNavigate()
   const { session, logout } = useAuth()
@@ -31,28 +31,21 @@ export function WorkspacePageFrame({
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-background text-foreground">
-      <div className="relative isolate">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(circle_at_top_left,rgba(77,157,224,0.18),transparent_32%),radial-gradient(circle_at_65%_10%,rgba(60,207,207,0.12),transparent_28%)]" />
-        <div className="pointer-events-none absolute inset-0 opacity-40 panel-grid" />
-
-        <section className="mx-auto max-w-[1440px] px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-          <DashboardSurface
-            profileName={session?.user.full_name ?? 'Operator'}
-            email={session?.user.email ?? 'operator@streamgate.local'}
-            role={session?.user.role ?? 'operator'}
-            onLogout={handleLogout}
-            pathname={pathname}
-            eyebrow={eyebrow}
-            title={title}
-            primaryActionLabel={primaryActionLabel}
-            secondaryActionLabel={secondaryActionLabel}
-            enableOperationalBadges={pathname === '/dashboard'}
-          >
-            {children}
-          </DashboardSurface>
-        </section>
-      </div>
+    <main className="h-screen overflow-hidden bg-[#0a0a0a] text-foreground">
+      <DashboardSurface
+        profileName={session?.user.full_name ?? 'Operator'}
+        email={session?.user.email ?? 'operator@streamgate.local'}
+        role={session?.user.role ?? 'operator'}
+        onLogout={handleLogout}
+        pathname={pathname}
+        eyebrow={eyebrow}
+        title={title}
+        primaryActionLabel="+ Upload"
+        secondaryActionLabel={secondaryActionLabel}
+        enableOperationalBadges={pathname === '/dashboard'}
+      >
+        {children}
+      </DashboardSurface>
     </main>
   )
 }

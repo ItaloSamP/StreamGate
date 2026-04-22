@@ -3,7 +3,9 @@ export type WorkspaceRoute =
   | '/upload'
   | '/jobs'
   | '/analytics'
+  | '/clickhouse'
   | '/quarantine'
+  | '/etl-explorer'
   | '/events'
   | '/audit'
   | '/operations'
@@ -57,13 +59,15 @@ export const workspaceNavGroups: { label: string; items: WorkspaceNavItem[] }[] 
     label: 'Analise',
     items: [
       { label: 'Analytics', href: '/analytics', icon: 'analytics' },
+      { label: 'ClickHouse', href: '/clickhouse', icon: 'clickhouse' },
       { label: 'Quarentena', href: '/quarantine', icon: 'quarantine' },
-      { label: 'Event Log', href: '/events', icon: 'events' },
+      { label: 'ETL Explorer', href: '/etl-explorer', icon: 'etl' },
     ],
   },
   {
     label: 'Sistema',
     items: [
+      { label: 'Event Log', href: '/events', icon: 'events' },
       { label: 'Auditoria', href: '/audit', icon: 'audit', adminOnly: true },
       { label: 'Operacoes Seguras', href: '/operations', icon: 'operations', adminOnly: true },
       { label: 'Notificacoes', href: '/notifications', icon: 'notifications' },
@@ -102,11 +106,25 @@ export const workspaceModules: WorkspaceModuleDefinition[] = [
     family: 'analytical',
   },
   {
+    title: 'ClickHouse',
+    eyebrow: 'Exploracao analitica',
+    description: 'Superficie scaffold para consultas operacionais, blocos de leitura e atalhos do warehouse.',
+    route: '/clickhouse',
+    family: 'analytical',
+  },
+  {
     title: 'Quarentena',
     eyebrow: 'Qualidade e triagem',
     description: 'Superficie de triagem para registros bloqueados, motivos de validacao e proximas acoes operacionais.',
     route: '/quarantine',
     family: 'operational',
+  },
+  {
+    title: 'ETL Explorer',
+    eyebrow: 'Fluxos e lineage',
+    description: 'Superficie scaffold para explorar batches, lineage e estatisticas de transformacao do pipeline.',
+    route: '/etl-explorer',
+    family: 'analytical',
   },
   {
     title: 'Event Log',
