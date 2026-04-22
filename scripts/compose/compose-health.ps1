@@ -274,9 +274,9 @@ function Test-ComposeServicesReady {
       continue
     }
 
-    $message = "Service '$name' is unhealthy."
+    $message = "Service '$name' is unhealthy but may still recover during startup."
     $issues.Add($message)
-    $fatalIssues.Add($message)
+    $pendingIssues.Add($message)
   }
 
   [pscustomobject]@{

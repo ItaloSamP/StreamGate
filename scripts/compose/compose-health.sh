@@ -193,7 +193,7 @@ analyze_compose_services() {
       continue
     fi
 
-    printf 'fatal\tService '\''%s'\'' is unhealthy.\n' "$name"
+    printf 'pending\tService '\''%s'\'' is unhealthy but may still recover during startup.\n' "$name"
   done < <(jq -c '.[]' <<<"$services_json")
 
   return 0

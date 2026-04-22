@@ -51,6 +51,8 @@ ensure_sprint5_smoke_env() {
   local env_path="$ROOT_DIR/.env"
   local key value
 
+  export SMOKE_API_BASE_URL="${SMOKE_API_BASE_URL:-http://127.0.0.1:3000}"
+
   for key in \
     SMOKE_ADMIN_EMAIL \
     SMOKE_SECOND_ADMIN_EMAIL \
@@ -191,7 +193,8 @@ if [[ "$FAILED" -eq 0 ]]; then run_step "Signed upload smoke" python scripts/smo
 if [[ "$FAILED" -eq 0 ]]; then run_step "Start full stack" bash scripts/dev/dev-up.sh full "$TIMEOUT_SECONDS" || FAILED=1; fi
 if [[ "$FAILED" -eq 0 ]]; then run_step "Worker operational smoke" python scripts/smokes/worker-operational-smoke.py || FAILED=1; fi
 if [[ "$FAILED" -eq 0 ]]; then run_step "Seed second admin fixture" docker compose exec -T -e SMOKE_SECOND_ADMIN_EMAIL -e SMOKE_SECOND_ADMIN_PASSWORD api bundle exec rails runner "email = ENV.fetch('SMOKE_SECOND_ADMIN_EMAIL'); password = ENV.fetch('SMOKE_SECOND_ADMIN_PASSWORD'); user = User.find_or_initialize_by(email: email); user.full_name = 'Operational Approver'; user.organization_id ||= ENV.fetch('DEFAULT_ORGANIZATION_ID', 'org_default'); user.role = :admin; user.status = :active; user.password = password; user.save!" || FAILED=1; fi
-if [[ "$FAILED" -eq 0 ]]; then run_step "Safe operations smoke" python scripts/smokes/safe-operations-smoke.py || FAILED=1; fi
+if [[ "$FAILED" -eq 0 ]]; then run_step "Safe operations + artifacts + notifications smoke" python scripts/smokes/safe-operations-smoke.py || FAILED=1; fi
+if [[ "$FAILED" -eq 0 ]]; then run_step "Persisted notifications + deliveries audit" bash scripts/smokes/verify-safe-operations-records.sh || FAILED=1; fi
 
 if [[ "$FAILED" -ne 0 ]]; then
   docker compose ps || true

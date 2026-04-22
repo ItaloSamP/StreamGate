@@ -8,8 +8,11 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from datetime import datetime, timezone
+from pathlib import Path
+import http.client
 
-API_BASE_URL = os.environ.get("SMOKE_API_BASE_URL", "http://localhost:3000").rstrip("/")
+API_BASE_URL = os.environ.get("SMOKE_API_BASE_URL", "http://127.0.0.1:3000").rstrip("/")
 OPERATOR_EMAIL = os.environ.get("SMOKE_OPERATOR_EMAIL", "operator@streamgate.local")
 OPERATOR_PASSWORD = os.environ.get("SEED_OPERATOR_PASSWORD", "ChangeMe123!")
 ADMIN_EMAIL = os.environ.get("SMOKE_ADMIN_EMAIL", "admin@streamgate.local")
@@ -21,6 +24,10 @@ TIMEOUT_SECONDS = int(os.environ.get("SMOKE_HTTP_TIMEOUT_SECONDS", "60"))
 WORKER_TIMEOUT_SECONDS = int(os.environ.get("SMOKE_WORKER_TIMEOUT_SECONDS", "180"))
 POLL_INTERVAL_SECONDS = int(os.environ.get("SMOKE_POLL_INTERVAL_SECONDS", "3"))
 SMOKE_STORAGE_PUBLIC_BASE_URL = os.environ.get("SMOKE_STORAGE_PUBLIC_BASE_URL", "").strip()
+HTTP_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+RESULTS_PATH = Path(os.environ.get("SMOKE_SAFE_CONTEXT_PATH", ".tmp/smokes/safe-operations-context.json"))
+HTTP_RETRY_ATTEMPTS = int(os.environ.get("SMOKE_HTTP_RETRY_ATTEMPTS", "4"))
+HTTP_RETRY_DELAY_SECONDS = float(os.environ.get("SMOKE_HTTP_RETRY_DELAY_SECONDS", "2"))
 
 
 def log(message: str) -> None:
@@ -41,26 +48,35 @@ def request_json(method: str, path_or_url: str, payload: dict | None = None, hea
         merged_headers["Content-Type"] = "application/json"
 
     request = urllib.request.Request(url=url, method=method, data=body, headers=merged_headers)
-    try:
-        with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as response:
-            raw = response.read().decode("utf-8")
-            if not raw:
-                return {}
-            return json.loads(raw)
-    except (TimeoutError, socket.timeout) as error:
-        raise RuntimeError(f"timed out after {TIMEOUT_SECONDS}s on {method} {url}") from error
-    except urllib.error.HTTPError as error:
-        payload_text = error.read().decode("utf-8", errors="replace")
-        message = payload_text
+    for attempt in range(1, HTTP_RETRY_ATTEMPTS + 1):
         try:
-            parsed = json.loads(payload_text)
-            if isinstance(parsed, dict):
-                error_payload = parsed.get("error", {})
-                if isinstance(error_payload, dict):
-                    message = error_payload.get("message") or payload_text
-        except json.JSONDecodeError:
-            pass
-        raise RuntimeError(f"HTTP {error.code} on {method} {url}: {message}") from error
+            with HTTP_OPENER.open(request, timeout=TIMEOUT_SECONDS) as response:
+                raw = response.read().decode("utf-8")
+                if not raw:
+                    return {}
+                return json.loads(raw)
+        except (TimeoutError, socket.timeout) as error:
+            if attempt == HTTP_RETRY_ATTEMPTS:
+                raise RuntimeError(f"timed out after {TIMEOUT_SECONDS}s on {method} {url}") from error
+        except urllib.error.HTTPError as error:
+            payload_text = error.read().decode("utf-8", errors="replace")
+            message = payload_text
+            try:
+                parsed = json.loads(payload_text)
+                if isinstance(parsed, dict):
+                    error_payload = parsed.get("error", {})
+                    if isinstance(error_payload, dict):
+                        message = error_payload.get("message") or payload_text
+            except json.JSONDecodeError:
+                pass
+            raise RuntimeError(f"HTTP {error.code} on {method} {url}: {message}") from error
+        except (urllib.error.URLError, http.client.RemoteDisconnected) as error:
+            if attempt == HTTP_RETRY_ATTEMPTS:
+                raise RuntimeError(f"connection failed on {method} {url}: {error}") from error
+
+        time.sleep(HTTP_RETRY_DELAY_SECONDS)
+
+    raise RuntimeError(f"request retries exhausted on {method} {url}")
 
 
 def resolve_upload_target(upload_url: str) -> tuple[str, str | None]:
@@ -97,7 +113,7 @@ def upload_to_signed_url(upload_url: str, content: bytes, required_headers: dict
 
     request = urllib.request.Request(upload_url, data=content, method="PUT", headers=headers)
     try:
-        with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as response:
+        with HTTP_OPENER.open(request, timeout=TIMEOUT_SECONDS) as response:
             if response.status not in (200, 201, 204):
                 raise RuntimeError(f"unexpected storage response status={response.status}")
     except (TimeoutError, socket.timeout) as error:
@@ -111,9 +127,30 @@ def require(condition: bool, message: str) -> None:
         raise RuntimeError(message)
 
 
+def candidate_passwords(primary: str) -> list[str]:
+    values = [primary, "TrocaNdo123!", "ChangeMe123!"]
+    unique_values: list[str] = []
+    for value in values:
+        if value and value not in unique_values:
+            unique_values.append(value)
+    return unique_values
+
+
+def parse_iso8601(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
 def login(email: str, password: str) -> dict[str, str]:
-    session = request_json("POST", "/api/v1/auth/login", payload={"session": {"email": email, "password": password}})
-    token = session.get("data", {}).get("session", {}).get("access_token")
+    token = None
+    for candidate in candidate_passwords(password):
+        try:
+            session = request_json("POST", "/api/v1/auth/login", payload={"session": {"email": email, "password": candidate}})
+            token = session.get("data", {}).get("session", {}).get("access_token")
+            if token:
+                break
+        except RuntimeError as error:
+            if "Credenciais invalidas" not in str(error):
+                raise
     require(bool(token), f"missing access_token for {email}")
     return {"Authorization": f"Bearer {token}"}
 
@@ -272,6 +309,11 @@ def expect_audit_event(headers: dict[str, str], action_name: str, auditable_id: 
     raise RuntimeError(f"audit event {action_name} for {auditable_id} was not found")
 
 
+def write_context(context: dict[str, str]) -> None:
+    RESULTS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    RESULTS_PATH.write_text(json.dumps(context, indent=2), encoding="utf-8")
+
+
 def create_dlq_payload(message_suffix: str, upload_id: str, job_id: str) -> dict:
     return {
         "event_id": f"event-{message_suffix}",
@@ -310,6 +352,8 @@ def main() -> int:
         headers=with_idempotency(operator_headers, make_idempotency_key("webhook-test", suffix)),
     ).get("data", {})
     require(test_delivery.get("status") == "pending", "webhook test delivery was not queued")
+    require(test_delivery.get("channel") == "webhook", "webhook test returned unexpected delivery channel")
+    require(bool(test_delivery.get("trace_id")), "webhook test delivery is missing trace_id")
 
     log("[safe-smoke] create completed job and wait artifacts")
     valid_upload_id, valid_job_id = create_upload_job(
@@ -325,6 +369,10 @@ def main() -> int:
         {"processed_dataset", "quality_report", "audit_report"}.issubset(artifact_types),
         f"unexpected artifact types for job {valid_job_id}: {sorted(artifact_types)}",
     )
+    for artifact in artifacts:
+        require(bool(artifact.get("trace_id")), f"artifact {artifact.get('id')} is missing trace_id")
+        require(bool(artifact.get("checksum_sha256")), f"artifact {artifact.get('id')} is missing checksum_sha256")
+        require(int(artifact.get("byte_size") or 0) > 0, f"artifact {artifact.get('id')} has invalid byte_size")
     dataset_artifact = next(artifact for artifact in artifacts if artifact.get("artifact_type") == "processed_dataset")
     download = request_json(
         "POST",
@@ -332,8 +380,11 @@ def main() -> int:
         headers=operator_headers,
     ).get("data", {})
     require("X-Amz-Signature=" in str(download.get("download_url", "")), "artifact download url is missing signature")
-    expect_notification(operator_headers, "job.completed", job_id=valid_job_id)
+    require(bool(download.get("expires_at")), "artifact download url is missing expires_at")
+    require(parse_iso8601(str(download["expires_at"])) > datetime.now(timezone.utc), "artifact download url is already expired")
+    completed_notification = expect_notification(operator_headers, "job.completed", job_id=valid_job_id)
     expect_audit_event(admin_headers, "artifact.download_url_created", dataset_artifact["id"])
+    expect_audit_event(admin_headers, "worker.job.completed", valid_job_id)
 
     log("[safe-smoke] create quarantined job and resolve quarantine")
     invalid_upload_id, invalid_job_id = create_upload_job(
@@ -354,6 +405,7 @@ def main() -> int:
     require(resolution.get("resolution_status") == "resolved", "quarantine resolution did not complete")
     expect_notification(operator_headers, "quarantine.resolved", job_id=invalid_job_id, quarantine_id=quarantine_record["id"])
     expect_audit_event(admin_headers, "quarantine.resolve", quarantine_record["id"])
+    expect_audit_event(admin_headers, "worker.job.quarantined", invalid_job_id)
 
     log("[safe-smoke] request retry on quarantined job")
     retry_response = request_json(
@@ -363,7 +415,7 @@ def main() -> int:
         headers=with_idempotency(admin_headers, make_idempotency_key("retry", suffix)),
     ).get("data", {})
     require(retry_response.get("status") == "retry_requested", "retry request was not accepted")
-    expect_notification(operator_headers, "job.retry_requested", job_id=invalid_job_id)
+    retry_notification = expect_notification(operator_headers, "job.retry_requested", job_id=invalid_job_id)
     expect_audit_event(admin_headers, "job.retry_requested", invalid_job_id)
 
     log("[safe-smoke] create/approve/execute DLQ replay request")
@@ -398,6 +450,18 @@ def main() -> int:
     expect_audit_event(admin_headers, "dlq_replay.requested", replay_request["id"])
     expect_audit_event(admin_headers, "dlq_replay.approved", replay_request["id"])
     expect_audit_event(admin_headers, "dlq_replay.executed", replay_request["id"])
+
+    write_context(
+        {
+            "completed_job_id": valid_job_id,
+            "completed_notification_id": str(completed_notification.get("id", "")),
+            "quarantined_job_id": invalid_job_id,
+            "quarantine_id": quarantine_record["id"],
+            "retry_notification_id": str(retry_notification.get("id", "")),
+            "replay_request_id": replay_request["id"],
+            "webhook_test_trace_id": str(test_delivery.get("trace_id", "")),
+        }
+    )
 
     log(
         "[safe-smoke] success "

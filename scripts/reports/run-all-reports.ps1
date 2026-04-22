@@ -114,6 +114,39 @@ function Assert-DevopsReadiness {
   Assert-Sprint5OperationalEnv -Path (Join-Path $root '.env')
 }
 
+function Wait-HttpReady {
+  param(
+    [Parameter(Mandatory)]
+    [string]$Name,
+    [Parameter(Mandatory)]
+    [string]$Url,
+    [int]$Attempts = 30,
+    [int]$DelaySeconds = 2
+  )
+
+  Write-Host ""
+  Write-Host "==> Wait $Name readiness" -ForegroundColor Cyan
+
+  for ($attempt = 1; $attempt -le $Attempts; $attempt++) {
+    try {
+      $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 15
+      if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 500) {
+        Write-Host "Status: PASS" -ForegroundColor Green
+        return
+      }
+    }
+    catch {
+      if ($attempt -ge $Attempts) {
+        $script:failure = "$Name readiness"
+        Write-Host "Status: FAIL" -ForegroundColor Red
+        throw "Falha ao aguardar $Name em $Url"
+      }
+    }
+
+    Start-Sleep -Seconds $DelaySeconds
+  }
+}
+
 function Write-ProfileBanner {
   Write-Host ""
   Write-Host "Perfil de reports: $Profile" -ForegroundColor Cyan
@@ -162,6 +195,8 @@ try {
     try {
       Invoke-ReportStepWithRetry -Name 'Start app for frontend integration reports' -Command "powershell -ExecutionPolicy Bypass -File scripts/dev/dev-up.ps1 -Mode app -TimeoutSeconds $TimeoutSeconds"
       Invoke-ReportStep -Name 'Seed auth fixtures' -Command 'docker compose exec -T -e SEED_OPERATOR_PASSWORD -e SEED_ADMIN_PASSWORD api bundle exec rails db:seed'
+      Wait-HttpReady -Name 'API app' -Url 'http://localhost:3000/up'
+      Wait-HttpReady -Name 'Web app' -Url 'http://localhost:5173/login'
       Invoke-ReportStep -Name 'Frontend integration reports' -Command 'cd apps\web && pnpm test:integration'
       Invoke-ReportStep -Name 'Frontend E2E reports' -Command 'set "E2E_STABLE_MODE=1" && cd apps\web && pnpm test:e2e'
     }
