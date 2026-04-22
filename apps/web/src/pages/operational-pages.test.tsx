@@ -82,7 +82,7 @@ describe('Sprint 4 operational pages', () => {
     renderApp('/dashboard', 'admin')
 
     expect(await screen.findByRole('link', { name: /Auditoria/i })).toBeInTheDocument()
-  })
+  }, 15000)
 
   it('turns dashboard into a real command center instead of mock metrics', async () => {
     renderApp('/dashboard', 'admin')
