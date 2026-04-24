@@ -99,7 +99,7 @@ jobs:
         run: bundle exec rails test test/requests/uploads_jobs_flow_test.rb
 
       - name: Run tests
-        run: bundle exec rails test -j 1
+        run: bundle exec rails test
 
       - name: Run RuboCop
         run: bundle exec rubocop
