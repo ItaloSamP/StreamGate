@@ -26,6 +26,7 @@ init_reports() {
 }
 
 ensure_seed_password_env() {
+  local env_path="$ROOT_DIR/.env"
   if [[ -n "${SEED_OPERATOR_PASSWORD:-}" ]]; then
     if [[ -z "${SEED_ADMIN_PASSWORD:-}" ]]; then
       export SEED_ADMIN_PASSWORD="$SEED_OPERATOR_PASSWORD"
@@ -33,13 +34,13 @@ ensure_seed_password_env() {
     return
   fi
   local value
-  value="$(get_dotenv_value SEED_OPERATOR_PASSWORD)"
+  value="$(get_dotenv_value "$env_path" "SEED_OPERATOR_PASSWORD")"
   if [[ -n "$value" ]]; then
     export SEED_OPERATOR_PASSWORD="$value"
   fi
 
   local admin_value
-  admin_value="$(get_dotenv_value SEED_ADMIN_PASSWORD)"
+  admin_value="$(get_dotenv_value "$env_path" "SEED_ADMIN_PASSWORD")"
   if [[ -n "$admin_value" ]]; then
     export SEED_ADMIN_PASSWORD="$admin_value"
   elif [[ -n "${SEED_OPERATOR_PASSWORD:-}" ]]; then
