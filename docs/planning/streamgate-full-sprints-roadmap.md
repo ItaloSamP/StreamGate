@@ -1480,7 +1480,7 @@ Fronteira explicita (fora da Sprint 5 funcional): `external_link`, `oauth_delega
 - `powershell -ExecutionPolicy Bypass -File scripts/reports/run-all-reports.ps1 -Profile full-closeout`: baseline DevOps da trilha passou antes da expansao final do smoke; o rerun agregado mais recente no host Windows ficou classificado como flake de ambiente/Compose health, sem evidenciar regressao funcional da Sprint 5.
 - `docs/reports/index.html`: regenerado com tempos, workflows, `lastCompletedStep` e playbook `fast / operational / full-closeout`.
 
-## Sprint 6 - Fechamento da v1, dashboard final e `external_link` secundario
+## Sprint 6 - Fechamento da v1, dashboard real, drilldowns analiticos e `external_link` terciario
 
 **Status atual:** `Planejada`
 
@@ -1490,22 +1490,28 @@ Fronteira explicita (fora da Sprint 5 funcional): `external_link`, `oauth_delega
 - `docs/guides/platform/final-delivery-guide.md` aprovado como guia oficial de fechamento do produto.
 - `docs/product/vision.md` segue como fonte de verdade para o que entra na v1 e para o que continua `discovery-only`.
 - Shell/dashboard v3 ja possuem base visual forte no frontend, mas ainda com mistura de dados reais, derivacoes e scaffold controlado.
+- `/clickhouse` e `/etl-explorer` ja existem no shell e na navegacao analitica para `operator` e `admin`, mas ainda seguem como placeholders completos.
+- `workspace-routes.test.tsx` ainda nao cobre as duas rotas analiticas como paginas protegidas reais nem a estabilidade do shell apos o refactor novo da sidebar responsiva.
 
 **Bloqueadores conhecidos**
 
-- Dashboard v3 ainda nao esta completamente materializada como command center real; parte dos blocos ainda precisa de wiring ou classificacao explicita.
+- Dashboard v3 ainda nao esta completamente materializada como command center real; `queue`, `workers`, `event log` e parte da `distribution` ainda dependem de fixtures ou derivacoes que podem soar enganosas.
 - `ClickHouse` e `ETL Explorer` seguem como superficies scaffold e ainda nao possuem papel funcional final claramente fechado na v1.
 - A jornada de ingestao da v1 ainda precisa fechar a leitura de produto final em `Upload`, especialmente em `guided` vs `advanced`, handoff para jobs e mensagens finais.
+- O shell novo com sidebar fixa/colapsavel ainda precisa de cobertura focada para evitar regressao silenciosa de rota, navegacao e responsividade.
 - `external_link` ainda nao possui fronteira funcional implementada e, se entrar cedo demais, pode dispersar a sprint.
 - Nao existe permissao para abrir `connector wave 1` (`google_drive`, `s3`, `http_url`) nesta sprint sem replanejamento explicito da visao.
 
 **O que nao pode ficar para depois**
 
 - Fechar shell e dashboard como superficie de produto, nao apenas scaffold visual forte.
+- Eliminar secoes fixture-driven enganosas da dashboard v3.
+- Transformar `/clickhouse` e `/etl-explorer` em drilldowns analiticos reais, mesmo que minimos.
+- Adicionar cobertura focada de rota, nav e shell para o refactor novo da dashboard.
 - Fechar o upload local como experiencia final da v1.
 - Materializar a superficie analitica minima com valor real e papel claro.
 - Registrar claramente o que continua `scaffold`, `discovery-only` ou `pos-v1` para evitar falsa leitura de entrega.
-- Manter `external_link` como frente secundaria; se o nucleo da sprint apertar, reclassificar formalmente sem contaminar a narrativa da v1.
+- Manter `external_link` como frente terciaria; se o nucleo da sprint apertar, reclassificar formalmente sem contaminar a narrativa da v1.
 
 **Contexto e intencao**
 
@@ -1513,7 +1519,13 @@ A Sprint 5 fechou o motor operacional do StreamGate: upload local, processamento
 
 Esta sprint existe para fechar a diferenca entre produto funcional e produto finalizado. O foco principal e tornar shell, dashboard, upload e superficie analitica partes coerentes de uma mesma experiencia, com menos lacunas visuais, menos ambiguidades de narrativa e menos areas que parecam prontas sem estarem realmente materializadas.
 
-`external_link` entra apenas como frente secundaria. Se houver espaco real apos o fechamento do nucleo da sprint, o primeiro passo funcional permitido sera `public_link`. `oauth_delegated` e connectors wave 1 permanecem fora do corte funcional da Sprint 6.
+Pela leitura atual do frontend, esta sprint passa a ter tres frentes centrais e explicitamente conectadas:
+
+- cobertura focada de rotas e shell para o refactor novo da dashboard;
+- eliminacao das secoes ainda fixture-driven da dashboard v3;
+- transformacao de `/clickhouse` e `/etl-explorer` em drilldowns analiticos reais.
+
+`external_link` entra apenas como frente terciaria. Se houver espaco real apos o fechamento do nucleo da sprint, o primeiro passo funcional permitido sera `public_link`. `oauth_delegated` e connectors wave 1 permanecem fora do corte funcional da Sprint 6.
 
 **Ja existe hoje**
 
@@ -1523,23 +1535,31 @@ Esta sprint existe para fechar a diferenca entre produto funcional e produto fin
 - [x] Operacao segura (`retry`, `resolve`, `replay request/approve/execute`) fechada e auditavel.
 - [x] Dashboard v3 e shell full-screen ja implantados como base visual forte.
 - [x] `ClickHouse` e `ETL Explorer` ja existem no shell como superficies scaffold.
+- [x] Navegacao analitica nova ja esta exposta por role para `operator` e `admin`.
+- [x] `DashboardPage.tsx` ja deriva parte dos blocos de `analytics`, `jobs`, `uploads`, `quarantine`, `audit` e `dlq`, mas ainda mistura dados reais com fixtures importadas.
 - [x] Guia oficial de fechamento do produto criado em `docs/guides/platform/final-delivery-guide.md`.
 
 ### Back planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `architecture-patterns`, `domain-modeling`, `api-designer`, `supabase-postgres-best-practices`.
 - [ ] Congelar o escopo HTTP e de dominio da Sprint 6 com prioridade absoluta em fechamento da v1.
+- [ ] Definir como os dados atuais de `analytics`, `jobs`, `quarantine`, `audit` e `uploads` serao reaproveitados para remover linhas fake da dashboard.
+- [ ] Congelar quais paineis da dashboard serao `live`, `truthfully derived` ou `placeholder controlado`.
 - [ ] Definir o papel funcional de `Analytics`, `ClickHouse`, `ETL Explorer` e `external_link`.
+- [ ] Definir os drilldowns analiticos finais: `ClickHouse` como visao de warehouse, throughput e agregacao; `ETL Explorer` como batches, lineage, etapas e relacoes entre job, quarantine e auditoria.
 - [ ] Classificar explicitamente cada superficie nova da sprint em `funcional agora`, `scaffold transitorio` ou `descoberta futura`.
-- [ ] Definir quais leituras adicionais o backend precisa expor para eliminar blocos cenograficos da dashboard.
-- [ ] Definir a fronteira funcional minima de `external_link` como `public_link` e somente como segunda prioridade.
+- [ ] Definir quais leituras adicionais o backend precisa expor para eliminar blocos cenograficos da dashboard e sustentar os drilldowns reais.
+- [ ] Definir a fronteira funcional minima de `external_link` como `public_link` e somente como terceira prioridade.
 
 ### Back execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
 - [ ] Implementar apenas o backend necessario para materializar os blocos finais da dashboard e a superficie analitica minima.
+- [ ] Priorizar somente os endpoints e leituras adicionais necessarios para suportar dashboard final sem fixtures enganosas e drilldowns analiticos reais.
+- [ ] Reutilizar a API existente sempre que possivel; abrir endpoint novo somente quando for realmente necessario para evitar bricolagem fragil no frontend.
 - [ ] Sustentar a jornada final de upload local com estados e leituras coerentes de produto.
 - [ ] Evitar abrir endpoints ou contratos de connector wave 1 nesta sprint.
+- [ ] Se houver endpoint novo para drilldown, sincronizar OpenAPI e `packages/contracts` no mesmo ciclo.
 - [ ] Se `external_link` entrar, limitar a entrega funcional inicial a `public_link`, mantendo `oauth_delegated` fora do corte.
 - [ ] Manter OpenAPI, `packages/contracts` e documentacao sincronizados no mesmo ciclo das mudancas.
 
@@ -1547,6 +1567,8 @@ Esta sprint existe para fechar a diferenca entre produto funcional e produto fin
 
 - Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `integration-testing`, `monitoring-observability`.
 - [ ] Garantir que o fluxo local da v1 continue sendo a referencia completa: upload -> processamento -> quarantine/artifacts -> notificacoes -> auditoria.
+- [ ] Garantir que os dados ja emitidos e persistidos pela Sprint 5 sejam suficientes para sustentar os drilldowns e a dashboard final.
+- [ ] Tratar qualquer vinculo adicional necessario para lineage ou visao operacional derivada como ajuste pequeno de rastreabilidade e observabilidade, nao como expansao funcional do worker.
 - [ ] Fechar lacunas de worker que impeçam a dashboard final de refletir o estado real do pipeline.
 - [ ] Se `external_link` entrar, suportar apenas o caminho minimo necessario sem quebrar idempotencia, DLQ, artefatos e auditoria.
 - [ ] Nao ampliar o worker para multiplos pipelines alem do necessario para o corte da sprint.
@@ -1557,33 +1579,45 @@ Esta sprint existe para fechar a diferenca entre produto funcional e produto fin
 - [ ] Fechar shell e dashboard com base no prototipo final, sem deixar blocos semanticamente ambíguos.
 - [ ] Revisar a dashboard bloco a bloco e classificar cada area em `real`, `derivada` ou `placeholder controlado`.
 - [ ] Definir o papel final de `dashboard`, `analytics`, `clickhouse`, `etl explorer` e `upload` dentro da v1.
+- [ ] Revisar `/clickhouse` e `/etl-explorer` como rotas reais do workspace, e nao mais como placeholders tolerados.
+- [ ] Revisar bloco a bloco da dashboard v3 para eliminar qualquer card cenografico ainda sustentado por fixture.
+- [ ] Revisar shell responsivo, sidebar fixa/colapsavel e estados de navegacao apos o refactor novo.
+- [ ] Registrar explicitamente que a navegacao analitica ja esta exposta para `operator` e `admin`, portanto essas paginas precisam entregar valor funcional real nesta sprint.
 - [ ] Fechar a UX final da ingestao local, incluindo `guided` vs `advanced`, mensagens, erro, progresso e handoff para jobs.
-- [ ] Tratar `external_link` como frente secundaria e opcional ao fechamento do nucleo.
+- [ ] Tratar `external_link` como frente terciaria e puramente oportunistica em relacao ao fechamento do nucleo.
 
 ### Front execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`, `vercel-react-best-practices`, `vitest`, `playwright`, `test-driven-development`.
 - [ ] Finalizar o shell autenticado como superficie final de produto, nao apenas scaffold bonito.
+- [ ] Adicionar cobertura focada de rota e shell para a renderizacao protegida de `/clickhouse` e `/etl-explorer`.
+- [ ] Cobrir presenca correta dos itens analiticos na sidebar por role suportada e estabilidade do shell apos as mudancas responsivas/sidebar fixa-colapsavel.
 - [ ] Finalizar a dashboard v3 como command center real, eliminando cards que parecam prontos sem papel funcional decidido.
+- [ ] Substituir `scaffoldQueue`, `scaffoldWorkers`, `scaffoldEventRows` e `scaffoldFormatRows` por dados live ou honestamente derivados do runtime atual.
+- [ ] Fazer a dashboard falhar com elegancia quando faltar dado, usando empty state ou insight insuficiente sem inventar linhas prontas.
 - [ ] Materializar a superficie analitica minima com valor real para a v1.
-- [ ] Integrar `ClickHouse` e `ETL Explorer` de forma coerente; se nao houver logica suficiente para ambos, deixar apenas um como superficie viva e o outro explicitamente em preparacao.
+- [ ] Implementar `/clickhouse` e `/etl-explorer` como drilldowns reais, reutilizando `streamgateApi` e derivando visoes uteis de analytics, jobs, quarantine, audit e uploads.
 - [ ] Fechar a experiencia final de upload local na UI.
-- [ ] Implementar `external_link` apenas se o nucleo da sprint estiver estavel.
+- [ ] Implementar `external_link` apenas se dashboard real, shell estavel, drilldowns analiticos e upload final ja estiverem fechados.
 
 ### DevOps
 
 - Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
 - [ ] Manter a politica `WSL/Compose-first` para gates pesados.
 - [ ] Validar que o fechamento da v1 continua coberto por fast gates, smoke operacional e `full-closeout`.
-- [ ] Ajustar smokes e reports apenas se o recorte da Sprint 6 realmente tocar novos fluxos.
+- [ ] Garantir que os gates atuais cubram as novas rotas analiticas, o shell responsivo atualizado e a dashboard sem fixtures falsas.
+- [ ] Ajustar smokes e reports apenas se o recorte da Sprint 6 realmente tocar novos fluxos ou exigir leitura adicional para os drilldowns.
+- [ ] Se algum endpoint novo entrar para suportar drilldown, refletir isso so no minimo necessario em smoke/report.
 - [ ] Se `external_link` entrar, adicionar smoke dedicado para esse fluxo sem abrir uma frente paralela de infraestrutura.
 - [ ] Manter DevOps a servico do fechamento da v1, sem abrir um novo pacote grande de automacao.
 
 ### Test planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Planejar testes por risco para shell final, dashboard final, upload final e superficie analitica minima.
+- [ ] Planejar testes por risco para shell final, dashboard final, upload final, superficie analitica minima e drilldowns analiticos.
+- [ ] Elevar route coverage de `/clickhouse` e `/etl-explorer`, nav coverage por role e shell behavior apos sidebar responsiva a prioridades explicitas da sprint.
 - [ ] Exigir distincao explicita entre bloco visual scaffoldado e bloco com dados reais.
+- [ ] Tratar blocos derivados como `derived truth`, com criterios de teste focados em honestidade dos dados, e nao em snapshot estetico.
 - [ ] Planejar testes dedicados para `external_link` apenas se a implementacao realmente entrar no corte da sprint.
 - [ ] Priorizar cobertura de risco funcional da v1, e nao aumento artificial de coverage global.
 
@@ -1591,6 +1625,10 @@ Esta sprint existe para fechar a diferenca entre produto funcional e produto fin
 
 - Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
 - [ ] Reexecutar os gates oficiais do recorte tocado na Sprint 6.
+- [ ] Adicionar cobertura focada em `workspace-routes.test.tsx` ou equivalente para `/clickhouse` e `/etl-explorer` como rotas protegidas reais.
+- [ ] Cobrir navegacao e role gating da sidebar para os itens analiticos, mais a estabilidade do shell apos as mudancas responsivas.
+- [ ] Cobrir a dashboard sem fixtures enganosas, validando queue, workers, event log e distribution como dados reais ou honestamente derivados.
+- [ ] Cobrir a renderizacao util dos drilldowns analiticos com dados atuais de API e o menor conjunto de interacoes que prove que deixaram de ser placeholders.
 - [ ] Adicionar E2E feliz da jornada principal da v1: login, dashboard, upload, acompanhamento de job, artefatos/notificacao/drilldowns principais.
 - [ ] Executar `run-smokes` como gate obrigatorio do fechamento da sprint.
 - [ ] Se `external_link` entrar, exigir teste ponta a ponta e smoke dedicados para esse novo caminho.
@@ -1600,6 +1638,7 @@ Esta sprint existe para fechar a diferenca entre produto funcional e produto fin
 
 - Skills obrigatorias para todas as tasks desta trilha: `review-codebase`, `openapi`, `docker`, `security-best-practices`, `security-threat-model`.
 - [ ] Rever a superficie final da v1 sob a otica de arquivos, links externos, signed URLs, notificacoes, auditoria e masking.
+- [ ] Rever o que muda com drilldowns analiticos em exposicao de metadata, masking de eventos/quarantine/auditoria e risco de mostrar dados warehouse-like fora do papel do usuario.
 - [ ] Se `external_link` entrar, atualizar o threat model antes da implementacao funcional.
 - [ ] Manter connectors wave 1 fora da entrega funcional ate haver sprint propria.
 - [ ] Garantir que docs e UI nao sugiram como entregue nenhuma frente ainda `discovery-only`.
@@ -1617,15 +1656,22 @@ Esta sprint existe para fechar a diferenca entre produto funcional e produto fin
 - [ ] Atualizar `docs/guides/platform/final-delivery-guide.md` com o que deixar de ser gap e passar a ser entregue.
 - [ ] Atualizar `docs/guides/frontend/frontend-workspace-map.md` com o workspace final da v1.
 - [ ] Atualizar `docs/guides/backend/api-docs.md` e OpenAPI quando os blocos finais exigirem endpoints ou contratos novos.
+- [ ] Registrar explicitamente na documentacao que a Sprint 6 fecha dashboard real sem fixtures enganosas e transforma `/clickhouse` e `/etl-explorer` em metas funcionais da sprint.
 - [ ] Atualizar `docs/guides/security/streamgate-threat-model.md` se `external_link` entrar.
 - [ ] Preparar o closeout da Sprint 6 como closeout de fechamento da v1, caso o checklist de saida seja atingido.
 
 ### Checklist de saida
 
 - [ ] Shell autenticado finalizado e coerente com o prototipo aprovado.
+- [ ] `/clickhouse` e `/etl-explorer` renderizam como rotas protegidas reais.
+- [ ] Sidebar expoe corretamente essas rotas por role suportada.
+- [ ] Shell novo permanece estavel apos o refactor responsivo/sidebar.
 - [ ] Dashboard v3 fechada como command center real.
+- [ ] Dashboard v3 nao depende mais de filas, workers, eventos ou distribution baseados em fixtures enganosas.
+- [ ] Dashboard usa dados live ou honestamente derivados do estado operacional da Sprint 5.
 - [ ] Upload local fechado como experiencia final da v1.
 - [ ] Superficie analitica minima com valor real implementado.
+- [ ] Drilldowns analiticos entregam valor real e deixam de ser scaffold.
 - [ ] `ClickHouse` e `ETL Explorer` com papel claro no produto.
 - [ ] Docs centrais sincronizadas com a leitura final da v1.
 - [ ] Gates oficiais verdes para o recorte tocado.
@@ -1634,29 +1680,29 @@ Esta sprint existe para fechar a diferenca entre produto funcional e produto fin
 
 ### Reavaliacao de transicao por trilha
 
-- [ ] `Back planning`: confirmar se a fronteira final da v1 ficou congelada sem drift com o backlog estrategico.
-- [ ] `Back execution`: registrar o que deixou de ser scaffold e virou produto funcional real.
+- [ ] `Back planning`: confirmar se a fronteira final da v1 congelou os dados minimos necessarios para dashboard final e drilldowns, sem drift com o backlog estrategico.
+- [ ] `Back execution`: registrar o que deixou de ser scaffold e virou produto funcional real para suportar dashboard final e superficies analiticas.
 - [ ] `Worker execution`: validar se o pipeline principal da v1 ficou suficiente para sustentar a entrega final.
-- [ ] `Front planning`: validar se a leitura de produto final ficou coerente entre shell, dashboard, analytics e upload.
+- [ ] `Front planning`: validar se analytics, clickhouse e etl explorer deixaram de ser tratados como futuras areas e passaram a ser parte do fechamento da v1.
 - [ ] `Front execution`: confirmar se ainda existe algum bloco visual que pareca feature pronta sem estar materializado.
 - [ ] `DevOps`: confirmar se os gates finais sustentam a narrativa de release da v1.
-- [ ] `Documentation`: validar se vision, roadmap, guide de fechamento e workspace map contam a mesma historia.
-- [ ] `Test planning`: confirmar se a matriz de testes cobriu o risco real da reta final da v1.
+- [ ] `Documentation`: validar se vision, roadmap, guide de fechamento e workspace map contam a mesma historia sobre dashboard real e drilldowns analiticos.
+- [ ] `Test planning`: confirmar se a matriz de testes cobriu rota, nav, shell e derived truth da reta final da v1.
 - [ ] `Test execution`: registrar resultados, residual e diferenca entre ambiente vs implementacao.
 - [ ] `Security`: confirmar se a superficie final da v1 esta coerente com links, artefatos, notificacoes e masking.
 - [ ] `Skills da sprint`: registrar se a stack de skills obrigatoria foi suficiente para fechar o produto sem lacunas.
 
 ### Delta esperado por trilha (Sprint 6 - planejamento)
 
-- Back planning: congelar a fronteira final da v1 e reduzir ambiguidade entre analitico real, scaffold e discovery-only.
-- Back execution: materializar somente o backend necessario para fechar dashboard, upload e superficie analitica minima.
+- Back planning: congelar a fronteira final da v1 com os dados minimos necessarios para dashboard final e drilldowns analiticos reais.
+- Back execution: materializar somente o backend necessario para fechar dashboard, upload e superficies analiticas reais, evitando endpoint sobrando.
 - Worker execution: manter o pipeline principal da v1 como referencia absoluta, com extensao minima se `external_link` entrar.
-- Front planning: transformar a base visual forte em produto semanticamente fechado.
-- Front execution: fechar shell/dashboard/upload e integrar as superficies analiticas com papel claro.
-- DevOps: sustentar o fechamento da v1 com os gates existentes, sem abrir uma frente nova grande de infra.
-- Documentation: transformar a Sprint 6 em sprint de fechamento da v1 com narrativa documental unificada.
-- Test planning: focar em risco de produto final, nao em volume artificial de testes.
-- Test execution: provar a jornada principal da v1 ponta a ponta.
+- Front planning: deixar de tratar analytics, clickhouse e etl como areas futuras e transforma-las em parte do fechamento da v1.
+- Front execution: trocar a dashboard bonita porem parcialmente cenografica por um command center real, com drilldowns funcionais.
+- DevOps: sustentar o fechamento da v1 com os gates existentes, cobrindo shell novo, rotas analiticas e dashboard sem fixtures falsas.
+- Documentation: transformar a Sprint 6 em sprint de fechamento da v1 com narrativa documental unificada sobre dashboard e analytics.
+- Test planning: focar em risco de produto final com route/nav/shell coverage e verificacao de dados derivados honestos.
+- Test execution: provar a jornada principal da v1 ponta a ponta e o comportamento util das novas rotas analiticas.
 - Security: revisar a superficie final da entrega e impedir que `external_link` entre sem threat model adequado.
 - Skills da sprint: aplicar a stack de planejamento, frontend, API, teste e observabilidade como obrigatoria na reta final do produto.
 
