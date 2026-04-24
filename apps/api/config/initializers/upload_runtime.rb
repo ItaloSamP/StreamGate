@@ -45,11 +45,15 @@ module UploadRuntime
   end
 
   def allowed_content_types
-    ENV.fetch("UPLOAD_ALLOWED_CONTENT_TYPES", "application/zip,text/csv")
+    ENV.fetch("UPLOAD_ALLOWED_CONTENT_TYPES", "application/json,application/zip,text/csv")
       .split(",")
       .map { |value| value.to_s.strip.downcase }
       .reject(&:blank?)
       .uniq
+  end
+
+  def max_byte_size
+    env_integer("UPLOAD_MAX_BYTE_SIZE", 10.gigabytes)
   end
 
   def verify_object_before_register?
@@ -73,4 +77,5 @@ Rails.application.config.x.upload_signed_url_limit_per_ip = UploadRuntime.signed
 Rails.application.config.x.upload_register_limit_per_ip = UploadRuntime.register_limit_per_ip
 Rails.application.config.x.upload_throttle_window_seconds = UploadRuntime.throttle_window_seconds
 Rails.application.config.x.upload_allowed_content_types = UploadRuntime.allowed_content_types
+Rails.application.config.x.upload_max_byte_size = UploadRuntime.max_byte_size
 Rails.application.config.x.upload_verify_object_before_register = UploadRuntime.verify_object_before_register?

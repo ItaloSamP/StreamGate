@@ -17,11 +17,19 @@ class Upload < ApplicationRecord
     restricted: "restricted"
   }.freeze
 
+  SOURCE_TYPES = {
+    upload: "upload",
+    external_link: "external_link"
+  }.freeze
+
   enum :status, STATUSES, default: :registered, validate: true
   enum :sensitivity_level, SENSITIVITY_LEVELS, default: :internal, validate: true
+  enum :source_type, SOURCE_TYPES, default: :upload, validate: true
 
   belongs_to :user
   has_many :jobs, dependent: :restrict_with_exception
+  has_one :upload_acquisition, dependent: :restrict_with_exception
+  has_many :operational_warnings, dependent: :restrict_with_exception
   has_many :audit_events, as: :auditable, dependent: :restrict_with_exception
   has_many :analytics_job_snapshots, dependent: :restrict_with_exception
 

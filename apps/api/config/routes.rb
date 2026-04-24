@@ -16,6 +16,7 @@ Rails.application.routes.draw do
       resources :uploads, only: [ :create, :index ] do
         collection do
           post "signed-url", to: "uploads#signed_url"
+          post "public-link", to: "uploads#public_link"
         end
       end
 
@@ -25,6 +26,9 @@ Rails.application.routes.draw do
       get "jobs/:job_id/artifacts", to: "job_artifacts#index"
       post "jobs/:job_id/artifacts/:artifact_id/download-url", to: "job_artifacts#download_url"
       get "analytics", to: "analytics#index"
+      get "analytics/dashboard", to: "analytics_dashboard#show"
+      get "analytics/warehouse", to: "analytics_warehouse#show"
+      get "analytics/lineage", to: "analytics_lineage#show"
       get "quarantine", to: "quarantine#index"
       post "quarantine/:id/resolve", to: "quarantine_resolutions#create"
       get "quarantine/dlq", to: "dlq#index"

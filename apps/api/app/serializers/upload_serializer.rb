@@ -7,6 +7,7 @@ class UploadSerializer < ApplicationSerializer
       byte_size: record.byte_size,
       checksum_sha256: record.checksum_sha256,
       storage_key: record.storage_key,
+      source_type: record.source_type,
       status: record.status,
       sensitivity_level: record.sensitivity_level,
       user_id: record.user_id,

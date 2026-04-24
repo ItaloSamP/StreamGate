@@ -46,8 +46,8 @@ class UploadsJobsFlowTest < ActionDispatch::IntegrationTest
     post "/api/v1/uploads/signed-url",
          params: {
            upload: {
-             filename: "orders.json",
-             content_type: "application/json",
+             filename: "orders.pdf",
+             content_type: "application/pdf",
              byte_size: 200,
              checksum_sha256: "b" * 64
            }
