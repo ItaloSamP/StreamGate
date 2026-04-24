@@ -46,7 +46,16 @@ O StreamGate ja possui, apos a Sprint 5, um fluxo operacional real mais completo
 - Autenticacao/autorizacao entre servicos internos ainda depende da rede local/Compose; assinatura forte de eventos e webhook receiver real ficam para evolucao posterior.
 - Replay prevention e suficiente para o corte atual por `event_id` + aprovacao humana + idempotencia, mas ainda nao ha janela temporal assinada nem nonce externo entre servicos.
 - Deliveries `email/webhook` sao persistidos e auditados, mas ainda dependem de politicas futuras de rate limiting externo, allowlist de destino e observabilidade remota.
-- Conectores externos de entrada (`external_link`, `oauth_delegated`, `google_drive`, `s3`, `http_url`) seguem discovery-only e exigem revisao separada antes de implementacao funcional.
+- `public_link` foi materializado como primeiro corte de `external_link`; `oauth_delegated`, `google_drive`, `s3` e `http_url` seguem discovery-only e exigem revisao separada antes de implementacao funcional.
+
+## Sprint 6 security addendum
+
+- A API aceita apenas `http`/`https`, sem userinfo e sem portas nao padrao.
+- O worker valida DNS antes de cada `HEAD`/`GET`, segue no maximo tres redirects e bloqueia localhost, ranges privados, link-local e metadata hosts.
+- URLs expostas por API e auditoria usam `url_masked` e `url_hash`; query string, fragmento e credenciais nao aparecem em recursos HTTP.
+- Downloads remotos sao gravados por stream em `Tempfile`, com limite configuravel alinhado a 10 GB e SHA-256 calculado durante a copia.
+- Falhas tecnicas viram `operational_warnings` com retencao padrao de 30 dias, sem impedir acesso aos artefatos ja disponiveis.
+- Dashboard e warehouse distinguem `live`, `derived`, `empty` e `degraded` para evitar dados cenograficos.
 ## Scope and assumptions
 
 ### In-scope paths

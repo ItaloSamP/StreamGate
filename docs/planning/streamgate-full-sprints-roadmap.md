@@ -1482,7 +1482,7 @@ Fronteira explicita (fora da Sprint 5 funcional): `external_link`, `oauth_delega
 
 ## Sprint 6 - Fechamento da v1, dashboard real, drilldowns analiticos e `external_link` terciario
 
-**Status atual:** `Planejada`
+**Status atual:** `Em execucao - trilha backend/worker/documentacao parcial concluida`
 
 **Dependencias**
 
@@ -1542,26 +1542,26 @@ Pela leitura atual do frontend, esta sprint passa a ter tres frentes centrais e 
 ### Back planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `architecture-patterns`, `domain-modeling`, `api-designer`, `supabase-postgres-best-practices`.
-- [ ] Congelar o escopo HTTP e de dominio da Sprint 6 com prioridade absoluta em fechamento da v1.
+- [x] Congelar o escopo HTTP e de dominio da Sprint 6 com prioridade absoluta em fechamento da v1.
 - [ ] Definir como os dados atuais de `analytics`, `jobs`, `quarantine`, `audit` e `uploads` serao reaproveitados para remover linhas fake da dashboard.
 - [ ] Congelar quais paineis da dashboard serao `live`, `truthfully derived` ou `placeholder controlado`.
 - [ ] Definir o papel funcional de `Analytics`, `ClickHouse`, `ETL Explorer` e `external_link`.
 - [ ] Definir os drilldowns analiticos finais: `ClickHouse` como visao de warehouse, throughput e agregacao; `ETL Explorer` como batches, lineage, etapas e relacoes entre job, quarantine e auditoria.
 - [ ] Classificar explicitamente cada superficie nova da sprint em `funcional agora`, `scaffold transitorio` ou `descoberta futura`.
-- [ ] Definir quais leituras adicionais o backend precisa expor para eliminar blocos cenograficos da dashboard e sustentar os drilldowns reais.
-- [ ] Definir a fronteira funcional minima de `external_link` como `public_link` e somente como terceira prioridade.
+- [x] Definir quais leituras adicionais o backend precisa expor para eliminar blocos cenograficos da dashboard e sustentar os drilldowns reais.
+- [x] Definir a fronteira funcional minima de `external_link` como `public_link` e somente como terceira prioridade.
 
 ### Back execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
-- [ ] Implementar apenas o backend necessario para materializar os blocos finais da dashboard e a superficie analitica minima.
-- [ ] Priorizar somente os endpoints e leituras adicionais necessarios para suportar dashboard final sem fixtures enganosas e drilldowns analiticos reais.
+- [x] Implementar apenas o backend necessario para materializar os blocos finais da dashboard e a superficie analitica minima.
+- [x] Priorizar somente os endpoints e leituras adicionais necessarios para suportar dashboard final sem fixtures enganosas e drilldowns analiticos reais.
 - [ ] Reutilizar a API existente sempre que possivel; abrir endpoint novo somente quando for realmente necessario para evitar bricolagem fragil no frontend.
 - [ ] Sustentar a jornada final de upload local com estados e leituras coerentes de produto.
 - [ ] Evitar abrir endpoints ou contratos de connector wave 1 nesta sprint.
-- [ ] Se houver endpoint novo para drilldown, sincronizar OpenAPI e `packages/contracts` no mesmo ciclo.
-- [ ] Se `external_link` entrar, limitar a entrega funcional inicial a `public_link`, mantendo `oauth_delegated` fora do corte.
-- [ ] Manter OpenAPI, `packages/contracts` e documentacao sincronizados no mesmo ciclo das mudancas.
+- [x] Se houver endpoint novo para drilldown, sincronizar OpenAPI e `packages/contracts` no mesmo ciclo.
+- [x] Se `external_link` entrar, limitar a entrega funcional inicial a `public_link`, mantendo `oauth_delegated` fora do corte.
+- [x] Manter OpenAPI, `packages/contracts` e documentacao sincronizados no mesmo ciclo das mudancas.
 
 ### Worker execution
 
@@ -1569,9 +1569,9 @@ Pela leitura atual do frontend, esta sprint passa a ter tres frentes centrais e 
 - [ ] Garantir que o fluxo local da v1 continue sendo a referencia completa: upload -> processamento -> quarantine/artifacts -> notificacoes -> auditoria.
 - [ ] Garantir que os dados ja emitidos e persistidos pela Sprint 5 sejam suficientes para sustentar os drilldowns e a dashboard final.
 - [ ] Tratar qualquer vinculo adicional necessario para lineage ou visao operacional derivada como ajuste pequeno de rastreabilidade e observabilidade, nao como expansao funcional do worker.
-- [ ] Fechar lacunas de worker que impeçam a dashboard final de refletir o estado real do pipeline.
-- [ ] Se `external_link` entrar, suportar apenas o caminho minimo necessario sem quebrar idempotencia, DLQ, artefatos e auditoria.
-- [ ] Nao ampliar o worker para multiplos pipelines alem do necessario para o corte da sprint.
+- [x] Fechar lacunas de worker que impeçam a dashboard final de refletir o estado real do pipeline.
+- [x] Se `external_link` entrar, suportar apenas o caminho minimo necessario sem quebrar idempotencia, DLQ, artefatos e auditoria.
+- [x] Nao ampliar o worker para multiplos pipelines alem do necessario para o corte da sprint.
 
 ### Front planning
 
@@ -1651,13 +1651,13 @@ Pela leitura atual do frontend, esta sprint passa a ter tres frentes centrais e 
 ### Documentation
 
 - Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `documentation-writer`, `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
-- [ ] Atualizar este roadmap mestre no mesmo ciclo do andamento real da Sprint 6.
-- [ ] Manter `docs/product/vision.md` alinhado ao corte final da v1.
-- [ ] Atualizar `docs/guides/platform/final-delivery-guide.md` com o que deixar de ser gap e passar a ser entregue.
+- [x] Atualizar este roadmap mestre no mesmo ciclo do andamento real da Sprint 6.
+- [x] Manter `docs/product/vision.md` alinhado ao corte final da v1.
+- [x] Atualizar `docs/guides/platform/final-delivery-guide.md` com o que deixar de ser gap e passar a ser entregue.
 - [ ] Atualizar `docs/guides/frontend/frontend-workspace-map.md` com o workspace final da v1.
-- [ ] Atualizar `docs/guides/backend/api-docs.md` e OpenAPI quando os blocos finais exigirem endpoints ou contratos novos.
+- [x] Atualizar `docs/guides/backend/api-docs.md` e OpenAPI quando os blocos finais exigirem endpoints ou contratos novos.
 - [ ] Registrar explicitamente na documentacao que a Sprint 6 fecha dashboard real sem fixtures enganosas e transforma `/clickhouse` e `/etl-explorer` em metas funcionais da sprint.
-- [ ] Atualizar `docs/guides/security/streamgate-threat-model.md` se `external_link` entrar.
+- [x] Atualizar `docs/guides/security/streamgate-threat-model.md` se `external_link` entrar.
 - [ ] Preparar o closeout da Sprint 6 como closeout de fechamento da v1, caso o checklist de saida seja atingido.
 
 ### Checklist de saida

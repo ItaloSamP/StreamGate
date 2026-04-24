@@ -1,0 +1,32 @@
+{
+  "data": {
+    "generated_at": "2026-04-24T14:00:00Z",
+    "source": "postgres_derived",
+    "window": {
+      "from": "2026-04-23T14:00:00Z",
+      "to": "2026-04-24T14:00:00Z",
+      "preset": "last_24h",
+      "timezone": "UTC"
+    },
+    "sections": {
+      "queue": {
+        "status": "derived",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": { "processed": 12, "retried": 1, "moved_to_dlq": 0 },
+        "empty_state": null
+      }
+    },
+    "dependencies": {
+      "broker": { "status": "healthy" },
+      "warehouse": { "status": "degraded", "source": "postgres_derived", "fallback_reason": "clickhouse_unavailable" }
+    },
+    "slo": {
+      "slo_target_seconds": 300,
+      "last_event_at": "2026-04-24T13:59:40Z",
+      "lag_seconds": 20,
+      "stale": false,
+      "p95_ms": 240,
+      "error_budget_percent": 99.9
+    }
+  }
+}

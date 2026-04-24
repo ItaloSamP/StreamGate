@@ -76,7 +76,7 @@ Precisa investigar eventos, reprocessar cargas, auditar trilhas e manter o pipel
 ### Ingestao multicanal
 
 - upload local via SPA;
-- ingestao por link externo segue como fronteira futura, com suporte inicial planejado para `public_link` e evolucao para `oauth_delegated`;
+- ingestao por link externo possui corte inicial como `public_link`; `oauth_delegated` continua evolucao futura;
 - conectores wave 1 continuam planejados/discovery-only: `google_drive`, `s3`, `http_url`;
 - entrada inicial com foco em arquivo zipado e portabilidade para outras extensoes.
 
@@ -92,6 +92,7 @@ Precisa investigar eventos, reprocessar cargas, auditar trilhas e manter o pipel
 - enviar invalidos para quarentena com motivo explicito;
 - persistir dados operacionais no PostgreSQL;
 - persistir dados analiticos no ClickHouse;
+- quando ClickHouse estiver indisponivel, expor fallback honesto `postgres_derived` com SLO e aviso tecnico;
 - expor status e indicadores para o frontend;
 - disponibilizar download de `processed_dataset` e `quality_report`/`audit_report` no final do processo.
 
@@ -171,7 +172,7 @@ O frontend consulta a API para ler status operacionais e metricas agregadas. Na 
 
 ## Interfaces e conceitos de produto (direcao, sem implementacao imediata)
 
-- `source_type`: `local_file`, `external_link`, `connector`
+- `source_type`: `upload`, `external_link`, `connector`
 - `link_mode`: `public_link`, `oauth_delegated`
 - `connector_type` wave 1: `google_drive`, `s3`, `http_url`
 - `output_artifact_type`: `processed_dataset`, `quality_report`, `audit_report`

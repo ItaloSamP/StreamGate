@@ -1,0 +1,21 @@
+{
+  "data": {
+    "source": "postgres_derived",
+    "generated_at": "2026-04-24T14:00:00Z",
+    "last_event_at": "2026-04-24T13:59:40Z",
+    "lag_seconds": 20,
+    "stale": false,
+    "slo_target_seconds": 300,
+    "p95_ms": 240,
+    "error_budget_percent": 99.9,
+    "dependency_status": {
+      "clickhouse": "unavailable",
+      "postgres": "healthy"
+    },
+    "fallback_reason": "clickhouse_unavailable",
+    "aggregates": {
+      "jobs_total": 12,
+      "uploads_total": 12
+    }
+  }
+}

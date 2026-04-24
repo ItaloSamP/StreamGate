@@ -204,6 +204,12 @@ Sinais de pronto:
 - a narrativa comercial e tecnica do produto nao promete mais do que a v1 realmente entrega;
 - o backlog de conectores fica priorizado, mas sem ser confundido com feature pronta.
 
+Estado Sprint 6 backend/worker:
+
+- `public_link` entra como primeiro caminho funcional de `external_link`;
+- `oauth_delegated`, `google_drive`, `s3` e `http_url` continuam fora da entrega;
+- dashboard, warehouse e lineage passam a ter endpoints reais adapter-ready para o frontend, com fallback `postgres_derived` e empty states honestos.
+
 ### Bloco E - Fechamento de produto e release
 
 Objetivo: transformar o estado "quase pronto" em entrega confiavel.
