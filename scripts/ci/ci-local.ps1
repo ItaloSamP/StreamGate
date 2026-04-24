@@ -458,7 +458,7 @@ function Run-E2EWorkflow {
   $env:SEED_ADMIN_PASSWORD = $seedAdminPassword
 
   $integrationCommand = 'set "AUTH_INTEGRATION_BASE_URL=http://localhost:3000" && pnpm test:integration'
-  $e2eCommand = 'set "E2E_BASE_URL=http://localhost:5173" && pnpm exec playwright test --project=chromium'
+  $e2eCommand = 'set "E2E_BASE_URL=http://localhost:5173" && set "SEED_OPERATOR_PASSWORD=' + $seedOperatorPassword + '" && set "SEED_ADMIN_PASSWORD=' + $seedAdminPassword + '" && pnpm exec playwright test --project=chromium'
 
   $failed = $false
   $reason = 'Todos os passos passaram.'

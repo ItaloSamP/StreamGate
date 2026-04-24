@@ -70,7 +70,7 @@ if failed_result="$(test_compose_services_ready "$failed_json")"; then
 fi
 
 assert_contains "$failed_result" $'pending\tService '\''redis'\'' is still starting.' "starting redis should be pending"
-assert_contains "$failed_result" $'fatal\tService '\''rabbitmq'\'' is unhealthy.' "unhealthy rabbitmq should be fatal"
+assert_contains "$failed_result" $'pending\tService '\''rabbitmq'\'' is unhealthy but may still recover during startup.' "unhealthy rabbitmq should be pending while startup can still recover"
 assert_contains "$failed_result" $'fatal\tService '\''minio'\'' is not running (state: exited).' "failed minio should be fatal"
 assert_contains "$failed_result" $'fatal\tOne-shot service '\''minio-init'\'' exited with code 1.' "failed minio-init should be fatal"
 

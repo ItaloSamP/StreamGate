@@ -11,7 +11,7 @@ export function WorkspacePageFrame({
   eyebrow,
   title,
   children,
-  primaryActionLabel: _primaryActionLabel = '+ Upload',
+  primaryActionLabel = '+ Upload',
   secondaryActionLabel,
 }: {
   pathname: WorkspaceRoute
@@ -40,7 +40,7 @@ export function WorkspacePageFrame({
         pathname={pathname}
         eyebrow={eyebrow}
         title={title}
-        primaryActionLabel="+ Upload"
+        primaryActionLabel={primaryActionLabel}
         secondaryActionLabel={secondaryActionLabel}
         enableOperationalBadges={pathname === '/dashboard'}
       >

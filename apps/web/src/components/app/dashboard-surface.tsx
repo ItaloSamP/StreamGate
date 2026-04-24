@@ -172,10 +172,6 @@ export function DashboardSurface({
     }
   }, [locked, pathname])
 
-  useEffect(() => {
-    setSidebarOpen(false)
-  }, [pathname])
-
   const quarantineBadge = navBadges['/quarantine'] ?? 7
   const alertCopy = quarantineBadge > 0
     ? `${quarantineBadge} registros em quarentena aguardam triagem enquanto o command center segue auditavel.`
@@ -235,7 +231,12 @@ export function DashboardSurface({
                   }
 
                   return (
-                    <NavLink key={item.label} to={item.href} className={`dash-nav-item ${isActive ? 'active' : ''}`}>
+                    <NavLink
+                      key={item.label}
+                      to={item.href}
+                      className={`dash-nav-item ${isActive ? 'active' : ''}`}
+                      onClick={() => setSidebarOpen(false)}
+                    >
                       {itemBody}
                     </NavLink>
                   )
@@ -298,6 +299,7 @@ export function DashboardSurface({
                   to="/notifications"
                   className={`dash-notification-button ${pathname.startsWith('/notifications') ? 'active' : ''}`}
                   aria-label={unreadNotifications > 0 ? `${unreadNotifications} notificacoes nao lidas` : 'Notificacoes'}
+                  onClick={() => setSidebarOpen(false)}
                 >
                   <Bell size={15} />
                   {unreadNotifications > 0 ? <span className="dash-notification-dot" /> : null}
@@ -305,7 +307,11 @@ export function DashboardSurface({
               ) : null}
               {secondaryActionLabel ? <button type="button" className="dash-btn">{secondaryActionLabel}</button> : null}
               {!locked ? (
-                <NavLink to="/upload" className="dash-btn dash-btn--primary">
+                <NavLink
+                  to="/upload"
+                  className="dash-btn dash-btn--primary"
+                  onClick={() => setSidebarOpen(false)}
+                >
                   {primaryActionLabel}
                 </NavLink>
               ) : (
@@ -322,7 +328,7 @@ export function DashboardSurface({
               <strong>Operacao segura</strong> {alertCopy}
             </span>
             {!locked ? (
-              <NavLink to="/quarantine" className="dash-alert-link">
+              <NavLink to="/quarantine" className="dash-alert-link" onClick={() => setSidebarOpen(false)}>
                 Abrir triagem
               </NavLink>
             ) : null}

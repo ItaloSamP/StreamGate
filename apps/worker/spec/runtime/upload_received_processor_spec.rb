@@ -120,68 +120,107 @@ class FakeProcessorConnection
   end
 
   def exec_params(sql, params)
-    case sql
-    when /SELECT id FROM jobs .* FOR UPDATE/m
-      job = @jobs[params[0]]
-      return result_rows([]) if job.nil? || job.fetch("upload_id") != params[1]
-
-      result_rows([{"id" => params[0]}])
-    when /INSERT INTO worker_consumed_events/
-      return result_rows([]) if @consumed_event_ids.include?(params[1])
-
-      @consumed_event_ids << params[1]
-      result_rows([{"id" => params[0]}])
-    when /DELETE FROM worker_consumed_events/
-      @consumed_event_ids.delete(params[0])
-      result_rows([])
-    when /UPDATE jobs SET status = 'processing'/
-      @jobs.fetch(params[0])["status"] = "processing"
-      result_rows([])
-    when /SELECT COALESCE\(MAX\(attempt_number\), 0\) AS max_attempt FROM processing_attempts/
-      result_rows([{"max_attempt" => @attempts.size.to_s}])
-    when /INSERT INTO processing_attempts/
-      @attempts << { id: params[0], job_id: params[1], attempt_number: params[2], status: "started" }
-      result_rows([])
-    when /INSERT INTO job_batches/
-      result_rows([])
-    when /INSERT INTO quarantine_records/
-      result_rows([])
-    when /UPDATE jobs SET status = \$1, quarantined_records_count = \$2, updated_at = NOW\(\) WHERE id = \$3/
-      @jobs.fetch(params[2])["status"] = params[0]
-      result_rows([])
-    when /UPDATE processing_attempts SET status = 'succeeded'/
-      attempt = @attempts.find { |entry| entry[:id] == params[0] }
-      attempt[:status] = "succeeded" if attempt
-      result_rows([])
-    when /INSERT INTO analytics_job_snapshots/
-      result_rows([])
-    when /INSERT INTO audit_events/
-      @audit_events << {
-        id: params[0],
-        action: params[1],
-        auditable_type: params[3],
-        auditable_id: params[4],
-        request_id: params[5],
-        trace_id: params[6],
-        metadata: JSON.parse(params[7])
-      }
-      result_rows([])
-    when /INSERT INTO worker_processing_metrics/
-      @metrics << {
-        id: params[0],
-        event_id: params[1],
-        job_id: params[2],
-        status: "artifact_failed",
-        error_class: params[3],
-        trace_id: params[4]
-      }
-      result_rows([])
-    else
-      raise "Unhandled SQL in FakeProcessorConnection: #{sql.lines.first.to_s.strip}"
+    handler = sql_handlers.find { |matcher, _method_name| sql.match?(matcher) }
+    if handler
+      _matcher, method_name = handler
+      return send(method_name, params)
     end
+
+    raise "Unhandled SQL in FakeProcessorConnection: #{sql.lines.first.to_s.strip}"
   end
 
   private
+
+  def sql_handlers
+    [
+      [/SELECT id FROM jobs .* FOR UPDATE/m, :select_job_for_update],
+      [/INSERT INTO worker_consumed_events/, :insert_consumed_event],
+      [/DELETE FROM worker_consumed_events/, :delete_consumed_event],
+      [/UPDATE jobs SET status = 'processing'/, :update_job_processing],
+      [/SELECT COALESCE\(MAX\(attempt_number\), 0\) AS max_attempt FROM processing_attempts/, :select_max_attempt],
+      [/INSERT INTO processing_attempts/, :insert_processing_attempt],
+      [/INSERT INTO job_batches/, :return_empty_result],
+      [/INSERT INTO quarantine_records/, :return_empty_result],
+      [/UPDATE jobs SET status = \$1, quarantined_records_count = \$2, updated_at = NOW\(\) WHERE id = \$3/, :update_job_status],
+      [/UPDATE processing_attempts SET status = 'succeeded'/, :mark_attempt_succeeded],
+      [/INSERT INTO analytics_job_snapshots/, :return_empty_result],
+      [/INSERT INTO audit_events/, :insert_audit_event],
+      [/INSERT INTO worker_processing_metrics/, :insert_processing_metric]
+    ]
+  end
+
+  def select_job_for_update(params)
+    job = @jobs[params[0]]
+    return result_rows([]) if job.nil? || job.fetch("upload_id") != params[1]
+
+    result_rows([{ "id" => params[0] }])
+  end
+
+  def insert_consumed_event(params)
+    return result_rows([]) if @consumed_event_ids.include?(params[1])
+
+    @consumed_event_ids << params[1]
+    result_rows([{ "id" => params[0] }])
+  end
+
+  def delete_consumed_event(params)
+    @consumed_event_ids.delete(params[0])
+    result_rows([])
+  end
+
+  def update_job_processing(params)
+    @jobs.fetch(params[0])["status"] = "processing"
+    result_rows([])
+  end
+
+  def select_max_attempt(_params)
+    result_rows([{ "max_attempt" => @attempts.size.to_s }])
+  end
+
+  def return_empty_result(_params)
+    result_rows([])
+  end
+
+  def insert_processing_attempt(params)
+    @attempts << { id: params[0], job_id: params[1], attempt_number: params[2], status: "started" }
+    result_rows([])
+  end
+
+  def update_job_status(params)
+    @jobs.fetch(params[2])["status"] = params[0]
+    result_rows([])
+  end
+
+  def mark_attempt_succeeded(params)
+    attempt = @attempts.find { |entry| entry[:id] == params[0] }
+    attempt[:status] = "succeeded" if attempt
+    result_rows([])
+  end
+
+  def insert_audit_event(params)
+    @audit_events << {
+      id: params[0],
+      action: params[1],
+      auditable_type: params[3],
+      auditable_id: params[4],
+      request_id: params[5],
+      trace_id: params[6],
+      metadata: JSON.parse(params[7])
+    }
+    result_rows([])
+  end
+
+  def insert_processing_metric(params)
+    @metrics << {
+      id: params[0],
+      event_id: params[1],
+      job_id: params[2],
+      status: "artifact_failed",
+      error_class: params[3],
+      trace_id: params[4]
+    }
+    result_rows([])
+  end
 
   def result_rows(rows)
     FakeProcessorResult.new(rows)

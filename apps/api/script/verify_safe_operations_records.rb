@@ -40,14 +40,14 @@ assert_record!(completed_deliveries.any? { |delivery| delivery.channel == "webho
 assert_record!(completed_deliveries.none? { |delivery| delivery.payload.to_json.downcase.include?("secret") }, "delivery de job.completed expos segredo no payload")
 
 [
-  ["artifact.download_url_created", JobArtifact.where(job_id: completed_job_id, artifact_type: "processed_dataset").order(created_at: :desc).pick(:id)],
-  ["worker.job.completed", completed_job_id],
-  ["worker.job.quarantined", quarantined_job_id],
-  ["quarantine.resolve", quarantine_id],
-  ["job.retry_requested", quarantined_job_id],
-  ["dlq_replay.requested", replay_request_id],
-  ["dlq_replay.approved", replay_request_id],
-  ["dlq_replay.executed", replay_request_id]
+  [ "artifact.download_url_created", JobArtifact.where(job_id: completed_job_id, artifact_type: "processed_dataset").order(created_at: :desc).pick(:id) ],
+  [ "worker.job.completed", completed_job_id ],
+  [ "worker.job.quarantined", quarantined_job_id ],
+  [ "quarantine.resolve", quarantine_id ],
+  [ "job.retry_requested", quarantined_job_id ],
+  [ "dlq_replay.requested", replay_request_id ],
+  [ "dlq_replay.approved", replay_request_id ],
+  [ "dlq_replay.executed", replay_request_id ]
 ].each do |action, auditable_id|
   assert_record!(auditable_id.present?, "auditable_id ausente para #{action}")
   event = AuditEvent.where(action: action, auditable_id: auditable_id).order(occurred_at: :desc).first
