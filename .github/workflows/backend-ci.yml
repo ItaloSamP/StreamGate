@@ -44,6 +44,11 @@ jobs:
       AUTH_CSRF_MODE: token
       API_CORS_ALLOWED_ORIGINS: http://localhost:5173
       API_CORS_ALLOW_CREDENTIALS: false
+      BROKER_HOST: localhost
+      BROKER_PORT: 5672
+      BROKER_USERNAME: streamgate
+      BROKER_PASSWORD: streamgate123
+      BROKER_MANAGEMENT_URL: http://localhost:15672/api
       UPLOAD_STORAGE_ENDPOINT: http://localhost:9000
       UPLOAD_STORAGE_BUCKET: streamgate-uploads
       UPLOAD_STORAGE_REGION: us-east-1
