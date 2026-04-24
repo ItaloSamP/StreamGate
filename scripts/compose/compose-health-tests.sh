@@ -55,6 +55,17 @@ fi
 
 assert_eq "$healthy_result" "" "healthy environment should not report issues"
 
+healthy_ndjson='{"Service":"postgres","State":"running","Health":"healthy","ExitCode":0}
+{"Service":"redis","State":"running","Health":"healthy","ExitCode":0}
+{"Service":"rabbitmq","State":"running","Health":"healthy","ExitCode":0}'
+
+if ! healthy_ndjson_result="$(test_compose_services_ready "$healthy_ndjson")"; then
+  echo "healthy NDJSON environment should have passed" >&2
+  exit 1
+fi
+
+assert_eq "$healthy_ndjson_result" "" "healthy NDJSON environment should not report issues"
+
 failed_json='[
   {"Service":"postgres","State":"running","Health":"healthy","ExitCode":0},
   {"Service":"redis","State":"running","Health":"starting","ExitCode":0},
