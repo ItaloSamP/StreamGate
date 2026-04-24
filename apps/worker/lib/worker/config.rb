@@ -12,7 +12,12 @@ module Worker
                 :queue_name,
                 :dlq_queue_name,
                 :dlq_routing_key,
+                :public_link_routing_key,
+                :public_link_queue_name,
+                :public_link_dlq_queue_name,
+                :public_link_dlq_routing_key,
                 :max_retries,
+                :public_link_max_bytes,
                 :postgres_host,
                 :postgres_port,
                 :postgres_db,
@@ -37,7 +42,12 @@ module Worker
       @queue_name = env.fetch("BROKER_UPLOAD_RECEIVED_QUEUE", "streamgate.worker.upload.received.v1")
       @dlq_queue_name = env.fetch("BROKER_UPLOAD_RECEIVED_DLQ", "streamgate.worker.upload.received.v1.dlq")
       @dlq_routing_key = env.fetch("BROKER_UPLOAD_RECEIVED_DLQ_ROUTING_KEY", "upload.received.v1.dlq")
+      @public_link_routing_key = env.fetch("BROKER_PUBLIC_LINK_REQUESTED_ROUTING_KEY", "upload.public_link.requested.v1")
+      @public_link_queue_name = env.fetch("BROKER_PUBLIC_LINK_REQUESTED_QUEUE", "streamgate.worker.upload.public_link.requested.v1")
+      @public_link_dlq_queue_name = env.fetch("BROKER_PUBLIC_LINK_REQUESTED_DLQ", "streamgate.worker.upload.public_link.requested.v1.dlq")
+      @public_link_dlq_routing_key = env.fetch("BROKER_PUBLIC_LINK_REQUESTED_DLQ_ROUTING_KEY", "upload.public_link.requested.v1.dlq")
       @max_retries = env.fetch("WORKER_MAX_RETRIES", "3").to_i
+      @public_link_max_bytes = env.fetch("PUBLIC_LINK_MAX_BYTES", (10 * 1024 * 1024 * 1024).to_s).to_i
 
       @postgres_host = env.fetch("POSTGRES_HOST", "postgres")
       @postgres_port = env.fetch("POSTGRES_PORT", "5432").to_i

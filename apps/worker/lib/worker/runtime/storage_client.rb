@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "aws-sdk-s3"
+require "tempfile"
 
 module Worker
   module Runtime
@@ -21,6 +22,16 @@ module Worker
         response.body.read
       end
 
+      def download_object_to_tempfile(storage_key:)
+        tempfile = Tempfile.new(["streamgate-upload-", ".bin"], binmode: true)
+        client.get_object({ bucket: config.storage_bucket, key: storage_key }, target: tempfile.path)
+        tempfile.rewind
+        tempfile
+      rescue StandardError
+        tempfile&.close!
+        raise
+      end
+
       def write_object(storage_key:, body:, content_type:)
         client.put_object(
           bucket: config.storage_bucket,
@@ -28,6 +39,11 @@ module Worker
           body: body,
           content_type: content_type
         )
+      end
+
+      def write_object_stream(storage_key:, io:, content_type:)
+        io.rewind if io.respond_to?(:rewind)
+        write_object(storage_key: storage_key, body: io, content_type: content_type)
       end
 
       private
