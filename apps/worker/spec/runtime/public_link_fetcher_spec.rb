@@ -51,6 +51,32 @@ RSpec.describe Worker::Runtime::PublicLinkFetcher do
     expect(storage_client.written[:body]).to include("Alice")
   end
 
+  it "treats text/plain csv links as CSV when the final URL has a csv extension" do
+    response = Worker::Runtime::PublicLinkFetcher::HttpResponse.new(
+      status: 200,
+      headers: { "content-type" => "text/plain; charset=utf-8", "content-length" => "18" },
+      body: StringIO.new("name,cpf\nAlice,123\n"),
+      final_url: "https://data.example.com/export.csv"
+    )
+
+    fake_http_client = Class.new do
+      define_method(:head) { |_| response }
+      define_method(:get) { |_| response }
+    end.new
+
+    fetcher = described_class.new(
+      storage_client: storage_client,
+      max_bytes: 10 * 1024,
+      resolver: ->(_) { ["93.184.216.34"] },
+      http_client: fake_http_client
+    )
+
+    result = fetcher.call(url: "https://data.example.com/export.csv", storage_key: "uploads/external/export.csv")
+
+    expect(result.content_type).to eq("text/csv")
+    expect(storage_client.written[:content_type]).to eq("text/csv")
+  end
+
   it "blocks private destinations before issuing HTTP requests" do
     expect do
       fetcher.call(url: "http://localhost/private.csv", storage_key: "uploads/external/private.csv")

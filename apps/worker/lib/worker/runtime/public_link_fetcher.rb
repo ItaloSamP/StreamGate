@@ -46,7 +46,7 @@ module Worker
         response = request_with_redirects(:get, head.final_url || url)
         raise TerminalProcessingError, "public_link_http_status=#{response.status}" unless response.status.to_i.between?(200, 299)
 
-        content_type = normalize_content_type(header(response.headers, "content-type"))
+        content_type = normalize_content_type(header(response.headers, "content-type"), response.final_url || head.final_url || url)
         tempfile = Tempfile.new(["streamgate-public-link-", ".bin"], binmode: true)
         digest = Digest::SHA256.new
         byte_size = stream_body(response.body, tempfile, digest)
@@ -121,8 +121,10 @@ module Worker
         byte_size
       end
 
-      def normalize_content_type(value)
+      def normalize_content_type(value, url)
         normalized = value.to_s.split(";").first.to_s.strip.downcase
+        return "text/csv" if %w[text/plain application/octet-stream].include?(normalized) && URI.parse(url).path.downcase.end_with?(".csv")
+
         normalized.empty? ? "application/octet-stream" : normalized
       end
 
