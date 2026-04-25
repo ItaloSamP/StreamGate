@@ -10,6 +10,7 @@ RSpec.describe Worker::Runtime::UploadReceivedProcessor do
   let(:parser) { instance_double(Worker::Processing::CsvZipParser) }
   let(:artifact_writer) { instance_double(Worker::Runtime::ArtifactWriter) }
   let(:notifier) { instance_double(Worker::Runtime::OperationalNotifier) }
+  let(:warehouse_loader) { instance_double(Worker::Runtime::ClickhouseWarehouseLoader, call: true) }
   let(:db_client) { FakeProcessorDbClient.new }
   let(:processor) do
     described_class.new(
@@ -19,7 +20,8 @@ RSpec.describe Worker::Runtime::UploadReceivedProcessor do
       parser: parser,
       logger: logger,
       artifact_writer: artifact_writer,
-      notifier: notifier
+      notifier: notifier,
+      warehouse_loader: warehouse_loader
     )
   end
   let(:event) do
@@ -42,6 +44,10 @@ RSpec.describe Worker::Runtime::UploadReceivedProcessor do
       input_rows: 2,
       valid_rows: 2,
       invalid_rows: 0,
+      valid_records: [
+        { row_number: 2, payload: { "order_id" => "1001", "amount" => "42" } },
+        { row_number: 3, payload: { "order_id" => "1002", "amount" => "84" } }
+      ],
       invalid_records: []
     )
   end
@@ -76,6 +82,42 @@ RSpec.describe Worker::Runtime::UploadReceivedProcessor do
       )
     )
   end
+
+  it "loads ClickHouse after the main job transition without blocking artifacts or notifications" do
+    allow(storage_client).to receive(:read_object).and_return("order_id,amount\n1001,42\n1002,84\n")
+    allow(parser).to receive(:parse).and_return(parse_result)
+    allow(artifact_writer).to receive(:call).and_return([])
+    allow(notifier).to receive(:emit_job_transition)
+
+    result = processor.process(event, retry_count: 0)
+
+    expect(result).to eq(:processed)
+    expect(warehouse_loader).to have_received(:call).with(
+      hash_including(
+        connection: db_client.connection,
+        ids: hash_including(job_id: "job_fixture"),
+        batch_id: /^batch_/,
+        parse_result: parse_result
+      )
+    )
+    expect(db_client.connection.job_status("job_fixture")).to eq("completed")
+  end
+
+  it "records a warning when ClickHouse load fails and keeps the job completed" do
+    allow(storage_client).to receive(:read_object).and_return("order_id,amount\n1001,42\n1002,84\n")
+    allow(parser).to receive(:parse).and_return(parse_result)
+    allow(artifact_writer).to receive(:call).and_return([])
+    allow(notifier).to receive(:emit_job_transition)
+    allow(warehouse_loader).to receive(:call).and_raise(Worker::Runtime::ClickhouseWarehouseLoader::Error, "clickhouse down")
+
+    result = processor.process(event, retry_count: 0)
+
+    expect(result).to eq(:processed)
+    expect(db_client.connection.job_status("job_fixture")).to eq("completed")
+    expect(db_client.connection.operational_warnings).to include(
+      include(code: "clickhouse_load_failed", status: "open", job_id: "job_fixture", upload_id: "upload_fixture")
+    )
+  end
 end
 
 class FakeProcessorDbClient
@@ -91,7 +133,7 @@ class FakeProcessorDbClient
 end
 
 class FakeProcessorConnection
-  attr_reader :audit_events, :metrics
+  attr_reader :audit_events, :metrics, :operational_warnings
 
   def initialize
     @consumed_event_ids = Set.new
@@ -105,6 +147,7 @@ class FakeProcessorConnection
     }
     @audit_events = []
     @metrics = []
+    @operational_warnings = []
   end
 
   def mark_duplicate!(event_id)
@@ -144,6 +187,7 @@ class FakeProcessorConnection
       [/UPDATE jobs SET status = \$1, quarantined_records_count = \$2, updated_at = NOW\(\) WHERE id = \$3/, :update_job_status],
       [/UPDATE processing_attempts SET status = 'succeeded'/, :mark_attempt_succeeded],
       [/INSERT INTO analytics_job_snapshots/, :return_empty_result],
+      [/INSERT INTO operational_warnings/, :insert_operational_warning],
       [/INSERT INTO audit_events/, :insert_audit_event],
       [/INSERT INTO worker_processing_metrics/, :insert_processing_metric]
     ]
@@ -218,6 +262,21 @@ class FakeProcessorConnection
       status: "artifact_failed",
       error_class: params[3],
       trace_id: params[4]
+    }
+    result_rows([])
+  end
+
+  def insert_operational_warning(params)
+    @operational_warnings << {
+      id: params[0],
+      job_id: params[1],
+      upload_id: params[2],
+      code: "clickhouse_load_failed",
+      message: params[3],
+      status: "open",
+      retry_count: 0,
+      trace_id: params[4],
+      request_id: params[5]
     }
     result_rows([])
   end

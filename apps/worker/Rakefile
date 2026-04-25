@@ -9,4 +9,19 @@ require "rubocop/rake_task"
 
 RuboCop::RakeTask.new
 
+namespace :clickhouse do
+  desc "Backfill existing analytics snapshots and batches into ClickHouse"
+  task :backfill do
+    require "worker"
+
+    config = Worker::Config.new
+    count = Worker::Runtime::ClickhouseBackfill.new(
+      config: config,
+      db_client: Worker::Runtime::DbClient.new(config: config)
+    ).call
+
+    puts "Backfilled #{count} ClickHouse batch snapshots."
+  end
+end
+
 task default: %i[spec rubocop]

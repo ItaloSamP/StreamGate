@@ -29,7 +29,13 @@ module Worker
                 :storage_access_key,
                 :storage_secret_key,
                 :job_artifact_retention_days,
-                :notification_retention_days
+                :notification_retention_days,
+                :clickhouse_http_url,
+                :clickhouse_db,
+                :clickhouse_user,
+                :clickhouse_password,
+                :clickhouse_hmac_secret,
+                :clickhouse_ttl_days
 
     def initialize(env: ENV)
       @broker_host = env.fetch("BROKER_HOST", "rabbitmq")
@@ -62,6 +68,12 @@ module Worker
       @storage_secret_key = env.fetch("UPLOAD_STORAGE_SECRET_KEY", env.fetch("MINIO_ROOT_PASSWORD", "streamgate123"))
       @job_artifact_retention_days = env.fetch("JOB_ARTIFACT_RETENTION_DAYS", "30").to_i
       @notification_retention_days = env.fetch("NOTIFICATION_RETENTION_DAYS", "30").to_i
+      @clickhouse_http_url = env.fetch("CLICKHOUSE_HTTP_URL", "http://clickhouse:8123")
+      @clickhouse_db = env.fetch("CLICKHOUSE_DB", "streamgate")
+      @clickhouse_user = env.fetch("CLICKHOUSE_USER", "default")
+      @clickhouse_password = env.fetch("CLICKHOUSE_PASSWORD", "")
+      @clickhouse_hmac_secret = env.fetch("CLICKHOUSE_HMAC_SECRET", "streamgate-dev-clickhouse-hmac-secret")
+      @clickhouse_ttl_days = env.fetch("CLICKHOUSE_TTL_DAYS", "30").to_i
     end
   end
 end

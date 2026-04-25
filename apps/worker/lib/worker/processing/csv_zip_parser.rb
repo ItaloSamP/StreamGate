@@ -9,7 +9,7 @@ require "stringio"
 module Worker
   module Processing
     class CsvZipParser
-      ParseResult = Struct.new(:input_rows, :valid_rows, :invalid_rows, :invalid_records, keyword_init: true)
+      ParseResult = Struct.new(:input_rows, :valid_rows, :invalid_rows, :invalid_records, :valid_records, keyword_init: true)
       MAX_ZIP_ENTRIES = 50
       MAX_ZIP_UNCOMPRESSED_BYTES = 10 * 1024 * 1024 * 1024
       MAX_ZIP_EXPANSION_RATIO = 100
@@ -80,7 +80,7 @@ module Worker
                   end
 
         invalid_records = []
-        valid_rows = 0
+        valid_records = []
 
         records.each_with_index do |record, index|
           unless record.is_a?(Hash)
@@ -94,14 +94,15 @@ module Worker
             next
           end
 
-          valid_rows += 1
+          valid_records << { row_number: index + 1, payload: normalized }
         end
 
         ParseResult.new(
           input_rows: records.size,
-          valid_rows: valid_rows,
+          valid_rows: valid_records.size,
           invalid_rows: invalid_records.size,
-          invalid_records: invalid_records
+          invalid_records: invalid_records,
+          valid_records: valid_records
         )
       rescue JSON::ParserError => e
         raise Worker::TerminalProcessingError, "invalid_json: #{e.message}"
@@ -123,7 +124,7 @@ module Worker
         raise Worker::TerminalProcessingError, "csv_header_required" if headers.empty? || headers.any?(&:empty?)
 
         invalid_records = []
-        valid_rows = 0
+        valid_records = []
 
         rows.each_with_index do |row, index|
           normalized = row.to_h.transform_values { |value| value.to_s.strip }
@@ -137,14 +138,15 @@ module Worker
             next
           end
 
-          valid_rows += 1
+          valid_records << { row_number: index + 2, payload: normalized }
         end
 
         ParseResult.new(
           input_rows: rows.size,
-          valid_rows: valid_rows,
+          valid_rows: valid_records.size,
           invalid_rows: invalid_records.size,
-          invalid_records: invalid_records
+          invalid_records: invalid_records,
+          valid_records: valid_records
         )
       rescue CSV::MalformedCSVError => e
         raise Worker::TerminalProcessingError, "invalid_csv: #{e.message}"
