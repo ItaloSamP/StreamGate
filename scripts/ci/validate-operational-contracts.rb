@@ -96,4 +96,16 @@ assert!(public_link_event_schema.dig("properties", "event_name", "const") == "up
 assert!(public_link_event_example["event_name"] == "upload.public_link.requested.v1", "public link event example must use upload.public_link.requested.v1")
 assert!(public_link_event_example.dig("payload", "url_masked").to_s !~ /[?&]/, "public link event example url_masked must not expose query string")
 
+dashboard_schema = parse_json!(File.join(ROOT, "packages/contracts/schemas/http/operational-reads/analytics-dashboard-response.v1.json"))
+dashboard_example = parse_json!(File.join(ROOT, "packages/contracts/examples/http/operational-reads/analytics-dashboard.v1.json"))
+warehouse_schema = parse_json!(File.join(ROOT, "packages/contracts/schemas/http/operational-reads/analytics-warehouse-response.v1.json"))
+warehouse_example = parse_json!(File.join(ROOT, "packages/contracts/examples/http/operational-reads/analytics-warehouse.v1.json"))
+
+assert!(dashboard_schema.dig("properties", "data", "properties", "sections", "required").include?("event_log"), "dashboard schema must require sections.event_log")
+assert!(dashboard_example.dig("data", "sections", "event_log", "data").is_a?(Array), "dashboard example must include event_log array")
+%w[records_total valid_records invalid_records].each do |field|
+  assert!(warehouse_schema.dig("properties", "data", "properties", "aggregates", "required").include?(field), "warehouse schema must require aggregates.#{field}")
+  assert!(warehouse_example.dig("data", "aggregates").key?(field), "warehouse example must include aggregates.#{field}")
+end
+
 puts "Operational contract validation passed."

@@ -24,7 +24,8 @@ module Api
               workers: section(status: worker_status(metrics), data: worker_data(metrics)),
               throughput: section(status: snapshots.exists? ? "derived" : "empty", data: throughput_data(snapshots)),
               formats: section(status: snapshots.exists? ? "derived" : "empty", data: format_data(snapshots)),
-              warnings: section(status: warnings.exists? ? "degraded" : "empty", data: warning_data(warnings))
+              warnings: section(status: warnings.exists? ? "degraded" : "empty", data: warning_data(warnings)),
+              event_log: section(status: event_log_status(metrics, warnings), data: event_log(job_ids, metrics, warnings, window))
             },
             dependencies: {
               broker: broker_dependency(metrics),
@@ -120,6 +121,70 @@ module Api
           failed: warnings.where(status: "failed").count,
           resolved: warnings.where(status: "resolved").count
         }
+      end
+
+      def event_log_status(metrics, warnings)
+        return "degraded" if warnings.exists?
+        return "derived" if metrics.exists?
+
+        "empty"
+      end
+
+      def event_log(job_ids, metrics, warnings, window)
+        entries = []
+        entries.concat(worker_metric_events(metrics))
+        entries.concat(warning_events(warnings))
+        entries.concat(audit_events(job_ids, window))
+        entries.sort_by { |entry| entry.fetch(:timestamp).to_s }.reverse.first(50)
+      end
+
+      def worker_metric_events(metrics)
+        metrics.order(processed_at: :desc).limit(50).map do |metric|
+          {
+            timestamp: metric.processed_at&.iso8601,
+            type: "worker_metric",
+            severity: metric.moved_to_dlq? || %w[dlq failed_terminal].include?(metric.status) ? "warning" : "info",
+            job_id: metric.job_id,
+            upload_id: metric.job&.upload_id,
+            status: metric.status,
+            message: "Worker processed #{metric.event_id} with status #{metric.status}."
+          }
+        end
+      end
+
+      def warning_events(warnings)
+        warnings.order(created_at: :desc).limit(50).map do |warning|
+          {
+            timestamp: warning.created_at&.iso8601,
+            type: "operational_warning",
+            severity: warning.severity,
+            job_id: warning.job_id,
+            upload_id: warning.upload_id,
+            status: warning.status,
+            message: warning.message
+          }
+        end
+      end
+
+      def audit_events(job_ids, window)
+        return [] if job_ids.empty?
+
+        AuditEvent
+          .where(auditable_type: "Job", auditable_id: job_ids)
+          .where(occurred_at: window[:from]..window[:to])
+          .order(occurred_at: :desc)
+          .limit(50)
+          .map do |event|
+            {
+              timestamp: event.occurred_at&.iso8601,
+              type: "audit",
+              severity: "info",
+              job_id: event.auditable_id,
+              upload_id: event.metadata&.fetch("upload_id", nil),
+              status: event.action,
+              message: "Audit event #{event.action}."
+            }
+          end
       end
 
       def broker_dependency(metrics)

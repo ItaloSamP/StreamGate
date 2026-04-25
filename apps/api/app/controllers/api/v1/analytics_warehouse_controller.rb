@@ -10,7 +10,49 @@ module Api
         return if window.nil?
 
         snapshots = scoped_snapshots.where(job_created_at: window[:from]..window[:to])
+        clickhouse = Analytics::ClickhouseWarehouseReader.new
+        if clickhouse.available?
+          begin
+            return render_clickhouse(window: window, reader: clickhouse)
+          rescue Analytics::ClickhouseWarehouseReader::Unavailable => e
+            record_clickhouse_warning(e)
+          end
+        end
+
+        render_postgres_derived(window: window, snapshots: snapshots)
+      end
+
+      private
+
+      def render_clickhouse(window:, reader:)
+        target = Rails.application.config.x.analytics_slo_target_seconds
+        result = reader.aggregates(window: window, organization_id: current_actor.admin? ? nil : current_actor.organization_id)
+        last_event_at = result[:last_event_at]
+        lag_seconds = last_event_at ? (Time.current - last_event_at).round : nil
+
+        render_success(
+          data: {
+            source: "clickhouse",
+            generated_at: Time.current.iso8601,
+            last_event_at: last_event_at&.iso8601,
+            lag_seconds: lag_seconds,
+            stale: lag_seconds.nil? || lag_seconds > target,
+            slo_target_seconds: target,
+            p95_ms: result[:p95_ms],
+            error_budget_percent: result[:error_budget_percent],
+            dependency_status: {
+              clickhouse: "healthy",
+              postgres: "healthy"
+            },
+            fallback_reason: nil,
+            aggregates: result[:aggregates]
+          }
+        )
+      end
+
+      def render_postgres_derived(window:, snapshots:)
         metrics = WorkerProcessingMetric.where(job_id: snapshots.select(:job_id), processed_at: window[:from]..window[:to])
+        batches = JobBatch.where(job_id: snapshots.select(:job_id))
         last_event_at = metrics.maximum(:processed_at) || snapshots.maximum(:last_synced_at)
         target = Rails.application.config.x.analytics_slo_target_seconds
         lag_seconds = last_event_at ? (Time.current - last_event_at).round : nil
@@ -33,6 +75,9 @@ module Api
             aggregates: {
               jobs_total: snapshots.count,
               uploads_total: snapshots.select(:upload_id).distinct.count,
+              records_total: batches.sum(:input_rows),
+              valid_records: batches.sum(:valid_rows),
+              invalid_records: batches.sum(:invalid_rows),
               by_status: snapshots.group(:status).count,
               by_source: snapshots.group(:source_type).count
             }
@@ -40,12 +85,25 @@ module Api
         )
       end
 
-      private
-
       def scoped_snapshots
         return AnalyticsJobSnapshot.all if current_actor.admin?
 
         AnalyticsJobSnapshot.where(organization_id: current_actor.organization_id)
+      end
+
+      def record_clickhouse_warning(error)
+        OperationalWarning.create!(
+          code: "clickhouse_warehouse_read_failed",
+          message: error.message.to_s[0, 1_000],
+          status: "open",
+          severity: "warning",
+          retry_count: 0,
+          expires_at: Rails.application.config.x.operational_warning_retention_days.days.from_now,
+          trace_id: Current.trace_id,
+          request_id: Current.request_id
+        )
+      rescue ActiveRecord::ActiveRecordError
+        Rails.logger.warn("failed to persist clickhouse warehouse warning")
       end
 
       def p95(values)

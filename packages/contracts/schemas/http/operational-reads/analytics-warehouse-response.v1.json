@@ -19,7 +19,20 @@
         "error_budget_percent": { "type": "number", "minimum": 0, "maximum": 100 },
         "dependency_status": { "type": "object", "additionalProperties": true },
         "fallback_reason": { "type": ["string", "null"] },
-        "aggregates": { "type": "object", "additionalProperties": true }
+        "aggregates": {
+          "type": "object",
+          "required": ["jobs_total", "uploads_total", "records_total", "valid_records", "invalid_records"],
+          "properties": {
+            "jobs_total": { "type": "integer", "minimum": 0 },
+            "uploads_total": { "type": "integer", "minimum": 0 },
+            "records_total": { "type": "integer", "minimum": 0 },
+            "valid_records": { "type": "integer", "minimum": 0 },
+            "invalid_records": { "type": "integer", "minimum": 0 },
+            "by_status": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+            "by_source": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } }
+          },
+          "additionalProperties": true
+        }
       },
       "additionalProperties": false
     }
