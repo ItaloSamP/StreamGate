@@ -1482,7 +1482,7 @@ Fronteira explicita (fora da Sprint 5 funcional): `external_link`, `oauth_delega
 
 ## Sprint 6 - Fechamento da v1, dashboard real, drilldowns analiticos e `external_link` terciario
 
-**Status atual:** `Em execucao - trilha backend/worker/documentacao parcial concluida`
+**Status atual:** `Em execucao - trilhas back planning/back execution/worker execution concluidas`
 
 **Dependencias**
 
@@ -1543,11 +1543,11 @@ Pela leitura atual do frontend, esta sprint passa a ter tres frentes centrais e 
 
 - Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `architecture-patterns`, `domain-modeling`, `api-designer`, `supabase-postgres-best-practices`.
 - [x] Congelar o escopo HTTP e de dominio da Sprint 6 com prioridade absoluta em fechamento da v1.
-- [ ] Definir como os dados atuais de `analytics`, `jobs`, `quarantine`, `audit` e `uploads` serao reaproveitados para remover linhas fake da dashboard.
-- [ ] Congelar quais paineis da dashboard serao `live`, `truthfully derived` ou `placeholder controlado`.
-- [ ] Definir o papel funcional de `Analytics`, `ClickHouse`, `ETL Explorer` e `external_link`.
-- [ ] Definir os drilldowns analiticos finais: `ClickHouse` como visao de warehouse, throughput e agregacao; `ETL Explorer` como batches, lineage, etapas e relacoes entre job, quarantine e auditoria.
-- [ ] Classificar explicitamente cada superficie nova da sprint em `funcional agora`, `scaffold transitorio` ou `descoberta futura`.
+- [x] Definir como os dados atuais de `analytics`, `jobs`, `quarantine`, `audit` e `uploads` serao reaproveitados para remover linhas fake da dashboard.
+- [x] Congelar quais paineis da dashboard serao `live`, `truthfully derived` ou `placeholder controlado`.
+- [x] Definir o papel funcional de `Analytics`, `ClickHouse`, `ETL Explorer` e `external_link`.
+- [x] Definir os drilldowns analiticos finais: `ClickHouse` como visao de warehouse, throughput e agregacao; `ETL Explorer` como batches, lineage, etapas e relacoes entre job, quarantine e auditoria.
+- [x] Classificar explicitamente cada superficie nova da sprint em `funcional agora`, `scaffold transitorio` ou `descoberta futura`.
 - [x] Definir quais leituras adicionais o backend precisa expor para eliminar blocos cenograficos da dashboard e sustentar os drilldowns reais.
 - [x] Definir a fronteira funcional minima de `external_link` como `public_link` e somente como terceira prioridade.
 
@@ -1556,9 +1556,9 @@ Pela leitura atual do frontend, esta sprint passa a ter tres frentes centrais e 
 - Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
 - [x] Implementar apenas o backend necessario para materializar os blocos finais da dashboard e a superficie analitica minima.
 - [x] Priorizar somente os endpoints e leituras adicionais necessarios para suportar dashboard final sem fixtures enganosas e drilldowns analiticos reais.
-- [ ] Reutilizar a API existente sempre que possivel; abrir endpoint novo somente quando for realmente necessario para evitar bricolagem fragil no frontend.
-- [ ] Sustentar a jornada final de upload local com estados e leituras coerentes de produto.
-- [ ] Evitar abrir endpoints ou contratos de connector wave 1 nesta sprint.
+- [x] Reutilizar a API existente sempre que possivel; abrir endpoint novo somente quando for realmente necessario para evitar bricolagem fragil no frontend.
+- [x] Sustentar a jornada final de upload local com estados e leituras coerentes de produto.
+- [x] Evitar abrir endpoints ou contratos de connector wave 1 nesta sprint.
 - [x] Se houver endpoint novo para drilldown, sincronizar OpenAPI e `packages/contracts` no mesmo ciclo.
 - [x] Se `external_link` entrar, limitar a entrega funcional inicial a `public_link`, mantendo `oauth_delegated` fora do corte.
 - [x] Manter OpenAPI, `packages/contracts` e documentacao sincronizados no mesmo ciclo das mudancas.
@@ -1566,12 +1566,27 @@ Pela leitura atual do frontend, esta sprint passa a ter tres frentes centrais e 
 ### Worker execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `integration-testing`, `monitoring-observability`.
-- [ ] Garantir que o fluxo local da v1 continue sendo a referencia completa: upload -> processamento -> quarantine/artifacts -> notificacoes -> auditoria.
-- [ ] Garantir que os dados ja emitidos e persistidos pela Sprint 5 sejam suficientes para sustentar os drilldowns e a dashboard final.
-- [ ] Tratar qualquer vinculo adicional necessario para lineage ou visao operacional derivada como ajuste pequeno de rastreabilidade e observabilidade, nao como expansao funcional do worker.
+- [x] Garantir que o fluxo local da v1 continue sendo a referencia completa: upload -> processamento -> quarantine/artifacts -> notificacoes -> auditoria.
+- [x] Garantir que os dados ja emitidos e persistidos pela Sprint 5 sejam suficientes para sustentar os drilldowns e a dashboard final.
+- [x] Tratar qualquer vinculo adicional necessario para lineage ou visao operacional derivada como ajuste pequeno de rastreabilidade e observabilidade, nao como expansao funcional do worker.
 - [x] Fechar lacunas de worker que impeçam a dashboard final de refletir o estado real do pipeline.
 - [x] Se `external_link` entrar, suportar apenas o caminho minimo necessario sem quebrar idempotencia, DLQ, artefatos e auditoria.
 - [x] Nao ampliar o worker para multiplos pipelines alem do necessario para o corte da sprint.
+
+Evidencia backend/worker do recorte (2026-04-24):
+
+- [x] Dashboard final recebe `sections.event_log` derivado de audit, warnings e metricas do worker, sem fixture enganosa.
+- [x] `Analytics` ficou como leitura operacional agregada; `ClickHouse` como warehouse OLAP minimo; `ETL Explorer` como lineage por job; `external_link` como `public_link`.
+- [x] ClickHouse grava job + registros com metadata e HMAC-SHA256, TTL padrao de 30 dias e sem payload bruto.
+- [x] Falha ClickHouse gera `operational_warning` e fallback `postgres_derived`, sem bloquear job, artefatos, notificacoes ou auditoria.
+- [x] Backfill ClickHouse idempotente cobre snapshots/batches existentes.
+- [x] Smoke `public_link` dedicado criado e exige `SMOKE_PUBLIC_LINK_URL` para CSV publico pequeno.
+- [x] `cd apps/api && bundle exec rails test test/requests/sprint6_backend_test.rb` (7 runs, 57 assertions, 0 failures).
+- [x] `cd apps/api && bundle exec rails test` com `PARALLEL_WORKERS=1` (70 runs, 396 assertions, 0 failures).
+- [x] `cd apps/worker && bundle exec rspec` (35 examples, 0 failures).
+- [x] `ruby scripts/ci/validate-operational-contracts.rb` (passed).
+- [x] `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 backend` com `PARALLEL_WORKERS=1` (PASS).
+- [x] `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1` com `SMOKE_PUBLIC_LINK_URL=https://raw.githubusercontent.com/plotly/datasets/master/2014_apple_stock.csv` (PASS; inclui `public_link`, artefatos e notificacao).
 
 ### Front planning
 
@@ -1680,9 +1695,9 @@ Pela leitura atual do frontend, esta sprint passa a ter tres frentes centrais e 
 
 ### Reavaliacao de transicao por trilha
 
-- [ ] `Back planning`: confirmar se a fronteira final da v1 congelou os dados minimos necessarios para dashboard final e drilldowns, sem drift com o backlog estrategico.
-- [ ] `Back execution`: registrar o que deixou de ser scaffold e virou produto funcional real para suportar dashboard final e superficies analiticas.
-- [ ] `Worker execution`: validar se o pipeline principal da v1 ficou suficiente para sustentar a entrega final.
+- [x] `Back planning`: confirmar se a fronteira final da v1 congelou os dados minimos necessarios para dashboard final e drilldowns, sem drift com o backlog estrategico.
+- [x] `Back execution`: registrar o que deixou de ser scaffold e virou produto funcional real para suportar dashboard final e superficies analiticas.
+- [x] `Worker execution`: validar se o pipeline principal da v1 ficou suficiente para sustentar a entrega final.
 - [ ] `Front planning`: validar se analytics, clickhouse e etl explorer deixaram de ser tratados como futuras areas e passaram a ser parte do fechamento da v1.
 - [ ] `Front execution`: confirmar se ainda existe algum bloco visual que pareca feature pronta sem estar materializado.
 - [ ] `DevOps`: confirmar se os gates finais sustentam a narrativa de release da v1.

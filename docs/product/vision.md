@@ -160,7 +160,7 @@ O worker consome o evento, processa em lotes, valida conteudo, aplica idempotenc
 
 ### Load
 
-O PostgreSQL recebe estado operacional e o ClickHouse recebe dados preparados para exploracao analitica.
+O PostgreSQL recebe estado operacional e o ClickHouse recebe dados preparados para exploracao analitica. Na v1, ClickHouse armazena uma camada por job e uma camada por registro com metadados, status, colunas presentes, contagens e HMAC-SHA256; payload bruto de registros nao e replicado no warehouse.
 
 ### Delivery
 
@@ -168,7 +168,7 @@ Ao final, o produto entrega artefatos de resultado para consumo humano e tecnico
 
 ### Analytics
 
-O frontend consulta a API para ler status operacionais e metricas agregadas. Na v1, atualizacao quase em tempo real por polling curto, com evolucao futura para SSE/WebSocket.
+O frontend consulta a API para ler status operacionais e metricas agregadas. Na v1, atualizacao quase em tempo real por polling curto, com evolucao futura para SSE/WebSocket. Quando ClickHouse estiver indisponivel, a API retorna fallback honesto `postgres_derived`, SLO e aviso tecnico sem interromper a entrega operacional.
 
 ## Interfaces e conceitos de produto (direcao, sem implementacao imediata)
 

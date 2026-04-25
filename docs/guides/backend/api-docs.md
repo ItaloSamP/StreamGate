@@ -150,9 +150,13 @@ Envelope padrao:
 
 Snapshot agregado para a dashboard final. Cada secao declara `status` como `live`, `derived`, `empty` ou `degraded`; dado ausente vira empty state explicito, nao fixture.
 
+Na Sprint 6, `sections.event_log` e parte requerida do contrato v1. Ele entrega uma timeline compacta derivada de `audit_events`, `operational_warnings` e `worker_processing_metrics`, com `timestamp`, `type`, `severity`, `job_id`, `upload_id`, `status` e `message`. Operator recebe somente dados do proprio escopo organizacional; admin pode consultar a visao global.
+
 ### `GET /api/v1/analytics/warehouse`
 
-Leitura adapter-ready para ClickHouse. Quando ClickHouse nao estiver disponivel, retorna `200` com `source=postgres_derived`, `fallback_reason` e metadados de SLO.
+Leitura real de warehouse em ClickHouse quando disponivel. A carga analitica e feita pelo worker em duas camadas: uma linha por job e linhas de registro com metadata + HMAC-SHA256, sem payload bruto. O payload agrega `jobs_total`, `uploads_total`, `records_total`, `valid_records`, `invalid_records`, `by_status` e `by_source`.
+
+Quando ClickHouse nao estiver disponivel, retorna `200` com `source=postgres_derived`, `fallback_reason`, `dependency_status`, metadados de SLO e warning tecnico em `operational_warnings`. Falha analitica nao bloqueia job, artefatos, notificacoes ou auditoria operacional.
 
 ### `GET /api/v1/analytics/lineage?job_id=...`
 

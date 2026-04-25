@@ -56,6 +56,7 @@ O StreamGate ja possui, apos a Sprint 5, um fluxo operacional real mais completo
 - Downloads remotos sao gravados por stream em `Tempfile`, com limite configuravel alinhado a 10 GB e SHA-256 calculado durante a copia.
 - Falhas tecnicas viram `operational_warnings` com retencao padrao de 30 dias, sem impedir acesso aos artefatos ja disponiveis.
 - Dashboard e warehouse distinguem `live`, `derived`, `empty` e `degraded` para evitar dados cenograficos.
+- ClickHouse recebe apenas metadados analiticos de jobs/registros e HMAC-SHA256 de registros; payload bruto nao e replicado no OLAP. O TTL padrao e 30 dias e falha de carga gera warning tecnico nao bloqueante.
 ## Scope and assumptions
 
 ### In-scope paths

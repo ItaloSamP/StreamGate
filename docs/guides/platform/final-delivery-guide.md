@@ -71,8 +71,8 @@ Estas frentes ja ajudam muito na experiencia final, mas ainda nao devem ser lida
 | --- | --- | --- |
 | Dashboard v3 | `parcial` | wiring completo card a card, consolidacao dos blocos que ainda usam scaffold/derivacao local |
 | Shell do workspace | `parcial` | fechamento fino de fidelidade visual, consistencia entre todas as rotas e eliminacao de pequenos desvios de UX |
-| ClickHouse | `scaffold` | superficie real de consulta/exploracao e criterio claro de uso |
-| ETL Explorer | `scaffold` | fluxo util real, dados reais e papel funcional dentro do produto |
+| ClickHouse | `funcional backend/worker` | warehouse OLAP minimo com job + registros, fallback honesto e contrato pronto para front |
+| ETL Explorer | `funcional backend/worker` | lineage por job com batches, attempts, quarantine, artifacts, warnings e audit refs |
 | Camada analitica visivel no front | `parcial` | leituras mais profundas, exploracao consistente e melhor narrativa entre operacional x analitico |
 
 ### Aprovado na visao, mas ainda nao materializado
@@ -208,7 +208,7 @@ Estado Sprint 6 backend/worker:
 
 - `public_link` entra como primeiro caminho funcional de `external_link`;
 - `oauth_delegated`, `google_drive`, `s3` e `http_url` continuam fora da entrega;
-- dashboard, warehouse e lineage passam a ter endpoints reais adapter-ready para o frontend, com fallback `postgres_derived` e empty states honestos.
+- dashboard, warehouse e lineage passam a ter endpoints reais para o frontend, com `event_log`, ClickHouse real para warehouse, fallback `postgres_derived`, warnings tecnicos e empty states honestos.
 
 ### Bloco E - Fechamento de produto e release
 
