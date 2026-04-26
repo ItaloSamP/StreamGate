@@ -69,6 +69,70 @@ export type AnalyticsSnapshot = {
   breakdowns: AnalyticsBreakdowns
 }
 
+export type AnalyticsSectionStatus = 'live' | 'derived' | 'empty' | 'degraded' | string
+
+export type AnalyticsDashboardSection<T> = {
+  status: AnalyticsSectionStatus
+  generated_at: string
+  data: T
+  empty_state: string | null
+}
+
+export type AnalyticsDashboardEvent = {
+  timestamp: string | null
+  type: string
+  severity: 'info' | 'warning' | 'error' | string
+  job_id: string | null
+  upload_id: string | null
+  status: string | null
+  message: string
+}
+
+export type AnalyticsDashboardSnapshot = {
+  generated_at: string
+  source: 'postgres_derived' | 'clickhouse' | 'empty' | string
+  window: AnalyticsSnapshot['window']
+  sections: {
+    queue: AnalyticsDashboardSection<{ processed: number; retried: number; moved_to_dlq: number }>
+    workers: AnalyticsDashboardSection<{ processed: number; failed_terminal: number; average_latency_ms: number }>
+    throughput: AnalyticsDashboardSection<{ jobs_total: number; uploads_total: number; completed: number; failed: number; quarantined: number }>
+    formats: AnalyticsDashboardSection<{ content_type: string; count: number }[]>
+    warnings: AnalyticsDashboardSection<{ open: number; failed: number; resolved: number }>
+    event_log: AnalyticsDashboardSection<AnalyticsDashboardEvent[]>
+  }
+  dependencies: Record<string, { status: string; reason?: string; source?: string; fallback_reason?: string | null }>
+  slo: {
+    slo_target_seconds: number
+    last_event_at: string | null
+    lag_seconds: number | null
+    stale: boolean
+    p95_ms: number
+    error_budget_percent: number
+  }
+}
+
+export type AnalyticsWarehouseSnapshot = {
+  source: 'clickhouse' | 'postgres_derived' | string
+  generated_at: string
+  last_event_at: string | null
+  lag_seconds: number | null
+  stale: boolean
+  slo_target_seconds: number
+  p95_ms: number
+  error_budget_percent: number
+  dependency_status: Record<string, string>
+  fallback_reason: string | null
+  aggregates: {
+    jobs_total: number
+    uploads_total: number
+    records_total: number
+    valid_records: number
+    invalid_records: number
+    by_status?: Record<string, number>
+    by_source?: Record<string, number>
+  }
+}
+
 export type QuarantineRecord = {
   id: string
   job_id: string
@@ -146,6 +210,25 @@ export type JobSummary = {
   trace_id: string
   created_at: string | null
   updated_at: string | null
+}
+
+export type UploadAcquisition = {
+  id: string
+  upload_id: string
+  job_id: string
+  source_type: string
+  link_mode: string
+  status: string
+  url_masked: string
+  url_hash: string
+  source_host: string
+  content_type: string
+  byte_size: number
+  requested_at: string | null
+  completed_at: string | null
+  trace_id: string
+  created_at: string
+  updated_at: string
 }
 
 export type OperationActionInput = {
@@ -273,6 +356,7 @@ export type UploadSummary = {
   byte_size: number
   checksum_sha256: string
   storage_key: string
+  source_type?: string
   status: string
   sensitivity_level: string
   user_id: string
@@ -308,6 +392,77 @@ export type UploadRegisterRequest = {
 export type UploadRegisterResponse = {
   upload: UploadSummary
   job: JobSummary
+}
+
+export type PublicLinkUploadRequest = {
+  url: string
+  filename: string
+  contentType: UploadContentType
+  byteSize: number
+  idempotencyKey?: string
+}
+
+export type PublicLinkUploadResponse = UploadRegisterResponse & {
+  acquisition: UploadAcquisition | null
+}
+
+export type AnalyticsLineage = {
+  job: JobSummary
+  upload: UploadSummary
+  acquisition: UploadAcquisition | null
+  batches: {
+    id: string
+    job_id: string
+    batch_number: number
+    status: string
+    input_rows: number
+    valid_rows: number
+    invalid_rows: number
+    trace_id: string
+    created_at: string | null
+    updated_at: string | null
+  }[]
+  attempts: {
+    id: string
+    attempt_number: number
+    operation: string
+    status: string
+    retryable: boolean
+    error_code: string | null
+    started_at: string | null
+    finished_at: string | null
+    trace_id: string
+  }[]
+  quarantine: {
+    id: string
+    job_batch_id: string | null
+    row_number: number | null
+    code: string
+    message: string
+    severity: string
+    resolution_status: string
+    trace_id: string
+    created_at: string | null
+  }[]
+  artifacts: JobArtifact[]
+  warnings: {
+    id: string
+    code: string
+    message: string
+    status: string
+    severity: string
+    trace_id: string
+    created_at: string
+    updated_at: string
+  }[]
+  audit_refs: {
+    id: string
+    action: string
+    auditable_type: string
+    auditable_id: string
+    trace_id: string
+    occurred_at: string | null
+  }[]
 }
 
 export type AuthUser = {
@@ -452,6 +607,7 @@ const endpoints = {
   notifications: '/api/v1/notifications',
   notificationSettings: '/api/v1/notification-settings',
   uploads: '/api/v1/uploads',
+  uploadPublicLink: '/api/v1/uploads/public-link',
   uploadSignedUrl: '/api/v1/uploads/signed-url',
 } as const
 
@@ -532,6 +688,27 @@ export function createStreamgateApi(client: StreamgateHttpClient = apiClient) {
       return { data }
     },
 
+    createPublicLinkUpload: async (input: PublicLinkUploadRequest): Promise<ApiSuccessEnvelope<PublicLinkUploadResponse>> => {
+      const options = {
+        body: {
+          public_link: {
+            url: input.url,
+            filename: input.filename,
+            content_type: input.contentType,
+            byte_size: input.byteSize,
+          },
+        },
+        headers: idempotencyHeaders(input.idempotencyKey),
+      }
+
+      if (client.postEnvelope) {
+        return client.postEnvelope<PublicLinkUploadResponse>(endpoints.uploadPublicLink, options)
+      }
+
+      const data = await client.post<PublicLinkUploadResponse>(endpoints.uploadPublicLink, options)
+      return { data }
+    },
+
     listJobs: async (query?: ListQuery): Promise<ApiSuccessEnvelope<JobSummary[]>> => {
       const normalizedQuery = normalizeListQuery(query)
 
@@ -562,6 +739,42 @@ export function createStreamgateApi(client: StreamgateHttpClient = apiClient) {
       }
 
       const data = await client.get<AnalyticsSnapshot>(endpoints.analytics, { query: normalizedQuery })
+      return { data }
+    },
+
+    getAnalyticsDashboard: async (query?: OperationalQuery): Promise<ApiSuccessEnvelope<AnalyticsDashboardSnapshot>> => {
+      const normalizedQuery = normalizeOperationalQuery(query)
+      const path = `${endpoints.analytics}/dashboard`
+
+      if (client.getEnvelope) {
+        return client.getEnvelope<AnalyticsDashboardSnapshot>(path, { query: normalizedQuery })
+      }
+
+      const data = await client.get<AnalyticsDashboardSnapshot>(path, { query: normalizedQuery })
+      return { data }
+    },
+
+    getAnalyticsWarehouse: async (query?: OperationalQuery): Promise<ApiSuccessEnvelope<AnalyticsWarehouseSnapshot>> => {
+      const normalizedQuery = normalizeOperationalQuery(query)
+      const path = `${endpoints.analytics}/warehouse`
+
+      if (client.getEnvelope) {
+        return client.getEnvelope<AnalyticsWarehouseSnapshot>(path, { query: normalizedQuery })
+      }
+
+      const data = await client.get<AnalyticsWarehouseSnapshot>(path, { query: normalizedQuery })
+      return { data }
+    },
+
+    getAnalyticsLineage: async (jobId: string): Promise<ApiSuccessEnvelope<AnalyticsLineage>> => {
+      const path = `${endpoints.analytics}/lineage`
+      const query = { job_id: jobId }
+
+      if (client.getEnvelope) {
+        return client.getEnvelope<AnalyticsLineage>(path, { query })
+      }
+
+      const data = await client.get<AnalyticsLineage>(path, { query })
       return { data }
     },
 
