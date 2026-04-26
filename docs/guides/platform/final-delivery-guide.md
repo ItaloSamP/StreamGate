@@ -37,7 +37,7 @@ A base do produto deixou de ser um esqueleto. O StreamGate ja tem um nucleo oper
 Leitura sintetica:
 
 - o nucleo operacional do produto esta materializado;
-- o shell do workspace e a dashboard caminham para a forma final do produto, mas parte dessa superficie ainda mistura dado real com scaffold;
+- o shell do workspace e a dashboard ja fecharam a trilha frontend da Sprint 6 como superficies reais, sem fixtures enganosas no command center;
 - a maior distancia para a entrega final nao esta mais na fundacao tecnica, e sim em fechar as superficies finais, a exploracao analitica e a conectividade futura aprovada na visao.
 
 Termometro pragmatico de maturidade:
@@ -69,11 +69,11 @@ Estas frentes ja ajudam muito na experiencia final, mas ainda nao devem ser lida
 
 | Frente | Estado | O que falta |
 | --- | --- | --- |
-| Dashboard v3 | `parcial` | wiring completo card a card, consolidacao dos blocos que ainda usam scaffold/derivacao local |
-| Shell do workspace | `parcial` | fechamento fino de fidelidade visual, consistencia entre todas as rotas e eliminacao de pequenos desvios de UX |
-| ClickHouse | `funcional backend/worker` | warehouse OLAP minimo com job + registros, fallback honesto e contrato pronto para front |
-| ETL Explorer | `funcional backend/worker` | lineage por job com batches, attempts, quarantine, artifacts, warnings e audit refs |
-| Camada analitica visivel no front | `parcial` | leituras mais profundas, exploracao consistente e melhor narrativa entre operacional x analitico |
+| Dashboard v3 | `funcional` | command center real via `analytics/dashboard`, com estados `live`, `derived`, `empty` e `degraded` |
+| Shell do workspace | `funcional` | sidebar/topbar estaveis, rotas analiticas reais e chips/gauges fixos neutralizados |
+| ClickHouse | `funcional` | warehouse OLAP minimo visivel no front com fallback honesto, SLO e agregados |
+| ETL Explorer | `funcional` | lineage por job com batches, attempts, quarantine, artifacts, warnings e audit refs |
+| Camada analitica visivel no front | `funcional minimo` | `Analytics`, `ClickHouse` e `ETL Explorer` possuem papeis distintos e dados reais |
 
 ### Aprovado na visao, mas ainda nao materializado
 
@@ -210,6 +210,13 @@ Estado Sprint 6 backend/worker:
 - `oauth_delegated`, `google_drive`, `s3` e `http_url` continuam fora da entrega;
 - dashboard, warehouse e lineage passam a ter endpoints reais para o frontend, com `event_log`, ClickHouse real para warehouse, fallback `postgres_derived`, warnings tecnicos e empty states honestos.
 
+Estado Sprint 6 frontend:
+
+- dashboard consome `analytics/dashboard` e remove fixtures locais de fila, workers, event log e formatos;
+- `/clickhouse` e `/etl-explorer` foram materializados como rotas protegidas reais para `operator` e `admin`;
+- Upload Center preserva arquivo local e adiciona `public_link` completo com idempotencia e acquisition mascarada;
+- conectores `oauth_delegated`, `google_drive`, `s3` e `http_url` seguem fora da UI funcional.
+
 ### Bloco E - Fechamento de produto e release
 
 Objetivo: transformar o estado "quase pronto" em entrega confiavel.
@@ -304,11 +311,11 @@ Regra pratica:
 
 ### Produto
 
-- [ ] shell autenticado finalizado e coerente com o prototipo aprovado
-- [ ] dashboard v3 fechada como command center real
-- [ ] upload local fechado como experiencia final da v1
-- [ ] superfices analiticas com papel real definido e implementado no minimo util
-- [ ] backlog de conectores e ingestao externa classificado sem ambiguidade
+- [x] shell autenticado finalizado e coerente com o prototipo aprovado
+- [x] dashboard v3 fechada como command center real
+- [x] upload local fechado como experiencia final da v1
+- [x] superfices analiticas com papel real definido e implementado no minimo util
+- [x] backlog de conectores e ingestao externa classificado sem ambiguidade
 
 ### Backend e worker
 
@@ -320,16 +327,16 @@ Regra pratica:
 
 ### Frontend
 
-- [ ] rotas principais coerentes entre shell, dashboard e modulos
+- [x] rotas principais coerentes entre shell, dashboard e modulos
 - [ ] estados de denied/error/loading consistentes em superficies sensiveis
-- [ ] visual final sem cards cenograficos ou lacunas de produto disfarcadas
+- [x] visual final sem cards cenograficos ou lacunas de produto disfarcadas
 - [ ] mobile/tablet utilizaveis nas rotas principais
 
 ### Documentacao
 
 - [ ] `docs/product/vision.md` reflete exatamente a entrega
 - [ ] `docs/planning/streamgate-full-sprints-roadmap.md` sincronizado com o estado real
-- [ ] `docs/guides/frontend/frontend-workspace-map.md` descreve o workspace final
+- [x] `docs/guides/frontend/frontend-workspace-map.md` descreve o workspace final
 - [ ] `docs/guides/backend/api-docs.md` e OpenAPI sincronizados
 - [ ] docs de seguranca e release atualizadas
 - [ ] closeout final de release escrito

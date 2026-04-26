@@ -1482,7 +1482,7 @@ Fronteira explicita (fora da Sprint 5 funcional): `external_link`, `oauth_delega
 
 ## Sprint 6 - Fechamento da v1, dashboard real, drilldowns analiticos e `external_link` terciario
 
-**Status atual:** `Em execucao - trilhas back planning/back execution/worker execution concluidas`
+**Status atual:** `Em execucao - trilhas back planning/back execution/worker execution/front planning/front execution concluidas`
 
 **Dependencias**
 
@@ -1591,29 +1591,33 @@ Evidencia backend/worker do recorte (2026-04-24):
 ### Front planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`, `vercel-react-best-practices`, `test-driven-development`.
-- [ ] Fechar shell e dashboard com base no prototipo final, sem deixar blocos semanticamente ambíguos.
-- [ ] Revisar a dashboard bloco a bloco e classificar cada area em `real`, `derivada` ou `placeholder controlado`.
-- [ ] Definir o papel final de `dashboard`, `analytics`, `clickhouse`, `etl explorer` e `upload` dentro da v1.
-- [ ] Revisar `/clickhouse` e `/etl-explorer` como rotas reais do workspace, e nao mais como placeholders tolerados.
-- [ ] Revisar bloco a bloco da dashboard v3 para eliminar qualquer card cenografico ainda sustentado por fixture.
-- [ ] Revisar shell responsivo, sidebar fixa/colapsavel e estados de navegacao apos o refactor novo.
-- [ ] Registrar explicitamente que a navegacao analitica ja esta exposta para `operator` e `admin`, portanto essas paginas precisam entregar valor funcional real nesta sprint.
-- [ ] Fechar a UX final da ingestao local, incluindo `guided` vs `advanced`, mensagens, erro, progresso e handoff para jobs.
-- [ ] Tratar `external_link` como frente terciaria e puramente oportunistica em relacao ao fechamento do nucleo.
+- [x] Fechar shell e dashboard com base no prototipo final, sem deixar blocos semanticamente ambíguos.
+- [x] Revisar a dashboard bloco a bloco e classificar cada area em `real`, `derivada` ou `placeholder controlado`.
+- [x] Definir o papel final de `dashboard`, `analytics`, `clickhouse`, `etl explorer` e `upload` dentro da v1.
+- [x] Revisar `/clickhouse` e `/etl-explorer` como rotas reais do workspace, e nao mais como placeholders tolerados.
+- [x] Revisar bloco a bloco da dashboard v3 para eliminar qualquer card cenografico ainda sustentado por fixture.
+- [x] Revisar shell responsivo, sidebar fixa/colapsavel e estados de navegacao apos o refactor novo.
+- [x] Registrar explicitamente que a navegacao analitica ja esta exposta para `operator` e `admin`, portanto essas paginas precisam entregar valor funcional real nesta sprint.
+- [x] Fechar a UX final da ingestao local, incluindo `guided` vs `advanced`, mensagens, erro, progresso e handoff para jobs.
+- [x] Tratar `external_link` como frente terciaria e puramente oportunistica em relacao ao fechamento do nucleo.
+
+**Evidencia Front planning:** decisao aplicada no frontend em 2026-04-26: dashboard usa `analytics/dashboard`; `Analytics` permanece leitura operacional agregada; `ClickHouse` virou warehouse operacional sem SQL livre; `ETL Explorer` virou lineage por job; `Upload` preserva arquivo local e adiciona `public_link`; `oauth_delegated`, `google_drive`, `s3` e `http_url` seguem fora do corte.
 
 ### Front execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`, `vercel-react-best-practices`, `vitest`, `playwright`, `test-driven-development`.
-- [ ] Finalizar o shell autenticado como superficie final de produto, nao apenas scaffold bonito.
-- [ ] Adicionar cobertura focada de rota e shell para a renderizacao protegida de `/clickhouse` e `/etl-explorer`.
-- [ ] Cobrir presenca correta dos itens analiticos na sidebar por role suportada e estabilidade do shell apos as mudancas responsivas/sidebar fixa-colapsavel.
-- [ ] Finalizar a dashboard v3 como command center real, eliminando cards que parecam prontos sem papel funcional decidido.
-- [ ] Substituir `scaffoldQueue`, `scaffoldWorkers`, `scaffoldEventRows` e `scaffoldFormatRows` por dados live ou honestamente derivados do runtime atual.
-- [ ] Fazer a dashboard falhar com elegancia quando faltar dado, usando empty state ou insight insuficiente sem inventar linhas prontas.
-- [ ] Materializar a superficie analitica minima com valor real para a v1.
-- [ ] Implementar `/clickhouse` e `/etl-explorer` como drilldowns reais, reutilizando `streamgateApi` e derivando visoes uteis de analytics, jobs, quarantine, audit e uploads.
-- [ ] Fechar a experiencia final de upload local na UI.
-- [ ] Implementar `external_link` apenas se dashboard real, shell estavel, drilldowns analiticos e upload final ja estiverem fechados.
+- [x] Finalizar o shell autenticado como superficie final de produto, nao apenas scaffold bonito.
+- [x] Adicionar cobertura focada de rota e shell para a renderizacao protegida de `/clickhouse` e `/etl-explorer`.
+- [x] Cobrir presenca correta dos itens analiticos na sidebar por role suportada e estabilidade do shell apos as mudancas responsivas/sidebar fixa-colapsavel.
+- [x] Finalizar a dashboard v3 como command center real, eliminando cards que parecam prontos sem papel funcional decidido.
+- [x] Substituir `scaffoldQueue`, `scaffoldWorkers`, `scaffoldEventRows` e `scaffoldFormatRows` por dados live ou honestamente derivados do runtime atual.
+- [x] Fazer a dashboard falhar com elegancia quando faltar dado, usando empty state ou insight insuficiente sem inventar linhas prontas.
+- [x] Materializar a superficie analitica minima com valor real para a v1.
+- [x] Implementar `/clickhouse` e `/etl-explorer` como drilldowns reais, reutilizando `streamgateApi` e derivando visoes uteis de analytics, jobs, quarantine, audit e uploads.
+- [x] Fechar a experiencia final de upload local na UI.
+- [x] Implementar `external_link` apenas se dashboard real, shell estavel, drilldowns analiticos e upload final ja estiverem fechados.
+
+**Evidencia Front execution:** `apps/web/src/lib/streamgate-api.ts` ganhou os contratos Sprint 6; `DashboardPage`, `ExplorationPages` e `UploadPage` foram ligados aos endpoints reais; `dashboard-surface`/`workspace-config` foram ajustados para nao exibir telemetria fixa. Gates: `pnpm.cmd --dir apps/web test:run` PASS, `pnpm.cmd --dir apps/web test:integration` PASS apos subir API local, `pnpm.cmd --dir apps/web build` PASS, `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 frontend` PASS, `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1` com `SMOKE_PUBLIC_LINK_URL=https://raw.githubusercontent.com/plotly/datasets/master/2014_apple_stock.csv` PASS. Verificacao visual desktop/mobile via Playwright em `/dashboard`, `/clickhouse`, `/etl-explorer` e `/upload`: PASS. CodeRabbit: bloqueado porque a CLI `coderabbit` nao esta instalada/reconhecida neste ambiente.
 
 ### DevOps
 
@@ -1669,23 +1673,23 @@ Evidencia backend/worker do recorte (2026-04-24):
 - [x] Atualizar este roadmap mestre no mesmo ciclo do andamento real da Sprint 6.
 - [x] Manter `docs/product/vision.md` alinhado ao corte final da v1.
 - [x] Atualizar `docs/guides/platform/final-delivery-guide.md` com o que deixar de ser gap e passar a ser entregue.
-- [ ] Atualizar `docs/guides/frontend/frontend-workspace-map.md` com o workspace final da v1.
+- [x] Atualizar `docs/guides/frontend/frontend-workspace-map.md` com o workspace final da v1.
 - [x] Atualizar `docs/guides/backend/api-docs.md` e OpenAPI quando os blocos finais exigirem endpoints ou contratos novos.
-- [ ] Registrar explicitamente na documentacao que a Sprint 6 fecha dashboard real sem fixtures enganosas e transforma `/clickhouse` e `/etl-explorer` em metas funcionais da sprint.
+- [x] Registrar explicitamente na documentacao que a Sprint 6 fecha dashboard real sem fixtures enganosas e transforma `/clickhouse` e `/etl-explorer` em metas funcionais da sprint.
 - [x] Atualizar `docs/guides/security/streamgate-threat-model.md` se `external_link` entrar.
 - [ ] Preparar o closeout da Sprint 6 como closeout de fechamento da v1, caso o checklist de saida seja atingido.
 
 ### Checklist de saida
 
-- [ ] Shell autenticado finalizado e coerente com o prototipo aprovado.
-- [ ] `/clickhouse` e `/etl-explorer` renderizam como rotas protegidas reais.
-- [ ] Sidebar expoe corretamente essas rotas por role suportada.
-- [ ] Shell novo permanece estavel apos o refactor responsivo/sidebar.
-- [ ] Dashboard v3 fechada como command center real.
-- [ ] Dashboard v3 nao depende mais de filas, workers, eventos ou distribution baseados em fixtures enganosas.
-- [ ] Dashboard usa dados live ou honestamente derivados do estado operacional da Sprint 5.
-- [ ] Upload local fechado como experiencia final da v1.
-- [ ] Superficie analitica minima com valor real implementado.
+- [x] Shell autenticado finalizado e coerente com o prototipo aprovado.
+- [x] `/clickhouse` e `/etl-explorer` renderizam como rotas protegidas reais.
+- [x] Sidebar expoe corretamente essas rotas por role suportada.
+- [x] Shell novo permanece estavel apos o refactor responsivo/sidebar.
+- [x] Dashboard v3 fechada como command center real.
+- [x] Dashboard v3 nao depende mais de filas, workers, eventos ou distribution baseados em fixtures enganosas.
+- [x] Dashboard usa dados live ou honestamente derivados do estado operacional da Sprint 5.
+- [x] Upload local fechado como experiencia final da v1.
+- [x] Superficie analitica minima com valor real implementado.
 - [ ] Drilldowns analiticos entregam valor real e deixam de ser scaffold.
 - [ ] `ClickHouse` e `ETL Explorer` com papel claro no produto.
 - [ ] Docs centrais sincronizadas com a leitura final da v1.
@@ -1698,8 +1702,8 @@ Evidencia backend/worker do recorte (2026-04-24):
 - [x] `Back planning`: confirmar se a fronteira final da v1 congelou os dados minimos necessarios para dashboard final e drilldowns, sem drift com o backlog estrategico.
 - [x] `Back execution`: registrar o que deixou de ser scaffold e virou produto funcional real para suportar dashboard final e superficies analiticas.
 - [x] `Worker execution`: validar se o pipeline principal da v1 ficou suficiente para sustentar a entrega final.
-- [ ] `Front planning`: validar se analytics, clickhouse e etl explorer deixaram de ser tratados como futuras areas e passaram a ser parte do fechamento da v1.
-- [ ] `Front execution`: confirmar se ainda existe algum bloco visual que pareca feature pronta sem estar materializado.
+- [x] `Front planning`: validar se analytics, clickhouse e etl explorer deixaram de ser tratados como futuras areas e passaram a ser parte do fechamento da v1.
+- [x] `Front execution`: confirmar se ainda existe algum bloco visual que pareca feature pronta sem estar materializado.
 - [ ] `DevOps`: confirmar se os gates finais sustentam a narrativa de release da v1.
 - [ ] `Documentation`: validar se vision, roadmap, guide de fechamento e workspace map contam a mesma historia sobre dashboard real e drilldowns analiticos.
 - [ ] `Test planning`: confirmar se a matriz de testes cobriu rota, nav, shell e derived truth da reta final da v1.
