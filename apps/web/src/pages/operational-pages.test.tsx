@@ -91,7 +91,35 @@ describe('Sprint 4 operational pages', () => {
     expect(await screen.findByText('Pipeline de Jobs')).toBeInTheDocument()
     expect((await screen.findAllByText('Quarentena')).length).toBeGreaterThan(0)
     expect(screen.getByRole('link', { name: '+ Upload' })).toHaveAttribute('href', '/upload')
-    expect(screen.getByText('1.840.000')).toBeInTheDocument()
+    expect(await screen.findByText('Fonte: postgres_derived')).toBeInTheDocument()
+    expect(await screen.findByText('Snapshot derived')).toBeInTheDocument()
+    expect(await screen.findByText('Worker processed event_fixture_1 with status processed.')).toBeInTheDocument()
+    expect(screen.queryByText('1.840.000')).not.toBeInTheDocument()
+  })
+
+  it('renders ClickHouse as a dense warehouse dashboard without SQL console claims', async () => {
+    renderApp('/clickhouse', 'admin')
+
+    expect(await screen.findByText('Warehouse operacional')).toBeInTheDocument()
+    expect(await screen.findByText('Fonte: clickhouse')).toBeInTheDocument()
+    expect(await screen.findByText('1.200')).toBeInTheDocument()
+    expect(await screen.findByText('external_link')).toBeInTheDocument()
+    expect(screen.queryByText(/SQL/i)).not.toBeInTheDocument()
+  })
+
+  it('renders ETL Explorer with auto-selected recent job and real lineage', async () => {
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>
+
+    renderApp('/etl-explorer', 'admin')
+
+    expect(await screen.findByText('Lineage real')).toBeInTheDocument()
+    expect(await screen.findByText('job_fixture_pending')).toBeInTheDocument()
+    expect(await screen.findByText('batch_fixture_first')).toBeInTheDocument()
+    expect(await screen.findByText('quality-report.json')).toBeInTheDocument()
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([input]) => String(input).includes('/api/v1/analytics/lineage?job_id=job_fixture_pending'))).toBe(true)
+    })
   })
 
   it('renders audit-backed event log with copied operational context', async () => {
@@ -286,6 +314,18 @@ function createOperationalFetchMock() {
           },
         },
       }))
+    }
+
+    if (url.includes('/api/v1/analytics/dashboard')) {
+      return Promise.resolve(jsonResponse(200, analyticsDashboardResponse()))
+    }
+
+    if (url.includes('/api/v1/analytics/warehouse')) {
+      return Promise.resolve(jsonResponse(200, analyticsWarehouseResponse()))
+    }
+
+    if (url.includes('/api/v1/analytics/lineage')) {
+      return Promise.resolve(jsonResponse(200, analyticsLineageResponse()))
     }
 
     if (url.includes('/api/v1/analytics')) {
@@ -571,6 +611,152 @@ function analyticsResponse() {
       },
     },
     meta: { pagination: { page: 1, per_page: 20, total_count: 1, total_pages: 1 }, filters: {} },
+  }
+}
+
+function analyticsDashboardResponse() {
+  return {
+    data: {
+      generated_at: '2026-04-24T14:00:00Z',
+      source: 'postgres_derived',
+      window: { from: '2026-04-23T14:00:00Z', to: '2026-04-24T14:00:00Z', preset: 'last_24h', timezone: 'UTC' },
+      sections: {
+        queue: {
+          status: 'derived',
+          generated_at: '2026-04-24T14:00:00Z',
+          data: { processed: 3, retried: 1, moved_to_dlq: 0 },
+          empty_state: null,
+        },
+        workers: {
+          status: 'derived',
+          generated_at: '2026-04-24T14:00:00Z',
+          data: { processed: 2, failed_terminal: 0, average_latency_ms: 120 },
+          empty_state: null,
+        },
+        throughput: {
+          status: 'derived',
+          generated_at: '2026-04-24T14:00:00Z',
+          data: { jobs_total: 12, uploads_total: 12, completed: 8, failed: 2, quarantined: 1 },
+          empty_state: null,
+        },
+        formats: {
+          status: 'derived',
+          generated_at: '2026-04-24T14:00:00Z',
+          data: [{ content_type: 'text/csv', count: 12 }],
+          empty_state: null,
+        },
+        warnings: {
+          status: 'empty',
+          generated_at: '2026-04-24T14:00:00Z',
+          data: { open: 0, failed: 0, resolved: 0 },
+          empty_state: 'no_data_in_window',
+        },
+        event_log: {
+          status: 'derived',
+          generated_at: '2026-04-24T14:00:00Z',
+          data: [
+            {
+              timestamp: '2026-04-24T13:59:40Z',
+              type: 'worker_metric',
+              severity: 'info',
+              job_id: 'job_fixture_pending',
+              upload_id: 'upload_fixture_registered',
+              status: 'processed',
+              message: 'Worker processed event_fixture_1 with status processed.',
+            },
+          ],
+          empty_state: null,
+        },
+      },
+      dependencies: {
+        broker: { status: 'healthy' },
+        warehouse: { status: 'degraded', source: 'postgres_derived', fallback_reason: 'clickhouse_unavailable' },
+      },
+      slo: {
+        slo_target_seconds: 300,
+        last_event_at: '2026-04-24T13:59:40Z',
+        lag_seconds: 20,
+        stale: false,
+        p95_ms: 240,
+        error_budget_percent: 99.9,
+      },
+    },
+  }
+}
+
+function analyticsWarehouseResponse() {
+  return {
+    data: {
+      source: 'clickhouse',
+      generated_at: '2026-04-24T14:00:00Z',
+      last_event_at: '2026-04-24T13:59:40Z',
+      lag_seconds: 20,
+      stale: false,
+      slo_target_seconds: 300,
+      p95_ms: 240,
+      error_budget_percent: 99.9,
+      dependency_status: { clickhouse: 'healthy', postgres: 'healthy' },
+      fallback_reason: null,
+      aggregates: {
+        jobs_total: 12,
+        uploads_total: 12,
+        records_total: 1200,
+        valid_records: 1188,
+        invalid_records: 12,
+        by_status: { completed: 11, quarantined_with_warnings: 1 },
+        by_source: { upload: 10, external_link: 2 },
+      },
+    },
+  }
+}
+
+function analyticsLineageResponse() {
+  return {
+    data: {
+      job: jobsResponse().data[0],
+      upload: uploadsResponse().data[0],
+      acquisition: null,
+      batches: [
+        {
+          id: 'batch_fixture_first',
+          job_id: 'job_fixture_pending',
+          batch_number: 1,
+          status: 'completed',
+          input_rows: 12,
+          valid_rows: 11,
+          invalid_rows: 1,
+          trace_id: 'trace_fixture_1',
+          created_at: '2026-04-20T10:00:00Z',
+          updated_at: '2026-04-20T10:01:00Z',
+        },
+      ],
+      attempts: [
+        {
+          id: 'attempt_fixture_1',
+          attempt_number: 1,
+          operation: 'process_upload',
+          status: 'completed',
+          retryable: false,
+          error_code: null,
+          started_at: '2026-04-20T10:00:00Z',
+          finished_at: '2026-04-20T10:01:00Z',
+          trace_id: 'trace_fixture_1',
+        },
+      ],
+      quarantine: quarantineResponse().data,
+      artifacts: artifactsResponse().data,
+      warnings: [],
+      audit_refs: [
+        {
+          id: 'audit_fixture_registered',
+          action: 'upload.registered',
+          auditable_type: 'Upload',
+          auditable_id: 'upload_fixture_registered',
+          trace_id: 'trace_fixture_1',
+          occurred_at: '2026-04-20T10:00:00Z',
+        },
+      ],
+    },
   }
 }
 

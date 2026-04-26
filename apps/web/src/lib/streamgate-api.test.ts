@@ -174,6 +174,49 @@ describe('streamgateApi auth adapter', () => {
     expect(response.meta?.idempotent).toBe(true)
   })
 
+  it('maps public-link upload payload with idempotency headers', async () => {
+    const postEnvelope = vi.fn().mockResolvedValue({
+      data: {
+        upload: { id: 'upload_public_link', source_type: 'external_link' },
+        job: { id: 'job_public_link', source_type: 'external_link' },
+        acquisition: {
+          id: 'acq_public_link',
+          url_masked: 'https://data.example.com/export.csv',
+          source_host: 'data.example.com',
+        },
+      },
+      meta: { idempotent: true },
+    })
+
+    const api = createStreamgateApi({
+      get: vi.fn(),
+      post: vi.fn(),
+      postEnvelope,
+    })
+
+    const response = await api.createPublicLinkUpload({
+      url: 'https://data.example.com/export.csv?token=secret',
+      filename: 'export.csv',
+      contentType: 'text/csv',
+      byteSize: 1024,
+      idempotencyKey: 'idem-public-link',
+    })
+
+    expect(postEnvelope).toHaveBeenCalledWith('/api/v1/uploads/public-link', {
+      body: {
+        public_link: {
+          url: 'https://data.example.com/export.csv?token=secret',
+          filename: 'export.csv',
+          content_type: 'text/csv',
+          byte_size: 1024,
+        },
+      },
+      headers: { 'Idempotency-Key': 'idem-public-link' },
+    })
+    expect(response.data.acquisition?.url_masked).toBe('https://data.example.com/export.csv')
+    expect(response.meta?.idempotent).toBe(true)
+  })
+
   it('aligns jobs and uploads list endpoints with api v1 and keeps query shape stable', async () => {
     const getEnvelope = vi.fn()
       .mockResolvedValueOnce({
@@ -287,6 +330,70 @@ describe('streamgateApi auth adapter', () => {
         sort_by: 'retry_count',
         sort_order: 'desc',
       }),
+    })
+  })
+
+  it('maps Sprint 6 analytics dashboard, warehouse and lineage endpoints', async () => {
+    const getEnvelope = vi.fn()
+      .mockResolvedValueOnce({
+        data: {
+          generated_at: '2026-04-24T14:00:00Z',
+          source: 'postgres_derived',
+          window: { from: '2026-04-23T14:00:00Z', to: '2026-04-24T14:00:00Z', preset: 'last_24h', timezone: 'UTC' },
+          sections: {
+            queue: { status: 'derived', generated_at: '2026-04-24T14:00:00Z', data: { processed: 2, retried: 0, moved_to_dlq: 0 }, empty_state: null },
+            workers: { status: 'derived', generated_at: '2026-04-24T14:00:00Z', data: { processed: 2, failed_terminal: 0, average_latency_ms: 120 }, empty_state: null },
+            throughput: { status: 'derived', generated_at: '2026-04-24T14:00:00Z', data: { jobs_total: 2, uploads_total: 2, completed: 1, failed: 0, quarantined: 1 }, empty_state: null },
+            formats: { status: 'derived', generated_at: '2026-04-24T14:00:00Z', data: [{ content_type: 'text/csv', count: 2 }], empty_state: null },
+            warnings: { status: 'empty', generated_at: '2026-04-24T14:00:00Z', data: { open: 0, failed: 0, resolved: 0 }, empty_state: 'no_data_in_window' },
+            event_log: { status: 'derived', generated_at: '2026-04-24T14:00:00Z', data: [], empty_state: null },
+          },
+          dependencies: { broker: { status: 'healthy' }, warehouse: { status: 'degraded', source: 'postgres_derived', fallback_reason: 'clickhouse_unavailable' } },
+          slo: { slo_target_seconds: 300, last_event_at: '2026-04-24T13:59:40Z', lag_seconds: 20, stale: false, p95_ms: 240, error_budget_percent: 99.9 },
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          source: 'clickhouse',
+          generated_at: '2026-04-24T14:00:00Z',
+          aggregates: {
+            jobs_total: 2,
+            uploads_total: 2,
+            records_total: 1200,
+            valid_records: 1188,
+            invalid_records: 12,
+            by_status: { completed: 1, quarantined_with_warnings: 1 },
+            by_source: { upload: 1, external_link: 1 },
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          job: { id: 'job_1', upload_id: 'upload_1', source_type: 'upload', status: 'completed' },
+          upload: { id: 'upload_1', filename: 'input.csv' },
+          batches: [],
+          attempts: [],
+          quarantine: [],
+          artifacts: [],
+          warnings: [],
+          audit_refs: [],
+        },
+      })
+
+    const api = createStreamgateApi({ get: vi.fn(), post: vi.fn(), getEnvelope })
+
+    await api.getAnalyticsDashboard({ preset: 'last_24h', timezone: 'UTC' })
+    await api.getAnalyticsWarehouse({ preset: 'last_24h', timezone: 'UTC' })
+    await api.getAnalyticsLineage('job_1')
+
+    expect(getEnvelope).toHaveBeenNthCalledWith(1, '/api/v1/analytics/dashboard', {
+      query: expect.objectContaining({ preset: 'last_24h', timezone: 'UTC' }),
+    })
+    expect(getEnvelope).toHaveBeenNthCalledWith(2, '/api/v1/analytics/warehouse', {
+      query: expect.objectContaining({ preset: 'last_24h', timezone: 'UTC' }),
+    })
+    expect(getEnvelope).toHaveBeenNthCalledWith(3, '/api/v1/analytics/lineage', {
+      query: { job_id: 'job_1' },
     })
   })
 
