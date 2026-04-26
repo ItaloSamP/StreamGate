@@ -172,10 +172,10 @@ export function DashboardSurface({
     }
   }, [locked, pathname])
 
-  const quarantineBadge = navBadges['/quarantine'] ?? 7
+  const quarantineBadge = navBadges['/quarantine'] ?? 0
   const alertCopy = quarantineBadge > 0
     ? `${quarantineBadge} registros em quarentena aguardam triagem enquanto o command center segue auditavel.`
-    : 'Pipeline estabilizado, com trilha auditavel, notificacoes ativas e operacoes seguras prontas.'
+    : 'Sem alerta derivado carregado para esta janela; consulte dashboard, warehouse e lineage para status real.'
 
   return (
     <div className={`dash-frame ${locked ? 'dash-frame--locked' : ''}`}>
@@ -249,20 +249,14 @@ export function DashboardSurface({
             <div className="dash-gauges">
               <div>
                 <div className="dash-gauge-row">
-                  <span>MinIO Storage</span>
-                  <span className="warn">72%</span>
-                </div>
-                <div className="dash-gauge-bar">
-                  <div className="dash-gauge-fill" style={{ width: '72%', background: 'var(--signal-yellow)', opacity: '.55' }} />
+                  <span>Status runtime</span>
+                  <span>via API</span>
                 </div>
               </div>
               <div>
                 <div className="dash-gauge-row">
-                  <span>RabbitMQ</span>
-                  <span>3 msgs</span>
-                </div>
-                <div className="dash-gauge-bar">
-                  <div className="dash-gauge-fill" style={{ width: '18%', background: 'var(--signal-blue)', opacity: '.5' }} />
+                  <span>Drilldowns</span>
+                  <span>reais</span>
                 </div>
               </div>
             </div>

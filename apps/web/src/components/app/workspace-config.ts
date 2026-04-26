@@ -108,7 +108,7 @@ export const workspaceModules: WorkspaceModuleDefinition[] = [
   {
     title: 'ClickHouse',
     eyebrow: 'Exploracao analitica',
-    description: 'Superficie scaffold para consultas operacionais, blocos de leitura e atalhos do warehouse.',
+    description: 'Warehouse operacional com fonte, fallback, lag, SLO, dependencias e agregados sem consulta livre.',
     route: '/clickhouse',
     family: 'analytical',
   },
@@ -122,7 +122,7 @@ export const workspaceModules: WorkspaceModuleDefinition[] = [
   {
     title: 'ETL Explorer',
     eyebrow: 'Fluxos e lineage',
-    description: 'Superficie scaffold para explorar batches, lineage e estatisticas de transformacao do pipeline.',
+    description: 'Drilldown por job com upload, acquisition, batches, attempts, artefatos, warnings e audit refs.',
     route: '/etl-explorer',
     family: 'analytical',
   },
@@ -163,11 +163,11 @@ export const workspaceModules: WorkspaceModuleDefinition[] = [
   },
 ]
 
-export const workspaceTopChips = [
-  { label: 'Workers 4/4', tone: 'ok' },
-  { label: 'RabbitMQ', tone: 'ok' },
-  { label: 'ClickHouse', tone: 'ok' },
-  { label: 'MinIO 72%', tone: 'warn' },
+export const workspaceTopChips: { label: string; tone: 'ok' | 'warn' }[] = [
+  { label: 'Dashboard API', tone: 'ok' },
+  { label: 'Warehouse API', tone: 'ok' },
+  { label: 'Lineage API', tone: 'ok' },
+  { label: 'Public link', tone: 'ok' },
 ] as const
 
 export const jobUiStates = [
