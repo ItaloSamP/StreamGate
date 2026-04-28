@@ -1480,16 +1480,460 @@ Fronteira explicita (fora da Sprint 5 funcional): `external_link`, `oauth_delega
 - `powershell -ExecutionPolicy Bypass -File scripts/reports/run-all-reports.ps1 -Profile full-closeout`: baseline DevOps da trilha passou antes da expansao final do smoke; o rerun agregado mais recente no host Windows ficou classificado como flake de ambiente/Compose health, sem evidenciar regressao funcional da Sprint 5.
 - `docs/reports/index.html`: regenerado com tempos, workflows, `lastCompletedStep` e playbook `fast / operational / full-closeout`.
 
+## Sprint 6 - Fechamento da v1, dashboard real, drilldowns analiticos e `external_link` terciario
+
+**Status atual:** `Concluida - v1 fechada com full-closeout verde em 2026-04-28`
+
+**Resultado final**
+
+- Sprint 5 concluida com backend/worker/front/devops/security/docs/testes fechados e sincronizados.
+- `docs/guides/platform/final-delivery-guide.md` aprovado como guia oficial de fechamento do produto.
+- `docs/product/vision.md` segue como fonte de verdade para o que entra na v1 e para o que continua `discovery-only`.
+- Shell/dashboard v3 foram fechados como superficie final de produto, com dados live, derivados honestos, empty states e estados degradados explicitos.
+- `/clickhouse` e `/etl-explorer` deixaram de ser placeholders e passaram a entregar warehouse operacional e lineage por job para `operator` e `admin`.
+- `public_link` entrou como unico caminho funcional de link externo da v1, com SSRF hardening, idempotencia, DLQ dedicada, warnings e smoke operacional.
+- `google_drive`, `s3`, `http_url` e `oauth_delegated` continuam `discovery-only`/pos-v1, sem UI ou contrato sugerindo entrega funcional.
+- Full-closeout final passou em 2026-04-28 com smokes, backend, worker, frontend, e2e, docker, contratos e reports.
+
+**Bloqueadores conhecidos**
+
+- Nenhum bloqueador de implementacao permanece aberto para a Sprint 6.
+- A primeira execucao do gate Docker sem `SMOKE_PUBLIC_LINK_URL` falhou corretamente por falta da variavel obrigatoria; a reexecucao com CSV publico pequeno passou.
+- CodeRabbit CLI nao estava instalado/reconhecido no ambiente local durante a frente frontend; a revisao assistida ficou como melhoria operacional pos-v1, nao como gate de release.
+
+**O que foi fechado**
+
+- Shell e dashboard como superficie de produto, nao apenas scaffold visual forte.
+- Secoes fixture-driven enganosas removidas ou substituidas por dados live, derivados honestos, empty state ou degradacao explicita.
+- `/clickhouse` e `/etl-explorer` como drilldowns analiticos reais.
+- Cobertura focada de rota, nav, shell, dashboard, upload, warehouse e lineage.
+- Upload local preservado como experiencia final da v1.
+- `public_link` entregue como primeiro link externo funcional, sem abrir connector wave 1.
+- Docs centrais, contratos, OpenAPI, threat model, smokes e reports sincronizados.
+
+**Contexto e intencao**
+
+A Sprint 5 fechou o motor operacional do StreamGate: upload local, processamento assincrono, artefatos finais, operacao segura, notificacoes, auditoria, contratos, docs, smokes e repo readiness. O proximo passo nao e abrir uma frente grande nova de conectividade; e transformar o que ja existe em um produto que possa ser lido como v1 entregue.
+
+Esta sprint existe para fechar a diferenca entre produto funcional e produto finalizado. O foco principal e tornar shell, dashboard, upload e superficie analitica partes coerentes de uma mesma experiencia, com menos lacunas visuais, menos ambiguidades de narrativa e menos areas que parecam prontas sem estarem realmente materializadas.
+
+Pela leitura atual do frontend, esta sprint passa a ter tres frentes centrais e explicitamente conectadas:
+
+- cobertura focada de rotas e shell para o refactor novo da dashboard;
+- eliminacao das secoes ainda fixture-driven da dashboard v3;
+- transformacao de `/clickhouse` e `/etl-explorer` em drilldowns analiticos reais.
+
+`external_link` entra apenas como frente terciaria. Se houver espaco real apos o fechamento do nucleo da sprint, o primeiro passo funcional permitido sera `public_link`. `oauth_delegated` e connectors wave 1 permanecem fora do corte funcional da Sprint 6.
+
+**Ja existe hoje**
+
+- [x] Auth e sessao reais com rotas protegidas.
+- [x] Upload local funcional com signed URL, registro de upload e criacao de job.
+- [x] Pipeline assincrono real com worker, idempotencia, DLQ, artefatos e notificacoes.
+- [x] Operacao segura (`retry`, `resolve`, `replay request/approve/execute`) fechada e auditavel.
+- [x] Dashboard v3 e shell full-screen ja implantados como base visual forte.
+- [x] `ClickHouse` e `ETL Explorer` ja existem no shell como superficies scaffold.
+- [x] Navegacao analitica nova ja esta exposta por role para `operator` e `admin`.
+- [x] `DashboardPage.tsx` ja deriva parte dos blocos de `analytics`, `jobs`, `uploads`, `quarantine`, `audit` e `dlq`, mas ainda mistura dados reais com fixtures importadas.
+- [x] Guia oficial de fechamento do produto criado em `docs/guides/platform/final-delivery-guide.md`.
+
+### Back planning
+
+- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `architecture-patterns`, `domain-modeling`, `api-designer`, `supabase-postgres-best-practices`.
+- [x] Congelar o escopo HTTP e de dominio da Sprint 6 com prioridade absoluta em fechamento da v1.
+- [x] Definir como os dados atuais de `analytics`, `jobs`, `quarantine`, `audit` e `uploads` serao reaproveitados para remover linhas fake da dashboard.
+- [x] Congelar quais paineis da dashboard serao `live`, `truthfully derived` ou `placeholder controlado`.
+- [x] Definir o papel funcional de `Analytics`, `ClickHouse`, `ETL Explorer` e `external_link`.
+- [x] Definir os drilldowns analiticos finais: `ClickHouse` como visao de warehouse, throughput e agregacao; `ETL Explorer` como batches, lineage, etapas e relacoes entre job, quarantine e auditoria.
+- [x] Classificar explicitamente cada superficie nova da sprint em `funcional agora`, `scaffold transitorio` ou `descoberta futura`.
+- [x] Definir quais leituras adicionais o backend precisa expor para eliminar blocos cenograficos da dashboard e sustentar os drilldowns reais.
+- [x] Definir a fronteira funcional minima de `external_link` como `public_link` e somente como terceira prioridade.
+
+### Back execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `review-codebase`.
+- [x] Implementar apenas o backend necessario para materializar os blocos finais da dashboard e a superficie analitica minima.
+- [x] Priorizar somente os endpoints e leituras adicionais necessarios para suportar dashboard final sem fixtures enganosas e drilldowns analiticos reais.
+- [x] Reutilizar a API existente sempre que possivel; abrir endpoint novo somente quando for realmente necessario para evitar bricolagem fragil no frontend.
+- [x] Sustentar a jornada final de upload local com estados e leituras coerentes de produto.
+- [x] Evitar abrir endpoints ou contratos de connector wave 1 nesta sprint.
+- [x] Se houver endpoint novo para drilldown, sincronizar OpenAPI e `packages/contracts` no mesmo ciclo.
+- [x] Se `external_link` entrar, limitar a entrega funcional inicial a `public_link`, mantendo `oauth_delegated` fora do corte.
+- [x] Manter OpenAPI, `packages/contracts` e documentacao sincronizados no mesmo ciclo das mudancas.
+
+### Worker execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `architecture-patterns`, `domain-modeling`, `integration-testing`, `monitoring-observability`.
+- [x] Garantir que o fluxo local da v1 continue sendo a referencia completa: upload -> processamento -> quarantine/artifacts -> notificacoes -> auditoria.
+- [x] Garantir que os dados ja emitidos e persistidos pela Sprint 5 sejam suficientes para sustentar os drilldowns e a dashboard final.
+- [x] Tratar qualquer vinculo adicional necessario para lineage ou visao operacional derivada como ajuste pequeno de rastreabilidade e observabilidade, nao como expansao funcional do worker.
+- [x] Fechar lacunas de worker que impeçam a dashboard final de refletir o estado real do pipeline.
+- [x] Se `external_link` entrar, suportar apenas o caminho minimo necessario sem quebrar idempotencia, DLQ, artefatos e auditoria.
+- [x] Nao ampliar o worker para multiplos pipelines alem do necessario para o corte da sprint.
+
+Evidencia backend/worker do recorte (2026-04-24):
+
+- [x] Dashboard final recebe `sections.event_log` derivado de audit, warnings e metricas do worker, sem fixture enganosa.
+- [x] `Analytics` ficou como leitura operacional agregada; `ClickHouse` como warehouse OLAP minimo; `ETL Explorer` como lineage por job; `external_link` como `public_link`.
+- [x] ClickHouse grava job + registros com metadata e HMAC-SHA256, TTL padrao de 30 dias e sem payload bruto.
+- [x] Falha ClickHouse gera `operational_warning` e fallback `postgres_derived`, sem bloquear job, artefatos, notificacoes ou auditoria.
+- [x] Backfill ClickHouse idempotente cobre snapshots/batches existentes.
+- [x] Smoke `public_link` dedicado criado e exige `SMOKE_PUBLIC_LINK_URL` para CSV publico pequeno.
+- [x] `cd apps/api && bundle exec rails test test/requests/sprint6_backend_test.rb` (7 runs, 57 assertions, 0 failures).
+- [x] `cd apps/api && bundle exec rails test` com `PARALLEL_WORKERS=1` (70 runs, 396 assertions, 0 failures).
+- [x] `cd apps/worker && bundle exec rspec` (35 examples, 0 failures).
+- [x] `ruby scripts/ci/validate-operational-contracts.rb` (passed).
+- [x] `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 backend` com `PARALLEL_WORKERS=1` (PASS).
+- [x] `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1` com `SMOKE_PUBLIC_LINK_URL=https://raw.githubusercontent.com/plotly/datasets/master/2014_apple_stock.csv` (PASS; inclui `public_link`, artefatos e notificacao).
+
+### Front planning
+
+- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`, `vercel-react-best-practices`, `test-driven-development`.
+- [x] Fechar shell e dashboard com base no prototipo final, sem deixar blocos semanticamente ambíguos.
+- [x] Revisar a dashboard bloco a bloco e classificar cada area em `real`, `derivada` ou `placeholder controlado`.
+- [x] Definir o papel final de `dashboard`, `analytics`, `clickhouse`, `etl explorer` e `upload` dentro da v1.
+- [x] Revisar `/clickhouse` e `/etl-explorer` como rotas reais do workspace, e nao mais como placeholders tolerados.
+- [x] Revisar bloco a bloco da dashboard v3 para eliminar qualquer card cenografico ainda sustentado por fixture.
+- [x] Revisar shell responsivo, sidebar fixa/colapsavel e estados de navegacao apos o refactor novo.
+- [x] Registrar explicitamente que a navegacao analitica ja esta exposta para `operator` e `admin`, portanto essas paginas precisam entregar valor funcional real nesta sprint.
+- [x] Fechar a UX final da ingestao local, incluindo `guided` vs `advanced`, mensagens, erro, progresso e handoff para jobs.
+- [x] Tratar `external_link` como frente terciaria e puramente oportunistica em relacao ao fechamento do nucleo.
+
+**Evidencia Front planning:** decisao aplicada no frontend em 2026-04-26: dashboard usa `analytics/dashboard`; `Analytics` permanece leitura operacional agregada; `ClickHouse` virou warehouse operacional sem SQL livre; `ETL Explorer` virou lineage por job; `Upload` preserva arquivo local e adiciona `public_link`; `oauth_delegated`, `google_drive`, `s3` e `http_url` seguem fora do corte.
+
+### Front execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `frontend-skill`, `shadcn`, `tailwind-design-system`, `web-design-guidelines`, `vercel-react-best-practices`, `vitest`, `playwright`, `test-driven-development`.
+- [x] Finalizar o shell autenticado como superficie final de produto, nao apenas scaffold bonito.
+- [x] Adicionar cobertura focada de rota e shell para a renderizacao protegida de `/clickhouse` e `/etl-explorer`.
+- [x] Cobrir presenca correta dos itens analiticos na sidebar por role suportada e estabilidade do shell apos as mudancas responsivas/sidebar fixa-colapsavel.
+- [x] Finalizar a dashboard v3 como command center real, eliminando cards que parecam prontos sem papel funcional decidido.
+- [x] Substituir `scaffoldQueue`, `scaffoldWorkers`, `scaffoldEventRows` e `scaffoldFormatRows` por dados live ou honestamente derivados do runtime atual.
+- [x] Fazer a dashboard falhar com elegancia quando faltar dado, usando empty state ou insight insuficiente sem inventar linhas prontas.
+- [x] Materializar a superficie analitica minima com valor real para a v1.
+- [x] Implementar `/clickhouse` e `/etl-explorer` como drilldowns reais, reutilizando `streamgateApi` e derivando visoes uteis de analytics, jobs, quarantine, audit e uploads.
+- [x] Fechar a experiencia final de upload local na UI.
+- [x] Implementar `external_link` apenas se dashboard real, shell estavel, drilldowns analiticos e upload final ja estiverem fechados.
+
+**Evidencia Front execution:** `apps/web/src/lib/streamgate-api.ts` ganhou os contratos Sprint 6; `DashboardPage`, `ExplorationPages` e `UploadPage` foram ligados aos endpoints reais; `dashboard-surface`/`workspace-config` foram ajustados para nao exibir telemetria fixa. Gates: `pnpm.cmd --dir apps/web test:run` PASS, `pnpm.cmd --dir apps/web test:integration` PASS apos subir API local, `pnpm.cmd --dir apps/web build` PASS, `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 frontend` PASS, `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1` com `SMOKE_PUBLIC_LINK_URL=https://raw.githubusercontent.com/plotly/datasets/master/2014_apple_stock.csv` PASS. Verificacao visual desktop/mobile via Playwright em `/dashboard`, `/clickhouse`, `/etl-explorer` e `/upload`: PASS. CodeRabbit: bloqueado porque a CLI `coderabbit` nao esta instalada/reconhecida neste ambiente.
+
+### DevOps
+
+- Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`; quando houver cluster, somar `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow`.
+- [x] Manter a politica `WSL/Compose-first` para gates pesados.
+- [x] Validar que o fechamento da v1 continua coberto por fast gates, smoke operacional e `full-closeout`.
+- [x] Garantir que os gates atuais cubram as novas rotas analiticas, o shell responsivo atualizado e a dashboard sem fixtures falsas.
+- [x] Ajustar smokes e reports apenas se o recorte da Sprint 6 realmente tocar novos fluxos ou exigir leitura adicional para os drilldowns.
+- [x] Se algum endpoint novo entrar para suportar drilldown, refletir isso so no minimo necessario em smoke/report.
+- [x] Se `external_link` entrar, adicionar smoke dedicado para esse fluxo sem abrir uma frente paralela de infraestrutura.
+- [x] Manter DevOps a servico do fechamento da v1, sem abrir um novo pacote grande de automacao.
+
+### Test planning
+
+- Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
+- [x] Planejar testes por risco para shell final, dashboard final, upload final, superficie analitica minima e drilldowns analiticos.
+- [x] Elevar route coverage de `/clickhouse` e `/etl-explorer`, nav coverage por role e shell behavior apos sidebar responsiva a prioridades explicitas da sprint.
+- [x] Exigir distincao explicita entre bloco visual scaffoldado e bloco com dados reais.
+- [x] Tratar blocos derivados como `derived truth`, com criterios de teste focados em honestidade dos dados, e nao em snapshot estetico.
+- [x] Planejar testes dedicados para `external_link` apenas se a implementacao realmente entrar no corte da sprint.
+- [x] Priorizar cobertura de risco funcional da v1, e nao aumento artificial de coverage global.
+
+### Test execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
+- [x] Reexecutar os gates oficiais do recorte tocado na Sprint 6.
+- [x] Adicionar cobertura focada em `workspace-routes.test.tsx` ou equivalente para `/clickhouse` e `/etl-explorer` como rotas protegidas reais.
+- [x] Cobrir navegacao e role gating da sidebar para os itens analiticos, mais a estabilidade do shell apos as mudancas responsivas.
+- [x] Cobrir a dashboard sem fixtures enganosas, validando queue, workers, event log e distribution como dados reais ou honestamente derivados.
+- [x] Cobrir a renderizacao util dos drilldowns analiticos com dados atuais de API e o menor conjunto de interacoes que prove que deixaram de ser placeholders.
+- [x] Adicionar E2E feliz da jornada principal da v1: login, dashboard, upload, acompanhamento de job, artefatos/notificacao/drilldowns principais.
+- [x] Executar `run-smokes` como gate obrigatorio do fechamento da sprint.
+- [x] Se `external_link` entrar, exigir teste ponta a ponta e smoke dedicados para esse novo caminho.
+- [x] Atualizar o `full-closeout` como evidencia final da sprint.
+
+Evidencia final de fechamento da Sprint 6 (2026-04-28):
+
+- [x] `ruby scripts/ci/validate-operational-contracts.rb`: PASS.
+- [x] `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 backend`: PASS; API `70 runs, 396 assertions, 0 failures`; worker `35 examples, 0 failures`.
+- [x] `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 frontend`: PASS; unit `69 tests`, TypeScript e build de producao verdes.
+- [x] `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 e2e`: PASS; Vitest integration `4 tests` e Playwright Chromium `5 tests`.
+- [x] `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 docker` com `SMOKE_PUBLIC_LINK_URL=https://raw.githubusercontent.com/plotly/datasets/master/2014_apple_stock.csv`: PASS.
+- [x] `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1 -TimeoutSeconds 900` com `SMOKE_PUBLIC_LINK_URL`: PASS; incluiu `public_link`, artefatos, notificacao, operacao segura e auditoria persistida.
+- [x] `powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -Profile full-closeout -TimeoutSeconds 900` com `SMOKE_PUBLIC_LINK_URL`: PASS; `docs/reports/index.html` atualizado com `PASS:7 FAIL:0 NOT_RUN:0`.
+
+### Security
+
+- Skills obrigatorias para todas as tasks desta trilha: `review-codebase`, `openapi`, `docker`, `security-best-practices`, `security-threat-model`.
+- [x] Rever a superficie final da v1 sob a otica de arquivos, links externos, signed URLs, notificacoes, auditoria e masking.
+- [x] Rever o que muda com drilldowns analiticos em exposicao de metadata, masking de eventos/quarantine/auditoria e risco de mostrar dados warehouse-like fora do papel do usuario.
+- [x] Se `external_link` entrar, atualizar o threat model antes da implementacao funcional.
+- [x] Manter connectors wave 1 fora da entrega funcional ate haver sprint propria.
+- [x] Garantir que docs e UI nao sugiram como entregue nenhuma frente ainda `discovery-only`.
+
+### Skills da sprint
+
+- [x] Tornar obrigatorias no roadmap as skills `brainstorming`, `documentation-writer`, `frontend-skill`, `tailwind-design-system`, `web-design-guidelines`, `vercel-react-best-practices`, `api-designer`, `api-documenter`, `openapi`, `integration-testing`, `breakdown-test`, `vitest`, `playwright` e `monitoring-observability`.
+- [x] Se `external_link` for implementado, incluir tambem a trilha de seguranca/modelagem correspondente no texto da sprint.
+
+### Documentation
+
+- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `documentation-writer`, `api-documenter`, `openapi`, `review-codebase`, `readiness-report`.
+- [x] Atualizar este roadmap mestre no mesmo ciclo do andamento real da Sprint 6.
+- [x] Manter `docs/product/vision.md` alinhado ao corte final da v1.
+- [x] Atualizar `docs/guides/platform/final-delivery-guide.md` com o que deixar de ser gap e passar a ser entregue.
+- [x] Atualizar `docs/guides/frontend/frontend-workspace-map.md` com o workspace final da v1.
+- [x] Atualizar `docs/guides/backend/api-docs.md` e OpenAPI quando os blocos finais exigirem endpoints ou contratos novos.
+- [x] Registrar explicitamente na documentacao que a Sprint 6 fecha dashboard real sem fixtures enganosas e transforma `/clickhouse` e `/etl-explorer` em metas funcionais da sprint.
+- [x] Atualizar `docs/guides/security/streamgate-threat-model.md` se `external_link` entrar.
+- [x] Preparar o closeout da Sprint 6 como closeout de fechamento da v1, caso o checklist de saida seja atingido.
+
+### Checklist de saida
+
+- [x] Shell autenticado finalizado e coerente com o prototipo aprovado.
+- [x] `/clickhouse` e `/etl-explorer` renderizam como rotas protegidas reais.
+- [x] Sidebar expoe corretamente essas rotas por role suportada.
+- [x] Shell novo permanece estavel apos o refactor responsivo/sidebar.
+- [x] Dashboard v3 fechada como command center real.
+- [x] Dashboard v3 nao depende mais de filas, workers, eventos ou distribution baseados em fixtures enganosas.
+- [x] Dashboard usa dados live ou honestamente derivados do estado operacional da Sprint 5.
+- [x] Upload local fechado como experiencia final da v1.
+- [x] Superficie analitica minima com valor real implementado.
+- [x] Drilldowns analiticos entregam valor real e deixam de ser scaffold.
+- [x] `ClickHouse` e `ETL Explorer` com papel claro no produto.
+- [x] Docs centrais sincronizadas com a leitura final da v1.
+- [x] Gates oficiais verdes para o recorte tocado.
+- [x] Backlog residual explicito, sem ambiguidade entre entregue vs pos-v1.
+- [x] `external_link` implementado apenas se o nucleo da sprint tiver sido fechado; caso contrario, reclassificado formalmente para a sprint seguinte.
+
+### Reavaliacao de transicao por trilha
+
+- [x] `Back planning`: confirmar se a fronteira final da v1 congelou os dados minimos necessarios para dashboard final e drilldowns, sem drift com o backlog estrategico.
+- [x] `Back execution`: registrar o que deixou de ser scaffold e virou produto funcional real para suportar dashboard final e superficies analiticas.
+- [x] `Worker execution`: validar se o pipeline principal da v1 ficou suficiente para sustentar a entrega final.
+- [x] `Front planning`: validar se analytics, clickhouse e etl explorer deixaram de ser tratados como futuras areas e passaram a ser parte do fechamento da v1.
+- [x] `Front execution`: confirmar se ainda existe algum bloco visual que pareca feature pronta sem estar materializado.
+- [x] `DevOps`: confirmar se os gates finais sustentam a narrativa de release da v1.
+- [x] `Documentation`: validar se vision, roadmap, guide de fechamento e workspace map contam a mesma historia sobre dashboard real e drilldowns analiticos.
+- [x] `Test planning`: confirmar se a matriz de testes cobriu rota, nav, shell e derived truth da reta final da v1.
+- [x] `Test execution`: registrar resultados, residual e diferenca entre ambiente vs implementacao.
+- [x] `Security`: confirmar se a superficie final da v1 esta coerente com links, artefatos, notificacoes e masking.
+- [x] `Skills da sprint`: registrar se a stack de skills obrigatoria foi suficiente para fechar o produto sem lacunas.
+
+### Delta esperado por trilha (Sprint 6 - planejamento)
+
+- Back planning: congelar a fronteira final da v1 com os dados minimos necessarios para dashboard final e drilldowns analiticos reais.
+- Back execution: materializar somente o backend necessario para fechar dashboard, upload e superficies analiticas reais, evitando endpoint sobrando.
+- Worker execution: manter o pipeline principal da v1 como referencia absoluta, com extensao minima se `external_link` entrar.
+- Front planning: deixar de tratar analytics, clickhouse e etl como areas futuras e transforma-las em parte do fechamento da v1.
+- Front execution: trocar a dashboard bonita porem parcialmente cenografica por um command center real, com drilldowns funcionais.
+- DevOps: sustentar o fechamento da v1 com os gates existentes, cobrindo shell novo, rotas analiticas e dashboard sem fixtures falsas.
+- Documentation: transformar a Sprint 6 em sprint de fechamento da v1 com narrativa documental unificada sobre dashboard e analytics.
+- Test planning: focar em risco de produto final com route/nav/shell coverage e verificacao de dados derivados honestos.
+- Test execution: provar a jornada principal da v1 ponta a ponta e o comportamento util das novas rotas analiticas.
+- Security: revisar a superficie final da entrega e impedir que `external_link` entre sem threat model adequado.
+- Skills da sprint: aplicar a stack de planejamento, frontend, API, teste e observabilidade como obrigatoria na reta final do produto.
+
+## Sprint 7 - Paridade funcional do prototipo, realtime, conectores e governanca
+
+**Status atual:** `Planejada - aguardando merge da sprint6 em dev`
+
+**Resultado esperado**
+
+- Dashboard operacional com paridade funcional forte em relacao ao prototipo `streamgate-v3.html`, preservando visual, densidade e interacoes principais sem manter fixtures invisiveis.
+- `GET /api/v1/analytics/dashboard` expandido para sustentar graficos, heatmap, distribuicao, formatos, fila, ingestao, workers, alertas e event log com dados reais, derivados honestos ou empty/degraded states explicitos.
+- ClickHouse como fonte principal para historico/agregados, WebSocket como transporte de atualizacoes ao vivo e Postgres/polling como fallback honesto.
+- Quick upload real no card de ingestao da dashboard, reaproveitando Upload Center para arquivo local e link publico.
+- Conectores base S3 e HTTP via perfis admin-only, credenciais criptografadas, lease interno para worker e UX sem expor segredo.
+- Governanca com matriz de permissoes configuravel, retencao por workspace e auditoria de acoes sensiveis.
+
+**Contexto e intencao**
+
+A Sprint 6 fechou a v1 funcional, mas a reavaliacao contra o prototipo final mostrou que a dashboard real ainda esta mais conservadora do que o alvo visual e interativo do produto. O repositorio ja contem componentes estaticos que reproduzem boa parte do `streamgate-v3.html`, especialmente `WorkspaceOverview`, `dashboard-data` e `dashboard-graphics`; a Sprint 7 existe para transformar esses componentes em superficie viva, sem reintroduzir cards cenograficos.
+
+O objetivo nao e trocar honestidade operacional por maquiagem visual. O objetivo e fazer o command center parecer e agir como o prototipo final, com cada card sustentado por REST, WebSocket, ClickHouse ou estado vazio/degradado claramente declarado.
+
+**Ja existe hoje**
+
+- [x] Dashboard real via `analytics/dashboard`, com secoes `queue`, `workers`, `throughput`, `formats`, `warnings` e `event_log`.
+- [x] ClickHouse funcional para warehouse minimo, com fallback `postgres_derived`.
+- [x] ETL Explorer com lineage por job.
+- [x] Upload local e `public_link` funcionais.
+- [x] Componentes visuais estaticos que espelham partes do prototipo final.
+- [x] Worker com streaming/spool e parsing CSV, JSON envelope/array e ZIP seguro com 1 CSV.
+
+**Bloqueadores conhecidos**
+
+- Componentes visuais do prototipo ainda existem como preview estatico e precisam virar data-driven antes de serem tratados como produto final.
+- O endpoint atual da dashboard nao entrega series 24h, heatmap 7 dias, distribuicao por status, filas detalhadas, workers vivos, progresso de uploads ou alertas revisaveis.
+- WebSocket/Solid Cable ainda nao esta exposto como contrato operacional do frontend.
+- Parquet, NDJSON e XLSX aparecem no prototipo, mas ainda nao estao fechados como suporte real ponta a ponta.
+- S3 e HTTP URL ainda nao sao conectores funcionais; `google_drive` e `oauth_delegated` continuam fora da sprint.
+
+### P0 - Dashboard prototype parity
+
+- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `build-web-apps:frontend-app-builder`, `tailwind-design-system`, `web-design-guidelines`, `vercel-react-best-practices`, `vitest`, `playwright`, `test-driven-development`.
+- [ ] Refatorar `WorkspaceOverview`, `dashboard-data` e `dashboard-graphics` para componentes data-driven, mantendo fidelidade visual forte ao `streamgate-v3.html`.
+- [ ] Preservar o shell real, responsividade e acessibilidade; permitir ajuste visual apenas quando necessario para caber no produto atual.
+- [ ] Garantir que preview/demo so exista com marcacao explicita de demo.
+- [ ] Implementar cards reais para KPIs, grafico 24h, pipeline de jobs, distribuicao, formatos, heatmap, ingestao, fila, event log e workers.
+- [ ] Substituir SVGs fixos por graficos derivados de dados recebidos, mantendo o mesmo vocabulario visual do prototipo.
+- [ ] Implementar alert strip real para falhas/warnings recentes, com revisao e fechamento persistentes.
+- [ ] Implementar drawers contextuais para KPI, heatmap, formato, job, fila, worker e alerta, sempre com rota/filtro profundo para a tela especializada.
+- [ ] Implementar export CSV/JSON para snapshot filtrado, series, heatmap e event log.
+
+### Back planning
+
+- Skills obrigatorias para todas as tasks desta trilha: `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `supabase-postgres-best-practices`.
+- [ ] Congelar o contrato expandido de `GET /api/v1/analytics/dashboard` com `kpis`, `timeseries_24h`, `status_distribution`, `formats`, `heatmap_7d`, `jobs_board`, `queue`, `ingestion`, `workers`, `alerts` e `event_log`.
+- [ ] Definir quais campos vem do ClickHouse, quais sao derivados do Postgres e quais podem ser empty/degraded.
+- [ ] Definir contratos de export, alert review/dismiss, realtime ticket, realtime event e configuracao de permissoes.
+- [ ] Definir como os dados da dashboard sao escopados por org, role e matriz configuravel de permissoes.
+- [ ] Definir politica de retencao por workspace para eventos, artefatos, exports, ClickHouse e dados operacionais.
+
+### Back execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `api-designer`, `api-documenter`, `openapi`, `integration-testing`, `api-contract-testing`, `security-best-practices`.
+- [ ] Expandir `analytics/dashboard` sem quebrar consumidores Sprint 6.
+- [ ] Implementar leitura ClickHouse-first para series 24h, heatmap 7 dias, distribuicao, formatos, agregados e historico.
+- [ ] Manter fallback `postgres_derived` com `fallback_reason`, SLO, stale, dependency status e warning tecnico.
+- [ ] Implementar `POST /api/v1/realtime/tickets` com ticket curto, escopo por usuario/org/role e expiracao.
+- [ ] Criar `realtime_events` duravel para upload, job, batch, quarantine, warning, worker, artifact, notification e dependency health.
+- [ ] Implementar endpoints/acoes de export, alert review e alert dismiss com `Idempotency-Key`, RBAC, motivo quando sensivel e auditoria.
+- [ ] Implementar matriz configuravel de permissoes por role/org, com defaults compativeis com admin/operator atuais.
+- [ ] Implementar retencao por workspace e jobs de limpeza seguros.
+- [ ] Sincronizar OpenAPI, `packages/contracts`, examples e docs de API no mesmo ciclo.
+
+### Worker execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `integration-testing`, `security-best-practices`, `monitoring-observability`.
+- [ ] Emitir `realtime_events` nos pontos relevantes do pipeline sem bloquear processamento principal.
+- [ ] Alimentar ClickHouse com agregados necessarios para dashboard 24h, heatmap 7 dias, formatos, distribuicao e workers.
+- [ ] Suportar CSV, JSON array, `{ records: [...] }`, NDJSON, ZIP com 1 arquivo suportado, Parquet e XLSX.
+- [ ] Atualizar allowlists de content type no API, worker, contratos e frontend.
+- [ ] Preservar streaming/spool controlado, limites alinhados a 10 GB, cleanup best effort e warnings tecnicos.
+- [ ] Manter bloqueios de zip slip, zip bomb, payload bruto no warehouse e exposicao de dados sensiveis.
+- [ ] Implementar conectores S3 e HTTP base consumindo perfis admin-only via lease interno da API.
+- [ ] Garantir que falhas em ClickHouse, realtime ou conectores gerem warning tecnico sem impedir artefatos, notificacoes e auditoria principais.
+
+### Front planning
+
+- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `build-web-apps:frontend-app-builder`, `build-web-apps:react-best-practices`, `build-web-apps:shadcn`, `tailwind-design-system`, `web-design-guidelines`.
+- [ ] Tratar o `streamgate-v3.html` como referencia visual aprovada, nao como contrato de DOM literal.
+- [ ] Definir adapters TypeScript para dashboard expandida, realtime events, exports, alert actions, permissoes e quick upload.
+- [ ] Definir fallback visual quando WebSocket cair: aviso discreto, polling curto e SLO/stale explicito.
+- [ ] Definir UX de drawers contextuais com deep links para `/jobs`, `/etl-explorer`, `/quarantine`, `/events` e `/upload`.
+- [ ] Definir como o quick upload da dashboard reaproveita a logica do Upload Center sem duplicar regras.
+
+### Front execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `frontend-skill`, `build-web-apps:frontend-app-builder`, `vercel-react-best-practices`, `vitest`, `playwright`, `test-driven-development`.
+- [ ] Ligar dashboard ao snapshot REST expandido e ao canal WebSocket.
+- [ ] Implementar graficos 24h, donut, ranking de formatos, mini barras semanais e heatmap 7 dias com dados reais.
+- [ ] Implementar tabs reais de Pipeline de Jobs: ativos, fila e historico.
+- [ ] Implementar card de Ingestao com quick upload real para arquivo local e link publico.
+- [ ] Implementar lista de workers vivos com heartbeat/status, job atual e progresso.
+- [ ] Implementar alert strip, review/dismiss persistentes e export CSV/JSON.
+- [ ] Garantir que admin veja detalhes tecnicos globais e operator veja apenas dados uteis no proprio escopo.
+- [ ] Verificar desktop/mobile no browser e corrigir overlaps, cortes de texto, cards sem estado e mismatches relevantes contra o prototipo.
+
+### Connectors
+
+- Skills obrigatorias para todas as tasks desta trilha: `domain-modeling`, `api-designer`, `security-threat-model`, `security-best-practices`, `integration-testing`.
+- [ ] Implementar perfis de conector admin-only para S3 e HTTP URL.
+- [ ] Armazenar segredos com Active Record Encryption e nunca expor credenciais na UI, API, eventos ou logs.
+- [ ] Implementar lease interno para o worker acessar credenciais temporarias ou material minimo necessario.
+- [ ] Implementar UX `perfil + object key` para S3.
+- [ ] Implementar UX `perfil HTTP com auth` para HTTP URL.
+- [ ] Manter `google_drive` e `oauth_delegated` explicitamente fora do escopo funcional da Sprint 7.
+
+### DevOps
+
+- Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`, `circleci:circleci-builds`.
+- [ ] Ajustar env checks para WebSocket/Solid Cable, realtime tickets, Active Record Encryption, conectores S3/HTTP e retencao.
+- [ ] Atualizar smokes para dashboard realtime/fallback, quick upload, alert actions e conectores base.
+- [ ] Garantir que Compose/WSL continue sendo o caminho oficial para gates pesados.
+- [ ] Avaliar se GitHub Actions existentes cobrem as novas suites ou se precisam de jobs separados por risco.
+- [ ] Registrar CodeRabbit como revisao desejada se CLI/auth estiver disponivel; se nao estiver, registrar blocker operacional.
+
+### Test planning
+
+- Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
+- [ ] Planejar TDD por comportamento antes de cada frente: dashboard, realtime, parsers, conectores, governanca e retencao.
+- [ ] Cobrir contrato expandido da dashboard e compatibilidade com consumidores existentes.
+- [ ] Cobrir permissao por role/org, matriz configuravel e ausencia de vazamento entre tenants.
+- [ ] Cobrir WebSocket feliz, ticket expirado, queda para polling e reconexao.
+- [ ] Cobrir quick upload, public link, export e alert review/dismiss.
+- [ ] Cobrir formatos CSV, JSON, NDJSON, ZIP, Parquet e XLSX com casos de erro e limites.
+
+### Test execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`, `superpowers:verification-before-completion`.
+- [ ] `cd apps/api && bundle exec rails test`.
+- [ ] `cd apps/worker && bundle exec rspec`.
+- [ ] `ruby scripts/ci/validate-operational-contracts.rb`.
+- [ ] `cd apps/web && pnpm test:run`.
+- [ ] `cd apps/web && pnpm test:integration`.
+- [ ] `cd apps/web && pnpm build`.
+- [ ] `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 frontend`.
+- [ ] `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 backend`.
+- [ ] `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1` com variaveis de smoke dos conectores e `SMOKE_PUBLIC_LINK_URL`.
+- [ ] `powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -Profile full-closeout` quando a Sprint 7 estiver pronta para fechamento.
+
+### Security
+
+- Skills obrigatorias para todas as tasks desta trilha: `security-threat-model`, `security-best-practices`, `openapi`, `api-contract-testing`.
+- [ ] Atualizar threat model para WebSocket, tickets curtos, realtime events, export, alert actions, S3, HTTP URL, credential lease e novos formatos.
+- [ ] Garantir masking de URLs, object keys, credenciais, headers e mensagens de erro.
+- [ ] Garantir que alert review/dismiss, export e configuracao de permissoes sejam auditaveis e idempotentes.
+- [ ] Garantir que ClickHouse e eventos realtime nao carreguem payload bruto de registros.
+- [ ] Revisar SSRF e DNS rebind no conector HTTP e no `public_link` existente.
+
+### Documentation
+
+- Skills obrigatorias para todas as tasks desta trilha: `documentation-writer`, `api-documenter`, `openapi`, `readiness-report`.
+- [ ] Atualizar este roadmap conforme execucao real da Sprint 7.
+- [ ] Atualizar `docs/product/vision.md` para refletir dashboard parity, realtime, conectores S3/HTTP e governanca.
+- [ ] Atualizar `docs/guides/platform/final-delivery-guide.md` com o novo criterio de entrega pos-v1.
+- [ ] Atualizar `docs/guides/frontend/frontend-foundations.md` e `docs/guides/frontend/frontend-workspace-map.md` com dashboard data-driven, WebSocket e quick upload.
+- [ ] Atualizar `docs/guides/backend/api-docs.md`, OpenAPI e contratos sempre que endpoints/acoes mudarem.
+- [ ] Atualizar runbooks de worker/runtime para realtime, conectores, formatos e retencao.
+- [ ] Criar closeout unico da Sprint 7 somente depois dos gates verdes.
+
+### Checklist de saida
+
+- [ ] Dashboard visualmente alinhada ao prototipo nos blocos principais e sem fixtures invisiveis.
+- [ ] Todos os cards principais possuem logica real, fonte declarada ou empty/degraded state.
+- [ ] Grafico 24h, donut, ranking de formatos, mini barras e heatmap sao data-driven.
+- [ ] Drawer + deep link funciona para investigacoes principais.
+- [ ] WebSocket funciona com ticket curto e fallback para polling.
+- [ ] Quick upload local e public link funcionam a partir da dashboard.
+- [ ] Export CSV/JSON funciona para snapshot e series relevantes.
+- [ ] Alert review/dismiss persiste, audita e respeita RBAC.
+- [ ] S3 e HTTP base funcionam com perfis admin-only e segredos criptografados.
+- [ ] CSV, JSON, NDJSON, ZIP, Parquet e XLSX funcionam ou falham com erro claro e seguro.
+- [ ] Retencao por workspace e matriz de permissoes configuravel estao cobertas.
+- [ ] Docs, contratos, OpenAPI, smokes e reports estao sincronizados.
+- [ ] PR final da Sprint 7 passa nos workflows antes de merge.
+
+### Plano de transicao a partir da Sprint 6
+
+- [ ] Atualizar este roadmap com o planejamento da Sprint 7 na branch `sprint6`.
+- [ ] Commitar como `docs: plan sprint7 dashboard parity`.
+- [ ] Abrir PR `sprint6` -> `dev` com descricao detalhada da Sprint 6 e evidencias dos gates.
+- [ ] Aguardar todos os workflows GitHub passarem.
+- [ ] Corrigir qualquer falha na propria `sprint6`, repush e aguardar novamente.
+- [ ] Fazer squash merge para `dev` somente com checks verdes.
+- [ ] Criar a branch da Sprint 7 a partir de `dev` depois do merge.
+
 ## Pos-v1 e backlog estrategico
 
 Os itens abaixo nao entram na trilha critica da v1, mas ja estao visiveis pelo estado atual do produto e devem permanecer no horizonte oficial para evitar reinvencao desordenada depois do cluster.
 
 ### Evolucoes funcionais naturais
 
-- SSE ou WebSocket para reduzir polling quando o dashboard operacional ja estiver estavel.
-- RBAC mais fino por modulo, recurso e acao operacional.
 - Suporte a novos tipos de pipeline alem do fluxo principal de ingestao de arquivos.
 - Ferramentas de investigacao mais profundas no dashboard, como diff entre tentativas e comparacao de replays.
+- Conectores alem de S3/HTTP base, incluindo Google Drive e OAuth delegado.
 
 ### Evolucoes de plataforma
 

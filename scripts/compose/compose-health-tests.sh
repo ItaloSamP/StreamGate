@@ -55,6 +55,17 @@ fi
 
 assert_eq "$healthy_result" "" "healthy environment should not report issues"
 
+healthy_ndjson='{"Service":"postgres","State":"running","Health":"healthy","ExitCode":0}
+{"Service":"redis","State":"running","Health":"healthy","ExitCode":0}
+{"Service":"rabbitmq","State":"running","Health":"healthy","ExitCode":0}'
+
+if ! healthy_ndjson_result="$(test_compose_services_ready "$healthy_ndjson")"; then
+  echo "healthy NDJSON environment should have passed" >&2
+  exit 1
+fi
+
+assert_eq "$healthy_ndjson_result" "" "healthy NDJSON environment should not report issues"
+
 failed_json='[
   {"Service":"postgres","State":"running","Health":"healthy","ExitCode":0},
   {"Service":"redis","State":"running","Health":"starting","ExitCode":0},
@@ -70,7 +81,7 @@ if failed_result="$(test_compose_services_ready "$failed_json")"; then
 fi
 
 assert_contains "$failed_result" $'pending\tService '\''redis'\'' is still starting.' "starting redis should be pending"
-assert_contains "$failed_result" $'fatal\tService '\''rabbitmq'\'' is unhealthy.' "unhealthy rabbitmq should be fatal"
+assert_contains "$failed_result" $'pending\tService '\''rabbitmq'\'' is unhealthy but may still recover during startup.' "unhealthy rabbitmq should be pending while startup can still recover"
 assert_contains "$failed_result" $'fatal\tService '\''minio'\'' is not running (state: exited).' "failed minio should be fatal"
 assert_contains "$failed_result" $'fatal\tOne-shot service '\''minio-init'\'' exited with code 1.' "failed minio-init should be fatal"
 

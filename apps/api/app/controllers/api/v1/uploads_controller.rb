@@ -1,6 +1,8 @@
 module Api
   module V1
     class UploadsController < ApplicationController
+      include IdempotentOperation
+
       MAX_PER_PAGE = 100
       DEFAULT_PER_PAGE = 20
       CHECKSUM_PATTERN = /\A[a-f0-9]{64}\z/
@@ -8,6 +10,7 @@ module Api
       before_action :authenticate_request!
       before_action :enforce_signed_url_rate_limit!, only: :signed_url
       before_action :enforce_register_rate_limit!, only: :create
+      before_action :enforce_register_rate_limit!, only: :public_link
 
       def signed_url
         payload = signed_url_params
@@ -73,6 +76,40 @@ module Api
         render_api_error(
           code: "resource_conflict",
           message: "Conflito ao registrar upload. Tente novamente com uma nova URL assinada.",
+          status: :conflict
+        )
+      end
+
+      def public_link
+        payload = public_link_params
+        validation = validate_public_link_payload(payload)
+        return if validation == false
+
+        with_idempotency!(scope: "uploads.public_link", payload: payload.to_h) do
+          result = ::Uploads::RegisterPublicLinkService.call(
+            user: current_actor,
+            url: payload[:url],
+            filename: payload[:filename],
+            content_type: normalized_content_type(payload[:content_type]),
+            byte_size: payload[:byte_size].to_i,
+            request_id: Current.request_id,
+            trace_id: Current.trace_id
+          )
+
+          [
+            201,
+            {
+              data: upload_job_payload(result.upload, result.job).merge(
+                acquisition: UploadAcquisitionSerializer.new(result.acquisition).serializable_hash
+              ),
+              meta: { idempotent: true }
+            }
+          ]
+        end
+      rescue ActiveRecord::RecordNotUnique
+        render_api_error(
+          code: "resource_conflict",
+          message: "Conflito ao registrar link publico. Tente novamente.",
           status: :conflict
         )
       end
@@ -145,6 +182,10 @@ module Api
         params.require(:upload).permit(:filename, :content_type, :byte_size, :checksum_sha256, :storage_key, metadata: {})
       end
 
+      def public_link_params
+        params.require(:public_link).permit(:url, :filename, :content_type, :byte_size)
+      end
+
       def allowed_content_types
         Rails.application.config.x.upload_allowed_content_types
       end
@@ -186,6 +227,37 @@ module Api
         )
 
         true
+      end
+
+      def validate_public_link_payload(payload)
+        details = []
+
+        details << { field: "filename", reason: "blank" } if payload[:filename].blank?
+
+        content_type = normalized_content_type(payload[:content_type])
+        if content_type.blank?
+          details << { field: "content_type", reason: "blank" }
+        elsif !allowed_content_types.include?(content_type)
+          details << { field: "content_type", reason: "not_supported" }
+        end
+
+        byte_size = payload[:byte_size].to_i
+        max_byte_size = Rails.application.config.x.upload_max_byte_size
+        details << { field: "byte_size", reason: "too_large" } if byte_size.positive? && byte_size > max_byte_size
+
+        url_result = ::Uploads::PublicLinkUrlPolicy.validate(payload[:url])
+        details << { field: "url", reason: url_result.reason || "invalid" } unless url_result.valid?
+
+        return true if details.empty?
+
+        render_api_error(
+          code: "validation_failed",
+          message: "Nao foi possivel validar o link publico enviado.",
+          status: :unprocessable_entity,
+          details: details
+        )
+
+        false
       end
 
       def handle_existing_upload(existing_upload, payload)

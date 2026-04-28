@@ -48,7 +48,8 @@ async function loginAsAdmin(page: Page) {
 
     try {
       await expect(page).toHaveURL(/\/dashboard$/, { timeout: 12_000 })
-      await expect(page.getByText('Dashboard Operacional').first()).toBeVisible()
+      await expect(page.locator('.dash-topbar-title')).toHaveText('Dashboard')
+      await expect(page.getByTestId('dashboard-user-menu-toggle')).toBeVisible()
       return
     } catch {
       // Try the next known local password without failing the whole flow early.

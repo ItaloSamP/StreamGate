@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_20_000100) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_24_000100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -76,12 +76,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_000100) do
   end
 
   create_table "dlq_replay_requests", id: :string, force: :cascade do |t|
-    t.string "approved_by_id"
-    t.datetime "approved_at"
     t.text "approval_reason"
+    t.datetime "approved_at"
+    t.string "approved_by_id"
     t.datetime "created_at", null: false
-    t.string "executed_by_id"
     t.datetime "executed_at"
+    t.string "executed_by_id"
     t.text "execution_reason"
     t.datetime "expires_at"
     t.text "last_error"
@@ -230,6 +230,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_000100) do
     t.index ["expires_at"], name: "index_operational_action_idempotency_keys_on_expires_at"
   end
 
+  create_table "operational_warnings", id: :string, force: :cascade do |t|
+    t.string "code", null: false
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "job_id"
+    t.text "last_error"
+    t.text "message", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.string "request_id"
+    t.datetime "resolved_at"
+    t.integer "retry_count", default: 0, null: false
+    t.string "severity", default: "warning", null: false
+    t.string "status", default: "open", null: false
+    t.string "trace_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "upload_id"
+    t.index ["expires_at"], name: "index_operational_warnings_on_expires_at"
+    t.index ["job_id", "created_at"], name: "index_operational_warnings_on_job_id_and_created_at"
+    t.index ["status", "created_at"], name: "index_operational_warnings_on_status_and_created_at"
+    t.index ["trace_id"], name: "index_operational_warnings_on_trace_id"
+    t.index ["upload_id", "created_at"], name: "index_operational_warnings_on_upload_id_and_created_at"
+    t.check_constraint "retry_count >= 0", name: "operational_warnings_retry_count_non_negative"
+  end
+
   create_table "processing_attempts", id: :string, force: :cascade do |t|
     t.integer "attempt_number", null: false
     t.datetime "created_at", null: false
@@ -261,10 +285,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_000100) do
     t.string "job_id", null: false
     t.text "message", null: false
     t.jsonb "payload", default: {}, null: false
-    t.datetime "resolved_at"
-    t.string "resolved_by_id"
     t.text "resolution_reason"
     t.string "resolution_status", default: "open", null: false
+    t.datetime "resolved_at"
+    t.string "resolved_by_id"
     t.integer "row_number"
     t.string "severity", default: "error", null: false
     t.string "trace_id", null: false
@@ -280,6 +304,32 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_000100) do
     t.check_constraint "row_number IS NULL OR row_number > 0", name: "quarantine_records_row_number_positive"
   end
 
+  create_table "upload_acquisitions", id: :string, force: :cascade do |t|
+    t.bigint "byte_size"
+    t.datetime "completed_at"
+    t.string "content_type"
+    t.datetime "created_at", null: false
+    t.string "job_id", null: false
+    t.text "last_error"
+    t.string "link_mode", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.string "request_id"
+    t.datetime "requested_at", null: false
+    t.string "source_host", null: false
+    t.string "source_type", null: false
+    t.string "status", default: "pending", null: false
+    t.string "trace_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "upload_id", null: false
+    t.string "url_hash", null: false
+    t.text "url_masked", null: false
+    t.index ["job_id"], name: "index_upload_acquisitions_on_job_id", unique: true
+    t.index ["status", "created_at"], name: "index_upload_acquisitions_on_status_and_created_at"
+    t.index ["trace_id"], name: "index_upload_acquisitions_on_trace_id"
+    t.index ["upload_id"], name: "index_upload_acquisitions_on_upload_id", unique: true
+    t.index ["url_hash"], name: "index_upload_acquisitions_on_url_hash"
+  end
+
   create_table "uploads", id: :string, force: :cascade do |t|
     t.bigint "byte_size", null: false
     t.string "checksum_sha256", null: false
@@ -289,11 +339,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_000100) do
     t.jsonb "metadata", default: {}, null: false
     t.string "request_id"
     t.string "sensitivity_level", default: "internal", null: false
+    t.string "source_type", default: "upload", null: false
     t.string "status", default: "registered", null: false
     t.string "storage_key", null: false
     t.string "trace_id", null: false
     t.datetime "updated_at", null: false
     t.string "user_id", null: false
+    t.index ["source_type", "created_at"], name: "index_uploads_on_source_type_and_created_at"
     t.index ["storage_key"], name: "index_uploads_on_storage_key", unique: true
     t.index ["trace_id"], name: "index_uploads_on_trace_id"
     t.index ["user_id", "created_at"], name: "index_uploads_on_user_id_and_created_at"
@@ -329,8 +381,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_000100) do
     t.string "notification_id"
     t.string "notification_setting_id", null: false
     t.jsonb "payload", default: {}, null: false
-    t.integer "response_status"
     t.string "request_id"
+    t.integer "response_status"
     t.string "signature"
     t.string "status", default: "pending", null: false
     t.string "trace_id", null: false
@@ -382,23 +434,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_000100) do
   add_foreign_key "analytics_job_snapshots", "uploads"
   add_foreign_key "analytics_job_snapshots", "users", column: "actor_id"
   add_foreign_key "audit_events", "users", column: "actor_id"
+  add_foreign_key "auth_sessions", "users"
   add_foreign_key "dlq_replay_requests", "users", column: "approved_by_id"
   add_foreign_key "dlq_replay_requests", "users", column: "executed_by_id"
   add_foreign_key "dlq_replay_requests", "users", column: "requested_by_id"
   add_foreign_key "job_artifacts", "jobs"
-  add_foreign_key "notification_settings", "users"
-  add_foreign_key "notifications", "users", column: "recipient_id"
-  add_foreign_key "operational_action_idempotency_keys", "users", column: "actor_id"
-  add_foreign_key "auth_sessions", "users"
   add_foreign_key "job_batches", "jobs"
   add_foreign_key "jobs", "uploads"
   add_foreign_key "jobs", "users", column: "requested_by_id"
+  add_foreign_key "notification_settings", "users"
+  add_foreign_key "notifications", "users", column: "recipient_id"
+  add_foreign_key "operational_action_idempotency_keys", "users", column: "actor_id"
+  add_foreign_key "operational_warnings", "jobs"
+  add_foreign_key "operational_warnings", "uploads"
   add_foreign_key "processing_attempts", "jobs"
   add_foreign_key "processing_attempts", "processing_attempts", column: "source_attempt_id"
   add_foreign_key "processing_attempts", "users", column: "initiated_by_id"
   add_foreign_key "quarantine_records", "job_batches"
   add_foreign_key "quarantine_records", "jobs"
   add_foreign_key "quarantine_records", "users", column: "resolved_by_id"
+  add_foreign_key "upload_acquisitions", "jobs"
+  add_foreign_key "upload_acquisitions", "uploads"
   add_foreign_key "uploads", "users"
   add_foreign_key "webhook_deliveries", "notification_settings"
   add_foreign_key "webhook_deliveries", "notifications"

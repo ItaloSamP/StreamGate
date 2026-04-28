@@ -396,7 +396,7 @@ run_e2e_workflow() {
   fi
 
   if [[ $failed -eq 0 ]]; then
-    run_tracked_step "$workflow" 'Run auth e2e tests' "$ROOT_DIR/apps/web" "E2E_BASE_URL=http://localhost:5173 pnpm exec playwright test --project=chromium" || { failed=1; reason='Falha em Run auth e2e tests.'; }
+    run_tracked_step "$workflow" 'Run auth e2e tests' "$ROOT_DIR/apps/web" "E2E_BASE_URL=http://localhost:5173 SEED_OPERATOR_PASSWORD=$seed_operator_password SEED_ADMIN_PASSWORD=$seed_admin_password pnpm exec playwright test --project=chromium" || { failed=1; reason='Falha em Run auth e2e tests.'; }
   fi
 
   run_tracked_step "$workflow" 'Stop auth app stack' "$ROOT_DIR" './scripts/dev/dev-down.sh' 1 >/dev/null 2>&1 || true

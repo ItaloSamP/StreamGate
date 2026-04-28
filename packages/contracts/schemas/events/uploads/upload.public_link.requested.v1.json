@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/events/upload.public_link.requested.v1.json",
+  "title": "UploadPublicLinkRequestedEventV1",
+  "type": "object",
+  "required": ["event_id", "event_name", "occurred_at", "producer", "payload_version", "correlation_id", "trace_id", "request_id", "upload_id", "job_id", "payload"],
+  "properties": {
+    "event_id": { "type": "string" },
+    "event_name": { "const": "upload.public_link.requested.v1" },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "producer": { "type": "string" },
+    "payload_version": { "type": "integer", "const": 1 },
+    "correlation_id": { "type": "string" },
+    "trace_id": { "type": "string" },
+    "request_id": { "type": "string" },
+    "upload_id": { "type": "string" },
+    "job_id": { "type": "string" },
+    "payload": {
+      "type": "object",
+      "required": ["acquisition_id", "source_url", "url_hash", "url_masked", "source_host", "storage_key", "filename", "content_type"],
+      "properties": {
+        "acquisition_id": { "type": "string" },
+        "source_url": { "type": "string", "format": "uri" },
+        "url_hash": { "type": "string" },
+        "url_masked": { "type": "string" },
+        "source_host": { "type": "string" },
+        "storage_key": { "type": "string" },
+        "filename": { "type": "string" },
+        "content_type": { "type": "string" },
+        "declared_byte_size": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

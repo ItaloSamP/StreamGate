@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/http/resources/upload-acquisition.v1.json",
+  "title": "UploadAcquisitionResourceV1",
+  "type": "object",
+  "required": ["id", "upload_id", "job_id", "source_type", "link_mode", "status", "url_masked", "url_hash", "source_host", "requested_at", "trace_id"],
+  "properties": {
+    "id": { "type": "string" },
+    "upload_id": { "type": "string" },
+    "job_id": { "type": "string" },
+    "source_type": { "type": "string", "const": "external_link" },
+    "link_mode": { "type": "string", "const": "public_link" },
+    "status": { "type": "string", "enum": ["pending", "fetching", "stored", "failed"] },
+    "url_masked": { "type": "string" },
+    "url_hash": { "type": "string" },
+    "source_host": { "type": "string" },
+    "content_type": { "type": ["string", "null"] },
+    "byte_size": { "type": ["integer", "null"], "minimum": 1 },
+    "requested_at": { "type": "string", "format": "date-time" },
+    "completed_at": { "type": ["string", "null"], "format": "date-time" },
+    "trace_id": { "type": "string" },
+    "created_at": { "type": ["string", "null"], "format": "date-time" },
+    "updated_at": { "type": ["string", "null"], "format": "date-time" }
+  },
+  "additionalProperties": false
+}

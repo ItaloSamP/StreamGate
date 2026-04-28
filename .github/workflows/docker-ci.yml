@@ -53,6 +53,8 @@ jobs:
         run: docker build -f apps/worker/Dockerfile.dev -t streamgate-worker-dev:ci ./apps/worker
 
       - name: Run all smoke tests
+        env:
+          SMOKE_PUBLIC_LINK_URL: https://raw.githubusercontent.com/plotly/datasets/master/2014_apple_stock.csv
         run: |
           echo MINIO_CORS_ALLOWED_ORIGIN=http://localhost:5173 >> .env
           bash scripts/smokes/run-smokes.sh

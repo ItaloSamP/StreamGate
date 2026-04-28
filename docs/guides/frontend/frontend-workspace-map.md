@@ -6,17 +6,20 @@ Este guia registra a malha oficial do workspace autenticado do StreamGate. Ele s
 
 ## Estado atual
 
-Estado alinhado a entrega de frontend da Sprint 5:
+Estado alinhado a entrega de frontend da Sprint 6:
 
 - workspace protegido usa `DashboardSurface` + `WorkspacePageFrame`
 - navegacao oficial vive em `workspace-config.ts`
-- dashboard virou command center operacional real
+- dashboard virou command center operacional real via `GET /api/v1/analytics/dashboard`, com secoes `live`, `derived`, `empty` ou `degraded`
 - jobs, uploads, analytics, quarentena, DLQ, audit e event log consomem API real
+- `/clickhouse` e `/etl-explorer` deixaram de ser placeholders e viraram drilldowns analiticos reais
+- Upload Center suporta arquivo local e `public_link`; `oauth_delegated`, `google_drive`, `s3` e `http_url` seguem fora do corte funcional
 - audit e DLQ sao admin-only
 - operacoes mutaveis sensiveis vivem em painel admin-only dedicado
 - notificacoes in-app usam sino na topbar, inbox completa, arquivamento e canais
 - detalhe de job exibe historico de artefatos finais com download assinado
-- badges de navegacao no dashboard usam dados reais
+- badges de navegacao no dashboard usam dados reais quando habilitados
+- chips e gauges fixos foram neutralizados para nao parecerem telemetria real
 - filtros operacionais sao refletidos em URL
 - rotas de detalhe permitem investigacao compartilhavel por ID
 
@@ -44,7 +47,9 @@ Toda nova pagina autenticada deve nascer a partir dessa pilha antes de propor um
 | `/jobs` | leitura de execucao | principal | admin/operator |
 | `/jobs/:id` | detalhe de job | principal | admin/operator |
 | `/analytics` | metricas e leitura agregada | analise | admin/operator |
+| `/clickhouse` | warehouse operacional, fallback e SLO | analise | admin/operator |
 | `/quarantine` | triagem read-only de registros rejeitados | analise | admin/operator |
+| `/etl-explorer` | lineage por job, batches, attempts, artefatos e audit refs | analise | admin/operator |
 | `/quarantine/:id` | detalhe de registro em quarentena | analise | admin/operator |
 | `/quarantine/dlq/:messageId` | detalhe de mensagem DLQ | sistema | admin |
 | `/events` | event log operacional baseado em audit | analise | admin/operator |
@@ -75,18 +80,41 @@ Toda pagina protegida deve consumir a camada HTTP oficial:
 - `apps/web/src/lib/api-client.ts`
 - `apps/web/src/lib/streamgate-api.ts`
 
+### Organizacao de testes
+
+O workspace separa runtime e verificacao:
+
+- `apps/web/src`: codigo carregado pelo app.
+- `apps/web/tests/unit`: Vitest unitario e de componentes.
+- `apps/web/tests/integration`: Vitest de integracao contra backend real/local.
+- `apps/web/e2e`: Playwright.
+
+Essa separacao evita testes misturados com paginas e adapters, mantendo `src/pages`, `src/lib` e `src/features` mais faceis de navegar.
+
 Paginas e fontes atuais:
 
-- `DashboardPage`: `getAnalytics`, `listJobs`, `listUploads`, `listQuarantine`, `listAuditEvents`, `listQuarantineDlq`
+- `DashboardPage`: `getAnalyticsDashboard`, `listJobs`, `listUploads`
 - `AnalyticsPage`: `getAnalytics`
+- `ClickHousePage`: `getAnalyticsWarehouse`
+- `EtlExplorerPage`: `listJobs`, `getAnalyticsLineage`
 - `QuarantinePage`: `listQuarantine`, `listQuarantineDlq`
 - `AuditPage`: `listAuditEvents`
 - `EventLogPage`: `listAuditEvents`
 - `JobsPage`: `listJobs`
 - `OperationsPage`: `retryJob`, `resolveQuarantine`, `createDlqReplayRequest`, `approveDlqReplayRequest`, `executeDlqReplayRequest`
 - `NotificationsPage`: `listNotifications`, mutacoes de inbox, `getNotificationSettings`, `updateNotificationSettings`, `testWebhookNotification`
-- `UploadPage`: `requestUploadSignedUrl`, `registerUpload`, `listUploads`, `listJobs`
+- `UploadPage`: `requestUploadSignedUrl`, `registerUpload`, `createPublicLinkUpload`, `listUploads`, `listJobs`
 - `OperationalDetailPages`: listas oficiais filtradas por ID/search e `listJobArtifacts`/`createArtifactDownloadUrl`
+
+### Dashboard, warehouse e lineage
+
+Regras da Sprint 6:
+
+- a dashboard nao usa mais `scaffoldQueue`, `scaffoldWorkers`, `scaffoldEventRows` ou `scaffoldFormatRows`
+- ausencia de dado vira empty state explicito, nao numero sintetico
+- `/clickhouse` exibe warehouse operacional denso, sem console de query livre
+- `/etl-explorer` auto-seleciona um job recente quando `?job_id=` nao existe e grava a selecao na URL
+- `event_log` da dashboard vem do contrato backend e deve permanecer compacto para leitura operacional
 
 ### Query state e refresh
 
@@ -158,14 +186,13 @@ O wizard deve sempre exigir alvo, revisao de regras, motivo operacional e confir
 
 ## Validacao/Evidencias
 
-Evidencias da trilha de frontend Sprint 5:
+Evidencias da trilha de frontend Sprint 6:
 
-- testes de adapter cobrem endpoints reais e query params novos
-- testes de paginas cobrem sino, inbox, regras/canais, painel admin, permissoes e artefatos
-- `pnpm.cmd test:run`: aprovado, 11 arquivos e 58 testes
-- `pnpm.cmd lint`: aprovado sem warnings
-- `pnpm.cmd build`: aprovado com permissao escalada por restricao de sandbox
-- `pnpm.cmd test:integration`: aprovado contra API Rails local em `http://127.0.0.1:3000`, 1 arquivo e 3 testes
+- testes de adapter cobrem `getAnalyticsDashboard`, `getAnalyticsWarehouse`, `getAnalyticsLineage` e `createPublicLinkUpload`
+- testes de paginas cobrem dashboard sem fixtures enganosas, `/clickhouse`, `/etl-explorer`, Upload Center com arquivo local e `public_link`
+- testes de rotas cobrem `/clickhouse` e `/etl-explorer` como rotas protegidas reais para operador
+- `pnpm.cmd --dir apps/web test:run`, `pnpm.cmd --dir apps/web test:integration`, `pnpm.cmd --dir apps/web build`, `ci-local.ps1 frontend` e `run-smokes.ps1` com `SMOKE_PUBLIC_LINK_URL` passaram no fechamento do recorte
+- verificacao visual desktop/mobile passou para dashboard, warehouse, lineage e Upload Center
 
 ## Referencias
 

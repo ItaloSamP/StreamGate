@@ -22,6 +22,12 @@ module Worker
           parser: parser,
           logger: logger
         )
+        @public_link_processor = PublicLinkRequestedProcessor.new(
+          config: config,
+          db_client: db_client,
+          storage_client: storage_client,
+          logger: logger
+        )
       end
 
       def run
@@ -39,6 +45,8 @@ module Worker
         exchange = channel.topic(config.exchange_name, durable: true)
         dlq = channel.queue(config.dlq_queue_name, durable: true)
         dlq.bind(exchange, routing_key: config.dlq_routing_key)
+        public_link_dlq = channel.queue(config.public_link_dlq_queue_name, durable: true)
+        public_link_dlq.bind(exchange, routing_key: config.public_link_dlq_routing_key)
 
         queue = channel.queue(
           config.queue_name,
@@ -50,7 +58,20 @@ module Worker
         )
         queue.bind(exchange, routing_key: config.routing_key)
 
+        public_link_queue = channel.queue(
+          config.public_link_queue_name,
+          durable: true,
+          arguments: {
+            "x-dead-letter-exchange" => config.exchange_name,
+            "x-dead-letter-routing-key" => config.public_link_dlq_routing_key
+          }
+        )
+        public_link_queue.bind(exchange, routing_key: config.public_link_routing_key)
+
         logger.info("worker consumer started queue=#{config.queue_name} routing_key=#{config.routing_key}")
+        public_link_queue.subscribe(manual_ack: true, block: false) do |delivery_info, properties, payload|
+          handle_message(channel, exchange, delivery_info, properties, payload)
+        end
         queue.subscribe(manual_ack: true, block: true) do |delivery_info, properties, payload|
           handle_message(channel, exchange, delivery_info, properties, payload)
         end
@@ -61,14 +82,16 @@ module Worker
 
       private
 
-      attr_reader :config, :logger, :processor, :db_client, :storage_client, :parser
+      attr_reader :config, :logger, :processor, :public_link_processor, :db_client, :storage_client, :parser
 
       def handle_message(channel, exchange, delivery_info, properties, payload)
         retry_count = (properties.headers || {}).fetch("x-retry-count", 0).to_i
         started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
         event = JSON.parse(payload)
 
-        result = processor.process(event, retry_count: retry_count)
+        selected_processor = processor_for(event)
+        result = selected_processor.process(event, retry_count: retry_count)
+        publish_followup(exchange, result)
         status = result == :duplicate ? "duplicate" : "processed"
 
         record_metric(
@@ -91,7 +114,7 @@ module Worker
 
           exchange.publish(
             payload,
-            routing_key: config.routing_key,
+            routing_key: retry_routing_key(event),
             content_type: "application/json",
             persistent: true,
             headers: {
@@ -111,7 +134,7 @@ module Worker
             started_at: started_at
           )
         else
-          publish_to_dlq(exchange, payload, "max_retries_exceeded", retry_count)
+          publish_to_dlq(exchange, payload, "max_retries_exceeded", retry_count, event)
           logger.error("message moved to dlq event_id=#{event && event["event_id"]} retries=#{retry_count}")
           record_metric(
             event: event,
@@ -145,7 +168,7 @@ module Worker
 
           exchange.publish(
             payload,
-            routing_key: config.routing_key,
+            routing_key: retry_routing_key(event),
             content_type: "application/json",
             persistent: true,
             headers: {
@@ -164,7 +187,7 @@ module Worker
             started_at: started_at
           )
         else
-          publish_to_dlq(exchange, payload, "unexpected_error", retry_count)
+          publish_to_dlq(exchange, payload, "unexpected_error", retry_count, event)
           record_metric(
             event: event,
             status: "dlq",
@@ -178,10 +201,10 @@ module Worker
         channel.ack(delivery_info.delivery_tag)
       end
 
-      def publish_to_dlq(exchange, payload, reason, retry_count)
+      def publish_to_dlq(exchange, payload, reason, retry_count, event = nil)
         exchange.publish(
           payload,
-          routing_key: config.dlq_routing_key,
+          routing_key: dlq_routing_key(event),
           content_type: "application/json",
           persistent: true,
           headers: {
@@ -189,6 +212,36 @@ module Worker
             "x-retry-count" => retry_count
           }
         )
+      end
+
+      def processor_for(event)
+        return public_link_processor if event["event_name"] == config.public_link_routing_key
+
+        processor
+      end
+
+      def publish_followup(exchange, result)
+        return unless result.is_a?(Hash) && result[:publish]
+
+        followup = result.fetch(:publish)
+        exchange.publish(
+          followup.fetch(:payload).to_json,
+          routing_key: followup.fetch(:routing_key),
+          content_type: "application/json",
+          persistent: true,
+          headers: {
+            "x-event-name" => followup.fetch(:payload).fetch(:event_name),
+            "x-payload-version" => followup.fetch(:payload).fetch(:payload_version)
+          }
+        )
+      end
+
+      def retry_routing_key(event)
+        event && event["event_name"] == config.public_link_routing_key ? config.public_link_routing_key : config.routing_key
+      end
+
+      def dlq_routing_key(event)
+        event && event["event_name"] == config.public_link_routing_key ? config.public_link_dlq_routing_key : config.dlq_routing_key
       end
 
       def exponential_backoff(attempt)

@@ -31,6 +31,7 @@ Fonte compartilhada dos contratos do StreamGate entre API, worker e frontend.
 ### Eventos iniciais
 
 - `upload.received`
+- `upload.public_link.requested`
 - `etl.validation.failed`
 - `etl.batch.loaded`
 - `etl.job.completed`
@@ -53,8 +54,8 @@ Todo contrato de evento deve prever, quando aplicavel:
 
 ## Contratos HTTP por dominio
 
-- `uploads`: signed URL, registro idempotente e listagem de uploads.
-- `operational-reads`: jobs, analytics, quarantine, audit e DLQ read-only.
+- `uploads`: signed URL, registro idempotente, public link e listagem de uploads.
+- `operational-reads`: jobs, analytics, dashboard, warehouse, lineage, quarantine, audit e DLQ read-only.
 - `operations`: retry, resolve e ciclo de replay DLQ.
 - `artifacts`: listagem e URL assinada curta de download.
 - `notifications`: inbox, leitura/arquivo/delete, acoes em massa essenciais, settings e webhook/email deliveries.

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/http/analytics-dashboard-response.v1.json",
+  "title": "AnalyticsDashboardResponseV1",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": ["generated_at", "source", "window", "sections", "dependencies", "slo"],
+      "properties": {
+        "generated_at": { "type": "string", "format": "date-time" },
+        "source": { "type": "string", "enum": ["postgres_derived", "empty"] },
+        "window": { "type": "object", "additionalProperties": true },
+        "sections": {
+          "type": "object",
+          "required": ["queue", "workers", "throughput", "formats", "warnings", "event_log"],
+          "additionalProperties": {
+            "type": "object",
+            "required": ["status", "generated_at", "data"],
+            "properties": {
+              "status": { "type": "string", "enum": ["live", "derived", "empty", "degraded"] },
+              "generated_at": { "type": "string", "format": "date-time" },
+              "data": { "type": ["object", "array"], "additionalProperties": true },
+              "empty_state": { "type": ["string", "null"] }
+            },
+            "additionalProperties": false
+          }
+        },
+        "dependencies": { "type": "object", "additionalProperties": true },
+        "slo": { "$ref": "#/$defs/slo" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "slo": {
+      "type": "object",
+      "required": ["slo_target_seconds", "lag_seconds", "stale", "p95_ms", "error_budget_percent"],
+      "properties": {
+        "slo_target_seconds": { "type": "integer", "minimum": 1 },
+        "last_event_at": { "type": ["string", "null"], "format": "date-time" },
+        "lag_seconds": { "type": ["integer", "null"] },
+        "stale": { "type": "boolean" },
+        "p95_ms": { "type": "integer", "minimum": 0 },
+        "error_budget_percent": { "type": "number", "minimum": 0, "maximum": 100 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

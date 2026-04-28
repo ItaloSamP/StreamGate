@@ -6,12 +6,13 @@ Este guia fixa as regras de arquitetura, interface e integracao do frontend do S
 
 ## Estado atual
 
-Estado alinhado a trilha de frontend da Sprint 4:
+Estado alinhado a trilha de frontend da Sprint 6:
 
 - superficies publicas e autenticadas usam linguagem visual consolidada desde as Sprints 0 e 1
 - auth real esta conectado a API (`register`, `login`, `logout`, `me`, `session/refresh`, reset)
 - `/upload` e `/jobs` consomem dados reais desde a Sprint 3
-- `/dashboard`, `/analytics`, `/quarantine`, `/events` e `/audit` consomem dados reais na Sprint 4
+- `/dashboard`, `/analytics`, `/clickhouse`, `/etl-explorer`, `/quarantine`, `/events` e `/audit` consomem dados reais
+- `/upload` suporta arquivo local e `public_link`, mantendo conectores wave 1 fora do corte funcional
 - `/audit` e DLQ sao superficies admin-only
 - filtros operacionais usam URL state compartilhavel
 - payloads/metadados sensiveis sao mascarados antes de renderizar previews ou CSV
@@ -99,13 +100,17 @@ Regras:
 - paginas nao devem implementar `fetch` ad hoc
 - cache/polling futuros nao podem quebrar a camada adapter
 
-Adapters reais disponiveis na Sprint 4:
+Adapters reais disponiveis na Sprint 6:
 
 - `requestUploadSignedUrl`
 - `registerUpload`
 - `listUploads`
 - `listJobs`
 - `getAnalytics`
+- `getAnalyticsDashboard`
+- `getAnalyticsWarehouse`
+- `getAnalyticsLineage`
+- `createPublicLinkUpload`
 - `listQuarantine`
 - `listQuarantineDlq`
 - `listAuditEvents`
@@ -198,14 +203,25 @@ Regras:
 - exportacao server-side de toda a base
 - conectores externos como fluxo funcional
 
+## Organizacao De Testes
+
+`apps/web/src` deve conter apenas codigo de runtime do frontend: paginas, componentes, hooks, features e bibliotecas carregadas pelo app.
+
+Testes Vitest vivem em `apps/web/tests`:
+
+- `tests/unit`: testes unitarios, de componentes, adapters, features e paginas com jsdom.
+- `tests/integration`: testes Vitest em ambiente Node contra backend real/local.
+- `tests/setup.ts`: setup compartilhado dos testes unitarios.
+
+Testes Playwright continuam em `apps/web/e2e`. Novos arquivos `*.test.ts`, `*.test.tsx` ou `*.integration.test.ts` nao devem ser criados dentro de `src`.
+
 ## Validacao/Evidencias
 
-Evidencias da trilha de frontend Sprint 4:
+Evidencias da trilha de frontend Sprint 6:
 
-- `pnpm.cmd test:run`: aprovado, 11 arquivos e 53 testes
-- `pnpm.cmd lint`: aprovado sem warnings
-- `pnpm.cmd build`: aprovado com permissao escalada por restricao do sandbox ao Vite/Tailwind
-- `pnpm.cmd test:e2e`: aprovado contra ambiente Docker `app` saudavel em `http://localhost:5173`
+- testes focados de adapter, dashboard, `/clickhouse`, `/etl-explorer`, Upload Center e rotas protegidas passaram no ciclo de implementacao
+- `pnpm.cmd --dir apps/web test:run`, `pnpm.cmd --dir apps/web test:integration`, `pnpm.cmd --dir apps/web build`, `ci-local.ps1 frontend` e `run-smokes.ps1` com `SMOKE_PUBLIC_LINK_URL` passaram no fechamento do recorte Sprint 6
+- verificacao visual desktop/mobile passou nas rotas principais alteradas
 
 Criterio de pronto para mudancas futuras de frontend:
 

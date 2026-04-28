@@ -31,9 +31,12 @@ function setupUploadApiMock(options: UploadApiMockOptions = {}) {
     jobsList: 0,
     signedUrl: 0,
     register: 0,
+    publicLink: 0,
     signedPut: 0,
     uploadsUrls: [] as string[],
     jobsUrls: [] as string[],
+    lastPublicLinkBody: null as Record<string, unknown> | null,
+    lastIdempotencyKey: null as string | null,
   }
 
   global.fetch = vi.fn().mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
@@ -170,6 +173,65 @@ function setupUploadApiMock(options: UploadApiMockOptions = {}) {
       }))
     }
 
+    if (url.endsWith('/api/v1/uploads/public-link') && method === 'POST') {
+      counters.publicLink += 1
+      counters.lastPublicLinkBody = JSON.parse(String(init?.body ?? '{}')) as Record<string, unknown>
+      counters.lastIdempotencyKey = readHeader(init?.headers, 'Idempotency-Key')
+      return Promise.resolve(jsonResponse(202, {
+        data: {
+          upload: {
+            id: 'upload_link_1',
+            filename: 'remote.csv',
+            content_type: 'text/csv',
+            byte_size: 128,
+            checksum_sha256: 'b'.repeat(64),
+            storage_key: 'uploads/user_1/public-link/remote.csv',
+            source_type: 'external_link',
+            status: 'registered',
+            sensitivity_level: 'internal',
+            user_id: 'user_1',
+            trace_id: 'trace_link_1',
+            created_at: '2026-04-08T10:00:00Z',
+            updated_at: '2026-04-08T10:00:00Z',
+          },
+          job: {
+            id: 'job_link_1',
+            upload_id: 'upload_link_1',
+            requested_by_id: 'user_1',
+            source_type: 'external_link',
+            status: 'pending',
+            error_code: null,
+            error_category: null,
+            quarantined_records_count: 0,
+            trace_id: 'trace_link_job_1',
+            created_at: '2026-04-08T10:00:00Z',
+            updated_at: '2026-04-08T10:00:00Z',
+          },
+          acquisition: {
+            id: 'acq_link_1',
+            upload_id: 'upload_link_1',
+            job_id: 'job_link_1',
+            source_type: 'public_link',
+            link_mode: 'public_link',
+            status: 'requested',
+            url_masked: 'https://example.test/files/remote.csv',
+            url_hash: 'hash_fixture',
+            source_host: 'example.test',
+            content_type: 'text/csv',
+            byte_size: 128,
+            requested_at: '2026-04-08T10:00:00Z',
+            completed_at: null,
+            trace_id: 'trace_acq_1',
+            created_at: '2026-04-08T10:00:00Z',
+            updated_at: '2026-04-08T10:00:00Z',
+          },
+        },
+        meta: {
+          idempotent: false,
+        },
+      }))
+    }
+
     return Promise.resolve(jsonResponse(404, {
       error: {
         code: 'not_found',
@@ -280,6 +342,44 @@ describe('UploadPage', () => {
       expect(counters.jobsUrls[0]).toContain('/api/v1/jobs?status=pending&page=3&per_page=20')
     })
   })
+
+  it('creates a public-link upload without exposing future connector modes', async () => {
+    const counters = setupUploadApiMock()
+
+    renderUploadPage('/upload')
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Link publico' }))
+    fireEvent.change(screen.getByLabelText('URL publica'), {
+      target: { value: 'https://example.test/files/remote.csv' },
+    })
+    fireEvent.change(screen.getByLabelText('Nome do arquivo'), {
+      target: { value: 'remote.csv' },
+    })
+    fireEvent.change(screen.getByLabelText('Tamanho estimado (bytes)'), {
+      target: { value: '128' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Criar upload por link' }))
+
+    await waitFor(() => {
+      expect(counters.publicLink).toBe(1)
+      expect(counters.signedUrl).toBe(0)
+      expect(counters.signedPut).toBe(0)
+      expect(counters.register).toBe(0)
+    })
+
+    expect(counters.lastIdempotencyKey).toMatch(/^public-link-/)
+    expect(counters.lastPublicLinkBody).toEqual({
+      public_link: {
+        url: 'https://example.test/files/remote.csv',
+        filename: 'remote.csv',
+        content_type: 'text/csv',
+        byte_size: 128,
+      },
+    })
+    expect(await screen.findByText('Link publico aceito: upload upload_link_1 e job job_link_1 criados.')).toBeInTheDocument()
+    expect(screen.getByText('https://example.test/files/remote.csv')).toBeInTheDocument()
+    expect(screen.queryByText(/google_drive|oauth_delegated|s3|http_url/i)).not.toBeInTheDocument()
+  })
 })
 
 function jsonResponse(status: number, body: unknown) {
@@ -295,4 +395,19 @@ function readPageFromUrl(url: string) {
   const parsed = new URL(url)
   const value = Number.parseInt(parsed.searchParams.get('page') ?? '', 10)
   return Number.isFinite(value) && value > 0 ? value : 1
+}
+
+function readHeader(headers: HeadersInit | undefined, name: string) {
+  if (!headers) return null
+
+  const target = name.toLowerCase()
+  if (headers instanceof Headers) {
+    return headers.get(name)
+  }
+
+  if (Array.isArray(headers)) {
+    return headers.find(([key]) => key.toLowerCase() === target)?.[1] ?? null
+  }
+
+  return Object.entries(headers).find(([key]) => key.toLowerCase() === target)?.[1] ?? null
 }

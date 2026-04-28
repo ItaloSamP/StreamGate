@@ -37,7 +37,7 @@ A base do produto deixou de ser um esqueleto. O StreamGate ja tem um nucleo oper
 Leitura sintetica:
 
 - o nucleo operacional do produto esta materializado;
-- o shell do workspace e a dashboard caminham para a forma final do produto, mas parte dessa superficie ainda mistura dado real com scaffold;
+- o shell do workspace e a dashboard ja fecharam a trilha frontend da Sprint 6 como superficies reais, sem fixtures enganosas no command center;
 - a maior distancia para a entrega final nao esta mais na fundacao tecnica, e sim em fechar as superficies finais, a exploracao analitica e a conectividade futura aprovada na visao.
 
 Termometro pragmatico de maturidade:
@@ -69,11 +69,11 @@ Estas frentes ja ajudam muito na experiencia final, mas ainda nao devem ser lida
 
 | Frente | Estado | O que falta |
 | --- | --- | --- |
-| Dashboard v3 | `parcial` | wiring completo card a card, consolidacao dos blocos que ainda usam scaffold/derivacao local |
-| Shell do workspace | `parcial` | fechamento fino de fidelidade visual, consistencia entre todas as rotas e eliminacao de pequenos desvios de UX |
-| ClickHouse | `scaffold` | superficie real de consulta/exploracao e criterio claro de uso |
-| ETL Explorer | `scaffold` | fluxo util real, dados reais e papel funcional dentro do produto |
-| Camada analitica visivel no front | `parcial` | leituras mais profundas, exploracao consistente e melhor narrativa entre operacional x analitico |
+| Dashboard v3 | `funcional` | command center real via `analytics/dashboard`, com estados `live`, `derived`, `empty` e `degraded` |
+| Shell do workspace | `funcional` | sidebar/topbar estaveis, rotas analiticas reais e chips/gauges fixos neutralizados |
+| ClickHouse | `funcional` | warehouse OLAP minimo visivel no front com fallback honesto, SLO e agregados |
+| ETL Explorer | `funcional` | lineage por job com batches, attempts, quarantine, artifacts, warnings e audit refs |
+| Camada analitica visivel no front | `funcional minimo` | `Analytics`, `ClickHouse` e `ETL Explorer` possuem papeis distintos e dados reais |
 
 ### Aprovado na visao, mas ainda nao materializado
 
@@ -204,6 +204,19 @@ Sinais de pronto:
 - a narrativa comercial e tecnica do produto nao promete mais do que a v1 realmente entrega;
 - o backlog de conectores fica priorizado, mas sem ser confundido com feature pronta.
 
+Estado Sprint 6 backend/worker:
+
+- `public_link` entra como primeiro caminho funcional de `external_link`;
+- `oauth_delegated`, `google_drive`, `s3` e `http_url` continuam fora da entrega;
+- dashboard, warehouse e lineage passam a ter endpoints reais para o frontend, com `event_log`, ClickHouse real para warehouse, fallback `postgres_derived`, warnings tecnicos e empty states honestos.
+
+Estado Sprint 6 frontend:
+
+- dashboard consome `analytics/dashboard` e remove fixtures locais de fila, workers, event log e formatos;
+- `/clickhouse` e `/etl-explorer` foram materializados como rotas protegidas reais para `operator` e `admin`;
+- Upload Center preserva arquivo local e adiciona `public_link` completo com idempotencia e acquisition mascarada;
+- conectores `oauth_delegated`, `google_drive`, `s3` e `http_url` seguem fora da UI funcional.
+
 ### Bloco E - Fechamento de produto e release
 
 Objetivo: transformar o estado "quase pronto" em entrega confiavel.
@@ -298,43 +311,53 @@ Regra pratica:
 
 ### Produto
 
-- [ ] shell autenticado finalizado e coerente com o prototipo aprovado
-- [ ] dashboard v3 fechada como command center real
-- [ ] upload local fechado como experiencia final da v1
-- [ ] superfices analiticas com papel real definido e implementado no minimo util
-- [ ] backlog de conectores e ingestao externa classificado sem ambiguidade
+- [x] shell autenticado finalizado e coerente com o prototipo aprovado
+- [x] dashboard v3 fechada como command center real
+- [x] upload local fechado como experiencia final da v1
+- [x] superfices analiticas com papel real definido e implementado no minimo util
+- [x] backlog de conectores e ingestao externa classificado sem ambiguidade
 
 ### Backend e worker
 
-- [ ] pipeline assincrono validado ponta a ponta
-- [ ] operacao segura validada com RBAC, motivo, auditoria e idempotencia
-- [ ] artefatos finais validos e baixaveis
-- [ ] notificacoes e deliveries coerentes com eventos operacionais
-- [ ] auditoria navegavel e explicavel por recurso
+- [x] pipeline assincrono validado ponta a ponta
+- [x] operacao segura validada com RBAC, motivo, auditoria e idempotencia
+- [x] artefatos finais validos e baixaveis
+- [x] notificacoes e deliveries coerentes com eventos operacionais
+- [x] auditoria navegavel e explicavel por recurso
 
 ### Frontend
 
-- [ ] rotas principais coerentes entre shell, dashboard e modulos
-- [ ] estados de denied/error/loading consistentes em superficies sensiveis
-- [ ] visual final sem cards cenograficos ou lacunas de produto disfarcadas
-- [ ] mobile/tablet utilizaveis nas rotas principais
+- [x] rotas principais coerentes entre shell, dashboard e modulos
+- [x] estados de denied/error/loading consistentes em superficies sensiveis
+- [x] visual final sem cards cenograficos ou lacunas de produto disfarcadas
+- [x] mobile/tablet utilizaveis nas rotas principais
 
 ### Documentacao
 
-- [ ] `docs/product/vision.md` reflete exatamente a entrega
-- [ ] `docs/planning/streamgate-full-sprints-roadmap.md` sincronizado com o estado real
-- [ ] `docs/guides/frontend/frontend-workspace-map.md` descreve o workspace final
-- [ ] `docs/guides/backend/api-docs.md` e OpenAPI sincronizados
-- [ ] docs de seguranca e release atualizadas
-- [ ] closeout final de release escrito
+- [x] `docs/product/vision.md` reflete exatamente a entrega
+- [x] `docs/planning/streamgate-full-sprints-roadmap.md` sincronizado com o estado real
+- [x] `docs/guides/frontend/frontend-workspace-map.md` descreve o workspace final
+- [x] `docs/guides/backend/api-docs.md` e OpenAPI sincronizados
+- [x] docs de seguranca e release atualizadas
+- [x] closeout final de release escrito
 
 ### Testes e operacao
 
-- [ ] fast gates relevantes verdes
-- [ ] smoke operacional verde
-- [ ] full-closeout verde ou residual de ambiente explicitamente classificado
-- [ ] hub `docs/reports/index.html` atualizado
-- [ ] backlog residual aceito explicitamente
+- [x] fast gates relevantes verdes
+- [x] smoke operacional verde
+- [x] full-closeout verde
+- [x] hub `docs/reports/index.html` atualizado
+- [x] backlog residual aceito explicitamente
+
+Evidencia final da v1 (2026-04-28):
+
+- `ruby scripts/ci/validate-operational-contracts.rb`: PASS.
+- `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 backend`: PASS.
+- `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 frontend`: PASS.
+- `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 e2e`: PASS.
+- `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 docker` com `SMOKE_PUBLIC_LINK_URL=https://raw.githubusercontent.com/plotly/datasets/master/2014_apple_stock.csv`: PASS.
+- `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1 -TimeoutSeconds 900` com `SMOKE_PUBLIC_LINK_URL`: PASS.
+- `powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -Profile full-closeout -TimeoutSeconds 900` com `SMOKE_PUBLIC_LINK_URL`: PASS; hub atualizado com `PASS:7 FAIL:0 NOT_RUN:0` em `2026-04-28T19:48:41.768Z`.
 
 ## Recomendacao de governanca daqui para frente
 

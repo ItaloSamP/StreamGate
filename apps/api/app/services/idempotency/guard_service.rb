@@ -44,7 +44,8 @@ module Idempotency
         trace_id: trace_id,
         request_id: request_id
       )
-      record.save!
+      replay = save_record!(record, fingerprint)
+      return replay if replay
 
       Result.new(status: response_status, body: response_body, replayed: false)
     end
@@ -52,6 +53,16 @@ module Idempotency
     private
 
     attr_reader :actor, :key, :scope, :payload, :trace_id, :request_id
+
+    def save_record!(record, fingerprint)
+      record.save!
+      nil
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique
+      existing = OperationalActionIdempotencyKey.find_by(actor: actor, scope: scope, key: key)
+      raise if existing.blank? || existing.expired? || existing.request_fingerprint != fingerprint
+
+      Result.new(status: existing.response_status, body: existing.response_body, replayed: true)
+    end
 
     def normalized_payload
       payload.deep_stringify_keys.sort.to_h

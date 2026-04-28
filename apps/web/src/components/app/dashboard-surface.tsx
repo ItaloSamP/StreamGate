@@ -172,14 +172,10 @@ export function DashboardSurface({
     }
   }, [locked, pathname])
 
-  useEffect(() => {
-    setSidebarOpen(false)
-  }, [pathname])
-
-  const quarantineBadge = navBadges['/quarantine'] ?? 7
+  const quarantineBadge = navBadges['/quarantine'] ?? 0
   const alertCopy = quarantineBadge > 0
     ? `${quarantineBadge} registros em quarentena aguardam triagem enquanto o command center segue auditavel.`
-    : 'Pipeline estabilizado, com trilha auditavel, notificacoes ativas e operacoes seguras prontas.'
+    : 'Sem alerta derivado carregado para esta janela; consulte dashboard, warehouse e lineage para status real.'
 
   return (
     <div className={`dash-frame ${locked ? 'dash-frame--locked' : ''}`}>
@@ -235,7 +231,12 @@ export function DashboardSurface({
                   }
 
                   return (
-                    <NavLink key={item.label} to={item.href} className={`dash-nav-item ${isActive ? 'active' : ''}`}>
+                    <NavLink
+                      key={item.label}
+                      to={item.href}
+                      className={`dash-nav-item ${isActive ? 'active' : ''}`}
+                      onClick={() => setSidebarOpen(false)}
+                    >
                       {itemBody}
                     </NavLink>
                   )
@@ -248,20 +249,14 @@ export function DashboardSurface({
             <div className="dash-gauges">
               <div>
                 <div className="dash-gauge-row">
-                  <span>MinIO Storage</span>
-                  <span className="warn">72%</span>
-                </div>
-                <div className="dash-gauge-bar">
-                  <div className="dash-gauge-fill" style={{ width: '72%', background: 'var(--signal-yellow)', opacity: '.55' }} />
+                  <span>Status runtime</span>
+                  <span>via API</span>
                 </div>
               </div>
               <div>
                 <div className="dash-gauge-row">
-                  <span>RabbitMQ</span>
-                  <span>3 msgs</span>
-                </div>
-                <div className="dash-gauge-bar">
-                  <div className="dash-gauge-fill" style={{ width: '18%', background: 'var(--signal-blue)', opacity: '.5' }} />
+                  <span>Drilldowns</span>
+                  <span>reais</span>
                 </div>
               </div>
             </div>
@@ -298,6 +293,7 @@ export function DashboardSurface({
                   to="/notifications"
                   className={`dash-notification-button ${pathname.startsWith('/notifications') ? 'active' : ''}`}
                   aria-label={unreadNotifications > 0 ? `${unreadNotifications} notificacoes nao lidas` : 'Notificacoes'}
+                  onClick={() => setSidebarOpen(false)}
                 >
                   <Bell size={15} />
                   {unreadNotifications > 0 ? <span className="dash-notification-dot" /> : null}
@@ -305,7 +301,11 @@ export function DashboardSurface({
               ) : null}
               {secondaryActionLabel ? <button type="button" className="dash-btn">{secondaryActionLabel}</button> : null}
               {!locked ? (
-                <NavLink to="/upload" className="dash-btn dash-btn--primary">
+                <NavLink
+                  to="/upload"
+                  className="dash-btn dash-btn--primary"
+                  onClick={() => setSidebarOpen(false)}
+                >
                   {primaryActionLabel}
                 </NavLink>
               ) : (
@@ -322,7 +322,7 @@ export function DashboardSurface({
               <strong>Operacao segura</strong> {alertCopy}
             </span>
             {!locked ? (
-              <NavLink to="/quarantine" className="dash-alert-link">
+              <NavLink to="/quarantine" className="dash-alert-link" onClick={() => setSidebarOpen(false)}>
                 Abrir triagem
               </NavLink>
             ) : null}

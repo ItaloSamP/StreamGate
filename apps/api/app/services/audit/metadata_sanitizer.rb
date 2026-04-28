@@ -16,13 +16,16 @@ module Audit
       input_rows
       invalid_rows
       job_id
+      link_mode
       request_id
       retryable
       source
+      source_host
       source_type
       status
       trace_id
       upload_id
+      url_hash
       valid_rows
     ].freeze
 

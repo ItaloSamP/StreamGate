@@ -17,3 +17,5 @@ Rails.application.config.x.notification_retention_days = Sprint5BackendRuntime.e
 Rails.application.config.x.notification_delivery_retention_days = Sprint5BackendRuntime.env_integer("NOTIFICATION_DELIVERY_RETENTION_DAYS", 30)
 Rails.application.config.x.dlq_replay_request_retention_days = Sprint5BackendRuntime.env_integer("DLQ_REPLAY_REQUEST_RETENTION_DAYS", 30)
 Rails.application.config.x.artifact_download_url_ttl_seconds = Sprint5BackendRuntime.env_integer("ARTIFACT_DOWNLOAD_URL_TTL_SECONDS", 300)
+Rails.application.config.x.operational_warning_retention_days = Sprint5BackendRuntime.env_integer("OPERATIONAL_WARNING_RETENTION_DAYS", 30)
+Rails.application.config.x.analytics_slo_target_seconds = Sprint5BackendRuntime.env_integer("ANALYTICS_SLO_TARGET_SECONDS", 300)

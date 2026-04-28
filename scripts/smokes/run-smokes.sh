@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -26,6 +26,7 @@ init_reports() {
 }
 
 ensure_seed_password_env() {
+  local env_path="$ROOT_DIR/.env"
   if [[ -n "${SEED_OPERATOR_PASSWORD:-}" ]]; then
     if [[ -z "${SEED_ADMIN_PASSWORD:-}" ]]; then
       export SEED_ADMIN_PASSWORD="$SEED_OPERATOR_PASSWORD"
@@ -33,13 +34,13 @@ ensure_seed_password_env() {
     return
   fi
   local value
-  value="$(get_dotenv_value SEED_OPERATOR_PASSWORD)"
+  value="$(get_dotenv_value "$env_path" "SEED_OPERATOR_PASSWORD")"
   if [[ -n "$value" ]]; then
     export SEED_OPERATOR_PASSWORD="$value"
   fi
 
   local admin_value
-  admin_value="$(get_dotenv_value SEED_ADMIN_PASSWORD)"
+  admin_value="$(get_dotenv_value "$env_path" "SEED_ADMIN_PASSWORD")"
   if [[ -n "$admin_value" ]]; then
     export SEED_ADMIN_PASSWORD="$admin_value"
   elif [[ -n "${SEED_OPERATOR_PASSWORD:-}" ]]; then
@@ -192,6 +193,7 @@ if [[ "$FAILED" -eq 0 ]]; then run_step "Seed auth fixtures" docker compose exec
 if [[ "$FAILED" -eq 0 ]]; then run_step "Signed upload smoke" python scripts/smokes/upload-signed-smoke.py || FAILED=1; fi
 if [[ "$FAILED" -eq 0 ]]; then run_step "Start full stack" bash scripts/dev/dev-up.sh full "$TIMEOUT_SECONDS" || FAILED=1; fi
 if [[ "$FAILED" -eq 0 ]]; then run_step "Worker operational smoke" python scripts/smokes/worker-operational-smoke.py || FAILED=1; fi
+if [[ "$FAILED" -eq 0 ]]; then run_step "Public link smoke" python scripts/smokes/public-link-smoke.py || FAILED=1; fi
 if [[ "$FAILED" -eq 0 ]]; then run_step "Seed second admin fixture" docker compose exec -T -e SMOKE_SECOND_ADMIN_EMAIL -e SMOKE_SECOND_ADMIN_PASSWORD api bundle exec rails runner "email = ENV.fetch('SMOKE_SECOND_ADMIN_EMAIL'); password = ENV.fetch('SMOKE_SECOND_ADMIN_PASSWORD'); user = User.find_or_initialize_by(email: email); user.full_name = 'Operational Approver'; user.organization_id ||= ENV.fetch('DEFAULT_ORGANIZATION_ID', 'org_default'); user.role = :admin; user.status = :active; user.password = password; user.save!" || FAILED=1; fi
 if [[ "$FAILED" -eq 0 ]]; then run_step "Safe operations + artifacts + notifications smoke" python scripts/smokes/safe-operations-smoke.py || FAILED=1; fi
 if [[ "$FAILED" -eq 0 ]]; then run_step "Persisted notifications + deliveries audit" bash scripts/smokes/verify-safe-operations-records.sh || FAILED=1; fi

@@ -22,7 +22,6 @@ test.describe('auth e2e flow', () => {
     await page.getByTestId('register-submit').click()
 
     await expectDashboard(page)
-    await expect(page.getByText('Dashboard Operacional').first()).toBeVisible()
 
     await logoutFromDashboard(page)
     await expect(page).toHaveURL(/\/$/)
@@ -41,7 +40,6 @@ test.describe('auth e2e flow', () => {
     await page.getByTestId('login-submit').click()
 
     await expectDashboard(page)
-    await expect(page.getByText('Dashboard Operacional').first()).toBeVisible()
   })
 
   test('resets password for an ephemeral account and signs in with the new password', async ({
@@ -76,7 +74,6 @@ test.describe('auth e2e flow', () => {
     await page.getByTestId('login-submit').click()
 
     await expectDashboard(page)
-    await expect(page.getByText('Dashboard Operacional').first()).toBeVisible()
   })
 
   test('redirects to login when local storage contains an expired session', async ({ page }) => {
@@ -115,6 +112,9 @@ async function logoutFromDashboard(page: Page) {
 
 async function expectDashboard(page: Page) {
   await expect(page).toHaveURL(/\/dashboard$/, { timeout: 45_000 })
+  await expect(page.locator('.dash-topbar-title')).toHaveText('Dashboard')
+  await expect(page.getByTestId('dashboard-user-menu-toggle')).toBeVisible()
+  await expect(page.getByRole('link', { name: '+ Upload' })).toBeVisible()
 }
 
 function buildEphemeralCredentials(prefix: string, testInfo: TestInfo): EphemeralCredentials {

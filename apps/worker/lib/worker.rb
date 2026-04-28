@@ -8,8 +8,13 @@ require_relative "worker/runtime/db_client"
 require_relative "worker/runtime/storage_client"
 require_relative "worker/runtime/artifact_writer"
 require_relative "worker/runtime/operational_notifier"
+require_relative "worker/runtime/clickhouse_client"
+require_relative "worker/runtime/clickhouse_warehouse_loader"
+require_relative "worker/runtime/clickhouse_backfill"
+require_relative "worker/runtime/public_link_fetcher"
 require_relative "worker/processing/csv_zip_parser"
 require_relative "worker/runtime/upload_received_processor"
+require_relative "worker/runtime/public_link_requested_processor"
 require_relative "worker/runtime/consumer"
 
 module Worker

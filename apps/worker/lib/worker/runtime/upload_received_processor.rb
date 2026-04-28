@@ -26,7 +26,7 @@ module Worker
         valid_rows
       ].freeze
 
-      def initialize(config:, db_client:, storage_client:, parser:, logger:, artifact_writer: nil, notifier: nil)
+      def initialize(config:, db_client:, storage_client:, parser:, logger:, artifact_writer: nil, notifier: nil, warehouse_loader: nil)
         @config = config
         @db_client = db_client
         @storage_client = storage_client
@@ -38,6 +38,7 @@ module Worker
           retention_days: config.job_artifact_retention_days
         )
         @notifier = notifier || OperationalNotifier.new(retention_days: config.notification_retention_days)
+        @warehouse_loader = warehouse_loader || ClickhouseWarehouseLoader.new(config: config)
       end
 
       def process(event, retry_count:)
@@ -85,6 +86,7 @@ module Worker
 
         parse_result = consume_payload(event)
 
+        batch_id = nil
         db_client.with_connection do |connection|
           connection.exec("BEGIN")
           batch_id = create_batch!(connection, ids, parse_result)
@@ -95,6 +97,8 @@ module Worker
           connection.exec("ROLLBACK")
           raise
         end
+
+        load_clickhouse_after_commit(ids, batch_id, parse_result)
 
         :processed
       rescue TransientProcessingError => e
@@ -116,7 +120,7 @@ module Worker
 
       private
 
-      attr_reader :config, :db_client, :storage_client, :parser, :logger, :artifact_writer, :notifier
+      attr_reader :config, :db_client, :storage_client, :parser, :logger, :artifact_writer, :notifier, :warehouse_loader
 
       def validate_event!(event)
         required = %w[event_id event_name payload upload_id job_id trace_id]
@@ -245,6 +249,42 @@ module Worker
             ]
           )
         end
+      end
+
+      def load_clickhouse_after_commit(ids, batch_id, parse_result)
+        db_client.with_connection do |connection|
+          warehouse_loader.call(
+            connection: connection,
+            ids: ids,
+            batch_id: batch_id,
+            parse_result: parse_result,
+            processing_latency_ms: 0
+          )
+        rescue StandardError => e
+          record_clickhouse_warning!(connection, ids, e)
+          logger.warn("clickhouse load failed job_id=#{ids[:job_id]} error=#{e.class.name}: #{e.message}")
+        end
+      end
+
+      def record_clickhouse_warning!(connection, ids, error)
+        connection.exec_params(
+          <<~SQL,
+            INSERT INTO operational_warnings
+              (id, job_id, upload_id, code, message, status, severity, retry_count, expires_at, trace_id, request_id, created_at, updated_at)
+            VALUES
+              ($1, $2, $3, 'clickhouse_load_failed', $4, 'open', 'warning', 0, NOW() + INTERVAL '30 days', $5, $6, NOW(), NOW())
+          SQL
+          [
+            Worker::Id.generate("warn"),
+            ids[:job_id],
+            ids[:upload_id],
+            error.message.to_s[0, 1_000],
+            ids[:trace_id],
+            ids[:request_id]
+          ]
+        )
+      rescue StandardError
+        logger.warn("failed to persist clickhouse load warning job_id=#{ids[:job_id]}")
       end
 
       def finalize_success!(connection, ids, attempt_id, batch_id, parse_result)

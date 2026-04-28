@@ -29,10 +29,14 @@ O contrato oficial agora cobre auth + runtime backend da trilha operacional:
 - upload/job:
   - `POST /api/v1/uploads/signed-url`
   - `POST /api/v1/uploads`
+  - `POST /api/v1/uploads/public-link`
   - `GET /api/v1/uploads`
   - `GET /api/v1/jobs`
 - operacional read-only:
   - `GET /api/v1/analytics`
+  - `GET /api/v1/analytics/dashboard`
+  - `GET /api/v1/analytics/warehouse`
+  - `GET /api/v1/analytics/lineage?job_id=...`
   - `GET /api/v1/quarantine`
   - `GET /api/v1/quarantine/dlq` (admin-only)
   - `GET /api/v1/audit` (admin-only)
@@ -59,7 +63,7 @@ UI da doc:
 Request (`upload`):
 
 - `filename`
-- `content_type` (`application/zip` ou `text/csv`)
+- `content_type` (`application/json`, `application/zip` ou `text/csv`)
 - `byte_size`
 - `checksum_sha256`
 
@@ -91,6 +95,23 @@ Idempotencia:
 
 - mesmo `storage_key` + mesmo `checksum_sha256` retorna `200` com `meta.idempotent=true`
 - mesmo `storage_key` + checksum diferente retorna `409 resource_conflict`
+
+### `POST /api/v1/uploads/public-link`
+
+Cria a primeira fronteira funcional de `external_link` como `public_link`.
+
+- exige `Idempotency-Key`;
+- aceita somente `http`/`https` sem credenciais e sem portas nao padrao;
+- bloqueia destinos locais/privados/link-local/metadata;
+- persiste apenas `url_masked` + `url_hash` em recursos expostos;
+- publica `upload.public_link.requested.v1` para o worker baixar por stream e transformar em `upload.received.v1`.
+
+Response `201`:
+
+- `data.upload.source_type=external_link`
+- `data.job.source_type=external_link`
+- `data.acquisition.link_mode=public_link`
+- `meta.idempotent=true`
 
 ### `GET /api/v1/uploads` e `GET /api/v1/jobs`
 
@@ -124,6 +145,22 @@ Envelope padrao:
   - `quarantine_records_total`
   - `audit_events_total`
 - camada materializada: `analytics_job_snapshots`
+
+### `GET /api/v1/analytics/dashboard`
+
+Snapshot agregado para a dashboard final. Cada secao declara `status` como `live`, `derived`, `empty` ou `degraded`; dado ausente vira empty state explicito, nao fixture.
+
+Na Sprint 6, `sections.event_log` e parte requerida do contrato v1. Ele entrega uma timeline compacta derivada de `audit_events`, `operational_warnings` e `worker_processing_metrics`, com `timestamp`, `type`, `severity`, `job_id`, `upload_id`, `status` e `message`. Operator recebe somente dados do proprio escopo organizacional; admin pode consultar a visao global.
+
+### `GET /api/v1/analytics/warehouse`
+
+Leitura real de warehouse em ClickHouse quando disponivel. A carga analitica e feita pelo worker em duas camadas: uma linha por job e linhas de registro com metadata + HMAC-SHA256, sem payload bruto. O payload agrega `jobs_total`, `uploads_total`, `records_total`, `valid_records`, `invalid_records`, `by_status` e `by_source`.
+
+Quando ClickHouse nao estiver disponivel, retorna `200` com `source=postgres_derived`, `fallback_reason`, `dependency_status`, metadados de SLO e warning tecnico em `operational_warnings`. Falha analitica nao bloqueia job, artefatos, notificacoes ou auditoria operacional.
+
+### `GET /api/v1/analytics/lineage?job_id=...`
+
+Drilldown tecnico por job com batches, attempts, quarantine, artifacts, warnings tecnicos e `audit_refs`.
 
 ### `GET /api/v1/quarantine`
 
@@ -181,6 +218,7 @@ Envelope de erro:
 ## Eventos e outbox
 
 - evento oficial de ingestao: `upload.received.v1`
+- evento oficial de aquisicao por public link: `upload.public_link.requested.v1`
 - topologia:
   - exchange: `streamgate.events`
   - routing key: `upload.received.v1`

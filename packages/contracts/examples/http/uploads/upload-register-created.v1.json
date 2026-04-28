@@ -7,6 +7,7 @@
       "byte_size": 2048,
       "checksum_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "storage_key": "uploads/user_fixture_operator/2026/04/07/token-orders.csv",
+      "source_type": "upload",
       "status": "registered",
       "sensitivity_level": "internal",
       "user_id": "user_fixture_operator",

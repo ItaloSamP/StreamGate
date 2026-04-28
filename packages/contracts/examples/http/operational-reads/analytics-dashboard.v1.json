@@ -1,0 +1,72 @@
+{
+  "data": {
+    "generated_at": "2026-04-24T14:00:00Z",
+    "source": "postgres_derived",
+    "window": {
+      "from": "2026-04-23T14:00:00Z",
+      "to": "2026-04-24T14:00:00Z",
+      "preset": "last_24h",
+      "timezone": "UTC"
+    },
+    "sections": {
+      "queue": {
+        "status": "derived",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": { "processed": 12, "retried": 1, "moved_to_dlq": 0 },
+        "empty_state": null
+      },
+      "workers": {
+        "status": "derived",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": { "processed": 11, "failed_terminal": 0, "average_latency_ms": 120 },
+        "empty_state": null
+      },
+      "throughput": {
+        "status": "derived",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": { "jobs_total": 12, "uploads_total": 12, "completed": 11, "failed": 0, "quarantined": 1 },
+        "empty_state": null
+      },
+      "formats": {
+        "status": "derived",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": [{ "content_type": "text/csv", "count": 12 }],
+        "empty_state": null
+      },
+      "warnings": {
+        "status": "empty",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": { "open": 0, "failed": 0, "resolved": 0 },
+        "empty_state": "no_data_in_window"
+      },
+      "event_log": {
+        "status": "derived",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": [
+          {
+            "timestamp": "2026-04-24T13:59:40Z",
+            "type": "worker_metric",
+            "severity": "info",
+            "job_id": "job_public_link",
+            "upload_id": "upload_public_link",
+            "status": "processed",
+            "message": "Worker processed event_public_link with status processed."
+          }
+        ],
+        "empty_state": null
+      }
+    },
+    "dependencies": {
+      "broker": { "status": "healthy" },
+      "warehouse": { "status": "degraded", "source": "postgres_derived", "fallback_reason": "clickhouse_unavailable" }
+    },
+    "slo": {
+      "slo_target_seconds": 300,
+      "last_event_at": "2026-04-24T13:59:40Z",
+      "lag_seconds": 20,
+      "stale": false,
+      "p95_ms": 240,
+      "error_budget_percent": 99.9
+    }
+  }
+}

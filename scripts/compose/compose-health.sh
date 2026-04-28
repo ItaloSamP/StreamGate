@@ -194,7 +194,7 @@ analyze_compose_services() {
     fi
 
     printf 'pending\tService '\''%s'\'' is unhealthy but may still recover during startup.\n' "$name"
-  done < <(jq -c '.[]' <<<"$services_json")
+  done < <(jq -c 'if type == "array" then .[] elif type == "object" then . else empty end' <<<"$services_json")
 
   return 0
 }

@@ -30,7 +30,8 @@ const JOB_STATUS_OPTIONS = [
   { value: 'quarantined_with_warnings', label: 'Quarentena com alertas' },
 ] as const
 
-type UploadFlowState = 'idle' | 'signing' | 'uploading' | 'confirming' | 'success' | 'error'
+type UploadMode = 'file' | 'public_link'
+type UploadFlowState = 'idle' | 'signing' | 'uploading' | 'confirming' | 'requesting_link' | 'success' | 'error'
 
 type ListState<T> = {
   status: 'loading' | 'success' | 'empty' | 'error'
@@ -73,12 +74,21 @@ export function UploadPage() {
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [detectedContentType, setDetectedContentType] = useState<UploadContentType | null>(null)
+  const [uploadMode, setUploadMode] = useState<UploadMode>('file')
+  const [publicLinkForm, setPublicLinkForm] = useState({
+    url: '',
+    filename: '',
+    contentType: 'text/csv' as UploadContentType,
+    byteSize: '',
+  })
   const [flowState, setFlowState] = useState<UploadFlowState>('idle')
   const [flowError, setFlowError] = useState<string | null>(null)
   const [flowSummary, setFlowSummary] = useState<{
+    mode: UploadMode
     uploadId: string
     jobId: string
     idempotent: boolean
+    acquisitionUrl?: string | null
   } | null>(null)
 
   const [uploadsState, setUploadsState] = useState<ListState<UploadSummary>>(INITIAL_UPLOADS_STATE)
@@ -91,7 +101,7 @@ export function UploadPage() {
   const jobStatusFilter = (searchParams.get('job_status') ?? '').trim()
   const jobPage = useMemo(() => parsePage(searchParams.get('job_page')), [searchParams])
 
-  const busy = flowState === 'signing' || flowState === 'uploading' || flowState === 'confirming'
+  const busy = flowState === 'signing' || flowState === 'uploading' || flowState === 'confirming' || flowState === 'requesting_link'
 
   useEffect(() => {
     let active = true
@@ -208,6 +218,13 @@ export function UploadPage() {
     setSearchParams(params)
   }
 
+  function switchUploadMode(nextMode: UploadMode) {
+    setUploadMode(nextMode)
+    setFlowState('idle')
+    setFlowError(null)
+    setFlowSummary(null)
+  }
+
   function handleFileSelection(file: File | null) {
     setFlowError(null)
     setFlowSummary(null)
@@ -275,6 +292,7 @@ export function UploadPage() {
       })
 
       setFlowSummary({
+        mode: 'file',
         uploadId: registered.data.upload.id,
         jobId: registered.data.job.id,
         idempotent: registered.meta?.idempotent === true,
@@ -287,6 +305,52 @@ export function UploadPage() {
       setReloadToken((current) => current + 1)
     } catch (error) {
       const message = humanizeError(error, 'Falha ao concluir o fluxo de upload.')
+      setFlowState('error')
+      setFlowError(message)
+      showSingletonToast('error', message)
+    }
+  }
+
+  async function handlePublicLinkSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    if (busy) return
+
+    const url = publicLinkForm.url.trim()
+    const filename = publicLinkForm.filename.trim()
+    const byteSize = Number.parseInt(publicLinkForm.byteSize, 10)
+
+    if (!url || !filename || !Number.isFinite(byteSize) || byteSize <= 0) {
+      setFlowState('error')
+      setFlowError('Informe URL publica, nome do arquivo e tamanho estimado validos.')
+      return
+    }
+
+    try {
+      setFlowError(null)
+      setFlowSummary(null)
+      setFlowState('requesting_link')
+
+      const response = await streamgateApi.createPublicLinkUpload({
+        url,
+        filename,
+        contentType: publicLinkForm.contentType,
+        byteSize,
+        idempotencyKey: createPublicLinkIdempotencyKey(),
+      })
+
+      setFlowSummary({
+        mode: 'public_link',
+        uploadId: response.data.upload.id,
+        jobId: response.data.job.id,
+        idempotent: response.meta?.idempotent === true,
+        acquisitionUrl: response.data.acquisition?.url_masked ?? null,
+      })
+      setFlowState('success')
+      showSingletonToast('success', 'Link publico aceito e job criado.')
+      setReloadToken((current) => current + 1)
+    } catch (error) {
+      const message = humanizeError(error, 'Falha ao criar upload por link publico.')
       setFlowState('error')
       setFlowError(message)
       showSingletonToast('error', message)
@@ -306,57 +370,133 @@ export function UploadPage() {
           <section className="dash-panel dash-module-card">
             <div className="dash-panel-head">
               <div>
-                <div className="dash-panel-title">Upload assinado com registro de job</div>
+                <div className="dash-panel-title">Entrada de dados</div>
                 <div className="dash-module-copy">
-                  Fluxo real da Sprint 3: assinar URL, enviar arquivo para storage e confirmar registro com criacao de job.
+                  Escolha entre arquivo local via URL assinada ou link publico validado pelo worker dedicado.
                 </div>
               </div>
             </div>
 
-            <form className="grid gap-4 p-4" onSubmit={handleUploadSubmit}>
-              <div className="grid gap-2">
-                <Label htmlFor="upload-file">Arquivo (ZIP ou CSV)</Label>
-                <Input
-                  id="upload-file"
-                  type="file"
-                  accept=".zip,.csv,text/csv,application/zip"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0] ?? null
-                    handleFileSelection(file)
-                  }}
-                  disabled={busy}
-                />
-              </div>
-
-              <div className="text-mono text-[11px] text-[var(--text-dim)]">
-                {selectedFile ? `Selecionado: ${selectedFile.name} (${selectedFile.size} bytes)` : 'Nenhum arquivo selecionado.'}
-              </div>
-
-              <div className="text-mono text-[11px] text-[var(--text-dim)]">
-                Tipo detectado: {detectedContentType ?? '--'}
-              </div>
-
-              <div className="rounded-lg border border-[var(--border)] bg-[color:rgb(255_255_255_/_0.02)] px-3 py-2 text-mono text-[11px] text-[var(--text-soft)]">
-                Etapa atual: {flowStepLabel(flowState)}
-              </div>
-
-              {flowError ? <div className="text-mono text-[11px] text-[var(--signal-red)]">{flowError}</div> : null}
-
-              {flowSummary ? (
-                <div className="rounded-lg border border-[color:rgb(62_207_142_/_0.3)] bg-[color:rgb(62_207_142_/_0.08)] px-3 py-2 text-mono text-[11px] text-[var(--signal-green)]">
-                  Upload {flowSummary.uploadId} confirmado e job {flowSummary.jobId} criado{flowSummary.idempotent ? ' (idempotente).' : '.'}
-                </div>
-              ) : null}
-
+            <div className="grid gap-4 p-4">
               <div className="flex flex-wrap gap-2">
-                <Button type="submit" variant="panel" size="xl" disabled={!selectedFile || !detectedContentType || busy}>
-                  {busy ? 'Processando upload...' : 'Enviar arquivo'}
+                <Button type="button" variant={uploadMode === 'file' ? 'panel' : 'outline'} size="xl" onClick={() => switchUploadMode('file')} disabled={busy}>
+                  Arquivo local
                 </Button>
-                <Button type="button" variant="outline" size="xl" onClick={() => setReloadToken((current) => current + 1)}>
-                  Atualizar listas
+                <Button type="button" variant={uploadMode === 'public_link' ? 'panel' : 'outline'} size="xl" onClick={() => switchUploadMode('public_link')} disabled={busy}>
+                  Link publico
                 </Button>
               </div>
-            </form>
+
+              {uploadMode === 'file' ? (
+                <form key="file-upload-form" className="grid gap-4" onSubmit={handleUploadSubmit}>
+                  <div className="grid gap-2">
+                    <Label htmlFor="upload-file">Arquivo (ZIP ou CSV)</Label>
+                    <Input
+                      id="upload-file"
+                      type="file"
+                      accept=".zip,.csv,text/csv,application/zip"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0] ?? null
+                        handleFileSelection(file)
+                      }}
+                      disabled={busy}
+                    />
+                  </div>
+
+                  <div className="text-mono text-[11px] text-[var(--text-dim)]">
+                    {selectedFile ? `Selecionado: ${selectedFile.name} (${selectedFile.size} bytes)` : 'Nenhum arquivo selecionado.'}
+                  </div>
+
+                  <div className="text-mono text-[11px] text-[var(--text-dim)]">
+                    Tipo detectado: {detectedContentType ?? '--'}
+                  </div>
+
+                  <FlowReadout flowState={flowState} flowError={flowError} flowSummary={flowSummary} />
+
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="submit" variant="panel" size="xl" disabled={!selectedFile || !detectedContentType || busy}>
+                      {busy ? 'Processando upload...' : 'Enviar arquivo'}
+                    </Button>
+                    <Button type="button" variant="outline" size="xl" onClick={() => setReloadToken((current) => current + 1)}>
+                      Atualizar listas
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <form key="public-link-upload-form" className="grid gap-4" onSubmit={handlePublicLinkSubmit}>
+                  <div className="grid gap-2">
+                    <Label htmlFor="public-link-url">URL publica</Label>
+                    <Input
+                      id="public-link-url"
+                      type="url"
+                      value={publicLinkForm.url}
+                      onChange={(event) => setPublicLinkForm((current) => ({ ...current, url: event.target.value }))}
+                      placeholder="https://example.com/dataset.csv"
+                      disabled={busy}
+                    />
+                  </div>
+
+                  <div className="grid gap-2 md:grid-cols-3">
+                    <div className="grid gap-2">
+                      <Label htmlFor="public-link-filename">Nome do arquivo</Label>
+                      <Input
+                        id="public-link-filename"
+                        value={publicLinkForm.filename}
+                        onChange={(event) => setPublicLinkForm((current) => ({ ...current, filename: event.target.value }))}
+                        placeholder="dataset.csv"
+                        disabled={busy}
+                      />
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="public-link-content-type">Content type</Label>
+                      <select
+                        id="public-link-content-type"
+                        className="input-shell"
+                        value={publicLinkForm.contentType}
+                        onChange={(event) => setPublicLinkForm((current) => ({ ...current, contentType: event.target.value as UploadContentType }))}
+                        disabled={busy}
+                      >
+                        <option value="text/csv">text/csv</option>
+                        <option value="application/zip">application/zip</option>
+                      </select>
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="public-link-byte-size">Tamanho estimado (bytes)</Label>
+                      <Input
+                        id="public-link-byte-size"
+                        type="number"
+                        min="1"
+                        value={publicLinkForm.byteSize}
+                        onChange={(event) => setPublicLinkForm((current) => ({ ...current, byteSize: event.target.value }))}
+                        disabled={busy}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="text-mono text-[11px] text-[var(--text-dim)]">
+                    O backend mascara query string e credenciais; o worker baixa e publica o evento recebido sem expor payload bruto.
+                  </div>
+
+                  <FlowReadout flowState={flowState} flowError={flowError} flowSummary={flowSummary} />
+
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="submit"
+                      variant="panel"
+                      size="xl"
+                      disabled={!publicLinkForm.url.trim() || !publicLinkForm.filename.trim() || !publicLinkForm.byteSize.trim() || busy}
+                    >
+                      {busy ? 'Criando upload por link...' : 'Criar upload por link'}
+                    </Button>
+                    <Button type="button" variant="outline" size="xl" onClick={() => setReloadToken((current) => current + 1)}>
+                      Atualizar listas
+                    </Button>
+                  </div>
+                </form>
+              )}
+            </div>
           </section>
 
           <section className="dash-panel dash-module-card">
@@ -501,6 +641,7 @@ function renderUploadTable(state: ListState<UploadSummary>) {
             <th>Upload</th>
             <th>Arquivo</th>
             <th>Status</th>
+            <th>Origem</th>
             <th>Content type</th>
             <th>Criado em</th>
           </tr>
@@ -513,6 +654,7 @@ function renderUploadTable(state: ListState<UploadSummary>) {
               <td>
                 <span className={`dash-pill ${uploadTone(upload.status)}`}>{humanizeUploadStatus(upload.status)}</span>
               </td>
+              <td className="dim">{upload.source_type ?? 'upload'}</td>
               <td className="dim">{upload.content_type}</td>
               <td className="dim">{formatTimestamp(upload.created_at)}</td>
             </tr>
@@ -563,6 +705,41 @@ function renderJobTable(state: ListState<JobSummary>) {
         </tbody>
       </table>
     </div>
+  )
+}
+
+function FlowReadout({
+  flowState,
+  flowError,
+  flowSummary,
+}: {
+  flowState: UploadFlowState
+  flowError: string | null
+  flowSummary: {
+    mode: UploadMode
+    uploadId: string
+    jobId: string
+    idempotent: boolean
+    acquisitionUrl?: string | null
+  } | null
+}) {
+  return (
+    <>
+      <div className="rounded-lg border border-[var(--border)] bg-[color:rgb(255_255_255_/_0.02)] px-3 py-2 text-mono text-[11px] text-[var(--text-soft)]">
+        Etapa atual: {flowStepLabel(flowState)}
+      </div>
+
+      {flowError ? <div className="text-mono text-[11px] text-[var(--signal-red)]">{flowError}</div> : null}
+
+      {flowSummary ? (
+        <div className="rounded-lg border border-[color:rgb(62_207_142_/_0.3)] bg-[color:rgb(62_207_142_/_0.08)] px-3 py-2 text-mono text-[11px] text-[var(--signal-green)]">
+          {flowSummary.mode === 'public_link'
+            ? `Link publico aceito: upload ${flowSummary.uploadId} e job ${flowSummary.jobId} criados${flowSummary.idempotent ? ' (idempotente).' : '.'}`
+            : `Upload ${flowSummary.uploadId} confirmado e job ${flowSummary.jobId} criado${flowSummary.idempotent ? ' (idempotente).' : '.'}`}
+          {flowSummary.acquisitionUrl ? <div className="mt-1 text-[var(--text-soft)]">{flowSummary.acquisitionUrl}</div> : null}
+        </div>
+      ) : null}
+    </>
   )
 }
 
@@ -656,6 +833,8 @@ function flowStepLabel(state: UploadFlowState) {
       return 'Enviando arquivo ao storage'
     case 'confirming':
       return 'Confirmando upload e criando job'
+    case 'requesting_link':
+      return 'Solicitando acquisition por link publico'
     case 'success':
       return 'Fluxo concluido com sucesso'
     case 'error':
@@ -755,4 +934,12 @@ function humanizeError(error: unknown, fallback: string) {
   }
 
   return fallback
+}
+
+function createPublicLinkIdempotencyKey() {
+  const random = typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(16).slice(2)}`
+
+  return `public-link-${random}`
 }

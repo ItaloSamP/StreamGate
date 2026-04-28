@@ -416,6 +416,58 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
 
+  /api/v1/uploads/public-link:
+    post:
+      summary: Registra ingestao por link publico seguro
+      operationId: createPublicLinkUpload
+      tags:
+        - Uploads
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicLinkRequest'
+      responses:
+        '201':
+          description: Link publico registrado e evento de aquisicao enfileirado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicLinkEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Idempotency-Key usada com outro payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: URL bloqueada ou payload invalido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
   /api/v1/jobs:
     get:
       summary: Lista jobs com filtros e paginacao
@@ -540,6 +592,84 @@ paths:
                 $ref: '#/components/schemas/ErrorEnvelope'
         '422':
           description: Filtros invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/analytics/dashboard:
+    get:
+      summary: Snapshot agregado da dashboard operacional
+      operationId: showAnalyticsDashboard
+      tags:
+        - Analytics
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dashboard com secoes live, derived, empty ou degraded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsDashboardEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/analytics/warehouse:
+    get:
+      summary: Leitura analitica por warehouse com fallback honesto
+      operationId: showAnalyticsWarehouse
+      tags:
+        - Analytics
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Leitura ClickHouse ou fallback postgres_derived com metadados de SLO
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsWarehouseEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/analytics/lineage:
+    get:
+      summary: Drilldown de lineage tecnico por job
+      operationId: showAnalyticsLineage
+      tags:
+        - Analytics
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: job_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lineage com batches, attempts, quarentena, artefatos, warnings e auditoria
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsLineageEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: job_id ausente ou invalido
           content:
             application/json:
               schema:
@@ -1615,6 +1745,7 @@ components:
             content_type:
               type: string
               enum:
+                - application/json
                 - application/zip
                 - text/csv
             byte_size:
@@ -1677,6 +1808,7 @@ components:
             content_type:
               type: string
               enum:
+                - application/json
                 - application/zip
                 - text/csv
             byte_size:
@@ -1716,6 +1848,46 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/UploadRegisterPayload'
+        meta:
+          $ref: '#/components/schemas/UploadRegisterMeta'
+
+    PublicLinkRequest:
+      type: object
+      required: [public_link]
+      properties:
+        public_link:
+          type: object
+          required: [url, filename, content_type]
+          properties:
+            url:
+              type: string
+              format: uri
+            filename:
+              type: string
+            content_type:
+              type: string
+              enum: [application/json, application/zip, text/csv]
+            byte_size:
+              type: integer
+              minimum: 1
+
+    PublicLinkPayload:
+      type: object
+      required: [upload, job, acquisition]
+      properties:
+        upload:
+          $ref: '#/components/schemas/Upload'
+        job:
+          $ref: '#/components/schemas/Job'
+        acquisition:
+          $ref: '#/components/schemas/UploadAcquisition'
+
+    PublicLinkEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/PublicLinkPayload'
         meta:
           $ref: '#/components/schemas/UploadRegisterMeta'
 
@@ -1799,6 +1971,28 @@ components:
           $ref: '#/components/schemas/AnalyticsPayload'
         meta:
           $ref: '#/components/schemas/EnvelopeMeta'
+
+    AnalyticsDashboardEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/AnalyticsDashboardPayload'
+
+    AnalyticsWarehouseEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/AnalyticsWarehousePayload'
+
+    AnalyticsLineageEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/AnalyticsLineagePayload'
+
     Upload:
       type: object
       required:
@@ -1808,6 +2002,7 @@ components:
         - byte_size
         - checksum_sha256
         - storage_key
+        - source_type
         - status
         - sensitivity_level
         - user_id
@@ -1832,6 +2027,11 @@ components:
         storage_key:
           type: string
           example: uploads/sample-import.csv
+        source_type:
+          type: string
+          enum:
+            - upload
+            - external_link
         status:
           type: string
           enum:
@@ -1858,6 +2058,59 @@ components:
         updated_at:
           type: string
           format: date-time
+
+    UploadAcquisition:
+      type: object
+      required:
+        - id
+        - upload_id
+        - job_id
+        - source_type
+        - link_mode
+        - status
+        - url_masked
+        - url_hash
+        - source_host
+        - requested_at
+        - trace_id
+      properties:
+        id:
+          type: string
+        upload_id:
+          type: string
+        job_id:
+          type: string
+        source_type:
+          type: string
+          enum: [external_link]
+        link_mode:
+          type: string
+          enum: [public_link]
+        status:
+          type: string
+          enum: [pending, fetching, stored, failed]
+        url_masked:
+          type: string
+          description: URL sem query string, fragmento ou credenciais.
+        url_hash:
+          type: string
+        source_host:
+          type: string
+        content_type:
+          type: string
+          nullable: true
+        byte_size:
+          type: integer
+          nullable: true
+        requested_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          nullable: true
+          format: date-time
+        trace_id:
+          type: string
 
     Job:
       type: object
@@ -2099,6 +2352,232 @@ components:
                     type: string
                   count:
                     type: integer
+
+    AnalyticsDashboardPayload:
+      type: object
+      required: [generated_at, source, window, sections, dependencies, slo]
+      properties:
+        generated_at:
+          type: string
+          format: date-time
+        source:
+          type: string
+          enum: [postgres_derived, empty]
+        window:
+          type: object
+          additionalProperties: true
+        sections:
+          type: object
+          required: [queue, workers, throughput, formats, warnings, event_log]
+          additionalProperties:
+            type: object
+            required: [status, generated_at, data]
+            properties:
+              status:
+                type: string
+                enum: [live, derived, empty, degraded]
+              generated_at:
+                type: string
+                format: date-time
+              data:
+                oneOf:
+                  - type: object
+                    additionalProperties: true
+                  - type: array
+                    items: {}
+              empty_state:
+                type: string
+                nullable: true
+          properties:
+            event_log:
+              type: object
+              required: [status, generated_at, data]
+              properties:
+                status:
+                  type: string
+                  enum: [live, derived, empty, degraded]
+                generated_at:
+                  type: string
+                  format: date-time
+                data:
+                  type: array
+                  items:
+                    type: object
+                    required: [timestamp, type, severity, job_id, status, message]
+                    properties:
+                      timestamp:
+                        type: string
+                        nullable: true
+                        format: date-time
+                      type:
+                        type: string
+                        enum: [worker_metric, operational_warning, audit]
+                      severity:
+                        type: string
+                      job_id:
+                        type: string
+                        nullable: true
+                      upload_id:
+                        type: string
+                        nullable: true
+                      status:
+                        type: string
+                      message:
+                        type: string
+                empty_state:
+                  type: string
+                  nullable: true
+        dependencies:
+          type: object
+          additionalProperties: true
+        slo:
+          $ref: '#/components/schemas/AnalyticsSlo'
+
+    AnalyticsWarehousePayload:
+      type: object
+      required: [source, generated_at, lag_seconds, stale, slo_target_seconds, p95_ms, error_budget_percent, dependency_status, fallback_reason]
+      properties:
+        source:
+          type: string
+          enum: [clickhouse, postgres_derived]
+        generated_at:
+          type: string
+          format: date-time
+        last_event_at:
+          type: string
+          nullable: true
+          format: date-time
+        lag_seconds:
+          type: integer
+          nullable: true
+        stale:
+          type: boolean
+        slo_target_seconds:
+          type: integer
+        p95_ms:
+          type: integer
+        error_budget_percent:
+          type: number
+        dependency_status:
+          type: object
+          additionalProperties: true
+        fallback_reason:
+          type: string
+          nullable: true
+        aggregates:
+          type: object
+          required: [jobs_total, uploads_total, records_total, valid_records, invalid_records]
+          properties:
+            jobs_total:
+              type: integer
+            uploads_total:
+              type: integer
+            records_total:
+              type: integer
+            valid_records:
+              type: integer
+            invalid_records:
+              type: integer
+            by_status:
+              type: object
+              additionalProperties:
+                type: integer
+            by_source:
+              type: object
+              additionalProperties:
+                type: integer
+          additionalProperties: true
+
+    AnalyticsLineagePayload:
+      type: object
+      required: [job, upload, batches, attempts, quarantine, artifacts, warnings, audit_refs]
+      properties:
+        job:
+          $ref: '#/components/schemas/Job'
+        upload:
+          $ref: '#/components/schemas/Upload'
+        acquisition:
+          nullable: true
+          $ref: '#/components/schemas/UploadAcquisition'
+        batches:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        attempts:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        quarantine:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        artifacts:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperationalWarning'
+        audit_refs:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+
+    AnalyticsSlo:
+      type: object
+      required: [slo_target_seconds, lag_seconds, stale, p95_ms, error_budget_percent]
+      properties:
+        slo_target_seconds:
+          type: integer
+        last_event_at:
+          type: string
+          nullable: true
+          format: date-time
+        lag_seconds:
+          type: integer
+          nullable: true
+        stale:
+          type: boolean
+        p95_ms:
+          type: integer
+        error_budget_percent:
+          type: number
+
+    OperationalWarning:
+      type: object
+      required: [id, code, message, status, severity, retry_count, expires_at, trace_id]
+      properties:
+        id:
+          type: string
+        job_id:
+          type: string
+          nullable: true
+        upload_id:
+          type: string
+          nullable: true
+        code:
+          type: string
+        message:
+          type: string
+        status:
+          type: string
+          enum: [open, retrying, resolved, failed]
+        severity:
+          type: string
+          enum: [info, warning, error]
+        retry_count:
+          type: integer
+        expires_at:
+          type: string
+          format: date-time
+        trace_id:
+          type: string
 
     OperationActionRequest:
       type: object

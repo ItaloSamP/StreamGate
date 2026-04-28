@@ -30,6 +30,7 @@ class User < ApplicationRecord
   has_many :audit_events, foreign_key: :actor_id, inverse_of: :actor, dependent: :nullify
   has_many :auth_sessions, dependent: :destroy
   has_many :analytics_job_snapshots, foreign_key: :actor_id, inverse_of: :actor, dependent: :restrict_with_exception
+  has_many :upload_acquisitions, through: :uploads
   has_many :notifications, foreign_key: :recipient_id, inverse_of: :recipient, dependent: :destroy
   has_one :notification_setting, dependent: :destroy
   has_many :operational_action_idempotency_keys, foreign_key: :actor_id, inverse_of: :actor, dependent: :destroy
