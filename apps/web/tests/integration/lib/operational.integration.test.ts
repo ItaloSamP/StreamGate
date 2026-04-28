@@ -68,7 +68,7 @@ describe.sequential('operational integration with real backend', () => {
 })
 
 function readRootDotEnvValue(key: string) {
-  const envPath = path.resolve(import.meta.dirname, '../../../../.env')
+  const envPath = path.resolve(import.meta.dirname, '../../../../../.env')
   if (!existsSync(envPath)) return null
 
   const line = readFileSync(envPath, 'utf8')

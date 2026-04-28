@@ -80,6 +80,17 @@ Toda pagina protegida deve consumir a camada HTTP oficial:
 - `apps/web/src/lib/api-client.ts`
 - `apps/web/src/lib/streamgate-api.ts`
 
+### Organizacao de testes
+
+O workspace separa runtime e verificacao:
+
+- `apps/web/src`: codigo carregado pelo app.
+- `apps/web/tests/unit`: Vitest unitario e de componentes.
+- `apps/web/tests/integration`: Vitest de integracao contra backend real/local.
+- `apps/web/e2e`: Playwright.
+
+Essa separacao evita testes misturados com paginas e adapters, mantendo `src/pages`, `src/lib` e `src/features` mais faceis de navegar.
+
 Paginas e fontes atuais:
 
 - `DashboardPage`: `getAnalyticsDashboard`, `listJobs`, `listUploads`

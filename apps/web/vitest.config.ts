@@ -11,11 +11,11 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: ['./src/test/setup.ts'],
+    setupFiles: ['./tests/setup.ts'],
     pool: 'vmThreads',
     fileParallelism: false,
     maxWorkers: 1,
-    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
-    exclude: [...configDefaults.exclude, 'src/**/*.integration.test.ts'],
+    include: ['tests/unit/**/*.test.ts', 'tests/unit/**/*.test.tsx'],
+    exclude: [...configDefaults.exclude, 'tests/integration/**/*.integration.test.ts'],
   },
 })

@@ -203,6 +203,18 @@ Regras:
 - exportacao server-side de toda a base
 - conectores externos como fluxo funcional
 
+## Organizacao De Testes
+
+`apps/web/src` deve conter apenas codigo de runtime do frontend: paginas, componentes, hooks, features e bibliotecas carregadas pelo app.
+
+Testes Vitest vivem em `apps/web/tests`:
+
+- `tests/unit`: testes unitarios, de componentes, adapters, features e paginas com jsdom.
+- `tests/integration`: testes Vitest em ambiente Node contra backend real/local.
+- `tests/setup.ts`: setup compartilhado dos testes unitarios.
+
+Testes Playwright continuam em `apps/web/e2e`. Novos arquivos `*.test.ts`, `*.test.tsx` ou `*.integration.test.ts` nao devem ser criados dentro de `src`.
+
 ## Validacao/Evidencias
 
 Evidencias da trilha de frontend Sprint 6:

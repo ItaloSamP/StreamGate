@@ -2,9 +2,9 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 
-import { AuthProvider } from '../features/auth/auth-context'
-import { LandingPage } from './LandingPage'
-import { LoginPage } from './LoginPage'
+import { AuthProvider } from '@/features/auth/auth-context'
+import { LandingPage } from '@/pages/LandingPage'
+import { LoginPage } from '@/pages/LoginPage'
 
 describe('entry surfaces', () => {
   it('keeps the landing page focused on the product value and dashboard access', () => {

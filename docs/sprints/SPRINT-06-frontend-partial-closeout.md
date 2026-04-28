@@ -17,8 +17,8 @@
 
 ## Evidencias locais
 
-- `pnpm.cmd --dir apps/web test -- src/lib/streamgate-api.test.ts --runInBand`: PASS.
-- `pnpm.cmd --dir apps/web test -- src/pages/workspace-routes.test.tsx src/pages/operational-pages.test.tsx src/pages/UploadPage.test.tsx --runInBand`: PASS.
+- `pnpm.cmd --dir apps/web test -- tests/unit/lib/streamgate-api.test.ts --runInBand`: PASS.
+- `pnpm.cmd --dir apps/web test -- tests/unit/pages/workspace-routes.test.tsx tests/unit/pages/operational-pages.test.tsx tests/unit/pages/UploadPage.test.tsx --runInBand`: PASS.
 - `pnpm.cmd --dir apps/web test:run`: PASS, 11 arquivos e 69 testes.
 - `pnpm.cmd --dir apps/web test:integration`: primeira tentativa falhou por `ECONNREFUSED` em `localhost:3000`; apos `scripts/dev/dev-up.ps1 -Mode app`, PASS com 2 arquivos e 4 testes.
 - `pnpm.cmd --dir apps/web build`: PASS.

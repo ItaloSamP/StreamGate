@@ -150,6 +150,10 @@ Para validar E2E localmente, suba o web server antes do comando ou use `scripts/
 
 ## Reports locais
 
+- Testes Vitest ficam em `apps/web/tests`, separados do runtime em `apps/web/src`.
+- `apps/web/tests/unit` cobre adapters, paginas, componentes e features com jsdom.
+- `apps/web/tests/integration` cobre integracoes Vitest contra backend real/local.
+- `apps/web/e2e` permanece reservado para Playwright.
 - `pnpm test:run` gera logs, resumo HTML e coverage em `apps/web/reports/unit/`.
 - `pnpm test:integration` gera logs, resumo HTML e coverage em `apps/web/reports/integration/`.
 - `pnpm test:e2e` gera logs e Playwright HTML report em `apps/web/e2e/reports/`.

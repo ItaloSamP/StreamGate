@@ -14,7 +14,7 @@ export default defineConfig({
     pool: 'vmThreads',
     fileParallelism: false,
     maxWorkers: 1,
-    include: ['src/**/*.integration.test.ts'],
+    include: ['tests/integration/**/*.integration.test.ts'],
     exclude: [...configDefaults.exclude],
     testTimeout: 60000,
     hookTimeout: 60000,
