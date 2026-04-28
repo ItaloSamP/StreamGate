@@ -1733,16 +1733,207 @@ Evidencia final de fechamento da Sprint 6 (2026-04-28):
 - Security: revisar a superficie final da entrega e impedir que `external_link` entre sem threat model adequado.
 - Skills da sprint: aplicar a stack de planejamento, frontend, API, teste e observabilidade como obrigatoria na reta final do produto.
 
+## Sprint 7 - Paridade funcional do prototipo, realtime, conectores e governanca
+
+**Status atual:** `Planejada - aguardando merge da sprint6 em dev`
+
+**Resultado esperado**
+
+- Dashboard operacional com paridade funcional forte em relacao ao prototipo `streamgate-v3.html`, preservando visual, densidade e interacoes principais sem manter fixtures invisiveis.
+- `GET /api/v1/analytics/dashboard` expandido para sustentar graficos, heatmap, distribuicao, formatos, fila, ingestao, workers, alertas e event log com dados reais, derivados honestos ou empty/degraded states explicitos.
+- ClickHouse como fonte principal para historico/agregados, WebSocket como transporte de atualizacoes ao vivo e Postgres/polling como fallback honesto.
+- Quick upload real no card de ingestao da dashboard, reaproveitando Upload Center para arquivo local e link publico.
+- Conectores base S3 e HTTP via perfis admin-only, credenciais criptografadas, lease interno para worker e UX sem expor segredo.
+- Governanca com matriz de permissoes configuravel, retencao por workspace e auditoria de acoes sensiveis.
+
+**Contexto e intencao**
+
+A Sprint 6 fechou a v1 funcional, mas a reavaliacao contra o prototipo final mostrou que a dashboard real ainda esta mais conservadora do que o alvo visual e interativo do produto. O repositorio ja contem componentes estaticos que reproduzem boa parte do `streamgate-v3.html`, especialmente `WorkspaceOverview`, `dashboard-data` e `dashboard-graphics`; a Sprint 7 existe para transformar esses componentes em superficie viva, sem reintroduzir cards cenograficos.
+
+O objetivo nao e trocar honestidade operacional por maquiagem visual. O objetivo e fazer o command center parecer e agir como o prototipo final, com cada card sustentado por REST, WebSocket, ClickHouse ou estado vazio/degradado claramente declarado.
+
+**Ja existe hoje**
+
+- [x] Dashboard real via `analytics/dashboard`, com secoes `queue`, `workers`, `throughput`, `formats`, `warnings` e `event_log`.
+- [x] ClickHouse funcional para warehouse minimo, com fallback `postgres_derived`.
+- [x] ETL Explorer com lineage por job.
+- [x] Upload local e `public_link` funcionais.
+- [x] Componentes visuais estaticos que espelham partes do prototipo final.
+- [x] Worker com streaming/spool e parsing CSV, JSON envelope/array e ZIP seguro com 1 CSV.
+
+**Bloqueadores conhecidos**
+
+- Componentes visuais do prototipo ainda existem como preview estatico e precisam virar data-driven antes de serem tratados como produto final.
+- O endpoint atual da dashboard nao entrega series 24h, heatmap 7 dias, distribuicao por status, filas detalhadas, workers vivos, progresso de uploads ou alertas revisaveis.
+- WebSocket/Solid Cable ainda nao esta exposto como contrato operacional do frontend.
+- Parquet, NDJSON e XLSX aparecem no prototipo, mas ainda nao estao fechados como suporte real ponta a ponta.
+- S3 e HTTP URL ainda nao sao conectores funcionais; `google_drive` e `oauth_delegated` continuam fora da sprint.
+
+### P0 - Dashboard prototype parity
+
+- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `build-web-apps:frontend-app-builder`, `tailwind-design-system`, `web-design-guidelines`, `vercel-react-best-practices`, `vitest`, `playwright`, `test-driven-development`.
+- [ ] Refatorar `WorkspaceOverview`, `dashboard-data` e `dashboard-graphics` para componentes data-driven, mantendo fidelidade visual forte ao `streamgate-v3.html`.
+- [ ] Preservar o shell real, responsividade e acessibilidade; permitir ajuste visual apenas quando necessario para caber no produto atual.
+- [ ] Garantir que preview/demo so exista com marcacao explicita de demo.
+- [ ] Implementar cards reais para KPIs, grafico 24h, pipeline de jobs, distribuicao, formatos, heatmap, ingestao, fila, event log e workers.
+- [ ] Substituir SVGs fixos por graficos derivados de dados recebidos, mantendo o mesmo vocabulario visual do prototipo.
+- [ ] Implementar alert strip real para falhas/warnings recentes, com revisao e fechamento persistentes.
+- [ ] Implementar drawers contextuais para KPI, heatmap, formato, job, fila, worker e alerta, sempre com rota/filtro profundo para a tela especializada.
+- [ ] Implementar export CSV/JSON para snapshot filtrado, series, heatmap e event log.
+
+### Back planning
+
+- Skills obrigatorias para todas as tasks desta trilha: `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `supabase-postgres-best-practices`.
+- [ ] Congelar o contrato expandido de `GET /api/v1/analytics/dashboard` com `kpis`, `timeseries_24h`, `status_distribution`, `formats`, `heatmap_7d`, `jobs_board`, `queue`, `ingestion`, `workers`, `alerts` e `event_log`.
+- [ ] Definir quais campos vem do ClickHouse, quais sao derivados do Postgres e quais podem ser empty/degraded.
+- [ ] Definir contratos de export, alert review/dismiss, realtime ticket, realtime event e configuracao de permissoes.
+- [ ] Definir como os dados da dashboard sao escopados por org, role e matriz configuravel de permissoes.
+- [ ] Definir politica de retencao por workspace para eventos, artefatos, exports, ClickHouse e dados operacionais.
+
+### Back execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `api-designer`, `api-documenter`, `openapi`, `integration-testing`, `api-contract-testing`, `security-best-practices`.
+- [ ] Expandir `analytics/dashboard` sem quebrar consumidores Sprint 6.
+- [ ] Implementar leitura ClickHouse-first para series 24h, heatmap 7 dias, distribuicao, formatos, agregados e historico.
+- [ ] Manter fallback `postgres_derived` com `fallback_reason`, SLO, stale, dependency status e warning tecnico.
+- [ ] Implementar `POST /api/v1/realtime/tickets` com ticket curto, escopo por usuario/org/role e expiracao.
+- [ ] Criar `realtime_events` duravel para upload, job, batch, quarantine, warning, worker, artifact, notification e dependency health.
+- [ ] Implementar endpoints/acoes de export, alert review e alert dismiss com `Idempotency-Key`, RBAC, motivo quando sensivel e auditoria.
+- [ ] Implementar matriz configuravel de permissoes por role/org, com defaults compativeis com admin/operator atuais.
+- [ ] Implementar retencao por workspace e jobs de limpeza seguros.
+- [ ] Sincronizar OpenAPI, `packages/contracts`, examples e docs de API no mesmo ciclo.
+
+### Worker execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `integration-testing`, `security-best-practices`, `monitoring-observability`.
+- [ ] Emitir `realtime_events` nos pontos relevantes do pipeline sem bloquear processamento principal.
+- [ ] Alimentar ClickHouse com agregados necessarios para dashboard 24h, heatmap 7 dias, formatos, distribuicao e workers.
+- [ ] Suportar CSV, JSON array, `{ records: [...] }`, NDJSON, ZIP com 1 arquivo suportado, Parquet e XLSX.
+- [ ] Atualizar allowlists de content type no API, worker, contratos e frontend.
+- [ ] Preservar streaming/spool controlado, limites alinhados a 10 GB, cleanup best effort e warnings tecnicos.
+- [ ] Manter bloqueios de zip slip, zip bomb, payload bruto no warehouse e exposicao de dados sensiveis.
+- [ ] Implementar conectores S3 e HTTP base consumindo perfis admin-only via lease interno da API.
+- [ ] Garantir que falhas em ClickHouse, realtime ou conectores gerem warning tecnico sem impedir artefatos, notificacoes e auditoria principais.
+
+### Front planning
+
+- Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `build-web-apps:frontend-app-builder`, `build-web-apps:react-best-practices`, `build-web-apps:shadcn`, `tailwind-design-system`, `web-design-guidelines`.
+- [ ] Tratar o `streamgate-v3.html` como referencia visual aprovada, nao como contrato de DOM literal.
+- [ ] Definir adapters TypeScript para dashboard expandida, realtime events, exports, alert actions, permissoes e quick upload.
+- [ ] Definir fallback visual quando WebSocket cair: aviso discreto, polling curto e SLO/stale explicito.
+- [ ] Definir UX de drawers contextuais com deep links para `/jobs`, `/etl-explorer`, `/quarantine`, `/events` e `/upload`.
+- [ ] Definir como o quick upload da dashboard reaproveita a logica do Upload Center sem duplicar regras.
+
+### Front execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `frontend-skill`, `build-web-apps:frontend-app-builder`, `vercel-react-best-practices`, `vitest`, `playwright`, `test-driven-development`.
+- [ ] Ligar dashboard ao snapshot REST expandido e ao canal WebSocket.
+- [ ] Implementar graficos 24h, donut, ranking de formatos, mini barras semanais e heatmap 7 dias com dados reais.
+- [ ] Implementar tabs reais de Pipeline de Jobs: ativos, fila e historico.
+- [ ] Implementar card de Ingestao com quick upload real para arquivo local e link publico.
+- [ ] Implementar lista de workers vivos com heartbeat/status, job atual e progresso.
+- [ ] Implementar alert strip, review/dismiss persistentes e export CSV/JSON.
+- [ ] Garantir que admin veja detalhes tecnicos globais e operator veja apenas dados uteis no proprio escopo.
+- [ ] Verificar desktop/mobile no browser e corrigir overlaps, cortes de texto, cards sem estado e mismatches relevantes contra o prototipo.
+
+### Connectors
+
+- Skills obrigatorias para todas as tasks desta trilha: `domain-modeling`, `api-designer`, `security-threat-model`, `security-best-practices`, `integration-testing`.
+- [ ] Implementar perfis de conector admin-only para S3 e HTTP URL.
+- [ ] Armazenar segredos com Active Record Encryption e nunca expor credenciais na UI, API, eventos ou logs.
+- [ ] Implementar lease interno para o worker acessar credenciais temporarias ou material minimo necessario.
+- [ ] Implementar UX `perfil + object key` para S3.
+- [ ] Implementar UX `perfil HTTP com auth` para HTTP URL.
+- [ ] Manter `google_drive` e `oauth_delegated` explicitamente fora do escopo funcional da Sprint 7.
+
+### DevOps
+
+- Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`, `circleci:circleci-builds`.
+- [ ] Ajustar env checks para WebSocket/Solid Cable, realtime tickets, Active Record Encryption, conectores S3/HTTP e retencao.
+- [ ] Atualizar smokes para dashboard realtime/fallback, quick upload, alert actions e conectores base.
+- [ ] Garantir que Compose/WSL continue sendo o caminho oficial para gates pesados.
+- [ ] Avaliar se GitHub Actions existentes cobrem as novas suites ou se precisam de jobs separados por risco.
+- [ ] Registrar CodeRabbit como revisao desejada se CLI/auth estiver disponivel; se nao estiver, registrar blocker operacional.
+
+### Test planning
+
+- Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
+- [ ] Planejar TDD por comportamento antes de cada frente: dashboard, realtime, parsers, conectores, governanca e retencao.
+- [ ] Cobrir contrato expandido da dashboard e compatibilidade com consumidores existentes.
+- [ ] Cobrir permissao por role/org, matriz configuravel e ausencia de vazamento entre tenants.
+- [ ] Cobrir WebSocket feliz, ticket expirado, queda para polling e reconexao.
+- [ ] Cobrir quick upload, public link, export e alert review/dismiss.
+- [ ] Cobrir formatos CSV, JSON, NDJSON, ZIP, Parquet e XLSX com casos de erro e limites.
+
+### Test execution
+
+- Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`, `superpowers:verification-before-completion`.
+- [ ] `cd apps/api && bundle exec rails test`.
+- [ ] `cd apps/worker && bundle exec rspec`.
+- [ ] `ruby scripts/ci/validate-operational-contracts.rb`.
+- [ ] `cd apps/web && pnpm test:run`.
+- [ ] `cd apps/web && pnpm test:integration`.
+- [ ] `cd apps/web && pnpm build`.
+- [ ] `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 frontend`.
+- [ ] `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 backend`.
+- [ ] `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1` com variaveis de smoke dos conectores e `SMOKE_PUBLIC_LINK_URL`.
+- [ ] `powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -Profile full-closeout` quando a Sprint 7 estiver pronta para fechamento.
+
+### Security
+
+- Skills obrigatorias para todas as tasks desta trilha: `security-threat-model`, `security-best-practices`, `openapi`, `api-contract-testing`.
+- [ ] Atualizar threat model para WebSocket, tickets curtos, realtime events, export, alert actions, S3, HTTP URL, credential lease e novos formatos.
+- [ ] Garantir masking de URLs, object keys, credenciais, headers e mensagens de erro.
+- [ ] Garantir que alert review/dismiss, export e configuracao de permissoes sejam auditaveis e idempotentes.
+- [ ] Garantir que ClickHouse e eventos realtime nao carreguem payload bruto de registros.
+- [ ] Revisar SSRF e DNS rebind no conector HTTP e no `public_link` existente.
+
+### Documentation
+
+- Skills obrigatorias para todas as tasks desta trilha: `documentation-writer`, `api-documenter`, `openapi`, `readiness-report`.
+- [ ] Atualizar este roadmap conforme execucao real da Sprint 7.
+- [ ] Atualizar `docs/product/vision.md` para refletir dashboard parity, realtime, conectores S3/HTTP e governanca.
+- [ ] Atualizar `docs/guides/platform/final-delivery-guide.md` com o novo criterio de entrega pos-v1.
+- [ ] Atualizar `docs/guides/frontend/frontend-foundations.md` e `docs/guides/frontend/frontend-workspace-map.md` com dashboard data-driven, WebSocket e quick upload.
+- [ ] Atualizar `docs/guides/backend/api-docs.md`, OpenAPI e contratos sempre que endpoints/acoes mudarem.
+- [ ] Atualizar runbooks de worker/runtime para realtime, conectores, formatos e retencao.
+- [ ] Criar closeout unico da Sprint 7 somente depois dos gates verdes.
+
+### Checklist de saida
+
+- [ ] Dashboard visualmente alinhada ao prototipo nos blocos principais e sem fixtures invisiveis.
+- [ ] Todos os cards principais possuem logica real, fonte declarada ou empty/degraded state.
+- [ ] Grafico 24h, donut, ranking de formatos, mini barras e heatmap sao data-driven.
+- [ ] Drawer + deep link funciona para investigacoes principais.
+- [ ] WebSocket funciona com ticket curto e fallback para polling.
+- [ ] Quick upload local e public link funcionam a partir da dashboard.
+- [ ] Export CSV/JSON funciona para snapshot e series relevantes.
+- [ ] Alert review/dismiss persiste, audita e respeita RBAC.
+- [ ] S3 e HTTP base funcionam com perfis admin-only e segredos criptografados.
+- [ ] CSV, JSON, NDJSON, ZIP, Parquet e XLSX funcionam ou falham com erro claro e seguro.
+- [ ] Retencao por workspace e matriz de permissoes configuravel estao cobertas.
+- [ ] Docs, contratos, OpenAPI, smokes e reports estao sincronizados.
+- [ ] PR final da Sprint 7 passa nos workflows antes de merge.
+
+### Plano de transicao a partir da Sprint 6
+
+- [ ] Atualizar este roadmap com o planejamento da Sprint 7 na branch `sprint6`.
+- [ ] Commitar como `docs: plan sprint7 dashboard parity`.
+- [ ] Abrir PR `sprint6` -> `dev` com descricao detalhada da Sprint 6 e evidencias dos gates.
+- [ ] Aguardar todos os workflows GitHub passarem.
+- [ ] Corrigir qualquer falha na propria `sprint6`, repush e aguardar novamente.
+- [ ] Fazer squash merge para `dev` somente com checks verdes.
+- [ ] Criar a branch da Sprint 7 a partir de `dev` depois do merge.
+
 ## Pos-v1 e backlog estrategico
 
 Os itens abaixo nao entram na trilha critica da v1, mas ja estao visiveis pelo estado atual do produto e devem permanecer no horizonte oficial para evitar reinvencao desordenada depois do cluster.
 
 ### Evolucoes funcionais naturais
 
-- SSE ou WebSocket para reduzir polling quando o dashboard operacional ja estiver estavel.
-- RBAC mais fino por modulo, recurso e acao operacional.
 - Suporte a novos tipos de pipeline alem do fluxo principal de ingestao de arquivos.
 - Ferramentas de investigacao mais profundas no dashboard, como diff entre tentativas e comparacao de replays.
+- Conectores alem de S3/HTTP base, incluindo Google Drive e OAuth delegado.
 
 ### Evolucoes de plataforma
 
