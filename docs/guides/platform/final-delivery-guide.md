@@ -319,35 +319,45 @@ Regra pratica:
 
 ### Backend e worker
 
-- [ ] pipeline assincrono validado ponta a ponta
-- [ ] operacao segura validada com RBAC, motivo, auditoria e idempotencia
-- [ ] artefatos finais validos e baixaveis
-- [ ] notificacoes e deliveries coerentes com eventos operacionais
-- [ ] auditoria navegavel e explicavel por recurso
+- [x] pipeline assincrono validado ponta a ponta
+- [x] operacao segura validada com RBAC, motivo, auditoria e idempotencia
+- [x] artefatos finais validos e baixaveis
+- [x] notificacoes e deliveries coerentes com eventos operacionais
+- [x] auditoria navegavel e explicavel por recurso
 
 ### Frontend
 
 - [x] rotas principais coerentes entre shell, dashboard e modulos
-- [ ] estados de denied/error/loading consistentes em superficies sensiveis
+- [x] estados de denied/error/loading consistentes em superficies sensiveis
 - [x] visual final sem cards cenograficos ou lacunas de produto disfarcadas
-- [ ] mobile/tablet utilizaveis nas rotas principais
+- [x] mobile/tablet utilizaveis nas rotas principais
 
 ### Documentacao
 
-- [ ] `docs/product/vision.md` reflete exatamente a entrega
-- [ ] `docs/planning/streamgate-full-sprints-roadmap.md` sincronizado com o estado real
+- [x] `docs/product/vision.md` reflete exatamente a entrega
+- [x] `docs/planning/streamgate-full-sprints-roadmap.md` sincronizado com o estado real
 - [x] `docs/guides/frontend/frontend-workspace-map.md` descreve o workspace final
-- [ ] `docs/guides/backend/api-docs.md` e OpenAPI sincronizados
-- [ ] docs de seguranca e release atualizadas
-- [ ] closeout final de release escrito
+- [x] `docs/guides/backend/api-docs.md` e OpenAPI sincronizados
+- [x] docs de seguranca e release atualizadas
+- [x] closeout final de release escrito
 
 ### Testes e operacao
 
-- [ ] fast gates relevantes verdes
-- [ ] smoke operacional verde
-- [ ] full-closeout verde ou residual de ambiente explicitamente classificado
-- [ ] hub `docs/reports/index.html` atualizado
-- [ ] backlog residual aceito explicitamente
+- [x] fast gates relevantes verdes
+- [x] smoke operacional verde
+- [x] full-closeout verde
+- [x] hub `docs/reports/index.html` atualizado
+- [x] backlog residual aceito explicitamente
+
+Evidencia final da v1 (2026-04-28):
+
+- `ruby scripts/ci/validate-operational-contracts.rb`: PASS.
+- `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 backend`: PASS.
+- `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 frontend`: PASS.
+- `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 e2e`: PASS.
+- `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 docker` com `SMOKE_PUBLIC_LINK_URL=https://raw.githubusercontent.com/plotly/datasets/master/2014_apple_stock.csv`: PASS.
+- `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1 -TimeoutSeconds 900` com `SMOKE_PUBLIC_LINK_URL`: PASS.
+- `powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -Profile full-closeout -TimeoutSeconds 900` com `SMOKE_PUBLIC_LINK_URL`: PASS; hub atualizado com `PASS:7 FAIL:0 NOT_RUN:0` em `2026-04-28T19:48:41.768Z`.
 
 ## Recomendacao de governanca daqui para frente
 
