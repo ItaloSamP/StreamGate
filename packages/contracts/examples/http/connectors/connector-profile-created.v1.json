@@ -1,0 +1,18 @@
+{
+  "data": {
+    "id": "conn_8b6d79c2a2b54f24b39e442f8138a000",
+    "organization_id": "org_fixture_alpha",
+    "kind": "s3",
+    "name": "finance-s3",
+    "status": "active",
+    "settings": {
+      "region": "us-east-1",
+      "bucket": "[masked]",
+      "endpoint": "https://s3.example.com"
+    },
+    "created_by_id": "user_fixture_admin",
+    "trace_id": "trace_connector_1",
+    "created_at": "2026-04-26T12:00:00Z",
+    "updated_at": "2026-04-26T12:00:00Z"
+  }
+}

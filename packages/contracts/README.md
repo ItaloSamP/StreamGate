@@ -11,9 +11,10 @@ Fonte compartilhada dos contratos do StreamGate entre API, worker e frontend.
 - `schemas/http/uploads`: contratos HTTP de upload e registro de job.
 - `schemas/http/operational-reads`: contratos HTTP de leituras operacionais.
 - `schemas/http/operations`: contratos HTTP de mutacoes operacionais.
+- `schemas/http/connectors`: contratos HTTP de perfis, ingestions e leases de conectores.
 - `schemas/http/artifacts`: contratos HTTP de artefatos finais.
 - `schemas/http/notifications`: contratos HTTP de notificacoes e deliveries.
-- `schemas/events/uploads`: contratos de eventos assincronos de upload.
+- `schemas/events/uploads` e `schemas/events/connectors`: contratos de eventos assincronos de upload e conectores.
 - `examples/http/<dominio>` e `examples/events/<dominio>`: exemplos concretos espelhando a taxonomia dos schemas.
 
 ## Convencoes oficiais
@@ -35,6 +36,7 @@ Fonte compartilhada dos contratos do StreamGate entre API, worker e frontend.
 - `etl.validation.failed`
 - `etl.batch.loaded`
 - `etl.job.completed`
+- `connector.ingestion.requested`
 
 ### Campos minimos de rastreabilidade
 
@@ -57,6 +59,7 @@ Todo contrato de evento deve prever, quando aplicavel:
 - `uploads`: signed URL, registro idempotente, public link e listagem de uploads.
 - `operational-reads`: jobs, analytics, dashboard, warehouse, lineage, quarantine, audit e DLQ read-only.
 - `operations`: retry, resolve e ciclo de replay DLQ.
+- `connectors`: perfis admin-only, solicitacao de ingestion e lease interno para worker.
 - `artifacts`: listagem e URL assinada curta de download.
 - `notifications`: inbox, leitura/arquivo/delete, acoes em massa essenciais, settings e webhook/email deliveries.
 

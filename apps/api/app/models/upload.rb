@@ -19,7 +19,8 @@ class Upload < ApplicationRecord
 
   SOURCE_TYPES = {
     upload: "upload",
-    external_link: "external_link"
+    external_link: "external_link",
+    connector: "connector"
   }.freeze
 
   enum :status, STATUSES, default: :registered, validate: true
@@ -32,6 +33,7 @@ class Upload < ApplicationRecord
   has_many :operational_warnings, dependent: :restrict_with_exception
   has_many :audit_events, as: :auditable, dependent: :restrict_with_exception
   has_many :analytics_job_snapshots, dependent: :restrict_with_exception
+  has_one :connector_ingestion, dependent: :restrict_with_exception
 
   validates :filename, :content_type, :storage_key, :checksum_sha256, :trace_id, presence: true
   validates :byte_size, numericality: { greater_than: 0 }

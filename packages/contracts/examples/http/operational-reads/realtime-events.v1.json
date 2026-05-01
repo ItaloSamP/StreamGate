@@ -1,0 +1,21 @@
+{
+  "data": [
+    {
+      "id": "rte_8d8e81e9a8c44c6e8e915d0f2b19d5e3",
+      "event_type": "job.completed",
+      "organization_id": "org_fixture_alpha",
+      "actor_id": "user_fixture_operator",
+      "resource_type": "Job",
+      "resource_id": "job_fixture_pending",
+      "severity": "info",
+      "payload": {
+        "job_id": "job_fixture_pending",
+        "token": "[masked]"
+      },
+      "occurred_at": "2026-04-26T12:00:00Z",
+      "expires_at": "2026-05-03T12:00:00Z",
+      "trace_id": "trace_fixture_1",
+      "request_id": "req_fixture_1"
+    }
+  ]
+}

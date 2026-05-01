@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_24_000100) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_26_000200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -73,6 +73,83 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_24_000100) do
     t.index ["user_id", "created_at"], name: "index_auth_sessions_on_user_id_and_created_at"
     t.index ["user_id"], name: "index_auth_sessions_on_user_id"
     t.check_constraint "expires_at > created_at", name: "auth_sessions_expires_after_create"
+  end
+
+  create_table "connector_ingestions", id: :string, force: :cascade do |t|
+    t.bigint "byte_size"
+    t.string "connector_profile_id", null: false
+    t.string "content_type", null: false
+    t.datetime "created_at", null: false
+    t.string "filename", null: false
+    t.string "job_id", null: false
+    t.text "last_error"
+    t.jsonb "metadata", default: {}, null: false
+    t.string "object_key"
+    t.string "request_id"
+    t.string "requested_by_id", null: false
+    t.text "source_path"
+    t.string "status", default: "pending", null: false
+    t.string "trace_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "upload_id", null: false
+    t.index ["connector_profile_id", "created_at"], name: "idx_on_connector_profile_id_created_at_39c8181692"
+    t.index ["job_id"], name: "index_connector_ingestions_on_job_id", unique: true
+    t.index ["status", "created_at"], name: "index_connector_ingestions_on_status_and_created_at"
+    t.index ["upload_id"], name: "index_connector_ingestions_on_upload_id", unique: true
+  end
+
+  create_table "connector_leases", id: :string, force: :cascade do |t|
+    t.datetime "claimed_at"
+    t.string "claimed_by"
+    t.string "connector_ingestion_id", null: false
+    t.string "connector_profile_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "request_id"
+    t.string "status", default: "pending", null: false
+    t.string "token_digest", null: false
+    t.string "trace_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["connector_ingestion_id"], name: "index_connector_leases_on_connector_ingestion_id"
+    t.index ["status", "expires_at"], name: "index_connector_leases_on_status_and_expires_at"
+    t.index ["token_digest"], name: "index_connector_leases_on_token_digest", unique: true
+  end
+
+  create_table "connector_profiles", id: :string, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "created_by_id", null: false
+    t.string "kind", null: false
+    t.string "name", null: false
+    t.string "organization_id", null: false
+    t.string "request_id"
+    t.text "secret_payload", default: "{}", null: false
+    t.jsonb "settings", default: {}, null: false
+    t.string "status", default: "active", null: false
+    t.string "trace_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["organization_id", "kind", "name"], name: "index_connector_profiles_on_organization_id_and_kind_and_name", unique: true
+    t.index ["organization_id", "status"], name: "index_connector_profiles_on_organization_id_and_status"
+  end
+
+  create_table "dashboard_exports", id: :string, force: :cascade do |t|
+    t.string "actor_id", null: false
+    t.bigint "byte_size", default: 0, null: false
+    t.string "checksum_sha256", null: false
+    t.string "content_type", null: false
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "filename", null: false
+    t.string "format", null: false
+    t.datetime "generated_at", null: false
+    t.string "kind", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.string "organization_id", null: false
+    t.string "request_id"
+    t.string "trace_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["actor_id", "generated_at"], name: "index_dashboard_exports_on_actor_id_and_generated_at"
+    t.index ["expires_at"], name: "index_dashboard_exports_on_expires_at"
+    t.index ["organization_id", "generated_at"], name: "index_dashboard_exports_on_organization_id_and_generated_at"
   end
 
   create_table "dlq_replay_requests", id: :string, force: :cascade do |t|
@@ -233,25 +310,47 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_24_000100) do
   create_table "operational_warnings", id: :string, force: :cascade do |t|
     t.string "code", null: false
     t.datetime "created_at", null: false
+    t.text "dismiss_reason"
+    t.datetime "dismissed_at"
+    t.string "dismissed_by_id"
     t.datetime "expires_at", null: false
     t.string "job_id"
     t.text "last_error"
     t.text "message", null: false
     t.jsonb "metadata", default: {}, null: false
+    t.string "organization_id"
     t.string "request_id"
     t.datetime "resolved_at"
     t.integer "retry_count", default: 0, null: false
+    t.text "review_reason"
+    t.datetime "reviewed_at"
+    t.string "reviewed_by_id"
     t.string "severity", default: "warning", null: false
     t.string "status", default: "open", null: false
     t.string "trace_id", null: false
     t.datetime "updated_at", null: false
     t.string "upload_id"
+    t.index ["dismissed_by_id"], name: "index_operational_warnings_on_dismissed_by_id"
     t.index ["expires_at"], name: "index_operational_warnings_on_expires_at"
     t.index ["job_id", "created_at"], name: "index_operational_warnings_on_job_id_and_created_at"
+    t.index ["organization_id", "created_at"], name: "index_operational_warnings_on_organization_id_and_created_at"
+    t.index ["reviewed_by_id"], name: "index_operational_warnings_on_reviewed_by_id"
     t.index ["status", "created_at"], name: "index_operational_warnings_on_status_and_created_at"
     t.index ["trace_id"], name: "index_operational_warnings_on_trace_id"
     t.index ["upload_id", "created_at"], name: "index_operational_warnings_on_upload_id_and_created_at"
     t.check_constraint "retry_count >= 0", name: "operational_warnings_retry_count_non_negative"
+  end
+
+  create_table "permission_rules", id: :string, force: :cascade do |t|
+    t.string "capability", null: false
+    t.datetime "created_at", null: false
+    t.string "created_by_id"
+    t.boolean "enabled", default: true, null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.string "organization_id"
+    t.string "role", null: false
+    t.datetime "updated_at", null: false
+    t.index ["organization_id", "role", "capability"], name: "idx_on_organization_id_role_capability_a543fd4ee0", unique: true
   end
 
   create_table "processing_attempts", id: :string, force: :cascade do |t|
@@ -302,6 +401,41 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_24_000100) do
     t.index ["severity", "created_at"], name: "index_quarantine_records_on_severity_and_created_at"
     t.index ["trace_id"], name: "index_quarantine_records_on_trace_id"
     t.check_constraint "row_number IS NULL OR row_number > 0", name: "quarantine_records_row_number_positive"
+  end
+
+  create_table "realtime_events", id: :string, force: :cascade do |t|
+    t.string "actor_id"
+    t.datetime "created_at", null: false
+    t.string "event_type", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "occurred_at", null: false
+    t.string "organization_id", null: false
+    t.jsonb "payload", default: {}, null: false
+    t.string "request_id"
+    t.string "resource_id"
+    t.string "resource_type"
+    t.string "severity", default: "info", null: false
+    t.string "trace_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["expires_at"], name: "index_realtime_events_on_expires_at"
+    t.index ["organization_id", "occurred_at"], name: "index_realtime_events_on_organization_id_and_occurred_at"
+    t.index ["resource_type", "resource_id"], name: "index_realtime_events_on_resource_type_and_resource_id"
+    t.index ["trace_id"], name: "index_realtime_events_on_trace_id"
+  end
+
+  create_table "retention_policies", id: :string, force: :cascade do |t|
+    t.integer "clickhouse_days", default: 30, null: false
+    t.datetime "created_at", null: false
+    t.string "created_by_id"
+    t.integer "dashboard_exports_days", default: 7, null: false
+    t.integer "job_artifacts_days", default: 30, null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.integer "operational_data_days", default: 90, null: false
+    t.integer "operational_warnings_days", default: 30, null: false
+    t.string "organization_id", null: false
+    t.integer "realtime_events_days", default: 7, null: false
+    t.datetime "updated_at", null: false
+    t.index ["organization_id"], name: "index_retention_policies_on_organization_id", unique: true
   end
 
   create_table "upload_acquisitions", id: :string, force: :cascade do |t|

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/http/realtime-events-response.v1.json",
+  "title": "RealtimeEventsResponseV1",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "event_type", "organization_id", "severity", "payload", "occurred_at", "expires_at", "trace_id"],
+        "properties": {
+          "id": { "type": "string" },
+          "event_type": { "type": "string" },
+          "organization_id": { "type": "string" },
+          "actor_id": { "type": ["string", "null"] },
+          "resource_type": { "type": ["string", "null"] },
+          "resource_id": { "type": ["string", "null"] },
+          "severity": { "type": "string", "enum": ["info", "warning", "error"] },
+          "payload": { "type": "object", "additionalProperties": true },
+          "occurred_at": { "type": "string", "format": "date-time" },
+          "expires_at": { "type": "string", "format": "date-time" },
+          "trace_id": { "type": "string" },
+          "request_id": { "type": ["string", "null"] }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

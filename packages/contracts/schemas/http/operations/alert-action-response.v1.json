@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/http/alert-action-response.v1.json",
+  "title": "AlertActionResponseV1",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": ["id", "code", "message", "status", "severity", "retry_count", "trace_id"],
+      "properties": {
+        "id": { "type": "string" },
+        "job_id": { "type": ["string", "null"] },
+        "upload_id": { "type": ["string", "null"] },
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "status": { "type": "string" },
+        "severity": { "type": "string", "enum": ["info", "warning", "error"] },
+        "retry_count": { "type": "integer", "minimum": 0 },
+        "organization_id": { "type": ["string", "null"] },
+        "reviewed_by_id": { "type": ["string", "null"] },
+        "reviewed_at": { "type": ["string", "null"], "format": "date-time" },
+        "dismissed_by_id": { "type": ["string", "null"] },
+        "dismissed_at": { "type": ["string", "null"], "format": "date-time" },
+        "trace_id": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

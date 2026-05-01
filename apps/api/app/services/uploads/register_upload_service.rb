@@ -56,6 +56,17 @@ module Uploads
         )
 
         AnalyticsSyncJobSnapshotService.call(job: job)
+        Realtime::EventPublisher.call(
+          event_type: "upload.registered",
+          organization_id: user.organization_id,
+          actor_id: user.id,
+          resource_type: "Upload",
+          resource_id: upload.id,
+          severity: "info",
+          payload: { upload_id: upload.id, job_id: job.id, filename: upload.filename, content_type: upload.content_type },
+          request_id: upload.request_id || upload.trace_id,
+          trace_id: upload.trace_id
+        )
       end
 
       OutboxDispatchEventService.call(event_id: outbox_event.id) if outbox_event.present?

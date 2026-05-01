@@ -1,0 +1,29 @@
+{
+  "data": {
+    "upload": {
+      "id": "upload_connector_1",
+      "source_type": "connector",
+      "content_type": "application/x-ndjson"
+    },
+    "job": {
+      "id": "job_connector_1",
+      "status": "pending",
+      "source_type": "connector"
+    },
+    "ingestion": {
+      "id": "cing_7ba90f2937194336a5d0a9d364f69000",
+      "connector_profile_id": "conn_8b6d79c2a2b54f24b39e442f8138a000",
+      "upload_id": "upload_connector_1",
+      "job_id": "job_connector_1",
+      "status": "leased",
+      "object_key": "inco***************json",
+      "filename": "orders.ndjson",
+      "content_type": "application/x-ndjson"
+    },
+    "lease": {
+      "id": "lease_8784519f188842dd97fd59597311d000",
+      "token": "short-lived-token",
+      "expires_at": "2026-04-26T12:05:00Z"
+    }
+  }
+}

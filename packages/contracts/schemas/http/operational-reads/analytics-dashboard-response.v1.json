@@ -10,16 +10,16 @@
       "required": ["generated_at", "source", "window", "sections", "dependencies", "slo"],
       "properties": {
         "generated_at": { "type": "string", "format": "date-time" },
-        "source": { "type": "string", "enum": ["postgres_derived", "empty"] },
+        "source": { "type": "string", "enum": ["clickhouse", "postgres_derived", "empty"] },
         "window": { "type": "object", "additionalProperties": true },
         "sections": {
           "type": "object",
-          "required": ["queue", "workers", "throughput", "formats", "warnings", "event_log"],
+          "required": ["queue", "workers", "throughput", "formats", "warnings", "event_log", "timeseries_24h", "status_distribution", "heatmap_7d", "jobs_board", "queue_items", "ingestion", "workers_live", "alerts"],
           "additionalProperties": {
             "type": "object",
             "required": ["status", "generated_at", "data"],
             "properties": {
-              "status": { "type": "string", "enum": ["live", "derived", "empty", "degraded"] },
+              "status": { "type": "string", "enum": ["live", "derived", "empty", "degraded", "backend-pending"] },
               "generated_at": { "type": "string", "format": "date-time" },
               "data": { "type": ["object", "array"], "additionalProperties": true },
               "empty_state": { "type": ["string", "null"] }

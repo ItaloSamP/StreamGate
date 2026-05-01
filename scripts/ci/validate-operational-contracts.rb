@@ -12,9 +12,14 @@ HTTP_CONTRACTS = [
   "packages/contracts/schemas/http/operational-reads/analytics-dashboard-response.v1.json",
   "packages/contracts/schemas/http/operational-reads/analytics-warehouse-response.v1.json",
   "packages/contracts/schemas/http/operational-reads/analytics-lineage-response.v1.json",
+  "packages/contracts/schemas/http/operational-reads/realtime-events-response.v1.json",
   "packages/contracts/schemas/http/operational-reads/quarantine-list-response.v1.json",
   "packages/contracts/schemas/http/operational-reads/audit-list-response.v1.json",
   "packages/contracts/schemas/http/operational-reads/dlq-list-response.v1.json",
+  "packages/contracts/schemas/http/operations/dashboard-export-response.v1.json",
+  "packages/contracts/schemas/http/operations/alert-action-response.v1.json",
+  "packages/contracts/schemas/http/connectors/connector-profile-response.v1.json",
+  "packages/contracts/schemas/http/connectors/connector-ingestion-response.v1.json",
   "packages/contracts/schemas/http/uploads/public-link-request.v1.json",
   "packages/contracts/schemas/http/uploads/public-link-response.v1.json"
 ].freeze
@@ -24,9 +29,14 @@ HTTP_EXAMPLES = [
   "packages/contracts/examples/http/operational-reads/analytics-dashboard.v1.json",
   "packages/contracts/examples/http/operational-reads/analytics-warehouse.v1.json",
   "packages/contracts/examples/http/operational-reads/analytics-lineage.v1.json",
+  "packages/contracts/examples/http/operational-reads/realtime-events.v1.json",
   "packages/contracts/examples/http/operational-reads/quarantine-list.v1.json",
   "packages/contracts/examples/http/operational-reads/audit-list.v1.json",
   "packages/contracts/examples/http/operational-reads/dlq-list.v1.json",
+  "packages/contracts/examples/http/operations/dashboard-export-created.v1.json",
+  "packages/contracts/examples/http/operations/alert-reviewed.v1.json",
+  "packages/contracts/examples/http/connectors/connector-profile-created.v1.json",
+  "packages/contracts/examples/http/connectors/connector-ingestion-created.v1.json",
   "packages/contracts/examples/http/uploads/public-link-created.v1.json"
 ].freeze
 
@@ -34,10 +44,13 @@ EVENT_SCHEMA_PATH = "packages/contracts/schemas/events/uploads/upload.received.v
 EVENT_EXAMPLE_PATH = "packages/contracts/examples/events/uploads/upload.received.v1.json"
 PUBLIC_LINK_EVENT_SCHEMA_PATH = "packages/contracts/schemas/events/uploads/upload.public_link.requested.v1.json"
 PUBLIC_LINK_EVENT_EXAMPLE_PATH = "packages/contracts/examples/events/uploads/upload.public_link.requested.v1.json"
+CONNECTOR_EVENT_SCHEMA_PATH = "packages/contracts/schemas/events/connectors/connector.ingestion.requested.v1.json"
+CONNECTOR_EVENT_EXAMPLE_PATH = "packages/contracts/examples/events/connectors/connector.ingestion.requested.v1.json"
 
 REQUIRED_PATHS = {
   "/api/v1/analytics" => "#/components/schemas/AnalyticsEnvelope",
   "/api/v1/analytics/dashboard" => "#/components/schemas/AnalyticsDashboardEnvelope",
+  "/api/v1/realtime/events" => "#/components/schemas/RealtimeEventListEnvelope",
   "/api/v1/analytics/warehouse" => "#/components/schemas/AnalyticsWarehouseEnvelope",
   "/api/v1/analytics/lineage" => "#/components/schemas/AnalyticsLineageEnvelope",
   "/api/v1/quarantine" => "#/components/schemas/QuarantineListEnvelope",
@@ -96,13 +109,21 @@ assert!(public_link_event_schema.dig("properties", "event_name", "const") == "up
 assert!(public_link_event_example["event_name"] == "upload.public_link.requested.v1", "public link event example must use upload.public_link.requested.v1")
 assert!(public_link_event_example.dig("payload", "url_masked").to_s !~ /[?&]/, "public link event example url_masked must not expose query string")
 
+connector_event_schema = parse_json!(File.join(ROOT, CONNECTOR_EVENT_SCHEMA_PATH))
+connector_event_example = parse_json!(File.join(ROOT, CONNECTOR_EVENT_EXAMPLE_PATH))
+
+assert!(connector_event_schema.dig("properties", "event_name", "const") == "connector.ingestion.requested.v1", "connector event schema const must be connector.ingestion.requested.v1")
+assert!(connector_event_example["event_name"] == "connector.ingestion.requested.v1", "connector event example must use connector.ingestion.requested.v1")
+
 dashboard_schema = parse_json!(File.join(ROOT, "packages/contracts/schemas/http/operational-reads/analytics-dashboard-response.v1.json"))
 dashboard_example = parse_json!(File.join(ROOT, "packages/contracts/examples/http/operational-reads/analytics-dashboard.v1.json"))
 warehouse_schema = parse_json!(File.join(ROOT, "packages/contracts/schemas/http/operational-reads/analytics-warehouse-response.v1.json"))
 warehouse_example = parse_json!(File.join(ROOT, "packages/contracts/examples/http/operational-reads/analytics-warehouse.v1.json"))
 
 assert!(dashboard_schema.dig("properties", "data", "properties", "sections", "required").include?("event_log"), "dashboard schema must require sections.event_log")
+assert!(dashboard_schema.dig("properties", "data", "properties", "sections", "required").include?("timeseries_24h"), "dashboard schema must require sections.timeseries_24h")
 assert!(dashboard_example.dig("data", "sections", "event_log", "data").is_a?(Array), "dashboard example must include event_log array")
+assert!(dashboard_example.dig("data", "sections", "ingestion", "data", "enabled_formats").include?("Parquet"), "dashboard example must include Parquet enabled format")
 %w[records_total valid_records invalid_records].each do |field|
   assert!(warehouse_schema.dig("properties", "data", "properties", "aggregates", "required").include?(field), "warehouse schema must require aggregates.#{field}")
   assert!(warehouse_example.dig("data", "aggregates").key?(field), "warehouse example must include aggregates.#{field}")
