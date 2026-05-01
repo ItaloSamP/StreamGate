@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Este guia traduz o estado real do StreamGate apos o fechamento da Sprint 5 em um plano pratico para chegar a uma entrega de produto sem lacunas escondidas.
+Este guia traduz o estado real do StreamGate apos a execucao Back + Worker da Sprint 7 em um plano pratico para chegar a uma entrega de produto sem lacunas escondidas.
 
 Ele existe para responder quatro perguntas de forma objetiva:
 
@@ -22,6 +22,7 @@ Relacao com os outros documentos:
 - `docs/product/vision.md`: define a visao e a direcao de produto.
 - `docs/planning/streamgate-full-sprints-roadmap.md`: registra a cadencia de sprints, gates e evidencias de fechamento.
 - `docs/sprints/SPRINT-05-closeout.md`: registra o fechamento funcional da Sprint 5.
+- `docs/planning/streamgate-full-sprints-roadmap.md`: registra o corte Sprint 7 de dashboard parity, back e worker.
 - este guia: transforma o estado atual em trilha de finalizacao do produto.
 
 Regra de uso:
@@ -30,7 +31,7 @@ Regra de uso:
 - se uma frente estiver marcada como `funcional`, ela ja pode ser usada como base real para wiring, refinamento e validacao final;
 - se uma decisao de produto mudar, atualize primeiro `docs/product/vision.md` e depois sincronize este guia.
 
-## Estado real do produto em 2026-04-22
+## Estado real do produto em 2026-05-01
 
 A base do produto deixou de ser um esqueleto. O StreamGate ja tem um nucleo operacional consistente, com backend, worker, frontend, contratos, docs e gates reais para a espinha dorsal da v1.
 
@@ -38,7 +39,7 @@ Leitura sintetica:
 
 - o nucleo operacional do produto esta materializado;
 - o shell do workspace e a dashboard ja fecharam a trilha frontend da Sprint 6 como superficies reais, sem fixtures enganosas no command center;
-- a maior distancia para a entrega final nao esta mais na fundacao tecnica, e sim em fechar as superficies finais, a exploracao analitica e a conectividade futura aprovada na visao.
+- a maior distancia para a entrega final nao esta mais na fundacao tecnica, e sim em fechar a experiencia administrativa final de conectores, validar deploy/observabilidade produtiva e manter a narrativa documental coerente.
 
 Termometro pragmatico de maturidade:
 
@@ -75,6 +76,18 @@ Estas frentes ja ajudam muito na experiencia final, mas ainda nao devem ser lida
 | ETL Explorer | `funcional` | lineage por job com batches, attempts, quarantine, artifacts, warnings e audit refs |
 | Camada analitica visivel no front | `funcional minimo` | `Analytics`, `ClickHouse` e `ETL Explorer` possuem papeis distintos e dados reais |
 
+### Materializado parcialmente apos Sprint 7
+
+Estas frentes ja possuem corte tecnico real, mas ainda nao devem ser vendidas como suite completa de conectores com UI admin final:
+
+| Frente | Estado | Leitura |
+| --- | --- | --- |
+| `s3` | `API+worker funcional` | perfil admin-only, segredo criptografado, lease interno, aquisicao pelo worker e masking; sem UI admin nova |
+| `http_url` | `API+worker funcional` | perfil admin-only, anti-SSRF, redirect checks, lease interno e masking; sem UI admin nova |
+| realtime dashboard | `funcional com fallback` | tickets curtos + Action Cable/polling sobre `realtime_events` duravel |
+| exports/alert actions | `funcional` | export server-side CSV/JSON mascarado, review/dismiss persistentes e auditaveis |
+| formatos ampliados | `funcional condicionado ao runtime` | CSV, JSON, NDJSON, ZIP seguro e XLSX; Parquet requer runtime nativo/gem opcional no worker |
+
 ### Aprovado na visao, mas ainda nao materializado
 
 Estas frentes continuam fora da entrega funcional atual:
@@ -82,10 +95,7 @@ Estas frentes continuam fora da entrega funcional atual:
 | Frente | Estado | Leitura |
 | --- | --- | --- |
 | `google_drive` | `discovery-only` | aprovado na visao, sem implementacao funcional |
-| `s3` | `discovery-only` | aprovado na visao, sem implementacao funcional |
-| `http_url` | `discovery-only` | aprovado na visao, sem implementacao funcional |
 | `oauth_delegated` | `discovery-only` | aprovado na visao, sem implementacao funcional |
-| tempo real alem de polling curto | `futuro` | nao e bloqueador da entrega atual |
 | automacao completa de cluster | `futuro` | fora da entrega imediata |
 
 ## O que significa "produto entregue"
@@ -191,18 +201,19 @@ Sinais de pronto:
 
 ### Bloco D - Decidir o que e v1 e o que e pos-v1 em conectividade
 
-Objetivo: impedir que conectores discovery-only fiquem em limbo e contaminem a leitura de entrega.
+Objetivo: impedir que conectores discovery-only fiquem em limbo e separar claramente o corte API+worker da experiencia administrativa final.
 
 Escopo:
 
-- decidir explicitamente se a entrega final inclui somente `upload local` ou tambem algum primeiro caminho de `external_link`;
-- manter `google_drive`, `s3`, `http_url` e `oauth_delegated` fora da narrativa de entregue enquanto nao houver implementacao funcional;
+- decidir explicitamente se a entrega final inclui somente `upload local` ou tambem algum primeiro caminho de `external_link`/conector;
+- tratar `s3` e `http_url` como corte funcional API+worker, sem UI admin nova;
+- manter `google_drive` e `oauth_delegated` fora da narrativa de entregue enquanto nao houver implementacao funcional;
 - ajustar docs e UI para refletir essa fronteira sem ambiguidade.
 
 Sinais de pronto:
 
 - a narrativa comercial e tecnica do produto nao promete mais do que a v1 realmente entrega;
-- o backlog de conectores fica priorizado, mas sem ser confundido com feature pronta.
+- o backlog de conectores fica priorizado, mas sem confundir corte tecnico com experiencia de produto completa.
 
 Estado Sprint 6 backend/worker:
 
@@ -216,6 +227,14 @@ Estado Sprint 6 frontend:
 - `/clickhouse` e `/etl-explorer` foram materializados como rotas protegidas reais para `operator` e `admin`;
 - Upload Center preserva arquivo local e adiciona `public_link` completo com idempotencia e acquisition mascarada;
 - conectores `oauth_delegated`, `google_drive`, `s3` e `http_url` seguem fora da UI funcional.
+
+Estado Sprint 7 Back + Worker:
+
+- dashboard passa a ter contrato REST expandido para kpis, series 24h, status distribution, heatmap 7d, jobs board, queue, ingestion, workers, alerts, event log e source health;
+- realtime passa a ter tickets curtos, Action Cable/polling e `realtime_events` duravel;
+- exports CSV/JSON e alert review/dismiss passam a ser persistentes, auditaveis, idempotentes e mascarados;
+- S3/HTTP entram como conectores base em API+worker, admin-only, sem UI admin nova;
+- worker aceita NDJSON, ZIP com um arquivo suportado, XLSX e Parquet quando runtime nativo estiver disponivel, preservando limites, cleanup e warehouse sem payload bruto.
 
 ### Bloco E - Fechamento de produto e release
 
@@ -324,6 +343,9 @@ Regra pratica:
 - [x] artefatos finais validos e baixaveis
 - [x] notificacoes e deliveries coerentes com eventos operacionais
 - [x] auditoria navegavel e explicavel por recurso
+- [x] dashboard expandida, realtime/polling, exports e alert actions com contrato backend real
+- [x] worker aceita formatos ampliados e publica eventos realtime best-effort
+- [x] conectores S3/HTTP funcionais no corte API+worker, com segredos criptografados e lease interno
 
 ### Frontend
 

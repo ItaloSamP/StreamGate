@@ -4,7 +4,7 @@
 Este guia consolida diretrizes de worker runtime runbook para uso consistente no projeto.
 
 ## Estado atual
-Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+Conteudo alinhado a execucao Back + Worker da Sprint 7; atualizar em cada mudanca relevante.
 
 
 ## Regras/Contratos
@@ -18,7 +18,7 @@ Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atual
 
 ## Objetivo detalhado
 
-Padronizar operacao, diagnostico e resposta a incidentes da trilha de runtime real do worker na Sprint 4.
+Padronizar operacao, diagnostico e resposta a incidentes da trilha de runtime real do worker, incluindo processamento principal, artefatos, realtime, warehouse e conectores base.
 
 ## Estado atual detalhado
 
@@ -26,6 +26,7 @@ Padronizar operacao, diagnostico e resposta a incidentes da trilha de runtime re
 - fluxo oficial agora opera com outbox transacional na API + consumidor real no worker.
 - leitura operacional de DLQ disponivel em `GET /api/v1/quarantine/dlq` (admin-only).
 - Sprint 5 adiciona geracao de artefatos finais, notificacoes operacionais e replay controlado sobre a mesma idempotencia por `event_id`.
+- Sprint 7 adiciona eventos realtime best-effort, agregados ClickHouse para dashboard, formatos NDJSON/XLSX/Parquet e conectores S3/HTTP via lease interno.
 
 ## Regras e contratos operacionais
 
@@ -41,8 +42,15 @@ Padronizar operacao, diagnostico e resposta a incidentes da trilha de runtime re
   - metricas `artifact_generated` e `artifact_failed` em `worker_processing_metrics`;
   - notificacoes `job.completed`, `job.quarantined_with_warnings` e `job.failed` via inbox/outbox;
   - falha de artefato registrada como auditoria sem alterar o estado final do job.
-- escopo fora da Sprint 4:
-  - conectores `external_link`, `oauth_delegated`, `google_drive`, `s3`, `http_url`;
+- extensao da Sprint 7:
+  - eventos realtime duraveis em `realtime_events` sem bloquear o processamento principal;
+  - ClickHouse alimentado sem payload bruto, preservando hashes/HMAC e metadados agregaveis;
+  - parsing de CSV, JSON array, `{ records: [...] }`, NDJSON, ZIP com exatamente um arquivo suportado, XLSX e Parquet;
+  - limite operacional de 10 GB, spool/tempfile controlado e cleanup best-effort;
+  - conectores S3/HTTP consumidos pelo worker via lease interno da API e `X-Worker-Token`.
+- escopo fora do corte Sprint 7:
+  - `google_drive` e `oauth_delegated`;
+  - UI admin nova para conectores S3/HTTP;
   - automacao de cluster e reprocessamento avancado.
 - qualquer mudanca em runtime deve manter sincronia com:
   - `packages/contracts`;
@@ -61,6 +69,15 @@ Padronizar operacao, diagnostico e resposta a incidentes da trilha de runtime re
    - routing `upload.received.v1`
    - queue `streamgate.worker.upload.received.v1`
    - dlq `streamgate.worker.upload.received.v1.dlq`
+   - routing `connector.ingestion.requested.v1`
+   - queue `streamgate.worker.connector.ingestion.requested.v1`
+   - dlq `streamgate.worker.connector.ingestion.requested.v1.dlq`
+5. validar envs Sprint 7:
+   - `WORKER_INTERNAL_TOKEN`
+   - `BROKER_CONNECTOR_REQUESTED_ROUTING_KEY`
+   - `REALTIME_EVENT_RETENTION_DAYS`
+   - `CONNECTOR_LEASE_TTL_SECONDS`
+   - credenciais S3/HTTP somente nos perfis criptografados da API.
 
 ### 2. Diagnostico de falhas
 
@@ -90,6 +107,44 @@ Padronizar operacao, diagnostico e resposta a incidentes da trilha de runtime re
 4. se houver `worker.artifacts.failed` em audit, o job pode permanecer `completed` ou `quarantined_with_warnings`; tratar a falha do artefato como incidente operacional.
 5. notificacoes externas ficam em `webhook_deliveries` como outbox persistido; falha de envio nao bloqueia o processamento principal.
 
+### 5. Formatos de entrada
+
+Formatos suportados pelo worker:
+
+- CSV;
+- JSON array;
+- JSON objeto com `{ "records": [...] }`;
+- NDJSON (`application/x-ndjson` ou `application/ndjson`);
+- ZIP com exatamente um arquivo suportado dentro;
+- XLSX via `roo`;
+- Parquet quando o grupo opcional/runtime nativo estiver disponivel.
+
+Regras de seguranca:
+
+- ZIP com multiplos arquivos suportados falha com erro seguro;
+- zip slip, zip bomb e arquivos acima do limite sao rejeitados;
+- payload bruto nao e enviado ao ClickHouse;
+- erros retornam mensagens operacionais sem secrets, URL completa, headers, bucket ou object key.
+
+Observacao de ambiente: no Windows host, Parquet pode exigir toolchain nativa/libclang. O runtime trata Parquet como suporte real quando a gem opcional estiver instalada no ambiente de worker; WSL/Linux e o caminho recomendado para validar esse parser em closeout pesado.
+
+### 6. Conectores S3/HTTP
+
+Fluxo operacional:
+
+1. API cria `connector_profiles` admin-only com segredos criptografados.
+2. API cria `connector_ingestions` e `connector_leases`.
+3. Worker consome `connector.ingestion.requested.v1`.
+4. Worker reivindica o lease em `POST /api/v1/internal/connectors/leases/:id/claim` com `X-Worker-Token`.
+5. Worker baixa S3/HTTP, grava o arquivo no storage padrao e publica `upload.received.v1`.
+
+Controles obrigatorios:
+
+- HTTP bloqueia localhost, private, link-local, metadata host e redirects inseguros;
+- DNS resolvido para IP privado deve ser rejeitado para reduzir risco de DNS rebind;
+- S3 nunca deve aparecer com bucket/key/secret em resposta publica, evento, warning ou log;
+- falha de conector deve virar warning tecnico/auditoria e nao vazar credenciais.
+
 ## Validacao e evidencias
 
 - evidencias minimas da trilha:
@@ -115,6 +170,8 @@ Padronizar operacao, diagnostico e resposta a incidentes da trilha de runtime re
   - uma notificacao operacional e/ou delivery pendente e criado para a transicao final;
   - a listagem de quarantine mostra o registro do arquivo com aviso;
   - analytics reflete o delta de jobs apos o processamento;
+  - realtime/polling reflete eventos recentes sem bloquear o job;
+  - conectores S3/HTTP base funcionam por lease interno quando variaveis de smoke estiverem presentes;
   - o runner derruba a stack ao final, inclusive em falha.
 - o runner de reports consolida logs, SimpleCov do worker e smokes em `docs/reports/index.html`; estes artefatos sao locais e sobrescritos a cada execucao.
 

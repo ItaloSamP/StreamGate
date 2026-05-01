@@ -1735,7 +1735,7 @@ Evidencia final de fechamento da Sprint 6 (2026-04-28):
 
 ## Sprint 7 - Paridade funcional do prototipo, realtime, conectores e governanca
 
-**Status atual:** `Planejada - aguardando merge da sprint6 em dev`
+**Status atual:** `Execucao parcial validada em 2026-05-01 - P0 Dashboard, Back planning, Back execution e Worker execution concluidas; demais trilhas seguem com evidencia parcial`
 
 **Resultado esperado**
 
@@ -1772,48 +1772,56 @@ O objetivo nao e trocar honestidade operacional por maquiagem visual. O objetivo
 ### P0 - Dashboard prototype parity
 
 - Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `build-web-apps:frontend-app-builder`, `tailwind-design-system`, `web-design-guidelines`, `vercel-react-best-practices`, `vitest`, `playwright`, `test-driven-development`.
-- [ ] Refatorar `WorkspaceOverview`, `dashboard-data` e `dashboard-graphics` para componentes data-driven, mantendo fidelidade visual forte ao `streamgate-v3.html`.
-- [ ] Preservar o shell real, responsividade e acessibilidade; permitir ajuste visual apenas quando necessario para caber no produto atual.
-- [ ] Garantir que preview/demo so exista com marcacao explicita de demo.
-- [ ] Implementar cards reais para KPIs, grafico 24h, pipeline de jobs, distribuicao, formatos, heatmap, ingestao, fila, event log e workers.
-- [ ] Substituir SVGs fixos por graficos derivados de dados recebidos, mantendo o mesmo vocabulario visual do prototipo.
-- [ ] Implementar alert strip real para falhas/warnings recentes, com revisao e fechamento persistentes.
-- [ ] Implementar drawers contextuais para KPI, heatmap, formato, job, fila, worker e alerta, sempre com rota/filtro profundo para a tela especializada.
-- [ ] Implementar export CSV/JSON para snapshot filtrado, series, heatmap e event log.
+- [x] Refatorar `WorkspaceOverview`, `dashboard-data` e `dashboard-graphics` para componentes data-driven, mantendo fidelidade visual forte ao `streamgate-v3.html`.
+- [x] Preservar o shell real, responsividade e acessibilidade; permitir ajuste visual apenas quando necessario para caber no produto atual.
+- [x] Garantir que preview/demo so exista com marcacao explicita de demo.
+- [x] Implementar cards reais para KPIs, grafico 24h, pipeline de jobs, distribuicao, formatos, heatmap, ingestao, fila, event log e workers.
+- [x] Substituir SVGs fixos por graficos derivados de dados recebidos, mantendo o mesmo vocabulario visual do prototipo.
+- [x] Implementar alert strip real para falhas/warnings recentes, com revisao e fechamento persistentes.
+- [x] Implementar drawers contextuais para KPI, heatmap, formato, job, fila, worker e alerta, sempre com rota/filtro profundo para a tela especializada.
+- [x] Implementar export CSV/JSON para snapshot filtrado, series, heatmap e event log.
+
+**Evidencia P0:** dashboard validada via `apps/web` com adapter data-driven, graficos derivados e Browser Use em `/dashboard` e `/upload`; gates frontend passaram em `pnpm test:run`, `pnpm test:integration`, `pnpm build` e `ci-local frontend`.
 
 ### Back planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `architecture-patterns`, `domain-modeling`, `api-designer`, `api-documenter`, `openapi`, `supabase-postgres-best-practices`.
-- [ ] Congelar o contrato expandido de `GET /api/v1/analytics/dashboard` com `kpis`, `timeseries_24h`, `status_distribution`, `formats`, `heatmap_7d`, `jobs_board`, `queue`, `ingestion`, `workers`, `alerts` e `event_log`.
-- [ ] Definir quais campos vem do ClickHouse, quais sao derivados do Postgres e quais podem ser empty/degraded.
-- [ ] Definir contratos de export, alert review/dismiss, realtime ticket, realtime event e configuracao de permissoes.
-- [ ] Definir como os dados da dashboard sao escopados por org, role e matriz configuravel de permissoes.
-- [ ] Definir politica de retencao por workspace para eventos, artefatos, exports, ClickHouse e dados operacionais.
+- [x] Congelar o contrato expandido de `GET /api/v1/analytics/dashboard` com `kpis`, `timeseries_24h`, `status_distribution`, `formats`, `heatmap_7d`, `jobs_board`, `queue`, `ingestion`, `workers`, `alerts` e `event_log`.
+- [x] Definir quais campos vem do ClickHouse, quais sao derivados do Postgres e quais podem ser empty/degraded.
+- [x] Definir contratos de export, alert review/dismiss, realtime ticket, realtime event e configuracao de permissoes.
+- [x] Definir como os dados da dashboard sao escopados por org, role e matriz configuravel de permissoes.
+- [x] Definir politica de retencao por workspace para eventos, artefatos, exports, ClickHouse e dados operacionais.
+
+**Evidencia Back planning:** contratos Sprint 7 sincronizados em OpenAPI e `packages/contracts`; docs de API, runbook, threat model, vision e final delivery atualizados no mesmo ciclo.
 
 ### Back execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `api-designer`, `api-documenter`, `openapi`, `integration-testing`, `api-contract-testing`, `security-best-practices`.
-- [ ] Expandir `analytics/dashboard` sem quebrar consumidores Sprint 6.
-- [ ] Implementar leitura ClickHouse-first para series 24h, heatmap 7 dias, distribuicao, formatos, agregados e historico.
-- [ ] Manter fallback `postgres_derived` com `fallback_reason`, SLO, stale, dependency status e warning tecnico.
-- [ ] Implementar `POST /api/v1/realtime/tickets` com ticket curto, escopo por usuario/org/role e expiracao.
-- [ ] Criar `realtime_events` duravel para upload, job, batch, quarantine, warning, worker, artifact, notification e dependency health.
-- [ ] Implementar endpoints/acoes de export, alert review e alert dismiss com `Idempotency-Key`, RBAC, motivo quando sensivel e auditoria.
-- [ ] Implementar matriz configuravel de permissoes por role/org, com defaults compativeis com admin/operator atuais.
-- [ ] Implementar retencao por workspace e jobs de limpeza seguros.
-- [ ] Sincronizar OpenAPI, `packages/contracts`, examples e docs de API no mesmo ciclo.
+- [x] Expandir `analytics/dashboard` sem quebrar consumidores Sprint 6.
+- [x] Implementar leitura ClickHouse-first para series 24h, heatmap 7 dias, distribuicao, formatos, agregados e historico.
+- [x] Manter fallback `postgres_derived` com `fallback_reason`, SLO, stale, dependency status e warning tecnico.
+- [x] Implementar `POST /api/v1/realtime/tickets` com ticket curto, escopo por usuario/org/role e expiracao.
+- [x] Criar `realtime_events` duravel para upload, job, batch, quarantine, warning, worker, artifact, notification e dependency health.
+- [x] Implementar endpoints/acoes de export, alert review e alert dismiss com `Idempotency-Key`, RBAC, motivo quando sensivel e auditoria.
+- [x] Implementar matriz configuravel de permissoes por role/org, com defaults compativeis com admin/operator atuais.
+- [x] Implementar retencao por workspace e jobs de limpeza seguros.
+- [x] Sincronizar OpenAPI, `packages/contracts`, examples e docs de API no mesmo ciclo.
+
+**Evidencia Back execution:** `rails test` PASS com `PARALLEL_WORKERS=1`, `ci-local backend` PASS, `validate-operational-contracts.rb` PASS, Browser Use/API validou dashboard expandida, realtime ticket/events, export mascarado e alert review/dismiss.
 
 ### Worker execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `integration-testing`, `security-best-practices`, `monitoring-observability`.
-- [ ] Emitir `realtime_events` nos pontos relevantes do pipeline sem bloquear processamento principal.
-- [ ] Alimentar ClickHouse com agregados necessarios para dashboard 24h, heatmap 7 dias, formatos, distribuicao e workers.
-- [ ] Suportar CSV, JSON array, `{ records: [...] }`, NDJSON, ZIP com 1 arquivo suportado, Parquet e XLSX.
-- [ ] Atualizar allowlists de content type no API, worker, contratos e frontend.
-- [ ] Preservar streaming/spool controlado, limites alinhados a 10 GB, cleanup best effort e warnings tecnicos.
-- [ ] Manter bloqueios de zip slip, zip bomb, payload bruto no warehouse e exposicao de dados sensiveis.
-- [ ] Implementar conectores S3 e HTTP base consumindo perfis admin-only via lease interno da API.
-- [ ] Garantir que falhas em ClickHouse, realtime ou conectores gerem warning tecnico sem impedir artefatos, notificacoes e auditoria principais.
+- [x] Emitir `realtime_events` nos pontos relevantes do pipeline sem bloquear processamento principal.
+- [x] Alimentar ClickHouse com agregados necessarios para dashboard 24h, heatmap 7 dias, formatos, distribuicao e workers.
+- [x] Suportar CSV, JSON array, `{ records: [...] }`, NDJSON, ZIP com 1 arquivo suportado, Parquet e XLSX.
+- [x] Atualizar allowlists de content type no API, worker, contratos e frontend.
+- [x] Preservar streaming/spool controlado, limites alinhados a 10 GB, cleanup best effort e warnings tecnicos.
+- [x] Manter bloqueios de zip slip, zip bomb, payload bruto no warehouse e exposicao de dados sensiveis.
+- [x] Implementar conectores S3 e HTTP base consumindo perfis admin-only via lease interno da API.
+- [x] Garantir que falhas em ClickHouse, realtime ou conectores gerem warning tecnico sem impedir artefatos, notificacoes e auditoria principais.
+
+**Evidencia Worker execution:** `bundle exec rspec` PASS, `ci-local backend` PASS incluindo worker specs/RuboCop, `run-smokes.ps1` PASS no fluxo operacional existente; conectores S3/HTTP cobertos por specs e request tests, ainda sem smoke dedicado.
 
 ### Front planning
 

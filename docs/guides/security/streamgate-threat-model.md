@@ -2,7 +2,7 @@
 Este guia consolida diretrizes de streamgate threat model para uso consistente no projeto.
 
 ## Estado atual
-Conteudo alinhado ao fechamento integral da Sprint 5. Este threat model mantem o historico da Sprint 0 como contexto, mas a leitura vigente passa a considerar auth real na API, upload assinado, worker RabbitMQ real, operacao segura mutavel (`retry`, `resolve`, `dlq replay request/approve/execute`), artefatos finais com signed URL curta, notificacoes `in_app/email/webhook`, readiness operacional do repositorio e masking backend/frontend de payloads operacionais.
+Conteudo alinhado a execucao Back + Worker da Sprint 7. Este threat model mantem o historico das sprints anteriores como contexto, mas a leitura vigente passa a considerar auth real na API, upload assinado, worker RabbitMQ real, operacao segura mutavel, artefatos finais, notificacoes, dashboard expandida, realtime, exports, alert actions, conectores S3/HTTP e masking backend/frontend de payloads operacionais.
 
 ## Regras/Contratos
 - As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
@@ -18,7 +18,7 @@ Conteudo alinhado ao fechamento integral da Sprint 5. Este threat model mantem o
 
 ## Executive summary
 
-O StreamGate ja possui, apos a Sprint 5, um fluxo operacional real mais completo: `signed-url -> storage -> upload/job -> RabbitMQ -> worker -> artefatos finais -> notificacoes -> command center/admin operations -> auditoria`. Os maiores riscos agora se concentram em proteger mutacoes operacionais sensiveis, signed download URLs curtas, entregas externas de notificacao e o replay aprovado de DLQ contra abuso, reuso indevido e vazamento de payload. O hardening aplicado na Sprint 5 adicionou `Idempotency-Key` obrigatoria para mutacoes sensiveis, replay em tres etapas, auditoria de mutacoes/download/notificacoes, notificacoes persistidas com outbox interno, masking de payloads e signed URLs curtas para artefatos.
+O StreamGate ja possui um fluxo operacional real: `signed-url/public-link/connector -> storage -> upload/job -> RabbitMQ -> worker -> ClickHouse/realtime -> artefatos finais -> notificacoes -> command center/admin operations -> auditoria`. Os maiores riscos agora se concentram em proteger mutacoes operacionais sensiveis, exports, realtime events, conectores externos, signed download URLs curtas, replay aprovado de DLQ e payloads operacionais contra abuso, reuso indevido e vazamento.
 
 
 ## Sprint 5 security addendum
@@ -46,7 +46,15 @@ O StreamGate ja possui, apos a Sprint 5, um fluxo operacional real mais completo
 - Autenticacao/autorizacao entre servicos internos ainda depende da rede local/Compose; assinatura forte de eventos e webhook receiver real ficam para evolucao posterior.
 - Replay prevention e suficiente para o corte atual por `event_id` + aprovacao humana + idempotencia, mas ainda nao ha janela temporal assinada nem nonce externo entre servicos.
 - Deliveries `email/webhook` sao persistidos e auditados, mas ainda dependem de politicas futuras de rate limiting externo, allowlist de destino e observabilidade remota.
-- `public_link` foi materializado como primeiro corte de `external_link`; `oauth_delegated`, `google_drive`, `s3` e `http_url` seguem discovery-only e exigem revisao separada antes de implementacao funcional.
+- `public_link` foi materializado como primeiro corte de `external_link`; na Sprint 7, `s3` e `http_url` ganham corte API+worker com perfis admin-only e lease interno; `oauth_delegated` e `google_drive` seguem discovery-only.
+
+## Sprint 7 security addendum
+
+- Dashboard expandida usa ClickHouse-first com fallback Postgres honesto, source health, exports mascarados e alert review/dismiss persistentes.
+- Realtime usa ticket curto assinado, escopo por usuario/organizacao/role e polling fallback em `realtime_events` duravel.
+- Conectores S3/HTTP usam Active Record Encryption, resposta publica mascarada, `X-Worker-Token` no lease interno e nenhum segredo em evento/log/resposta publica.
+- HTTP connector aplica bloqueio de localhost/private/link-local/metadata host, validacao de redirect e resolucao DNS antes de baixar.
+- Worker aceita NDJSON, ZIP seguro, XLSX e Parquet quando runtime nativo estiver disponivel, com limite 10 GB, cleanup best-effort e ClickHouse sem payload bruto.
 
 ## Sprint 6 security addendum
 
@@ -172,7 +180,8 @@ flowchart LR
 
 - nao assumimos acesso direto do atacante ao host local do desenvolvedor sem outra falha previa
 - nao assumimos multi-tenancy produtivo ou dados regulados ja em producao
-- nao assumimos conectores externos nem mutacoes operacionais de replay/resolve na DLQ
+- nao assumimos `google_drive` nem `oauth_delegated` funcionais
+- nao assumimos UI admin nova para conectores S3/HTTP neste corte
 
 ## Entry points and attack surfaces
 
@@ -184,17 +193,22 @@ flowchart LR
 | Portas do compose | Postgres, Redis, RabbitMQ, MinIO, ClickHouse, API, Web | host -> containers | exposicao local e ampla na baseline de dev | `compose.yaml` |
 | Console do MinIO | porta administrativa 9001 | host -> MinIO console | risco sobe se credenciais simples vazarem para ambiente compartilhado | `compose.yaml`, `.env.example` |
 | RabbitMQ management | porta 15672 | host -> broker | ainda sem uso de negocio, mas ja e superficie administrativa | `compose.yaml`, `.env.example` |
-| Futuro upload direto | dashboard e visao do produto | browser -> storage | ainda nao implementado, mas ja e superficie oficial do produto | `docs/product/vision.md`, `apps/web/src/components/app/dashboard-surface.tsx` |
-| Futuro pipeline de eventos | API -> broker -> worker | servicos internos | risco de integridade quando contratos virarem runtime real | `docs/guides/platform/architecture.md`, `packages/contracts/README.md` |
+| Upload direto e link publico | dashboard, upload center e API | browser/API -> storage externo ou bruto | fluxo funcional com allowlist, masking e confirmacao | `apps/api/app/services/uploads`, `apps/worker/lib/worker/processing` |
+| Pipeline de eventos | API -> broker -> worker | servicos internos | eventos reais exigem contrato, idempotencia e DLQ | `docs/guides/platform/architecture.md`, `packages/contracts/README.md` |
+| Realtime dashboard | API -> Action Cable/polling -> browser | API -> browser autenticado | tickets curtos e eventos duraveis sanitizados | `apps/api/app/channels`, `apps/api/app/models/realtime_event.rb` |
+| Dashboard exports e alert actions | browser -> API -> Postgres/audit | usuario autenticado -> operacao sensivel | exige RBAC, idempotencia, masking e auditoria | `apps/api/app/controllers/api/v1/dashboard_exports_controller.rb`, `apps/api/app/controllers/api/v1/alerts_controller.rb` |
+| Conectores S3/HTTP | admin API -> worker -> rede externa/storage | API/worker -> sistemas externos | secrets criptografados, lease interno, anti-SSRF e masking | `apps/api/app/models/connector_profile.rb`, `apps/worker/lib/worker/runtime/connector_fetcher.rb` |
 
 ## Top abuse paths
 
 1. O atacante manipula `localStorage` ou `sessionStorage`, forja uma sessao valida no browser e acessa o dashboard mock como se estivesse autenticado.
 2. Um ambiente compartilhado sobe com credenciais simples copiadas de `.env.example`, expondo MinIO ou RabbitMQ management para acesso indevido.
-3. O futuro fluxo de upload nasce sem limites e validacao robusta, permitindo abuso de bucket, upload de arquivo malicioso ou pressao de custo/armazenamento.
+3. O fluxo de upload ou conector aceita arquivo fora do contrato, permitindo abuso de storage, processamento excessivo ou falha operacional.
 4. A API ou o worker passam a aceitar eventos sem contrato forte, possibilitando criacao falsa de jobs, replay indevido ou estados inconsistentes.
 5. Segredos reais entram por engano em `.env`, docs ou screenshots, e acabam vazando via Git, PR ou logs.
-6. O dashboard futuro mistura leitura operacional e analitica sem authz clara, expondo mais dado do que o perfil do usuario deveria ver.
+6. O dashboard mistura leitura operacional e analitica sem authz clara, expondo mais dado do que o perfil do usuario deveria ver.
+7. Um perfil HTTP e criado com URL interna, redirect malicioso ou DNS rebind para acessar metadata service, localhost ou rede privada.
+8. Exports, realtime events ou warnings carregam URL, header, bucket/object key ou credencial nao mascarada.
 
 ## Threat model table
 
@@ -206,20 +220,23 @@ flowchart LR
 | TM-004 | produtor/consumidor interno mal configurado ou comprometido | broker ativo e acesso interno ao exchange | publica ou consome evento invalido, replayado ou forjado | estados falsos de job, processamento indevido ou duplicacao | eventos, jobs, auditoria, disponibilidade | evento `upload.received.v1`, idempotencia por `event_id`, validacao de campos obrigatorios, retry limitado e DLQ existem | assinatura/autenticacao forte entre servicos e janela temporal anti-replay ainda nao existem | evoluir schema validation executavel, assinatura de evento e alertas de rejeicao/DLQ antes de novos produtores | logs estruturados por `event_id`, `trace_id`, `job_id`; metricas de retry/DLQ | medium | high | high |
 | TM-005 | erro operacional interno ou vazamento em PR/log | uso de segredos reais no repo, docs ou exemplos | expoe credenciais em Git, screenshots, logs ou fixtures | comprometimento de servicos e perda de confianca operacional | segredos, banco, storage, broker | Rails filtra parametros sensiveis em logs; docs avisam para nao subir `.env`; evidencias em `apps/api/config/initializers/filter_parameter_logging.rb` e `.env.example` | ainda nao existe politica formal de segredos antes desta sprint | adotar politica minima de segredos, revisar arquivos sensiveis em PR e usar scanners de dependencia/config proporcionais | checklist de PR, busca por padroes sensiveis, revisao de docs e envs | medium | medium | medium |
 | TM-006 | consumidor autenticado com permissao mal definida | dashboard, analytics, quarantine, audit e DLQ reais | acessa mais dado operacional ou analitico do que deveria | exposicao de informacao e quebra de segregacao funcional | dashboards, analytics, auditoria, quarantine, DLQ | audit/DLQ admin-only; analytics/quarantine escopados por organizacao; frontend oculta Auditoria para operador; serializers sanitizam payloads | classificacao de dados do dominio ainda precisa aprofundar dado real de cliente | manter testes de autorizacao por role, revisar novos campos antes de expor e classificar payloads de conectores externos | auditoria de consultas, logs por usuario, testes de autorizacao | medium | high | high |
+| TM-007 | admin mal-intencionado ou atacante com acesso admin | perfil HTTP/S3 configuravel e worker com saida de rede | cria URL interna, redirect malicioso, DNS rebind ou S3 object key sensivel | SSRF, exfiltracao interna, abuso de storage ou custo | worker, rede interna, storage, segredos de conector | HTTP bloqueia localhost/private/link-local/metadata host, valida redirects, resolve DNS e mascara URL/header; S3 nao retorna bucket/key/secret publicamente | listas de allow/deny de egress ainda dependem do ambiente de deploy | adicionar egress policy em infra, registrar host/hash sem segredo e manter testes de SSRF/DNS rebind | warnings de conector, auditoria por profile/ingestion, metricas de falha por host hash | medium | high | high |
+| TM-008 | usuario autenticado ou integracao com acesso a dashboard | exports, realtime events e alert actions | forca export/evento contendo payload sensivel ou repete mutacao sem idempotencia | vazamento operacional, trilha de auditoria ambigua ou estado inconsistente | dashboard exports, realtime events, warnings, audit | exports mascaram linhas, realtime payload passa por sanitizer, alert review/dismiss exige RBAC e `Idempotency-Key` | classificacao fina por campo ainda evolui conforme dados reais | manter allowlist/denylist de campos, testes de masking e revisao de novos payloads antes de expor | auditoria de export/action, amostragem de payload sanitizado, contract tests | medium | high | high |
+| TM-009 | produtor interno ou arquivo externo malicioso | parser aceita NDJSON/XLSX/Parquet/ZIP | envia arquivo gigante, zip bomb, zip slip ou formato ambiguo | indisponibilidade do worker, erros nao seguros ou payload bruto no warehouse | worker, tempfiles, ClickHouse, storage | limite 10 GB, ZIP com exatamente um arquivo suportado, cleanup best-effort, warehouse sem payload bruto e erros seguros | malware scanning e quotas por org ainda nao estao materializados | evoluir quotas/scanning, acompanhar tempo/memoria por parser e manter corpus de casos hostis | metricas de parser, warnings tecnicos, falhas por content type | medium | high | high |
 
 ## Criticality calibration
 
 Para este repositorio, a calibracao deve considerar o estado atual de fundacao e o fato de muitas superficies ainda serem planejadas.
 
 - `critical`: auth bypass em ambiente real, exfiltracao de segredos reais, takeover de storage/broker/banco em ambiente compartilhado, ou upload sem controle levando a comprometimento operacional severo.
-- `high`: defaults locais promovidos para preview/producao, eventos forjados no pipeline, upload real sem contrato/limites, dashboard real expondo dado entre perfis.
+- `high`: defaults locais promovidos para preview/producao, eventos forjados no pipeline, upload/conector sem contrato/limites, dashboard real expondo dado entre perfis.
 - `medium`: vazamento de exemplos sensiveis, falhas de logging/auditoria, separacao insuficiente entre visao operacional e analitica ainda sem dado sensivel real.
 - `low`: inconsistencias de documentacao, superficies desenhadas mas ainda nao executaveis, ou gaps que dependem de multiplas precondicoes nao presentes hoje.
 
 Exemplos para este repo:
 
 - `critical`: usar auth mock com dados reais; expor MinIO/RabbitMQ com credenciais reais fracas em ambiente compartilhado.
-- `high`: abrir upload assinado sem validacao de tamanho/tipo/checksum; aceitar eventos sem contrato versionado.
+- `high`: abrir upload/conector sem validacao de tamanho/tipo/checksum, aceitar eventos sem contrato versionado ou permitir SSRF em HTTP connector.
 - `medium`: exemplos de env com valores sensiveis indevidos em docs; logs sem `trace_id` em fluxos internos.
 - `low`: texto de roadmap sem refletir um scanner futuro ainda nao automatizado.
 
@@ -231,6 +248,10 @@ Exemplos para este repo:
 | `apps/web/src/features/auth/protected-route.tsx` | representa o gate visual do workspace autenticado | TM-001 |
 | `apps/api/config/routes.rb` | define a superficie HTTP atual e futura expansao de endpoints | TM-003, TM-006 |
 | `apps/api/openapi/v1/openapi.yaml` | vai materializar o contrato publico confiado por clientes | TM-003, TM-006 |
+| `apps/api/app/controllers/api/v1/connectors` | concentra a superficie admin-only de perfis, testes e ingestions de conectores | TM-007, TM-008 |
+| `apps/api/app/services/operational/payload_masker.rb` | mascara payloads antes de exports, realtime e respostas publicas | TM-006, TM-008 |
+| `apps/worker/lib/worker/runtime/connector_fetcher.rb` | aplica anti-SSRF, redirect checks e masking para HTTP/S3 | TM-007 |
+| `apps/worker/lib/worker/processing/csv_zip_parser.rb` | aplica limites e regras de parsing para CSV/JSON/NDJSON/ZIP/XLSX/Parquet | TM-003, TM-009 |
 | `apps/api/config/initializers/filter_parameter_logging.rb` | mostra o baseline atual de protecao contra vazamento em logs | TM-005 |
 | `compose.yaml` | concentra exposicao de portas, servicos administrativos e envs de infra | TM-002, TM-004 |
 | `.env.example` | explicita defaults de desenvolvimento que nao podem ser promovidos | TM-002, TM-005 |
@@ -240,8 +261,8 @@ Exemplos para este repo:
 
 ## Quality check
 
-- entry points descobertos foram cobertos: frontend auth mock, browser storage, API health/docs, compose ports, superfícies futuras de upload e broker
-- cada trust boundary principal apareceu nas ameaças: browser, API, storage, broker, analytics e segredos operacionais
+- entry points descobertos foram cobertos: frontend auth mock, browser storage, API health/docs, compose ports, upload, realtime, exports, conectores e broker
+- cada trust boundary principal apareceu nas ameacas: browser, API, storage, broker, analytics, worker, rede externa e segredos operacionais
 - runtime foi separado de tooling/dev: risco de compose local foi tratado como baseline operacional, nao como producao
 - este documento foi fechado com suposicoes explicitas porque o contexto de exposicao e deploy real ainda nao foi validado pelo time
-- conclusoes condicionais foram marcadas especialmente nas trilhas de upload, broker e analytics, que ainda nao possuem runtime real
+- conclusoes condicionais foram marcadas especialmente nas trilhas de conectores, egress de rede, malware scanning e classificacao fina de dados reais
