@@ -55,7 +55,7 @@ describe.sequential('operational integration with real backend', () => {
     expect(updatedSettings.data.webhook_url).toBe('https://hooks.example.test/streamgate')
 
     const delivery = await streamgateApi.testWebhookNotification({
-      reason: 'Exercicio integrado da Sprint 5.',
+      reason: 'Exercicio integrado de operacao segura.',
     })
 
     expect(delivery.data.channel).toBe('webhook')

@@ -1,6 +1,6 @@
 require "test_helper"
 
-class Sprint7GovernanceRetentionTest < ActiveSupport::TestCase
+class GovernanceRetentionTest < ActiveSupport::TestCase
   test "explicit disabled permission rule overrides role default" do
     actor = users(:operator)
     PermissionRule.create!(

@@ -36,7 +36,7 @@ function renderApp(initialEntry: string, role: 'operator' | 'admin' = 'admin') {
   )
 }
 
-describe('Sprint 4 operational pages', () => {
+describe('operational pages', () => {
   beforeEach(() => {
     window.localStorage.clear()
     window.sessionStorage.clear()
@@ -84,7 +84,7 @@ describe('Sprint 4 operational pages', () => {
     expect(await screen.findByRole('link', { name: /Auditoria/i })).toBeInTheDocument()
   }, 15000)
 
-  it('renders Sprint 7 P0 dashboard parity with honest backend-pending interactions', async () => {
+  it('renders command center dashboard parity with honest backend-pending interactions', async () => {
     const createObjectUrl = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:dashboard-export')
     const revokeObjectUrl = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined)
 

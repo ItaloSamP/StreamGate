@@ -171,7 +171,7 @@ Ao final, o produto entrega artefatos de resultado para consumo humano e tecnico
 
 ### Analytics
 
-O frontend consulta a API para ler status operacionais e metricas agregadas. A Sprint 7 adiciona realtime por ticket curto + Action Cable, mantendo polling como fallback. Quando ClickHouse estiver indisponivel, a API retorna fallback honesto `postgres_derived`, SLO e aviso tecnico sem interromper a entrega operacional.
+O frontend consulta a API para ler status operacionais e metricas agregadas. O command center operacional adiciona realtime por ticket curto + Action Cable, mantendo polling como fallback. Quando ClickHouse estiver indisponivel, a API retorna fallback honesto `postgres_derived`, SLO e aviso tecnico sem interromper a entrega operacional.
 
 ## Interfaces e conceitos de produto
 
@@ -234,7 +234,7 @@ Data-base: `2026-04-07`
 | Tema | Decisao | Status |
 | --- | --- | --- |
 | Estrategia de evolucao | Operacao e conectividade evoluem em paralelo (`dual-track`) | `aprovado` |
-| Cadencia de entrega | Sem dependencia de sprint curta para evolucao de produto | `aprovado` |
+| Cadencia de entrega | Sem dependencia de ciclo de entrega curta para evolucao de produto | `aprovado` |
 | Ingestao por link | Suporte a links publicos + evolucao para OAuth | `aprovado` |
 | Conectores wave 1 | `S3` e `URL HTTP` funcionais em API+worker; `Google Drive` segue discovery-only | `parcialmente materializado` |
 | Entrada de arquivos | CSV, JSON, NDJSON, ZIP seguro, XLSX e Parquet quando runtime nativo estiver disponivel | `aprovado` |

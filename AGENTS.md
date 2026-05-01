@@ -64,7 +64,7 @@ Guia rapido para agentes e contribuidores trabalhando no StreamGate.
 ## Referencias de apoio
 
 - `README.md`
-- `docs/planning/streamgate-full-sprints-roadmap.md`
+- `docs/planning/`
 - `docs/guides/platform/devops-roadmap.md`
 - `docs/guides/operations/worker-runtime-runbook.md`
 - `docs/guides/backend/api-docs.md`

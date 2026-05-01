@@ -4,7 +4,7 @@ info:
   version: v1
   description: |
     Base inicial da documentacao OpenAPI do StreamGate.
-    A Sprint 4 consolida runtime real de worker com RabbitMQ, camada materializada de analytics
+    O runtime operacional consolida runtime real de worker com RabbitMQ, camada materializada de analytics
     e leituras operacionais de quarantine/audit/DLQ.
 servers:
   - url: http://localhost:3000

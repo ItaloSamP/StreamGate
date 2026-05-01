@@ -2,7 +2,7 @@
 Este guia consolida diretrizes de streamgate threat model para uso consistente no projeto.
 
 ## Estado atual
-Conteudo alinhado a execucao Back + Worker da Sprint 7. Este threat model mantem o historico das sprints anteriores como contexto, mas a leitura vigente passa a considerar auth real na API, upload assinado, worker RabbitMQ real, operacao segura mutavel, artefatos finais, notificacoes, dashboard expandida, realtime, exports, alert actions, conectores S3/HTTP e masking backend/frontend de payloads operacionais.
+Conteudo alinhado ao estado atual de Back + Worker. Este threat model mantem o historico das ciclos de entrega anteriores como contexto, mas a leitura vigente passa a considerar auth real na API, upload assinado, worker RabbitMQ real, operacao segura mutavel, artefatos finais, notificacoes, dashboard expandida, realtime, exports, alert actions, conectores S3/HTTP e masking backend/frontend de payloads operacionais.
 
 ## Regras/Contratos
 - As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
@@ -10,10 +10,10 @@ Conteudo alinhado a execucao Back + Worker da Sprint 7. Este threat model mantem
 
 ## Validacao/Evidencias
 - Validar coerencia com README raiz, docs/README e roadmap da release atual.
-- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+- Registrar atualizacoes desta pagina no closeout do ciclo de entrega correspondente.
 
 ## Referencias
-- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/)
 - [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)
 
 ## Executive summary
@@ -21,7 +21,7 @@ Conteudo alinhado a execucao Back + Worker da Sprint 7. Este threat model mantem
 O StreamGate ja possui um fluxo operacional real: `signed-url/public-link/connector -> storage -> upload/job -> RabbitMQ -> worker -> ClickHouse/realtime -> artefatos finais -> notificacoes -> command center/admin operations -> auditoria`. Os maiores riscos agora se concentram em proteger mutacoes operacionais sensiveis, exports, realtime events, conectores externos, signed download URLs curtas, replay aprovado de DLQ e payloads operacionais contra abuso, reuso indevido e vazamento.
 
 
-## Sprint 5 security addendum
+## Operational safety security addendum
 
 ### Novas superficies materializadas
 
@@ -29,7 +29,7 @@ O StreamGate ja possui um fluxo operacional real: `signed-url/public-link/connec
 - Worker Ruby gerando `processed_dataset`, `quality_report` e `audit_report`, registrando falhas nao bloqueantes de artefato e emitindo notificacoes operacionais.
 - Frontend autenticado com inbox de notificacoes, painel admin-only de `Operacoes Seguras`, historico de artefatos e role gating para superficies sensiveis.
 - Outbox interno para `email` e `webhook`, com deliveries persistidos, retry/backoff e payload sanitizado.
-- Reports locais, E2E do caminho novo de notificacoes/operations e smoke ponta a ponta de Sprint 5 como evidencias operacionais.
+- Reports locais, E2E do caminho novo de notificacoes/operations e smoke ponta a ponta de operacao segura como evidencias operacionais.
 
 ### Controles confirmados
 
@@ -39,16 +39,16 @@ O StreamGate ja possui um fluxo operacional real: `signed-url/public-link/connec
 - `audit_event.metadata`, payloads de notificacao/delivery e payloads de quarantine/DLQ passam por sanitizacao antes de exposicao ou envio.
 - Download de artefato usa signed URL curta com `expires_at`; a API audita a geracao do link antes da entrega.
 - `Notification`, `NotificationSetting`, `WebhookDelivery` e `OperationalActionIdempotencyKey` persistem trilha operacional, canais e reuso seguro de resposta.
-- `scripts/smokes/run-smokes` cobre artifacts list/download-url, notificacoes, deliveries persistidos, retry/resolve/replay e audit trail coerente com o fluxo Sprint 5.
+- `scripts/smokes/run-smokes` cobre artifacts list/download-url, notificacoes, deliveries persistidos, retry/resolve/replay e audit trail coerente com o fluxo operacao segura.
 
-### Riscos residuais aceitos para Sprint 5+
+### Riscos residuais aceitos para operacao segura
 
 - Autenticacao/autorizacao entre servicos internos ainda depende da rede local/Compose; assinatura forte de eventos e webhook receiver real ficam para evolucao posterior.
 - Replay prevention e suficiente para o corte atual por `event_id` + aprovacao humana + idempotencia, mas ainda nao ha janela temporal assinada nem nonce externo entre servicos.
 - Deliveries `email/webhook` sao persistidos e auditados, mas ainda dependem de politicas futuras de rate limiting externo, allowlist de destino e observabilidade remota.
-- `public_link` foi materializado como primeiro corte de `external_link`; na Sprint 7, `s3` e `http_url` ganham corte API+worker com perfis admin-only e lease interno; `oauth_delegated` e `google_drive` seguem discovery-only.
+- `public_link` foi materializado como primeiro corte de `external_link`; na command center operacional, `s3` e `http_url` ganham corte API+worker com perfis admin-only e lease interno; `oauth_delegated` e `google_drive` seguem discovery-only.
 
-## Sprint 7 security addendum
+## Command center security addendum
 
 - Dashboard expandida usa ClickHouse-first com fallback Postgres honesto, source health, exports mascarados e alert review/dismiss persistentes.
 - Realtime usa ticket curto assinado, escopo por usuario/organizacao/role e polling fallback em `realtime_events` duravel.
@@ -56,7 +56,7 @@ O StreamGate ja possui um fluxo operacional real: `signed-url/public-link/connec
 - HTTP connector aplica bloqueio de localhost/private/link-local/metadata host, validacao de redirect e resolucao DNS antes de baixar.
 - Worker aceita NDJSON, ZIP seguro, XLSX e Parquet quando runtime nativo estiver disponivel, com limite 10 GB, cleanup best-effort e ClickHouse sem payload bruto.
 
-## Sprint 6 security addendum
+## Workspace operational security addendum
 
 - A API aceita apenas `http`/`https`, sem userinfo e sem portas nao padrao.
 - O worker valida DNS antes de cada `HEAD`/`GET`, segue no maximo tres redirects e bloqueia localhost, ranges privados, link-local e metadata hosts.
@@ -218,7 +218,7 @@ flowchart LR
 | TM-002 | operador ou atacante com acesso de rede ao host exposto | ambiente compartilhado usando defaults locais ou portas abertas | acessa MinIO, RabbitMQ ou banco com credenciais fracas de baseline | takeover operacional, leitura/escrita indevida e indisponibilidade | segredos, storage, broker, banco | docs dizem que `.env` real nao sobe para Git; MinIO raw inicia privado; evidencias em `.env.example`, `compose.yaml` e `docs/guides/platform/setup.md` | credenciais de exemplo sao simples e portas administrativas estao publicadas no host local | proibir promocao de `.env.example`; usar segredos unicos por ambiente; reduzir portas expostas fora de dev; revisar perfis antes de preview/producao | alertar quando compose compartilhar management ports; revisar envs e portas no PR | medium | high | high |
 | TM-003 | usuario de upload ou atacante explorando entrada de arquivo | signed URL e registro de upload disponiveis | envia arquivo fora do contrato, volumetria abusiva ou conteudo inesperado | abuso de armazenamento, custo, falha operacional e pipeline contaminado | bucket bruto, worker, disponibilidade | tipos permitidos, TTL, storage_key controlado, confirmacao pos-upload, checksum/idempotencia e smoke assinado existem | politica de malware scanning, quotas por organizacao e conectores externos ainda nao existem | manter allowlist de content type/tamanho, evoluir quotas/scanning antes de dados reais sensiveis e revisar conectores separadamente | metricas por bucket, alertas de volume, logs por `upload_id`, falhas de validacao | medium | high | high |
 | TM-004 | produtor/consumidor interno mal configurado ou comprometido | broker ativo e acesso interno ao exchange | publica ou consome evento invalido, replayado ou forjado | estados falsos de job, processamento indevido ou duplicacao | eventos, jobs, auditoria, disponibilidade | evento `upload.received.v1`, idempotencia por `event_id`, validacao de campos obrigatorios, retry limitado e DLQ existem | assinatura/autenticacao forte entre servicos e janela temporal anti-replay ainda nao existem | evoluir schema validation executavel, assinatura de evento e alertas de rejeicao/DLQ antes de novos produtores | logs estruturados por `event_id`, `trace_id`, `job_id`; metricas de retry/DLQ | medium | high | high |
-| TM-005 | erro operacional interno ou vazamento em PR/log | uso de segredos reais no repo, docs ou exemplos | expoe credenciais em Git, screenshots, logs ou fixtures | comprometimento de servicos e perda de confianca operacional | segredos, banco, storage, broker | Rails filtra parametros sensiveis em logs; docs avisam para nao subir `.env`; evidencias em `apps/api/config/initializers/filter_parameter_logging.rb` e `.env.example` | ainda nao existe politica formal de segredos antes desta sprint | adotar politica minima de segredos, revisar arquivos sensiveis em PR e usar scanners de dependencia/config proporcionais | checklist de PR, busca por padroes sensiveis, revisao de docs e envs | medium | medium | medium |
+| TM-005 | erro operacional interno ou vazamento em PR/log | uso de segredos reais no repo, docs ou exemplos | expoe credenciais em Git, screenshots, logs ou fixtures | comprometimento de servicos e perda de confianca operacional | segredos, banco, storage, broker | Rails filtra parametros sensiveis em logs; docs avisam para nao subir `.env`; evidencias em `apps/api/config/initializers/filter_parameter_logging.rb` e `.env.example` | ainda nao existe politica formal de segredos antes deste ciclo de entrega | adotar politica minima de segredos, revisar arquivos sensiveis em PR e usar scanners de dependencia/config proporcionais | checklist de PR, busca por padroes sensiveis, revisao de docs e envs | medium | medium | medium |
 | TM-006 | consumidor autenticado com permissao mal definida | dashboard, analytics, quarantine, audit e DLQ reais | acessa mais dado operacional ou analitico do que deveria | exposicao de informacao e quebra de segregacao funcional | dashboards, analytics, auditoria, quarantine, DLQ | audit/DLQ admin-only; analytics/quarantine escopados por organizacao; frontend oculta Auditoria para operador; serializers sanitizam payloads | classificacao de dados do dominio ainda precisa aprofundar dado real de cliente | manter testes de autorizacao por role, revisar novos campos antes de expor e classificar payloads de conectores externos | auditoria de consultas, logs por usuario, testes de autorizacao | medium | high | high |
 | TM-007 | admin mal-intencionado ou atacante com acesso admin | perfil HTTP/S3 configuravel e worker com saida de rede | cria URL interna, redirect malicioso, DNS rebind ou S3 object key sensivel | SSRF, exfiltracao interna, abuso de storage ou custo | worker, rede interna, storage, segredos de conector | HTTP bloqueia localhost/private/link-local/metadata host, valida redirects, resolve DNS e mascara URL/header; S3 nao retorna bucket/key/secret publicamente | listas de allow/deny de egress ainda dependem do ambiente de deploy | adicionar egress policy em infra, registrar host/hash sem segredo e manter testes de SSRF/DNS rebind | warnings de conector, auditoria por profile/ingestion, metricas de falha por host hash | medium | high | high |
 | TM-008 | usuario autenticado ou integracao com acesso a dashboard | exports, realtime events e alert actions | forca export/evento contendo payload sensivel ou repete mutacao sem idempotencia | vazamento operacional, trilha de auditoria ambigua ou estado inconsistente | dashboard exports, realtime events, warnings, audit | exports mascaram linhas, realtime payload passa por sanitizer, alert review/dismiss exige RBAC e `Idempotency-Key` | classificacao fina por campo ainda evolui conforme dados reais | manter allowlist/denylist de campos, testes de masking e revisao de novos payloads antes de expor | auditoria de export/action, amostragem de payload sanitizado, contract tests | medium | high | high |

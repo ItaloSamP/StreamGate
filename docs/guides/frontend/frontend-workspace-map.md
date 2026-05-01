@@ -1,4 +1,4 @@
-﻿# Mapa do Workspace Frontend
+# Mapa do Workspace Frontend
 
 ## Objetivo
 
@@ -6,7 +6,7 @@ Este guia registra a malha oficial do workspace autenticado do StreamGate. Ele s
 
 ## Estado atual
 
-Estado alinhado a entrega de frontend da Sprint 6:
+Estado atual do frontend operacional:
 
 - workspace protegido usa `DashboardSurface` + `WorkspacePageFrame`
 - navegacao oficial vive em `workspace-config.ts`
@@ -108,7 +108,7 @@ Paginas e fontes atuais:
 
 ### Dashboard, warehouse e lineage
 
-Regras da Sprint 6:
+Regras do workspace operacional:
 
 - a dashboard nao usa mais `scaffoldQueue`, `scaffoldWorkers`, `scaffoldEventRows` ou `scaffoldFormatRows`
 - ausencia de dado vira empty state explicito, nao numero sintetico
@@ -169,7 +169,7 @@ Regras de UX:
 
 ### Operacoes seguras
 
-`/operations` e admin-only e concentra as mutacoes sensiveis da Sprint 5:
+`/operations` e admin-only e concentra as mutacoes sensiveis de operacao segura:
 
 - retry de job
 - resolve de quarantine record
@@ -186,7 +186,7 @@ O wizard deve sempre exigir alvo, revisao de regras, motivo operacional e confir
 
 ## Validacao/Evidencias
 
-Evidencias da trilha de frontend Sprint 6:
+Evidencias da trilha de frontend workspace operacional:
 
 - testes de adapter cobrem `getAnalyticsDashboard`, `getAnalyticsWarehouse`, `getAnalyticsLineage` e `createPublicLinkUpload`
 - testes de paginas cobrem dashboard sem fixtures enganosas, `/clickhouse`, `/etl-explorer`, Upload Center com arquivo local e `public_link`
@@ -198,5 +198,5 @@ Evidencias da trilha de frontend Sprint 6:
 
 - [Fundacoes do frontend](C:/estudos/StreamGate/docs/guides/frontend/frontend-foundations.md)
 - [README do web](C:/estudos/StreamGate/apps/web/README.md)
-- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/)
 - [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)

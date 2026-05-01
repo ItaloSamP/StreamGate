@@ -7,9 +7,9 @@ import {
 import type { AnalyticsDashboardSnapshot, JobSummary, UploadSummary } from '@/lib/streamgate-api'
 
 describe('dashboard command center adapter', () => {
-  it('normalizes the current Sprint 6 dashboard without inventing hidden chart fixtures', () => {
+  it('normalizes the current dashboard contract without inventing hidden chart fixtures', () => {
     const model = buildDashboardCommandCenterModel({
-      dashboard: sprint6Dashboard(),
+      dashboard: currentDashboard(),
       jobs: [
         job({ id: 'job_processing', status: 'processing', upload_id: 'upload_csv' }),
         job({ id: 'job_pending', status: 'pending', upload_id: 'upload_json' }),
@@ -45,9 +45,9 @@ describe('dashboard command center adapter', () => {
     expect(model.demoState).toBe('data-driven')
   })
 
-  it('uses expanded Sprint 7 sections when they are present', () => {
+  it('uses expanded command center sections when they are present', () => {
     const model = buildDashboardCommandCenterModel({
-      dashboard: expandedSprint7Dashboard(),
+      dashboard: expandedCommandCenterDashboard(),
       jobs: [],
       uploads: [],
       role: 'admin',
@@ -76,14 +76,14 @@ describe('dashboard command center adapter', () => {
 
   it('keeps operator source health useful without global technical fallback details', () => {
     const adminModel = buildDashboardCommandCenterModel({
-      dashboard: sprint6Dashboard(),
+      dashboard: currentDashboard(),
       jobs: [],
       uploads: [],
       role: 'admin',
       dismissedAlertIds: [],
     })
     const operatorModel = buildDashboardCommandCenterModel({
-      dashboard: sprint6Dashboard(),
+      dashboard: currentDashboard(),
       jobs: [],
       uploads: [],
       role: 'operator',
@@ -97,9 +97,9 @@ describe('dashboard command center adapter', () => {
   it('exports masked event log rows from the normalized model', () => {
     const model = buildDashboardCommandCenterModel({
       dashboard: {
-        ...sprint6Dashboard(),
+        ...currentDashboard(),
         sections: {
-          ...sprint6Dashboard().sections,
+          ...currentDashboard().sections,
           event_log: {
             status: 'derived',
             generated_at: '2026-04-24T14:00:00Z',
@@ -134,7 +134,7 @@ describe('dashboard command center adapter', () => {
   })
 })
 
-function sprint6Dashboard(): AnalyticsDashboardSnapshot {
+function currentDashboard(): AnalyticsDashboardSnapshot {
   return {
     generated_at: '2026-04-24T14:00:00Z',
     source: 'postgres_derived',
@@ -177,12 +177,12 @@ function sprint6Dashboard(): AnalyticsDashboardSnapshot {
   }
 }
 
-function expandedSprint7Dashboard(): AnalyticsDashboardSnapshot {
+function expandedCommandCenterDashboard(): AnalyticsDashboardSnapshot {
   return {
-    ...sprint6Dashboard(),
+    ...currentDashboard(),
     source: 'clickhouse',
     sections: {
-      ...sprint6Dashboard().sections,
+      ...currentDashboard().sections,
       timeseries_24h: {
         status: 'live',
         generated_at: '2026-04-24T14:00:00Z',

@@ -1,14 +1,14 @@
-﻿# StreamGate Web
+# StreamGate Web
 
 Frontend React do StreamGate.
 
 ## Objetivo
 
-O `apps/web` entrega a experiencia publica, autenticacao e workspace operacional do StreamGate. A partir da Sprint 6, o workspace autenticado fecha dashboard, warehouse, lineage e ingestao `public_link` como superficies reais da v1, sem fixtures enganosas no fluxo principal.
+O `apps/web` entrega a experiencia publica, autenticacao e workspace operacional do StreamGate. Com o workspace operacional consolidado, o workspace autenticado fecha dashboard, warehouse, lineage e ingestao `public_link` como superficies reais da v1, sem fixtures enganosas no fluxo principal.
 
 ## Estado atual
 
-Estado alinhado a entrega de frontend da Sprint 6:
+Estado atual do frontend operacional:
 
 - landing page publica preservada como superficie de produto
 - login, cadastro e reset conectados na API real
@@ -64,7 +64,7 @@ Nesta fase, os modulos protegidos abaixo consomem dados reais via adapter oficia
 - `/jobs`: jobs reais com filtro/paginacao e export CSV da lista carregada
 - `/upload`: fluxo real de upload assinado, registro de job e `public_link`
 
-Ainda permanecem fora do escopo funcional desta sprint:
+Ainda permanecem fora do escopo funcional deste ciclo de entrega:
 
 - polling automatico
 - mutacoes operacionais (`retry`, `resolve`, `replay`, `delete`, `acknowledge`, `reprocess`)
@@ -140,10 +140,10 @@ Toda evolucao do frontend deve respeitar estes principios:
 
 ## Validacao/Evidencias
 
-Validacoes executadas na trilha de frontend Sprint 6:
+Validacoes executadas para o frontend operacional:
 
 - testes focados de adapter, dashboard, `/clickhouse`, `/etl-explorer`, Upload Center e rotas protegidas passaram no ciclo de implementacao
-- `pnpm.cmd --dir apps/web test:run`, `pnpm.cmd --dir apps/web test:integration`, `pnpm.cmd --dir apps/web build`, `ci-local.ps1 frontend` e `run-smokes.ps1` com `SMOKE_PUBLIC_LINK_URL` passaram no fechamento do recorte Sprint 6
+- `pnpm.cmd --dir apps/web test:run`, `pnpm.cmd --dir apps/web test:integration`, `pnpm.cmd --dir apps/web build`, `ci-local.ps1 frontend` e `run-smokes.ps1` com `SMOKE_PUBLIC_LINK_URL` passaram no fechamento do recorte do workspace operacional
 - verificacao visual desktop/mobile passou nas rotas principais alteradas
 
 Para validar E2E localmente, suba o web server antes do comando ou use `scripts/dev/dev-up.ps1 -Mode app`.
@@ -161,8 +161,8 @@ Para validar E2E localmente, suba o web server antes do comando ou use `scripts/
 
 ## Referencias
 
-- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/)
 - [Fundacoes do frontend](C:/estudos/StreamGate/docs/guides/frontend/frontend-foundations.md)
 - [Mapa do workspace frontend](C:/estudos/StreamGate/docs/guides/frontend/frontend-workspace-map.md)
 - [Guia de autenticacao](C:/estudos/StreamGate/docs/guides/backend/authentication-guide.md)
-- [Baseline de testes e reports](C:/estudos/StreamGate/docs/guides/quality/testing-baseline-sprint-0.md)
+- [Baseline de testes e reports](C:/estudos/StreamGate/docs/guides/quality/testing-baseline.md)

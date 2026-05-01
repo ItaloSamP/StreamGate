@@ -4,7 +4,7 @@
 Este guia consolida diretrizes de api docs para uso consistente no projeto.
 
 ## Estado atual
-Conteudo alinhado a execucao Back + Worker da Sprint 7; atualizar em cada mudanca relevante.
+Conteudo alinhado ao estado atual de Back + Worker; atualizar em cada mudanca relevante.
 
 ## Regras/Contratos
 - As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
@@ -12,16 +12,16 @@ Conteudo alinhado a execucao Back + Worker da Sprint 7; atualizar em cada mudanc
 
 ## Validacao/Evidencias
 - Validar coerencia com README raiz, docs/README e roadmap da release atual.
-- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+- Registrar atualizacoes desta pagina no closeout do ciclo de entrega correspondente.
 
 ## Referencias
-- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/)
 - [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)
 
 
 A API Rails do StreamGate usa OpenAPI como contrato publico versionado da v1.
 
-## Estado apos Sprint 7 Back + Worker
+## Estado apos command center operacional Back + Worker
 
 O contrato oficial cobre auth, runtime operacional, dashboard expandida, realtime, exports, alert actions e conectores base S3/HTTP:
 
@@ -174,7 +174,7 @@ Envelope padrao:
 
 Snapshot agregado para a dashboard final. Cada secao declara `status` como `live`, `derived`, `empty`, `degraded` ou `backend-pending`; dado ausente vira empty state explicito, nao fixture.
 
-Na Sprint 7, o payload preserva compatibilidade com consumidores Sprint 6 e adiciona secoes opcionais para command center:
+Na command center operacional, o payload preserva compatibilidade com consumidores workspace operacional e adiciona secoes opcionais para command center:
 
 - `kpis`
 - `timeseries_24h`
@@ -330,7 +330,7 @@ Os schemas/examples HTTP ficam organizados por dominio em:
 
 ### Notificacoes in-app
 
-A Sprint 5 expande a inbox sem expor payload sensivel:
+A operacao segura expande a inbox sem expor payload sensivel:
 
 - `GET /api/v1/notifications?status=active|unread|read|archived`
 - `PATCH /api/v1/notifications/:id/read`
@@ -348,4 +348,4 @@ Compatibilidade de contrato deve seguir sincronizada com OpenAPI no mesmo ciclo 
 
 - setup e envs: [docs/guides/platform/setup.md](C:/estudos/StreamGate/docs/guides/platform/setup.md)
 - autenticacao: [docs/guides/backend/authentication-guide.md](C:/estudos/StreamGate/docs/guides/backend/authentication-guide.md)
-- roadmap executivo: [docs/planning/streamgate-full-sprints-roadmap.md](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- roadmap executivo: docs/planning/

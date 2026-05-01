@@ -16,7 +16,7 @@ A API nao deve assumir processamento pesado de arquivo. Esse trabalho pertence a
 
 ## Estado atual
 
-Depois do fechamento da Sprint 3, a API possui auth real + trilha base de upload/job:
+Depois do fechamento da entrega de upload/job, a API possui auth real + trilha base de upload/job:
 
 - health check disponivel em `GET /up`
 - OpenAPI v1 servido em `/api-docs`
@@ -107,15 +107,15 @@ A API deve evoluir nesta ordem:
 
 1. ampliar cobertura operacional (analytics/quarantine/audit) sobre a base upload/job ja entregue
 2. conectar worker real aos contratos versionados
-3. abrir ingestao por link/conector em sprint posterior (3.x/4)
+3. abrir ingestao por link/conector em ciclo de entrega posterior (3.x/4)
 
-O backlog executivo detalhado dessa evolucao esta em [docs/planning/streamgate-full-sprints-roadmap.md](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md).
+O backlog executivo detalhado dessa evolucao esta em [docs/planning/](C:/estudos/StreamGate/docs/planning/).
 
-O padrao completo de reports locais esta em [docs/guides/quality/testing-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/quality/testing-baseline-sprint-0.md).
+O padrao completo de reports locais esta em [docs/guides/quality/testing-baseline.md](C:/estudos/StreamGate/docs/guides/quality/testing-baseline.md).
 
-## Gate de prontidao da Sprint 2.5
+## Gate de prontidao estrutural
 
-A Sprint 2.5 nao abriu endpoints de negocio novos. O foco foi alinhar prontidao estrutural para Sprint 3:
+O gate de prontidao nao abriu endpoints de negocio novos. O foco foi alinhar prontidao estrutural para entrega de upload/job:
 
 - congelamento do namespace alvo para trilha upload/job base em /api/v1;
 - alinhamento de envs oficiais de upload em setup/compose/CI;

@@ -6,13 +6,13 @@ Consolidar uma operacao local previsivel para o StreamGate, com gates claros, ev
 
 ## Estado atual
 
-Estado alinhado ao fechamento da trilha DevOps da Sprint 5 (2026-04-21):
+Estado alinhado ao fechamento da trilha DevOps de operacao segura (2026-04-21):
 
 - scripts oficiais seguem organizados em `scripts/bootstrap`, `scripts/dev`, `scripts/compose`, `scripts/ci`, `scripts/smokes` e `scripts/reports`;
-- a Sprint 5 adicionou env checks operacionais para email, webhook, idempotencia, download de artefatos e smoke seguro;
+- a operacao segura adicionou env checks operacionais para email, webhook, idempotencia, download de artefatos e smoke seguro;
 - `run-smokes` cobre operacao segura, artefatos finais, notificacoes e audit trail;
 - repo readiness minimo foi fechado com `CODEOWNERS`, `dependabot.yml`, issue templates, PR template e `AGENTS.md`;
-- o hub `docs/reports/index.html` continua sendo a leitura agregada oficial da workspace.
+- o hub `docs/reports/index.html` continua sendo a leitura agregada oficial do workspace.
 
 ## Politica oficial de gates
 
@@ -50,7 +50,7 @@ Comandos oficiais:
 - `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1`
 - `bash scripts/smokes/run-smokes.sh`
 
-Cobertura minima esperada na Sprint 5:
+Cobertura minima esperada na operacao segura:
 
 - autenticacao operacional;
 - upload assinado;
@@ -62,7 +62,7 @@ Cobertura minima esperada na Sprint 5:
 
 #### `full-closeout`
 
-Use no fechamento de sprint, PR grande ou mudanca critica de runtime, CI, scripts ou contratos.
+Use no fechamento de ciclo de entrega, PR grande ou mudanca critica de runtime, CI, scripts ou contratos.
 
 Comandos oficiais:
 
@@ -94,7 +94,7 @@ Responsavel pelo runtime ponta a ponta.
 Contratos atuais:
 
 - sobe e derruba stack limpa;
-- executa compose smoke, upload assinado, worker operacional e smoke seguro da Sprint 5;
+- executa compose smoke, upload assinado, worker operacional e smoke seguro de operacao segura;
 - gera summary/report HTML e snapshots de diagnostico quando ha falha.
 
 ### `scripts/reports/run-all-reports`
@@ -108,7 +108,7 @@ Contratos atuais:
 - `full-closeout`: `fast` + integracao/E2E + smoke operacional;
 - atualiza sempre o hub `docs/reports/index.html`.
 
-## Repo readiness entregue na Sprint 5
+## Repo readiness entregue na operacao segura
 
 - `CODEOWNERS` com ownership minimo por app, contratos, docs, scripts e GitHub config;
 - `dependabot.yml` para Actions, npm e Bundler;
@@ -116,7 +116,7 @@ Contratos atuais:
 - PR template alinhado aos perfis de gate;
 - `AGENTS.md` raiz com mapa do repo, comandos oficiais e politica operacional.
 
-## Evidencias da Sprint 5
+## Evidencias de operacao segura
 
 Evidencias minimas esperadas para considerar a trilha DevOps concluida:
 
@@ -138,7 +138,7 @@ Resumo operacional:
 
 ## Referencias
 
-- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/)
 - [Setup da plataforma](C:/estudos/StreamGate/docs/guides/platform/setup.md)
 - [Runbook do worker](C:/estudos/StreamGate/docs/guides/operations/worker-runtime-runbook.md)
 - [Hub de reports](C:/estudos/StreamGate/docs/reports/index.html)

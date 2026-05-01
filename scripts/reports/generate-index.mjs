@@ -171,7 +171,7 @@ export function generateIndex() {
       </article>
       <article class="playbook-card">
         <h2>Full-closeout</h2>
-        <p>Use no fechamento de sprint, PR grande ou mudanca critica de runtime/CI. O caminho pesado oficial e WSL/Compose-first.</p>
+        <p>Use no fechamento de ciclo de entrega, PR grande ou mudanca critica de runtime/CI. O caminho pesado oficial e WSL/Compose-first.</p>
         <code>scripts/reports/run-all-reports.ps1 -Profile full-closeout</code>
       </article>
     </section>

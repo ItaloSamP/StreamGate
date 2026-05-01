@@ -16,7 +16,7 @@ Gem::Specification.new do |spec|
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = spec.homepage
-  spec.metadata["changelog_uri"] = "#{spec.homepage}/blob/main/docs/planning/streamgate-full-sprints-roadmap.md"
+  spec.metadata["changelog_uri"] = "#{spec.homepage}/tree/main/docs/planning"
 
   gemspec = File.basename(__FILE__)
   tracked_files = Dir.glob("{bin,exe,lib,sig,spec}/**/*", File::FNM_DOTMATCH, base: __dir__)

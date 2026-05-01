@@ -4,7 +4,7 @@
 Este guia consolida diretrizes de architecture para uso consistente no projeto.
 
 ## Estado atual
-Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+Conteudo alinhado ao estado operacional atual; atualizar em cada mudanca relevante.
 
 ## Regras/Contratos
 - As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
@@ -12,10 +12,10 @@ Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atual
 
 ## Validacao/Evidencias
 - Validar coerencia com README raiz, docs/README e roadmap da release atual.
-- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+- Registrar atualizacoes desta pagina no closeout do ciclo de entrega correspondente.
 
 ## Referencias
-- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/)
 - [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)
 
 
@@ -104,8 +104,8 @@ Quando a v1 estabilizar, a migracao natural e:
 - migrar polling curto para SSE ou WebSocket
 - separar pipelines de deploy por ambiente
 
-## Decisoes de prontidao (Sprint 2.5)
+## Decisoes de prontidao (gate de prontidao)
 
 - Contrato e naming de rotas operacionais de upload/job ficam oficialmente em namespace /api/v1, evitando drift com auth e OpenAPI.
-- Sprint 2.5 e gate estrutural: ajustes pontuais de base sao permitidos; abertura de pacote funcional novo continua proibida.
-- Itens de ingestao por external_link, oauth_delegated e conectores (google_drive, s3, http_url) permanecem fora do escopo da Sprint 3 base.
+- gate de prontidao e gate estrutural: ajustes pontuais de base sao permitidos; abertura de pacote funcional novo continua proibida.
+- Itens de ingestao por external_link, oauth_delegated e conectores (google_drive, s3, http_url) permanecem fora do escopo da entrega de upload/job base.

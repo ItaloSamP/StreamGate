@@ -152,8 +152,8 @@ ensure_env_file() {
   echo "Arquivo .env nao encontrado; copia temporaria criada a partir de .env.example."
 }
 
-ensure_sprint5_operational_env() {
-  assert_sprint5_operational_env "$ROOT_DIR/.env"
+ensure_operational_env() {
+  assert_operational_env "$ROOT_DIR/.env"
 }
 
 get_powershell_file_command() {
@@ -244,7 +244,7 @@ run_backend_workflow() {
   fi
 
   ensure_env_file
-  ensure_sprint5_operational_env
+  ensure_operational_env
 
   local postgres_host postgres_port postgres_user postgres_password postgres_test_db
   local auth_session_ttl_hours auth_password_reset_ttl_minutes auth_token_pepper
@@ -361,7 +361,7 @@ run_e2e_workflow() {
   fi
 
   ensure_env_file
-  ensure_sprint5_operational_env
+  ensure_operational_env
 
   local seed_operator_password
   local seed_admin_password
@@ -423,7 +423,7 @@ run_docker_workflow() {
   fi
 
   ensure_env_file
-  ensure_sprint5_operational_env
+  ensure_operational_env
 
   if powershell_health_command="$(get_powershell_file_command './scripts/compose/compose-health.tests.ps1')"; then
     :

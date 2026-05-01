@@ -111,7 +111,7 @@ function Stop-Stack {
 }
 
 function Assert-DevopsReadiness {
-  Assert-Sprint5OperationalEnv -Path (Join-Path $root '.env')
+  Assert-OperationalEnv -Path (Join-Path $root '.env')
 }
 
 function Wait-HttpReady {
@@ -197,7 +197,7 @@ function Write-ProfileBanner {
   Write-Host "Perfil de reports: $Profile" -ForegroundColor Cyan
   switch ($Profile) {
     'fast' { Write-Host 'Escopo: frontend unit + backend API/worker. Sem integracao/E2E/smokes.' -ForegroundColor DarkCyan }
-    'operational' { Write-Host 'Escopo: apenas smoke operacional/runtime para Sprint 5.' -ForegroundColor DarkCyan }
+    'operational' { Write-Host 'Escopo: apenas smoke operacional/runtime para operacao segura.' -ForegroundColor DarkCyan }
     'full-closeout' { Write-Host 'Escopo: backend/frontend reports + integracao/E2E + smokes. CI local roda separado para evitar duplicacao.' -ForegroundColor DarkCyan }
   }
 }

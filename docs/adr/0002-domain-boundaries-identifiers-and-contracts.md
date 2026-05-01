@@ -1,4 +1,4 @@
-# ADR 0002: Fronteiras de dominio, identificadores e contratos da Sprint 1
+# ADR 0002: Fronteiras de dominio, identificadores e contratos da fundacao do dominio
 
 ## Status
 
@@ -6,11 +6,11 @@ Aceita
 
 ## Contexto
 
-A API Rails saiu da Sprint 0 como esqueleto tecnico, sem entidades, sem contratos executaveis e sem uma convencao de identificadores. O risco imediato era permitir que frontend, backend, worker e documentacao crescessem com naming, estados e rastreabilidade divergentes.
+A API Rails saiu do baseline inicial como esqueleto tecnico, sem entidades, sem contratos executaveis e sem uma convencao de identificadores. O risco imediato era permitir que frontend, backend, worker e documentacao crescessem com naming, estados e rastreabilidade divergentes.
 
 ## Decisao
 
-A Sprint 1 congela as seguintes decisoes:
+A fundacao do dominio congela as seguintes decisoes:
 
 1. O dominio operacional inicial e composto por `User`, `Upload`, `Job`, `JobBatch`, `QuarantineRecord`, `ProcessingAttempt` e `AuditEvent`.
 2. O estado transacional e auditavel fica no PostgreSQL. A camada analitica futura sera derivada para ClickHouse a partir desses fatos.
@@ -33,7 +33,7 @@ A Sprint 1 congela as seguintes decisoes:
 
 - ha mais arquivos desde cedo, porque a arquitetura deixa de ficar implodida dentro de controllers;
 - os IDs ficam mais verbosos, mas ganham legibilidade operacional e coesao entre sistemas;
-- alguns modelos parecem mais ricos do que o uso imediato da Sprint 1, mas isso evita renomear entidades no meio da v1.
+- alguns modelos parecem mais ricos do que o uso imediato da fundacao do dominio, mas isso evita renomear entidades no meio da v1.
 
 ## Itens explicitamente adiados
 

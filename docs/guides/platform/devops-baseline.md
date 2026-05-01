@@ -1,14 +1,14 @@
-# Baseline DevOps da Sprint 0
+# Baseline DevOps
 
 ## Objetivo
-Este guia consolida diretrizes de devops baseline sprint 0 para uso consistente no projeto.
+Este guia consolida diretrizes de devops baseline para uso consistente no projeto.
 
 ## Estado atual
-Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+Conteudo alinhado ao estado operacional atual; atualizar em cada mudanca relevante.
 
 
 ## Estado atual detalhado
-Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+Conteudo alinhado ao estado operacional atual; atualizar em cada mudanca relevante.
 
 ## Regras/Contratos
 - As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
@@ -16,16 +16,16 @@ Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atual
 
 ## Validacao/Evidencias
 - Validar coerencia com README raiz, docs/README e roadmap da release atual.
-- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+- Registrar atualizacoes desta pagina no closeout do ciclo de entrega correspondente.
 
 ## Referencias
-- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/)
 - [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)
 
 
 ## Objetivo detalhado
 
-Este documento registra o estado operacional real do projeto ao fim da trilha DevOps da Sprint 0. Ele existe para separar:
+Este documento registra o estado operacional real do projeto ao fim da trilha DevOps do baseline inicial. Ele existe para separar:
 
 - o que ja funciona
 - o que falha por ambiente
@@ -87,7 +87,7 @@ Evidencia observada nesta sessao:
 
 Conclusao operacional:
 
-- este problema deixou de ser um bloqueador tecnico do worker na Sprint 0
+- este problema deixou de ser um bloqueador tecnico do worker na baseline inicial
 - a falha original era de implementacao com impacto ampliado no ambiente Windows atual
 
 ## Registro de checks por escopo
@@ -131,7 +131,7 @@ Conclusao operacional:
 
 ## Comandos fonte de verdade
 
-Para a Sprint 0, estes continuam sendo os comandos oficiais de referencia:
+Para a baseline inicial, estes continuam sendo os comandos oficiais de referencia:
 
 - `pnpm lint` em `apps/web`
 - `pnpm test:run` em `apps/web`

@@ -1,4 +1,4 @@
-﻿import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { createStreamgateApi } from '@/lib/streamgate-api'
 
@@ -256,7 +256,7 @@ describe('streamgateApi auth adapter', () => {
     })
   })
 
-  it('aligns Sprint 4 operational endpoints with api v1 and keeps query shape stable', async () => {
+  it('aligns operational endpoints with api v1 and keeps query shape stable', async () => {
     const getEnvelope = vi.fn()
       .mockResolvedValueOnce({
         data: {
@@ -333,7 +333,7 @@ describe('streamgateApi auth adapter', () => {
     })
   })
 
-  it('maps Sprint 6 analytics dashboard, warehouse and lineage endpoints', async () => {
+  it('maps analytics dashboard, warehouse and lineage endpoints', async () => {
     const getEnvelope = vi.fn()
       .mockResolvedValueOnce({
         data: {

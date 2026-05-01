@@ -29,8 +29,8 @@ admin = ensure_seed_user(
   organization_id: "org_streamgate"
 )
 
-seed_trace_id = "trace_seed_sprint_1"
-seed_request_id = "req_seed_sprint_1"
+seed_trace_id = "trace_seed_bootstrap"
+seed_request_id = "req_seed_bootstrap"
 
 upload = Upload.find_or_initialize_by(storage_key: "uploads/sample-import.csv")
 upload.assign_attributes(

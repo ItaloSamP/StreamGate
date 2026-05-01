@@ -1,14 +1,14 @@
-# Baseline de Seguranca da Sprint 0
+# Baseline de Seguranca
 
 ## Objetivo
-Este guia consolida diretrizes de security baseline sprint 0 para uso consistente no projeto.
+Este guia consolida diretrizes de security baseline para uso consistente no projeto.
 
 ## Estado atual
-Conteudo alinhado ao fechamento integral da Sprint 5. O baseline historico da Sprint 0 continua valido como metodo, mas o estado operacional atual ja inclui auth real na API, upload assinado, worker RabbitMQ real, operacao segura mutavel, artefatos finais, notificacoes `in_app/email/webhook`, reports/smokes oficiais e repo readiness operacional.
+Conteudo alinhado ao estado operacional atual. O baseline historico do baseline inicial continua valido como metodo, mas o estado operacional atual ja inclui auth real na API, upload assinado, worker RabbitMQ real, operacao segura mutavel, artefatos finais, notificacoes `in_app/email/webhook`, reports/smokes oficiais e repo readiness operacional.
 
 
 ## Estado atual detalhado
-Conteudo alinhado ao fechamento da Sprint 5; atualizar em cada mudanca relevante de auth, upload, worker, broker, artefatos, notificacoes, auditoria, quarentena, CI, smokes ou reports.
+Conteudo alinhado ao estado operacional atual; atualizar em cada mudanca relevante de auth, upload, worker, broker, artefatos, notificacoes, auditoria, quarentena, CI, smokes ou reports.
 
 ## Regras/Contratos
 - As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
@@ -16,14 +16,14 @@ Conteudo alinhado ao fechamento da Sprint 5; atualizar em cada mudanca relevante
 
 ## Validacao/Evidencias
 - Validar coerencia com README raiz, docs/README e roadmap da release atual.
-- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+- Registrar atualizacoes desta pagina no closeout do ciclo de entrega correspondente.
 
 
 ## Objetivo detalhado
 
-Este guia fixa a base minima de seguranca do StreamGate na Sprint 0. Ele existe para impedir que o projeto siga evoluindo com suposicoes soltas sobre auth, segredos, superficies de ataque e validacao de seguranca.
+Este guia fixa a base minima de seguranca do StreamGate na baseline inicial. Ele existe para impedir que o projeto siga evoluindo com suposicoes soltas sobre auth, segredos, superficies de ataque e validacao de seguranca.
 
-A Sprint 0 nao fecha seguranca de produto. Ela fecha o metodo minimo para que as proximas sprints nao espalhem risco por falta de padrao.
+A baseline inicial nao fecha seguranca de produto. Ela fecha o metodo minimo para que as proximos ciclos de entrega nao espalhem risco por falta de padrao.
 
 ## Leitura do estado atual
 
@@ -33,7 +33,7 @@ Hoje o repositorio saiu do baseline puramente estrutural e ja possui um runtime 
 - o frontend autenticado consome dados reais da API; o armazenamento local guarda apenas sessao/token de desenvolvimento e o command center ja inclui inbox de notificacoes, artefatos e operacoes admin-only
 - o worker possui runtime real de fila RabbitMQ para `upload.received.v1`, com CSV/ZIP, retry, DLQ, artefatos finais e emissao de notificacoes operacionais
 - o `compose.yaml` sobe PostgreSQL, Redis, RabbitMQ, MinIO, ClickHouse, API, frontend e worker real no profile `full`
-- o fluxo real de upload, leitura operacional, artefatos, notificacoes e auditoria existe para o corte Sprint 5, ainda sem conectores externos funcionais
+- o fluxo real de upload, leitura operacional, artefatos, notificacoes e auditoria existe para o corte operacao segura, ainda sem conectores externos funcionais
 
 Isso significa que a maior parte do risco atual esta em:
 
@@ -44,7 +44,7 @@ Isso significa que a maior parte do risco atual esta em:
 - mutacoes sensiveis sendo executadas sem trilha forte de motivo, auditoria e idempotencia
 - futuras superficies de conectores externos entrando sem trilha de revisao proporcional
 
-## Superficies de ataque oficiais da Sprint 0
+## Superficies de ataque oficiais do baseline inicial
 
 | Superficie | Estado atual | Principal risco nesta fase | Evidencia base |
 | --- | --- | --- | --- |
@@ -61,7 +61,7 @@ Isso significa que a maior parte do risco atual esta em:
 
 O threat model inicial do repositorio foi consolidado em [streamgate-threat-model.md](C:/estudos/StreamGate/docs/guides/security/streamgate-threat-model.md).
 
-Ele deve ser tratado como referencia obrigatoria antes de abrir sprints que materializem:
+Ele deve ser tratado como referencia obrigatoria antes de abrir ciclos de entrega que materializem:
 
 - auth real
 - upload assinado
@@ -69,9 +69,9 @@ Ele deve ser tratado como referencia obrigatoria antes de abrir sprints que mate
 - dashboards com dados reais
 - reprocessamento, auditoria ou analytics de producao
 
-Na Sprint 5, auth real, upload assinado, runtime do worker, dashboards operacionais, analytics, quarantine, DLQ, audit, artefatos finais, notificacoes persistidas e operacoes seguras foram materializados para o ambiente local/CI. Por isso, novas mudancas nessas superficies devem tratar este baseline como controle vivo, nao como apenas planejamento.
+Na operacao segura, auth real, upload assinado, runtime do worker, dashboards operacionais, analytics, quarantine, DLQ, audit, artefatos finais, notificacoes persistidas e operacoes seguras foram materializados para o ambiente local/CI. Por isso, novas mudancas nessas superficies devem tratar este baseline como controle vivo, nao como apenas planejamento.
 
-## Controles entregues na Sprint 5
+## Controles entregues na operacao segura
 
 - `Idempotency-Key` obrigatoria em `retry`, `resolve`, `replay request/approve/execute` e `webhook test`, com persistencia de reuso equivalente.
 - Replay de DLQ em tres etapas (`request -> approve -> execute`) com bloqueio de self-approval.
@@ -83,7 +83,7 @@ Na Sprint 5, auth real, upload assinado, runtime do worker, dashboards operacion
 
 ## Scanners oficiais por camada
 
-A Sprint 0 define os scanners oficiais do projeto por camada, mesmo quando parte deles ainda entra como baseline de adocao e nao como gate totalmente automatizado.
+A baseline inicial define os scanners oficiais do projeto por camada, mesmo quando parte deles ainda entra como baseline de adocao e nao como gate totalmente automatizado.
 
 ### Frontend
 
@@ -134,7 +134,7 @@ Tratar como sensiveis por padrao:
 - artefatos de banco com dados reais
 - dumps, exemplos de payload e fixtures que carreguem dados reais de cliente
 
-### Leitura especifica da Sprint 0
+### Leitura especifica do baseline inicial
 
 - o arquivo [.env.example](C:/estudos/StreamGate/.env.example) hoje usa credenciais simples de desenvolvimento e isso e aceitavel apenas como baseline local
 - essas credenciais nunca devem ser promovidas para preview, CI compartilhado ou producao
@@ -142,7 +142,7 @@ Tratar como sensiveis por padrao:
 
 ## Revisao de seguranca proporcional ao escopo
 
-A partir da Sprint 0, revisao de seguranca deixa de ser opcional e passa a ser obrigatoria em proporcao ao tipo de entrega.
+A partir do baseline inicial, revisao de seguranca deixa de ser opcional e passa a ser obrigatoria em proporcao ao tipo de entrega.
 
 ### Mudanca documental ou estrutural leve
 
@@ -178,7 +178,7 @@ A partir da Sprint 0, revisao de seguranca deixa de ser opcional e passa a ser o
 - payloads de quarantine, audit metadata e DLQ passam por sanitizacao backend antes de serem expostos por endpoints operacionais
 - audit e DLQ sao admin-only; quarantine e analytics respeitam escopo por organizacao para operadores
 
-## Gaps conscientes que seguem para as proximas sprints
+## Gaps conscientes que seguem para as proximos ciclos de entrega
 
 - auth real ainda precisa de hardening para ambiente compartilhado/producao, incluindo politica de cookies/CSRF/TLS conforme deploy
 - conectores externos continuam discovery-only e precisam de threat model proprio antes de entrar na v1 funcional
@@ -191,6 +191,6 @@ A partir da Sprint 0, revisao de seguranca deixa de ser opcional e passa a ser o
 
 - [Threat model inicial do repositorio](C:/estudos/StreamGate/docs/guides/security/streamgate-threat-model.md)
 - [Definition of Done](C:/estudos/StreamGate/docs/guides/quality/definition-of-done.md)
-- [Baseline DevOps da Sprint 0](C:/estudos/StreamGate/docs/guides/platform/devops-baseline-sprint-0.md)
-- [Baseline de Testes da Sprint 0](C:/estudos/StreamGate/docs/guides/quality/testing-baseline-sprint-0.md)
+- [Baseline DevOps](C:/estudos/StreamGate/docs/guides/platform/devops-baseline.md)
+- [Baseline de Testes](C:/estudos/StreamGate/docs/guides/quality/testing-baseline.md)
 - [Catalogo de skills do projeto](C:/estudos/StreamGate/.agents/skills/README.md)

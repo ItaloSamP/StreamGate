@@ -15,7 +15,7 @@ O worker sera responsavel por:
 
 ## Estado atual
 
-O worker executa runtime real de fila e fecha a trilha de artefatos/notificacoes da Sprint 5:
+O worker executa runtime real de fila e fecha a trilha de artefatos/notificacoes de operacao segura:
 
 - consumo RabbitMQ (`upload.received.v1`) com retry controlado e DLQ
 - idempotencia por `event_id` para evitar reprocessamento duplicado
@@ -51,7 +51,7 @@ Os artefatos do worker ficam em `apps/worker/spec/reports/` e sao sobrescritos a
 
 ## Observacao importante
 
-O gap antigo do `gemspec` baseado em `git ls-files` ja foi removido na Sprint 0.
+O gap antigo do `gemspec` baseado em `git ls-files` ja foi removido na baseline inicial.
 
 No ambiente Windows atual, o principal cuidado do worker passa a ser a validacao do setup Ruby local, do runtime real de fila e da disponibilidade de Postgres/MinIO quando a suite sair dos mocks.
 
@@ -65,5 +65,5 @@ A evolucao apos este baseline deve focar em:
 
 ## Referencias
 
-- [Baseline de testes e reports](C:/estudos/StreamGate/docs/guides/quality/testing-baseline-sprint-0.md)
+- [Baseline de testes e reports](C:/estudos/StreamGate/docs/guides/quality/testing-baseline.md)
 - [Runbook do worker](C:/estudos/StreamGate/docs/guides/operations/worker-runtime-runbook.md)

@@ -22,7 +22,7 @@ export function WorkspaceModule({
               <div className="dash-panel-title">{title}</div>
               <div className="dash-module-copy">{description}</div>
             </div>
-            <span className="dash-panel-tag">Sprint 1 scaffold</span>
+            <span className="dash-panel-tag">base de dominio</span>
           </div>
         </div>
 
@@ -40,7 +40,7 @@ export function WorkspaceModule({
           <div className="dash-panel dash-module-card">
             <div className="dash-panel-head">
               <div className="dash-panel-title">Planejamento fechado</div>
-              <span className="dash-panel-tag">Sprint 1</span>
+              <span className="dash-panel-tag">dominio operacional</span>
             </div>
             <ul className="dash-module-list">
               {checkpoints.map((item) => (

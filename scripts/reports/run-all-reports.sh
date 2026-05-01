@@ -127,7 +127,7 @@ print_profile_banner() {
       echo "Escopo: frontend unit + backend API/worker. Sem integracao/E2E/smokes."
       ;;
     operational)
-      echo "Escopo: apenas smoke operacional/runtime para Sprint 5."
+      echo "Escopo: apenas smoke operacional/runtime para operacao segura."
       ;;
     full-closeout)
       echo "Escopo: backend/frontend reports + integracao/E2E + smokes. CI local roda separado para evitar duplicacao."
@@ -159,7 +159,7 @@ export POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-postgres}"
 export PARALLEL_WORKERS="${PARALLEL_WORKERS:-$(get_dotenv_value "$ROOT_DIR/.env" PARALLEL_WORKERS)}"
 export PARALLEL_WORKERS="${PARALLEL_WORKERS:-1}"
 
-assert_sprint5_operational_env "$ROOT_DIR/.env"
+assert_operational_env "$ROOT_DIR/.env"
 print_profile_banner
 
 if [[ "$PROFILE" == "fast" || "$PROFILE" == "full-closeout" ]]; then

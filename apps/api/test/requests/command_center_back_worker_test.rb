@@ -1,6 +1,6 @@
 require "test_helper"
 
-class Sprint7BackWorkerTest < ActionDispatch::IntegrationTest
+class CommandCenterBackWorkerTest < ActionDispatch::IntegrationTest
   test "dashboard exposes expanded clickhouse backed command center sections" do
     token = login_as("admin@example.com", "StrongPass123!")
     fake_reader = Class.new do
@@ -100,7 +100,7 @@ class Sprint7BackWorkerTest < ActionDispatch::IntegrationTest
 
     post "/api/v1/analytics/dashboard/exports",
          params: { export: { kind: "snapshot", format: "json", preset: "last_24h" } },
-         headers: auth_header(token).merge("Idempotency-Key" => "sprint7-export-1"),
+         headers: auth_header(token).merge("Idempotency-Key" => "dashboard-export-1"),
          as: :json
     assert_response :created
     assert_equal "snapshot", parsed_json.dig("data", "kind")
@@ -108,15 +108,15 @@ class Sprint7BackWorkerTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "secret"
 
     post "/api/v1/alerts/#{warning.id}/review",
-         params: { operation: { reason: "triaged during sprint7 validation" } },
-         headers: auth_header(token).merge("Idempotency-Key" => "sprint7-alert-review-1"),
+         params: { operation: { reason: "triaged during command center validation" } },
+         headers: auth_header(token).merge("Idempotency-Key" => "alert-review-1"),
          as: :json
     assert_response :ok
     assert_equal "reviewed", parsed_json.dig("data", "status")
 
     post "/api/v1/alerts/#{warning.id}/dismiss",
          params: { operation: { reason: "known transient dependency during validation" } },
-         headers: auth_header(token).merge("Idempotency-Key" => "sprint7-alert-dismiss-1"),
+         headers: auth_header(token).merge("Idempotency-Key" => "alert-dismiss-1"),
          as: :json
     assert_response :ok
     assert_equal "dismissed", parsed_json.dig("data", "status")
@@ -135,7 +135,7 @@ class Sprint7BackWorkerTest < ActionDispatch::IntegrationTest
              secrets: { access_key_id: "AKIASECRET", secret_access_key: "top-secret" }
            }
          },
-         headers: auth_header(token).merge("Idempotency-Key" => "sprint7-connector-profile-1"),
+         headers: auth_header(token).merge("Idempotency-Key" => "connector-profile-1"),
          as: :json
     assert_response :created
     profile_id = parsed_json.dig("data", "id")
@@ -144,7 +144,7 @@ class Sprint7BackWorkerTest < ActionDispatch::IntegrationTest
 
     post "/api/v1/connectors/profiles/#{profile_id}/ingestions",
          params: { ingestion: { object_key: "incoming/orders.ndjson", filename: "orders.ndjson", content_type: "application/x-ndjson" } },
-         headers: auth_header(token).merge("Idempotency-Key" => "sprint7-connector-ingestion-1"),
+         headers: auth_header(token).merge("Idempotency-Key" => "connector-ingestion-1"),
          as: :json
     assert_response :created
     assert_equal "connector", parsed_json.dig("data", "upload", "source_type")

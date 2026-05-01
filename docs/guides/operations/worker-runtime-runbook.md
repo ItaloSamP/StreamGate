@@ -4,7 +4,7 @@
 Este guia consolida diretrizes de worker runtime runbook para uso consistente no projeto.
 
 ## Estado atual
-Conteudo alinhado a execucao Back + Worker da Sprint 7; atualizar em cada mudanca relevante.
+Conteudo alinhado ao estado atual de Back + Worker; atualizar em cada mudanca relevante.
 
 
 ## Regras/Contratos
@@ -13,7 +13,7 @@ Conteudo alinhado a execucao Back + Worker da Sprint 7; atualizar em cada mudanc
 
 ## Validacao/Evidencias
 - Validar coerencia com README raiz, docs/README e roadmap da release atual.
-- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+- Registrar atualizacoes desta pagina no closeout do ciclo de entrega correspondente.
 
 
 ## Objetivo detalhado
@@ -22,40 +22,40 @@ Padronizar operacao, diagnostico e resposta a incidentes da trilha de runtime re
 
 ## Estado atual detalhado
 
-- Sprint 4 backend ativou runtime real de consumo RabbitMQ.
+- runtime operacional backend ativou runtime real de consumo RabbitMQ.
 - fluxo oficial agora opera com outbox transacional na API + consumidor real no worker.
 - leitura operacional de DLQ disponivel em `GET /api/v1/quarantine/dlq` (admin-only).
-- Sprint 5 adiciona geracao de artefatos finais, notificacoes operacionais e replay controlado sobre a mesma idempotencia por `event_id`.
-- Sprint 7 adiciona eventos realtime best-effort, agregados ClickHouse para dashboard, formatos NDJSON/XLSX/Parquet e conectores S3/HTTP via lease interno.
+- operacao segura adiciona geracao de artefatos finais, notificacoes operacionais e replay controlado sobre a mesma idempotencia por `event_id`.
+- command center operacional adiciona eventos realtime best-effort, agregados ClickHouse para dashboard, formatos NDJSON/XLSX/Parquet e conectores S3/HTTP via lease interno.
 
 ## Regras e contratos operacionais
 
-- trilha minima da Sprint 4:
+- trilha minima do runtime operacional:
   - consumo real de fila do broker;
   - processamento de evento `upload.received.v1` com transicao de estado de job;
   - idempotencia por `event_id` (`worker_consumed_events`);
   - retry com backoff exponencial e DLQ apos limite;
   - registro de erros com `trace_id`, `request_id`, `correlation_id`, `job_id` e `upload_id`.
-- extensao da Sprint 5:
+- extensao de operacao segura:
   - geracao de `processed_dataset`, `quality_report` e `audit_report` em `job_artifacts`;
   - escrita dos artefatos no storage em `artifacts/<job_id>/<event_id>/`;
   - metricas `artifact_generated` e `artifact_failed` em `worker_processing_metrics`;
   - notificacoes `job.completed`, `job.quarantined_with_warnings` e `job.failed` via inbox/outbox;
   - falha de artefato registrada como auditoria sem alterar o estado final do job.
-- extensao da Sprint 7:
+- extensao do command center operacional:
   - eventos realtime duraveis em `realtime_events` sem bloquear o processamento principal;
   - ClickHouse alimentado sem payload bruto, preservando hashes/HMAC e metadados agregaveis;
   - parsing de CSV, JSON array, `{ records: [...] }`, NDJSON, ZIP com exatamente um arquivo suportado, XLSX e Parquet;
   - limite operacional de 10 GB, spool/tempfile controlado e cleanup best-effort;
   - conectores S3/HTTP consumidos pelo worker via lease interno da API e `X-Worker-Token`.
-- escopo fora do corte Sprint 7:
+- escopo fora do corte command center operacional:
   - `google_drive` e `oauth_delegated`;
   - UI admin nova para conectores S3/HTTP;
   - automacao de cluster e reprocessamento avancado.
 - qualquer mudanca em runtime deve manter sincronia com:
   - `packages/contracts`;
   - `apps/api/openapi/v1/openapi.yaml` (quando houver reflexo em API);
-  - roadmap mestre e closeout da sprint.
+  - roadmap mestre e closeout do ciclo de entrega.
 
 ## Procedimentos operacionais
 
@@ -72,7 +72,7 @@ Padronizar operacao, diagnostico e resposta a incidentes da trilha de runtime re
    - routing `connector.ingestion.requested.v1`
    - queue `streamgate.worker.connector.ingestion.requested.v1`
    - dlq `streamgate.worker.connector.ingestion.requested.v1.dlq`
-5. validar envs Sprint 7:
+5. validar envs command center operacional:
    - `WORKER_INTERNAL_TOKEN`
    - `BROKER_CONNECTOR_REQUESTED_ROUTING_KEY`
    - `REALTIME_EVENT_RETENTION_DAYS`
@@ -86,7 +86,7 @@ Padronizar operacao, diagnostico e resposta a incidentes da trilha de runtime re
 3. classificar falha:
    - ambiente (infra/rede/host);
    - implementacao (regra/codigo/contrato).
-4. registrar classificacao no fechamento da sprint.
+4. registrar classificacao no fechamento do ciclo de entrega.
 
 ### 3. Retry e recuperacao
 
@@ -198,7 +198,7 @@ Controles obrigatorios:
 
 ## Referencias
 
-- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/)
 - [Arquitetura base](C:/estudos/StreamGate/docs/guides/platform/architecture.md)
 - [Fundacoes do backend](C:/estudos/StreamGate/docs/guides/backend/backend-foundations.md)
 - [Glossario de dominio](C:/estudos/StreamGate/docs/guides/backend/domain-glossary.md)

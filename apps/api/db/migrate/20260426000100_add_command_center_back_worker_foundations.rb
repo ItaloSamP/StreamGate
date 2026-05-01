@@ -1,4 +1,4 @@
-class AddSprint7BackWorkerFoundations < ActiveRecord::Migration[8.1]
+class AddCommandCenterBackWorkerFoundations < ActiveRecord::Migration[8.1]
   def change
     change_operational_warnings
     create_realtime_events

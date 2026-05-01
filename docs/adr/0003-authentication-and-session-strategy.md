@@ -1,4 +1,4 @@
-# ADR 0003: Estrategia de autenticacao e sessao da Sprint 2
+# ADR 0003: Estrategia de autenticacao e sessao da fundacao de autenticacao
 
 ## Status
 
@@ -6,11 +6,11 @@ Aceita
 
 ## Contexto
 
-A Sprint 1 estruturou dominio, contratos e fundacao da API, mas a autenticacao ainda estava mockada no frontend e ausente no backend. Sem uma estrategia explicita, havia risco de espalhar suposicoes diferentes sobre sessao, expiracao, erro de auth e bootstrap de usuario.
+A fundacao do dominio estruturou dominio, contratos e fundacao da API, mas a autenticacao ainda estava mockada no frontend e ausente no backend. Sem uma estrategia explicita, havia risco de espalhar suposicoes diferentes sobre sessao, expiracao, erro de auth e bootstrap de usuario.
 
 ## Decisao
 
-A Sprint 2 congela as seguintes decisoes para a v1:
+A fundacao de autenticacao congela as seguintes decisoes para a v1:
 
 1. A API adota autenticacao por token Bearer com sessao persistida em banco (`auth_sessions`).
 2. O token retornado ao cliente nunca e armazenado em texto puro no banco; apenas `token_digest`.
@@ -26,7 +26,7 @@ A Sprint 2 congela as seguintes decisoes para a v1:
 8. Fronteira entre autenticacao e autorizacao:
    - autenticacao valida identidade/sessao;
    - autorizacao por papel continua em policies, com papeis iniciais `operator`, `admin` e `service_account`.
-9. Hardening inicial de auth na Sprint 2:
+9. Hardening inicial de auth na fundacao de autenticacao:
    - throttle configuravel por IP e identificador para login/register/reset;
    - logs de falha sem vazamento de segredo;
    - CORS configuravel por env e sem cookies por padrao (`AUTH_COOKIE_ENABLED=false`).
@@ -38,7 +38,7 @@ A Sprint 2 congela as seguintes decisoes para a v1:
 - frontend ganha bootstrap real (`me`) sem depender de mock;
 - sessao passa a ser revogavel e auditavel;
 - erro de auth fica estavel para UX e contratos;
-- base pronta para evoluir RBAC fino nas proximas sprints;
+- base pronta para evoluir RBAC fino nas proximos ciclos de entrega;
 - protecao inicial contra abuso por repeticao de tentativas.
 
 ### Custos e trade-offs

@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Este guia traduz o estado real do StreamGate apos a execucao Back + Worker da Sprint 7 em um plano pratico para chegar a uma entrega de produto sem lacunas escondidas.
+Este guia traduz o estado real do StreamGate apos a execucao Back + Worker do command center operacional em um plano pratico para chegar a uma entrega de produto sem lacunas escondidas.
 
 Ele existe para responder quatro perguntas de forma objetiva:
 
@@ -20,9 +20,9 @@ Use este documento como referencia principal quando a pergunta for "o que falta 
 Relacao com os outros documentos:
 
 - `docs/product/vision.md`: define a visao e a direcao de produto.
-- `docs/planning/streamgate-full-sprints-roadmap.md`: registra a cadencia de sprints, gates e evidencias de fechamento.
-- `docs/sprints/SPRINT-05-closeout.md`: registra o fechamento funcional da Sprint 5.
-- `docs/planning/streamgate-full-sprints-roadmap.md`: registra o corte Sprint 7 de dashboard parity, back e worker.
+- `docs/planning/`: registra a cadencia de ciclos de entrega, gates e evidencias de fechamento.
+- `docs/`: registra o fechamento funcional de operacao segura.
+- `docs/planning/`: registra o corte command center operacional de dashboard parity, back e worker.
 - este guia: transforma o estado atual em trilha de finalizacao do produto.
 
 Regra de uso:
@@ -38,7 +38,7 @@ A base do produto deixou de ser um esqueleto. O StreamGate ja tem um nucleo oper
 Leitura sintetica:
 
 - o nucleo operacional do produto esta materializado;
-- o shell do workspace e a dashboard ja fecharam a trilha frontend da Sprint 6 como superficies reais, sem fixtures enganosas no command center;
+- o shell do workspace e a dashboard ja fecharam a trilha frontend do workspace operacional como superficies reais, sem fixtures enganosas no command center;
 - a maior distancia para a entrega final nao esta mais na fundacao tecnica, e sim em fechar a experiencia administrativa final de conectores, validar deploy/observabilidade produtiva e manter a narrativa documental coerente.
 
 Termometro pragmatico de maturidade:
@@ -76,7 +76,7 @@ Estas frentes ja ajudam muito na experiencia final, mas ainda nao devem ser lida
 | ETL Explorer | `funcional` | lineage por job com batches, attempts, quarantine, artifacts, warnings e audit refs |
 | Camada analitica visivel no front | `funcional minimo` | `Analytics`, `ClickHouse` e `ETL Explorer` possuem papeis distintos e dados reais |
 
-### Materializado parcialmente apos Sprint 7
+### Materializado parcialmente apos command center operacional
 
 Estas frentes ja possuem corte tecnico real, mas ainda nao devem ser vendidas como suite completa de conectores com UI admin final:
 
@@ -215,20 +215,20 @@ Sinais de pronto:
 - a narrativa comercial e tecnica do produto nao promete mais do que a v1 realmente entrega;
 - o backlog de conectores fica priorizado, mas sem confundir corte tecnico com experiencia de produto completa.
 
-Estado Sprint 6 backend/worker:
+Estado workspace operacional backend/worker:
 
 - `public_link` entra como primeiro caminho funcional de `external_link`;
 - `oauth_delegated`, `google_drive`, `s3` e `http_url` continuam fora da entrega;
 - dashboard, warehouse e lineage passam a ter endpoints reais para o frontend, com `event_log`, ClickHouse real para warehouse, fallback `postgres_derived`, warnings tecnicos e empty states honestos.
 
-Estado Sprint 6 frontend:
+Estado workspace operacional frontend:
 
 - dashboard consome `analytics/dashboard` e remove fixtures locais de fila, workers, event log e formatos;
 - `/clickhouse` e `/etl-explorer` foram materializados como rotas protegidas reais para `operator` e `admin`;
 - Upload Center preserva arquivo local e adiciona `public_link` completo com idempotencia e acquisition mascarada;
 - conectores `oauth_delegated`, `google_drive`, `s3` e `http_url` seguem fora da UI funcional.
 
-Estado Sprint 7 Back + Worker:
+Estado command center operacional Back + Worker:
 
 - dashboard passa a ter contrato REST expandido para kpis, series 24h, status distribution, heatmap 7d, jobs board, queue, ingestion, workers, alerts, event log e source health;
 - realtime passa a ter tickets curtos, Action Cable/polling e `realtime_events` duravel;
@@ -357,7 +357,7 @@ Regra pratica:
 ### Documentacao
 
 - [x] `docs/product/vision.md` reflete exatamente a entrega
-- [x] `docs/planning/streamgate-full-sprints-roadmap.md` sincronizado com o estado real
+- [x] `docs/planning/` sincronizado com o estado real
 - [x] `docs/guides/frontend/frontend-workspace-map.md` descreve o workspace final
 - [x] `docs/guides/backend/api-docs.md` e OpenAPI sincronizados
 - [x] docs de seguranca e release atualizadas
@@ -404,8 +404,8 @@ Regra de prioridade recomendada:
 ## Referencias
 
 - [Visao do produto](C:/estudos/StreamGate/docs/product/vision.md)
-- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
-- [Closeout Sprint 5](C:/estudos/StreamGate/docs/sprints/SPRINT-05-closeout.md)
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/)
+- [Closeout operacao segura](C:/estudos/StreamGate/docs/)
 - [Mapa do workspace frontend](C:/estudos/StreamGate/docs/guides/frontend/frontend-workspace-map.md)
 - [Roadmap DevOps](C:/estudos/StreamGate/docs/guides/platform/devops-roadmap.md)
 - [Hub de reports](C:/estudos/StreamGate/docs/reports/index.html)

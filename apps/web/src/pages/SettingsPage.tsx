@@ -6,7 +6,7 @@ export function SettingsPage() {
     <WorkspacePageFrame pathname="/settings" eyebrow="Workspace e integracoes" title="Configuracoes" primaryActionLabel="Salvar preferencias">
       <WorkspaceModule
         title="Configuracoes"
-        description="A Sprint 2 conecta autenticacao real e consolida esta superficie para variaveis de ambiente, sessao e comportamento do cliente HTTP."
+        description="A fundacao de autenticacao conecta autenticacao real e consolida esta superficie para variaveis de ambiente, sessao e comportamento do cliente HTTP."
         highlights={[
           { label: 'Backend target', value: 'API base URL', hint: 'Centralizado no adapter oficial' },
           { label: 'Session layer', value: 'real auth', hint: 'Login, logout, me e reset conectados ao backend' },

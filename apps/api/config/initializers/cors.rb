@@ -1,6 +1,6 @@
 # Be sure to restart your server when you modify this file.
 
-# StreamGate auth strategy for Sprint 2 is bearer token (SPA) and
+# StreamGate auth strategy for fundacao de autenticacao is bearer token (SPA) and
 # requires explicit CORS allowlist for frontend origins.
 
 allowed_origins = ENV.fetch("API_CORS_ALLOWED_ORIGINS", "http://localhost:5173")

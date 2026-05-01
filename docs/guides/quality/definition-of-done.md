@@ -4,11 +4,11 @@
 Este guia consolida diretrizes de definition of done para uso consistente no projeto.
 
 ## Estado atual
-Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+Conteudo alinhado ao estado operacional atual; atualizar em cada mudanca relevante.
 
 
 ## Estado atual detalhado
-Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+Conteudo alinhado ao estado operacional atual; atualizar em cada mudanca relevante.
 
 ## Regras/Contratos
 - As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
@@ -16,12 +16,12 @@ Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atual
 
 ## Validacao/Evidencias
 - Validar coerencia com README raiz, docs/README e roadmap da release atual.
-- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+- Registrar atualizacoes desta pagina no closeout do ciclo de entrega correspondente.
 
 
 ## Objetivo detalhado
 
-Este documento existe para transformar a definicao de pronto do StreamGate em uma referencia simples, reutilizavel e verificavel por sprint, PR e revisao tecnica.
+Este documento existe para transformar a definicao de pronto do StreamGate em uma referencia simples, reutilizavel e verificavel por ciclo de entrega, PR e revisao tecnica.
 
 Ele complementa o roadmap mestre e nao substitui os criterios especificos de backend, frontend, DevOps, testes e seguranca ja definidos nos guias da stack.
 
@@ -29,7 +29,7 @@ Ele complementa o roadmap mestre e nao substitui os criterios especificos de bac
 
 Nenhuma entrega e considerada pronta apenas porque o codigo parece funcionar.
 
-Uma task, PR ou sprint so pode ser tratada como concluida quando os criterios abaixo estiverem atendidos no escopo alterado.
+Uma task, PR ou ciclo de entrega so pode ser tratada como concluida quando os criterios abaixo estiverem atendidos no escopo alterado.
 
 ## Definition of Done global
 
@@ -43,7 +43,7 @@ Uma task, PR ou sprint so pode ser tratada como concluida quando os criterios ab
 
 - os documentos impactados pela mudanca foram atualizados
 - riscos, limites, mocks e trade-offs foram registrados quando existirem
-- o roadmap foi atualizado quando a task fizer parte de uma sprint ativa
+- o roadmap foi atualizado quando a task fizer parte de um ciclo de entrega ativa
 
 ## 3. Skills usadas desde o inicio da task
 
@@ -103,26 +103,26 @@ Ao abrir ou revisar um PR, confirmar pelo menos:
 - se houve revisao de seguranca proporcional ao escopo
 - quais riscos ou pendencias ficaram para depois
 
-## Uso por sprint
+## Uso por ciclo de entrega
 
-Ao encerrar uma sprint, confirmar:
+Ao encerrar um ciclo de entrega, confirmar:
 
 - itens do roadmap marcados corretamente
 - Definition of Done atendida no escopo fechado
 - evidencias registradas
-- pendencias remanescentes visiveis para a sprint seguinte
+- pendencias remanescentes visiveis para o ciclo de entrega seguinte
 
-## Regra de reavaliacao antes da proxima sprint
+## Regra de reavaliacao antes do proximo ciclo de entrega
 
-Encerrar uma sprint nao autoriza iniciar a seguinte automaticamente.
+Encerrar um ciclo de entrega nao autoriza iniciar a seguinte automaticamente.
 
-Antes de abrir a proxima sprint, passa a ser obrigatorio executar uma reavaliacao formal do produto e do repositorio para revisar o estado real da entrega e atualizar o plano vivo do projeto.
+Antes de abrir o proximo ciclo de entrega, passa a ser obrigatorio executar uma reavaliacao formal do produto e do repositorio para revisar o estado real da entrega e atualizar o plano vivo do projeto.
 
 Essa reavaliacao deve sempre:
 
 - revisar o que foi planejado versus o que foi realmente entregue;
 - revisar codigo, infraestrutura, contratos, UX, testes, seguranca, observabilidade e documentacao impactados;
-- identificar gaps, dividas, retrabalho evitavel, mudancas de prioridade e funcionalidades novas surgidas durante a sprint;
+- identificar gaps, dividas, retrabalho evitavel, mudancas de prioridade e funcionalidades novas surgidas durante o ciclo de entrega;
 - atualizar o roadmap mestre e toda documentacao relacionada ao estado atual do projeto.
 
 ## Skills obrigatorias nessa reavaliacao
@@ -135,7 +135,7 @@ Skills minimas obrigatorias:
 - `breakdown-test` para revisar cobertura, lacunas e qualidade esperada das proximas entregas;
 - `readiness-report` para identificar gaps de maturidade operacional, governanca, feedback loop e prontidao do repositorio.
 
-Skills adicionais devem entrar quando a sprint tocar temas especificos, por exemplo:
+Skills adicionais devem entrar quando o ciclo de entrega tocar temas especificos, por exemplo:
 
 - `review-architecture`, `architecture-patterns` e `domain-modeling` para mudancas fortes de backend e dominio;
 - `api-documenter`, `api-designer`, `openapi` e `api-contract-testing` para API e contratos;
@@ -144,17 +144,17 @@ Skills adicionais devem entrar quando a sprint tocar temas especificos, por exem
 - `security-best-practices` e `security-threat-model` para superfices sensiveis;
 - `docker`, `github-actions-expert`, `monitoring-observability`, `kubernetes`, `helm-chart-scaffolding` e `gitops-workflow` para trilhas operacionais e de plataforma.
 
-A transicao entre sprints so deve ser considerada pronta quando essa reavaliacao tiver sido executada e refletida na documentacao viva do projeto.
+A transicao entre ciclos de entrega so deve ser considerada pronta quando essa reavaliacao tiver sido executada e refletida na documentacao viva do projeto.
 
-Checklist operacional oficial: `docs/guides/quality/sprint-reassessment-checklist.md`.
+Checklist operacional oficial: `docs/guides/quality/delivery-reassessment-checklist.md`.
 
 ## Referencias
 
-- [Roadmap mestre de sprints](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/)
 - [Fundacoes do backend](C:/estudos/StreamGate/docs/guides/backend/backend-foundations.md)
 - [Fundacoes do frontend](C:/estudos/StreamGate/docs/guides/frontend/frontend-foundations.md)
-- [Baseline DevOps da Sprint 0](C:/estudos/StreamGate/docs/guides/platform/devops-baseline-sprint-0.md)
-- [Baseline de Testes da Sprint 0](C:/estudos/StreamGate/docs/guides/quality/testing-baseline-sprint-0.md)
-- [Baseline de Seguranca da Sprint 0](C:/estudos/StreamGate/docs/guides/security/security-baseline-sprint-0.md)
+- [Baseline DevOps](C:/estudos/StreamGate/docs/guides/platform/devops-baseline.md)
+- [Baseline de Testes](C:/estudos/StreamGate/docs/guides/quality/testing-baseline.md)
+- [Baseline de Seguranca](C:/estudos/StreamGate/docs/guides/security/security-baseline.md)
 - [Threat model inicial do repositorio](C:/estudos/StreamGate/docs/guides/security/streamgate-threat-model.md)
-- [Checklist de reavaliacao entre sprints](C:/estudos/StreamGate/docs/guides/quality/sprint-reassessment-checklist.md)
+- [Checklist de reavaliacao entre ciclos de entrega](C:/estudos/StreamGate/docs/guides/quality/delivery-reassessment-checklist.md)

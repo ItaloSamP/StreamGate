@@ -8,7 +8,7 @@ Padronizar o fechamento operacional do StreamGate no estagio atual do projeto: a
 
 Use este checklist em:
 
-- fechamento de sprint com runtime alterado;
+- fechamento de ciclo de entrega com runtime alterado;
 - PR grande que toca API, worker, web, contratos ou scripts operacionais;
 - validacao antes de demonstracao relevante ou pacote de evidencias final.
 
@@ -17,7 +17,7 @@ Use este checklist em:
 ### 1. Sanidade de ambiente
 
 - Confirmar `.env` sincronizado com `.env.example`.
-- Confirmar envs criticas de Sprint 5 presentes:
+- Confirmar envs criticas de operacao segura presentes:
   - email;
   - webhook;
   - artefatos;

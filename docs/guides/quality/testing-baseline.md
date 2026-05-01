@@ -1,14 +1,14 @@
-# Baseline de Testes da Sprint 0
+# Baseline de Testes
 
 ## Objetivo
-Este guia consolida diretrizes de testing baseline sprint 0 para uso consistente no projeto.
+Este guia consolida diretrizes de testing baseline para uso consistente no projeto.
 
 ## Estado atual
-Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+Conteudo alinhado ao estado operacional atual; atualizar em cada mudanca relevante.
 
 
 ## Estado atual detalhado
-Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+Conteudo alinhado ao estado operacional atual; atualizar em cada mudanca relevante.
 
 ## Regras/Contratos
 - As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
@@ -16,23 +16,23 @@ Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atual
 
 ## Validacao/Evidencias
 - Validar coerencia com README raiz, docs/README e roadmap da release atual.
-- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+- Registrar atualizacoes desta pagina no closeout do ciclo de entrega correspondente.
 
 
 ## Objetivo detalhado
 
-Este documento fixa a base de planejamento e execucao de testes da Sprint 0. Ele existe para responder quatro perguntas de forma operacional:
+Este documento fixa a base de planejamento e execucao de testes do baseline inicial. Ele existe para responder quatro perguntas de forma operacional:
 
 - que tipo de teste o projeto reconhece oficialmente
 - qual comando e fonte de verdade por stack
 - qual cobertura minima esperamos por tipo de entrega
 - quando uma falha pode ser aceita como exclusivamente de ambiente
 
-A Sprint 0 nao existe para maximizar cobertura. Ela existe para tornar a validacao do projeto legivel, repetivel e auditavel.
+A baseline inicial nao existe para maximizar cobertura. Ela existe para tornar a validacao do projeto legivel, repetivel e auditavel.
 
 ## Matriz oficial de testes por camada
 
-| Camada | Objetivo | Ferramenta/trilha atual | Status na Sprint 0 |
+| Camada | Objetivo | Ferramenta/trilha atual | Status na baseline inicial |
 | --- | --- | --- | --- |
 | Unitario | validar funcoes, helpers e regras locais | `vitest` no frontend, testes Ruby locais quando existirem | Parcial |
 | Request | validar endpoint HTTP e contrato basico da API | `rails test` em `apps/api` | Parcial |
@@ -44,7 +44,7 @@ A Sprint 0 nao existe para maximizar cobertura. Ela existe para tornar a validac
 
 ## Cobertura minima desejada por tipo de entrega
 
-A cobertura minima da Sprint 0 e orientada por tipo de entrega, nao por percentual global artificial.
+A cobertura minima do baseline inicial e orientada por tipo de entrega, nao por percentual global artificial.
 
 ### Mudancas de documentacao
 
@@ -97,7 +97,7 @@ Perfis oficiais:
 
 - `fast`: `ci-local` por workflow para trilhas pequenas;
 - `operational`: `run-smokes` para validar runtime, worker, artefatos e operacao segura;
-- `full-closeout`: `run-all-reports` para fechamento de sprint, PR grande ou mudanca critica de runtime/CI.
+- `full-closeout`: `run-all-reports` para fechamento de ciclo de entrega, PR grande ou mudanca critica de runtime/CI.
 
 ### Reports e coverage oficiais
 
@@ -165,7 +165,7 @@ Uma falha so pode ser tratada como exclusivamente de ambiente quando todos os po
 - a falha esta registrada com contexto suficiente para reexecucao futura
 - o time sabe qual ambiente e o caminho recomendado para evitar essa falha
 
-Exemplos validos na Sprint 0:
+Exemplos validos na baseline inicial:
 
 - `pnpm.ps1` bloqueado por politica de execucao do PowerShell
 - `spawn EPERM` no ecossistema `Vite/Vitest` no Windows host atual
@@ -177,7 +177,7 @@ Exemplos invalidos:
 - comando nao rodou porque dependencias nao foram instaladas no fluxo oficial
 - stack trace de aplicacao tratado genericamente como "problema do ambiente"
 
-## Registro oficial do estado atual na Sprint 0
+## Registro oficial do estado atual na baseline inicial
 
 | Escopo | Comando | Resultado atual | Leitura |
 | --- | --- | --- | --- |
@@ -192,7 +192,7 @@ Exemplos invalidos:
 | Compose helpers | `powershell -ExecutionPolicy Bypass -File .\scripts\compose\compose-health.tests.ps1` | PASS | helper PowerShell validado |
 | Compose helpers | `bash scripts/compose/compose-health-tests.sh` | FAIL | falha de ambiente nesta sessao (`E_ACCESSDENIED`) |
 
-## Como usar esta baseline nas proximas sprints
+## Como usar esta baseline nas proximos ciclos de entrega
 
 - toda task deve declarar qual camada de teste ela impacta
 - toda entrega deve executar os comandos fonte de verdade do seu escopo
@@ -203,5 +203,5 @@ Exemplos invalidos:
 ## Referencias
 
 - [Definition of Done](C:/estudos/StreamGate/docs/guides/quality/definition-of-done.md)
-- [Baseline DevOps da Sprint 0](C:/estudos/StreamGate/docs/guides/platform/devops-baseline-sprint-0.md)
-- [Roadmap mestre de sprints](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Baseline DevOps](C:/estudos/StreamGate/docs/guides/platform/devops-baseline.md)
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/)

@@ -4,7 +4,7 @@
 Este guia consolida diretrizes de setup para uso consistente no projeto.
 
 ## Estado atual
-Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+Conteudo alinhado ao estado operacional atual; atualizar em cada mudanca relevante.
 
 ## Regras/Contratos
 - As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
@@ -12,10 +12,10 @@ Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atual
 
 ## Validacao/Evidencias
 - Validar coerencia com README raiz, docs/README e roadmap da release atual.
-- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+- Registrar atualizacoes desta pagina no closeout do ciclo de entrega correspondente.
 
 ## Referencias
-- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/)
 - [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)
 
 
@@ -34,7 +34,7 @@ Os scripts `.ps1` continuam disponiveis apenas como fallback para Windows puro.
 
 A raiz de `scripts/` agora expoe apenas os comandos principais; helpers internos ficam organizados em `scripts/bootstrap`, `scripts/dev`, `scripts/ci`, `scripts/compose`, `scripts/reports` e `scripts/smokes`.
 
-A classificacao operacional real da Sprint 0 para ambientes, checks e falhas conhecidas esta em [docs/guides/platform/devops-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/platform/devops-baseline-sprint-0.md).
+A classificacao operacional real do baseline inicial para ambientes, checks e falhas conhecidas esta em [docs/guides/platform/devops-baseline.md](C:/estudos/StreamGate/docs/guides/platform/devops-baseline.md).
 
 ## O que voce precisa instalar
 
@@ -186,7 +186,7 @@ No `docker ps -a` ele aparece parado; isso e esperado.
 
 ## Nota sobre o worker no profile `full`
 
-O `worker` do profile `full` executa o runtime real de consumo RabbitMQ da Sprint 4.
+O `worker` do profile `full` executa o runtime real de consumo RabbitMQ do runtime operacional.
 Ele consome eventos `upload.received.v1`, processa arquivos CSV/ZIP no corte inicial, atualiza estados de job e alimenta leituras operacionais de analytics/quarantine/audit.
 Para validar a trilha completa, use o runner de smokes em `scripts/smokes`.
 
@@ -337,7 +337,7 @@ Objetivo:
 - processar arquivos e alimentar PostgreSQL e ClickHouse
 - construir painel operacional e analitico
 
-## Mapa oficial de servicos e variaveis (Sprint 2)
+## Mapa oficial de servicos e variaveis (fundacao de autenticacao)
 
 Para evitar drift entre frontend, backend, compose e contratos, este projeto passa a assumir estes nomes como oficiais:
 
@@ -371,7 +371,7 @@ Para evitar drift entre frontend, backend, compose e contratos, este projeto pas
 - `AUTH_COOKIE_ENABLED`
 - `AUTH_CSRF_MODE`
 
-### Variaveis de throttle de auth (hardening Sprint 2)
+### Variaveis de throttle de auth (hardening fundacao de autenticacao)
 
 - `AUTH_LOGIN_LIMIT_PER_IP`
 - `AUTH_LOGIN_LIMIT_PER_IDENTIFIER`
@@ -381,7 +381,7 @@ Para evitar drift entre frontend, backend, compose e contratos, este projeto pas
 - `AUTH_PASSWORD_RESET_CONFIRM_LIMIT_PER_IP`
 - `AUTH_THROTTLE_WINDOW_SECONDS`
 
-### Variaveis de readiness de upload (Sprint 2.5)
+### Variaveis de readiness de upload (gate de prontidao)
 
 - `UPLOAD_STORAGE_ENDPOINT`
 - `UPLOAD_STORAGE_BUCKET`
@@ -389,9 +389,9 @@ Para evitar drift entre frontend, backend, compose e contratos, este projeto pas
 - `UPLOAD_SIGNED_URL_TTL_SECONDS`
 - `UPLOAD_SIGNED_URL_MODE`
 
-Essas variaveis ainda nao ativam o fluxo funcional da Sprint 3 por si sozinhas, mas passam a ser oficiais para evitar drift entre compose, CI e API antes da implementacao de upload assinado.
+Essas variaveis ainda nao ativam o fluxo funcional da entrega de upload/job por si sozinhas, mas passam a ser oficiais para evitar drift entre compose, CI e API antes da implementacao de upload assinado.
 
-### Variaveis oficiais de upload/job (Sprint 3)
+### Variaveis oficiais de upload/job (entrega de upload/job)
 
 - `UPLOAD_STORAGE_ENDPOINT`
 - `UPLOAD_STORAGE_BUCKET`
@@ -409,7 +409,7 @@ Essas variaveis ainda nao ativam o fluxo funcional da Sprint 3 por si sozinhas, 
 
 Essas variaveis sustentam a trilha base de upload assinado (`signed-url -> PUT -> register`) e as listagens reais de uploads/jobs.
 
-### Validacao operacional recomendada (Sprint 4)
+### Validacao operacional recomendada (runtime operacional)
 
 Para rodar todos os smokes com lifecycle completo do Compose:
 

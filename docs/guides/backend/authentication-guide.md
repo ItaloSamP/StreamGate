@@ -4,11 +4,11 @@
 Este guia consolida diretrizes de authentication guide para uso consistente no projeto.
 
 ## Estado atual
-Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+Conteudo alinhado ao estado operacional atual; atualizar em cada mudanca relevante.
 
 
 ## Estado atual detalhado
-Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+Conteudo alinhado ao estado operacional atual; atualizar em cada mudanca relevante.
 
 ## Regras/Contratos
 - As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
@@ -16,10 +16,10 @@ Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atual
 
 ## Validacao/Evidencias
 - Validar coerencia com README raiz, docs/README e roadmap da release atual.
-- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+- Registrar atualizacoes desta pagina no closeout do ciclo de entrega correspondente.
 
 ## Referencias
-- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/)
 - [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)
 
 
@@ -63,7 +63,7 @@ Todos os erros usam envelope padrao:
 }
 ```
 
-Codigos obrigatorios na Sprint 2:
+Codigos obrigatorios na fundacao de autenticacao:
 
 - `invalid_credentials`: credencial/token de reset invalido
 - `access_denied`: token ausente, revogado ou sem permissao
@@ -129,5 +129,5 @@ Arquivos de referencia:
 ## Observacoes operacionais
 
 - em Windows host, scripts PowerShell podem exigir `ExecutionPolicy Bypass`
-- para evitar drift, manter `.env` alinhado com `.env.example` a cada fechamento de sprint
+- para evitar drift, manter `.env` alinhado com `.env.example` a cada fechamento de ciclo de entrega
 - qualquer endpoint novo de auth deve atualizar OpenAPI, roadmap e este guia no mesmo PR

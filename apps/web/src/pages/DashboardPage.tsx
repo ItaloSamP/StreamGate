@@ -119,7 +119,7 @@ export function DashboardPage() {
       writeDismissedAlertIds(next)
       return next
     })
-    showSingletonToast('info', 'Alerta fechado localmente ate a API de review/dismiss da Sprint 7.')
+    showSingletonToast('info', 'Alerta fechado localmente ate a API de review/dismiss do command center.')
   }
 
   function handleExport(kind: DashboardExportKind, format: 'csv' | 'json') {

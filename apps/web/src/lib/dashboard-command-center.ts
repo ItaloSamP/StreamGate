@@ -475,7 +475,7 @@ function buildTimeseries(
       jobs: throughput.jobs_total,
       failed: throughput.failed,
     }],
-    emptyState: 'Serie 24h depende do contrato expandido da Sprint 7.',
+    emptyState: 'Serie 24h depende do contrato expandido do command center.',
     detail: detail('series', 'Serie 24h', 'Backend ainda nao entrega bucket horario; exibindo agregado honesto da janela.', '/analytics?preset=last_24h', [
       ['Status', 'backend-pending'],
       ['Jobs agregados', throughput.jobs_total],
@@ -569,7 +569,7 @@ function buildHeatmap(dashboard: AnalyticsDashboardSnapshot | null) {
         label: `${row.range} ${days[index] ?? index + 1}: ${formatNumber(value)}`,
       })),
     })),
-    emptyState: section?.empty_state ?? 'Heatmap 7d depende do contrato expandido da Sprint 7.',
+    emptyState: section?.empty_state ?? 'Heatmap 7d depende do contrato expandido do command center.',
     detail: detail('heatmap', 'Throughput - Heatmap', 'Registros por bloco horario e dia.', '/clickhouse', [
       ['Status', section?.status ?? 'backend-pending'],
       ['Dias', days.length],

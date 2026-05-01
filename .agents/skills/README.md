@@ -142,11 +142,11 @@ Skills sem encaixe real na stack atual ou no roadmap devem sair do fluxo para ev
 
 - `security-threat-model`
   Apoia threat modeling repo-grounded, fronteiras de confianca, ativos e abuse paths.
-  Usar em sprints que abrem novas superficies ou consolidam fronteiras criticas, como auth, upload, broker e analytics.
+  Usar em ciclos de entrega que abrem novas superficies ou consolidam fronteiras criticas, como auth, upload, broker e analytics.
 
 ## Gatilhos obrigatorios por trilha
 
-A partir da Sprint 0, estes gatilhos deixam de ser recomendacao e passam a ser regra de execucao.
+A partir do baseline inicial, estes gatilhos deixam de ser recomendacao e passam a ser regra de execucao.
 
 ### Backend
 
@@ -197,7 +197,7 @@ A partir da Sprint 0, estes gatilhos deixam de ser recomendacao e passam a ser r
 - APIs e contratos: `api-documenter` + `openapi` quando houver interface publica
 - Trilha nova sem skill adequada: `find-skills`
 
-## Revisao de valor das skills ao fim da Sprint 0
+## Revisao de valor das skills ao fim do baseline inicial
 
 ### Skills que continuam agregando valor real
 
@@ -212,11 +212,11 @@ Em especial:
 
 ### Skills sem valor real neste fechamento
 
-Nenhuma skill importada precisa ser descontinuada no fechamento da Sprint 0.
+Nenhuma skill importada precisa ser descontinuada no fechamento do baseline inicial.
 
 O criterio para remocao futura continua sendo:
 
-- a skill nao apoiar mais nenhuma sprint planejada
+- a skill nao apoiar mais nenhum ciclo de entrega planejada
 - a skill duplicar completamente outra sem ganho metodologico
 - a skill empurrar um fluxo que o projeto nao usa na pratica
 

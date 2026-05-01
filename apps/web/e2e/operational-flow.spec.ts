@@ -24,7 +24,7 @@ test.describe('operational e2e flow', () => {
     const webhookToggle = page.locator('label', { hasText: 'Webhook' }).getByRole('checkbox')
     await webhookToggle.check()
     await webhookUrl.fill('https://hooks.example.test/streamgate/e2e')
-    await page.getByLabel('Motivo do teste').fill('Validar canal operacional da Sprint 5.')
+    await page.getByLabel('Motivo do teste').fill('Validar canal operacional de operacao segura.')
 
     await page.getByRole('button', { name: /Salvar canais/i }).click()
     await expect(webhookUrl).toHaveValue('https://hooks.example.test/streamgate/e2e')
@@ -56,7 +56,7 @@ async function loginAsAdmin(page: Page) {
     }
   }
 
-  throw new Error('Nao foi possivel autenticar o admin seeded para o fluxo operacional da Sprint 5.')
+  throw new Error('Nao foi possivel autenticar o admin seeded para o fluxo operacional de operacao segura.')
 }
 
 function readRootDotEnvValue(key: string) {

@@ -48,7 +48,7 @@ ensure_seed_password_env() {
   fi
 }
 
-ensure_sprint5_smoke_env() {
+ensure_smoke_env() {
   local env_path="$ROOT_DIR/.env"
   local key value
 
@@ -72,7 +72,7 @@ ensure_sprint5_smoke_env() {
     fi
   done
 
-  assert_sprint5_operational_env "$env_path"
+  assert_operational_env "$env_path"
 }
 
 stop_stack() {
@@ -181,7 +181,7 @@ trap 'print_summary; stop_stack; write_reports' EXIT
 
 init_reports
 ensure_seed_password_env
-ensure_sprint5_smoke_env
+ensure_smoke_env
 
 echo "Preparando ambiente limpo para smokes..."
 stop_stack

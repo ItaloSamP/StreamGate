@@ -1,4 +1,4 @@
-﻿# Fundacoes do Frontend
+# Fundacoes do Frontend
 
 ## Objetivo
 
@@ -6,17 +6,17 @@ Este guia fixa as regras de arquitetura, interface e integracao do frontend do S
 
 ## Estado atual
 
-Estado alinhado a trilha de frontend da Sprint 6:
+Estado alinhado a trilha de frontend operacional:
 
-- superficies publicas e autenticadas usam linguagem visual consolidada desde as Sprints 0 e 1
+- superficies publicas e autenticadas usam linguagem visual consolidada desde as Ciclos de entrega 0 e 1
 - auth real esta conectado a API (`register`, `login`, `logout`, `me`, `session/refresh`, reset)
-- `/upload` e `/jobs` consomem dados reais desde a Sprint 3
+- `/upload` e `/jobs` consomem dados reais desde a entrega de upload/job
 - `/dashboard`, `/analytics`, `/clickhouse`, `/etl-explorer`, `/quarantine`, `/events` e `/audit` consomem dados reais
 - `/upload` suporta arquivo local e `public_link`, mantendo conectores wave 1 fora do corte funcional
 - `/audit` e DLQ sao superficies admin-only
 - filtros operacionais usam URL state compartilhavel
 - payloads/metadados sensiveis sao mascarados antes de renderizar previews ou CSV
-- refresh e frescor de dados sao explicitos, sem polling automatico nesta sprint
+- refresh e frescor de dados sao explicitos, sem polling automatico neste ciclo de entrega
 
 ## Regras/Contratos
 
@@ -100,7 +100,7 @@ Regras:
 - paginas nao devem implementar `fetch` ad hoc
 - cache/polling futuros nao podem quebrar a camada adapter
 
-Adapters reais disponiveis na Sprint 6:
+Adapters reais disponiveis na workspace operacional:
 
 - `requestUploadSignedUrl`
 - `registerUpload`
@@ -175,7 +175,7 @@ Stale:
 
 - exibir `lastUpdatedAt`
 - marcar leitura como stale apos alguns minutos sem refresh
-- nao adicionar polling automatico nesta sprint
+- nao adicionar polling automatico neste ciclo de entrega
 
 ### Dados sensiveis
 
@@ -195,7 +195,7 @@ Regras:
 - paginas admin-only devem ser removidas da sidebar para operador
 - rota direta admin-only deve renderizar access denied, nao dados parciais
 
-### O que nao entra nesta sprint
+### O que nao entra neste ciclo de entrega
 
 - polling automatico
 - mutacoes operacionais (`retry`, `resolve`, `replay`, `delete`, `acknowledge`, `reprocess`)
@@ -217,10 +217,10 @@ Testes Playwright continuam em `apps/web/e2e`. Novos arquivos `*.test.ts`, `*.te
 
 ## Validacao/Evidencias
 
-Evidencias da trilha de frontend Sprint 6:
+Evidencias da trilha de frontend workspace operacional:
 
 - testes focados de adapter, dashboard, `/clickhouse`, `/etl-explorer`, Upload Center e rotas protegidas passaram no ciclo de implementacao
-- `pnpm.cmd --dir apps/web test:run`, `pnpm.cmd --dir apps/web test:integration`, `pnpm.cmd --dir apps/web build`, `ci-local.ps1 frontend` e `run-smokes.ps1` com `SMOKE_PUBLIC_LINK_URL` passaram no fechamento do recorte Sprint 6
+- `pnpm.cmd --dir apps/web test:run`, `pnpm.cmd --dir apps/web test:integration`, `pnpm.cmd --dir apps/web build`, `ci-local.ps1 frontend` e `run-smokes.ps1` com `SMOKE_PUBLIC_LINK_URL` passaram no fechamento do recorte do workspace operacional
 - verificacao visual desktop/mobile passou nas rotas principais alteradas
 
 Criterio de pronto para mudancas futuras de frontend:
@@ -235,7 +235,7 @@ Criterio de pronto para mudancas futuras de frontend:
 
 ## Referencias
 
-- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/)
 - [Mapa do workspace frontend](C:/estudos/StreamGate/docs/guides/frontend/frontend-workspace-map.md)
 - [README do web](C:/estudos/StreamGate/apps/web/README.md)
 - [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)
