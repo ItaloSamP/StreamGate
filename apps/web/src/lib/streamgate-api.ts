@@ -286,7 +286,14 @@ export type AuditQuery = OperationalQuery & {
   request_id?: string
 }
 
-export type UploadContentType = 'application/zip' | 'text/csv'
+export type UploadContentType =
+  | 'application/zip'
+  | 'text/csv'
+  | 'application/json'
+  | 'application/x-ndjson'
+  | 'application/ndjson'
+  | 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  | 'application/vnd.apache.parquet'
 
 export type JobSummary = {
   id: string

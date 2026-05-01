@@ -225,7 +225,7 @@ export function WorkspaceOverview({
                   id={uploadInputId}
                   className="dash-sr-only"
                   type="file"
-                  accept=".zip,.csv,text/csv,application/zip"
+                  accept=".zip,.csv,.json,.ndjson,.jsonl,.xlsx,.parquet,text/csv,application/json,application/zip,application/x-ndjson,application/ndjson,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.apache.parquet"
                   onChange={(event) => {
                     const file = event.currentTarget.files?.[0]
                     if (file) onQuickUploadFile?.(file)

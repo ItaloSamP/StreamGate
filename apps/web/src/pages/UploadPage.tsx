@@ -400,7 +400,7 @@ export function UploadPage() {
                     <Input
                       id="upload-file"
                       type="file"
-                      accept=".zip,.csv,text/csv,application/zip"
+                      accept=".zip,.csv,.json,.ndjson,.jsonl,.xlsx,.parquet,text/csv,application/json,application/zip,application/x-ndjson,application/ndjson,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.apache.parquet"
                       onChange={(event) => {
                         const file = event.target.files?.[0] ?? null
                         handleFileSelection(file)
@@ -464,7 +464,11 @@ export function UploadPage() {
                         disabled={busy}
                       >
                         <option value="text/csv">text/csv</option>
+                        <option value="application/json">application/json</option>
+                        <option value="application/x-ndjson">application/x-ndjson</option>
                         <option value="application/zip">application/zip</option>
+                        <option value="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">application/vnd.openxmlformats-officedocument.spreadsheetml.sheet</option>
+                        <option value="application/vnd.apache.parquet">application/vnd.apache.parquet</option>
                       </select>
                     </div>
 

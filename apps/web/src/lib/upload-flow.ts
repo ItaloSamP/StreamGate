@@ -12,6 +12,22 @@ export function inferUploadContentType(file: File): UploadContentType | null {
     return 'text/csv'
   }
 
+  if (lowerName.endsWith('.json') || normalizedType === 'application/json') {
+    return 'application/json'
+  }
+
+  if (lowerName.endsWith('.ndjson') || lowerName.endsWith('.jsonl') || normalizedType === 'application/x-ndjson' || normalizedType === 'application/ndjson') {
+    return 'application/x-ndjson'
+  }
+
+  if (lowerName.endsWith('.xlsx') || normalizedType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+    return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  }
+
+  if (lowerName.endsWith('.parquet') || normalizedType === 'application/vnd.apache.parquet') {
+    return 'application/vnd.apache.parquet'
+  }
+
   return null
 }
 
