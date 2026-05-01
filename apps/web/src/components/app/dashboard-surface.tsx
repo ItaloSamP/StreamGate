@@ -95,6 +95,7 @@ export function DashboardSurface({
   primaryActionLabel = '+ Upload',
   secondaryActionLabel = 'Exportar',
   enableOperationalBadges = false,
+  alertStrip,
   children,
 }: {
   locked?: boolean
@@ -108,6 +109,7 @@ export function DashboardSurface({
   primaryActionLabel?: string
   secondaryActionLabel?: string | null
   enableOperationalBadges?: boolean
+  alertStrip?: ReactNode
   children?: ReactNode
 }) {
   const initials = getInitials(profileName)
@@ -316,18 +318,20 @@ export function DashboardSurface({
             </div>
           </header>
 
-          <div className="dash-alert-strip">
-            <span className="dash-alert-icon">Alertas</span>
-            <span>
-              <strong>Operacao segura</strong> {alertCopy}
-            </span>
-            {!locked ? (
-              <NavLink to="/quarantine" className="dash-alert-link" onClick={() => setSidebarOpen(false)}>
-                Abrir triagem
-              </NavLink>
-            ) : null}
-            <span className="dash-alert-close">Sem polling</span>
-          </div>
+          {alertStrip ?? (
+            <div className="dash-alert-strip">
+              <span className="dash-alert-icon">Alertas</span>
+              <span>
+                <strong>Operacao segura</strong> {alertCopy}
+              </span>
+              {!locked ? (
+                <NavLink to="/quarantine" className="dash-alert-link" onClick={() => setSidebarOpen(false)}>
+                  Abrir triagem
+                </NavLink>
+              ) : null}
+              <span className="dash-alert-close">Sem polling</span>
+            </div>
+          )}
 
           {content}
         </div>

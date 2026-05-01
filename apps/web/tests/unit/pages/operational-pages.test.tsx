@@ -84,18 +84,42 @@ describe('Sprint 4 operational pages', () => {
     expect(await screen.findByRole('link', { name: /Auditoria/i })).toBeInTheDocument()
   }, 15000)
 
-  it('turns dashboard into a real command center instead of mock metrics', async () => {
+  it('renders Sprint 7 P0 dashboard parity with honest backend-pending interactions', async () => {
+    const createObjectUrl = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:dashboard-export')
+    const revokeObjectUrl = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined)
+
     renderApp('/dashboard', 'admin')
 
-    expect(await screen.findByText('Volume Processado · ultimas 24h')).toBeInTheDocument()
+    expect(await screen.findByText('Volume Processado - ultimas 24h')).toBeInTheDocument()
     expect(await screen.findByText('Pipeline de Jobs')).toBeInTheDocument()
+    expect(await screen.findByText('Throughput - Heatmap')).toBeInTheDocument()
+    expect((await screen.findAllByText('backend-pending')).length).toBeGreaterThan(0)
+    expect(screen.getByRole('tab', { name: /Ativos \(1\)/i })).toHaveAttribute('aria-selected', 'true')
+
+    fireEvent.click(screen.getByRole('tab', { name: /Fila \(0\)/i }))
+    expect(await screen.findByText('Nenhum job nesta aba para a janela atual.')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /Jobs hoje/i }))
+    expect(await screen.findByText('Detalhe contextual')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Abrir rota especializada/i })).toHaveAttribute('href', '/analytics?preset=last_24h')
+
+    fireEvent.click(screen.getByRole('button', { name: /Fechar painel/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Fechar alerta local/i }))
+    expect(screen.queryByText(/Quarentena aberta/i)).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /Exportar CSV/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Exportar JSON/i }))
+
+    expect(createObjectUrl).toHaveBeenCalledTimes(2)
     expect((await screen.findAllByText('Quarentena')).length).toBeGreaterThan(0)
     expect(screen.getByRole('link', { name: '+ Upload' })).toHaveAttribute('href', '/upload')
     expect(await screen.findByText('Fonte: postgres_derived')).toBeInTheDocument()
-    expect(await screen.findByText('Snapshot derived')).toBeInTheDocument()
     expect(await screen.findByText('Worker processed event_fixture_1 with status processed.')).toBeInTheDocument()
     expect(screen.queryByText('1.840.000')).not.toBeInTheDocument()
-  })
+
+    createObjectUrl.mockRestore()
+    revokeObjectUrl.mockRestore()
+  }, 10000)
 
   it('renders ClickHouse as a dense warehouse dashboard without SQL console claims', async () => {
     renderApp('/clickhouse', 'admin')
@@ -646,10 +670,10 @@ function analyticsDashboardResponse() {
           empty_state: null,
         },
         warnings: {
-          status: 'empty',
+          status: 'derived',
           generated_at: '2026-04-24T14:00:00Z',
-          data: { open: 0, failed: 0, resolved: 0 },
-          empty_state: 'no_data_in_window',
+          data: { open: 1, failed: 2, resolved: 0 },
+          empty_state: null,
         },
         event_log: {
           status: 'derived',

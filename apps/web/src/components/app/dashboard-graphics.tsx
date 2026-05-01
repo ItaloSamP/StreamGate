@@ -1,114 +1,140 @@
-export function VolumeChart() {
+import type { DashboardDistributionRow, DashboardSeriesPoint } from '@/lib/dashboard-command-center'
+
+const CHART_WIDTH = 580
+const CHART_HEIGHT = 132
+const PLOT_LEFT = 38
+const PLOT_RIGHT = 574
+const PLOT_TOP = 12
+const PLOT_BOTTOM = 113
+const COLORS = ['#3ecf8e', '#4d9de0', '#e05c5c', '#9b7fe8', '#5a5a5a', '#f0c040']
+
+export function VolumeChart({ points, status }: { points: DashboardSeriesPoint[]; status: string }) {
+  const safePoints = points.length > 0 ? points : [{ label: '--', records: 0, volumeGb: 0, jobs: 0, failed: 0 }]
+  const maxRecords = Math.max(...safePoints.map((point) => point.records), 1)
+  const maxVolume = Math.max(...safePoints.map((point) => point.volumeGb), 1)
+  const step = safePoints.length > 1 ? (PLOT_RIGHT - PLOT_LEFT) / (safePoints.length - 1) : 0
+  const coords = safePoints.map((point, index) => ({
+    x: safePoints.length > 1 ? PLOT_LEFT + index * step : (PLOT_LEFT + PLOT_RIGHT) / 2,
+    y: PLOT_BOTTOM - (point.records / maxRecords) * (PLOT_BOTTOM - PLOT_TOP),
+    volumeY: PLOT_BOTTOM - (point.volumeGb / maxVolume) * (PLOT_BOTTOM - PLOT_TOP),
+    point,
+  }))
+  const linePath = coords.map((coord, index) => `${index === 0 ? 'M' : 'L'}${coord.x.toFixed(1)},${coord.y.toFixed(1)}`).join(' ')
+  const volumePath = coords.map((coord, index) => `${index === 0 ? 'M' : 'L'}${coord.x.toFixed(1)},${coord.volumeY.toFixed(1)}`).join(' ')
+  const areaPath = `${linePath} L${coords.at(-1)?.x.toFixed(1) ?? PLOT_RIGHT},${PLOT_BOTTOM} L${coords[0]?.x.toFixed(1) ?? PLOT_LEFT},${PLOT_BOTTOM} Z`
+
   return (
-    <svg viewBox="0 0 580 132" xmlns="http://www.w3.org/2000/svg" className="dash-chart">
+    <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} xmlns="http://www.w3.org/2000/svg" className="dash-chart" role="img" aria-label={`Volume 24h ${status}`}>
       <defs>
-        <linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id="dashVolumeArea" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#4d9de0" stopOpacity=".22" />
           <stop offset="100%" stopColor="#4d9de0" stopOpacity="0" />
         </linearGradient>
       </defs>
-      <line x1="38" y1="12" x2="574" y2="12" stroke="#202020" strokeWidth="1" />
-      <line x1="38" y1="40" x2="574" y2="40" stroke="#202020" strokeWidth="1" />
-      <line x1="38" y1="68" x2="574" y2="68" stroke="#202020" strokeWidth="1" />
-      <line x1="38" y1="96" x2="574" y2="96" stroke="#202020" strokeWidth="1" />
-      <line x1="38" y1="113" x2="574" y2="113" stroke="#1a1a1a" strokeWidth="1" />
-      <text x="34" y="14" fill="#5a5a5a" fontSize="7.5" fontFamily="DM Mono" textAnchor="end">150k</text>
-      <text x="34" y="42" fill="#5a5a5a" fontSize="7.5" fontFamily="DM Mono" textAnchor="end">100k</text>
-      <text x="34" y="70" fill="#5a5a5a" fontSize="7.5" fontFamily="DM Mono" textAnchor="end">50k</text>
-      <text x="34" y="98" fill="#5a5a5a" fontSize="7.5" fontFamily="DM Mono" textAnchor="end">10k</text>
-      <rect x="46" y="100" width="12" height="13" fill="#4d9de0" opacity=".4" rx="1.5" />
-      <rect x="59" y="107" width="6" height="6" fill="#585858" opacity=".35" rx="1" />
-      <rect x="101" y="88" width="12" height="25" fill="#4d9de0" opacity=".5" rx="1.5" />
-      <rect x="114" y="104" width="6" height="9" fill="#585858" opacity=".35" rx="1" />
-      <rect x="156" y="76" width="12" height="37" fill="#4d9de0" opacity=".55" rx="1.5" />
-      <rect x="169" y="101" width="6" height="12" fill="#585858" opacity=".35" rx="1" />
-      <rect x="211" y="28" width="12" height="85" fill="#4d9de0" opacity=".72" rx="1.5" />
-      <rect x="224" y="97" width="6" height="16" fill="#585858" opacity=".4" rx="1" />
-      <rect x="266" y="50" width="12" height="63" fill="#4d9de0" opacity=".62" rx="1.5" />
-      <rect x="279" y="100" width="6" height="13" fill="#585858" opacity=".35" rx="1" />
-      <rect x="321" y="40" width="12" height="73" fill="#4d9de0" opacity=".67" rx="1.5" />
-      <rect x="334" y="98" width="6" height="15" fill="#585858" opacity=".35" rx="1" />
-      <rect x="376" y="60" width="12" height="53" fill="#4d9de0" opacity=".55" rx="1.5" />
-      <rect x="389" y="102" width="6" height="11" fill="#585858" opacity=".35" rx="1" />
-      <rect x="431" y="18" width="12" height="95" fill="#4d9de0" opacity=".88" rx="1.5" />
-      <rect x="444" y="100" width="6" height="13" fill="#585858" opacity=".35" rx="1" />
-      <rect x="486" y="90" width="12" height="23" fill="#4d9de0" opacity=".2" rx="1.5" />
-      <rect x="541" y="96" width="12" height="17" fill="#4d9de0" opacity=".14" rx="1.5" />
-      <path d="M52,106 C90,96 128,82 164,70 C200,58 234,88 272,66 C308,44 342,36 378,42 C414,48 450,22 488,28 L488,113 L52,113 Z" fill="url(#gArea)" />
-      <path d="M52,106 C90,96 128,82 164,70 C200,58 234,88 272,66 C308,44 342,36 378,42 C414,48 450,22 488,28" fill="none" stroke="#4d9de0" strokeWidth="1.8" />
-      <path d="M52,110 C90,105 128,99 164,91 C200,83 234,96 272,84 C308,72 342,58 378,62 C414,66 450,44 488,48" fill="none" stroke="#3ccfcf" strokeWidth="1.3" strokeDasharray="4,3" opacity=".65" />
-      <line x1="437" y1="12" x2="437" y2="113" stroke="#2c2c2c" strokeWidth="1" strokeDasharray="2,3" />
-      <circle cx="437" cy="22" r="3.5" fill="#141414" stroke="#4d9de0" strokeWidth="1.5" />
-      <circle cx="437" cy="46" r="3" fill="#141414" stroke="#3ccfcf" strokeWidth="1.5" />
-      <rect x="448" y="10" width="95" height="44" rx="4" fill="#0f0f0f" stroke="#2c2c2c" strokeWidth="1" />
-      <text x="454" y="22" fill="#707070" fontSize="7.5" fontFamily="DM Mono">14h — pico diario</text>
-      <circle cx="453" cy="31" r="3" fill="#4d9de0" opacity=".7" />
-      <text x="459" y="34" fill="#999" fontSize="7.5" fontFamily="DM Mono">Registros</text>
-      <text x="536" y="34" fill="#f5f5f5" fontSize="7.5" fontFamily="DM Mono" textAnchor="end">42.1k</text>
-      <circle cx="453" cy="43" r="3" fill="#3ccfcf" opacity=".7" />
-      <text x="459" y="46" fill="#999" fontSize="7.5" fontFamily="DM Mono">Volume</text>
-      <text x="536" y="46" fill="#f5f5f5" fontSize="7.5" fontFamily="DM Mono" textAnchor="end">0.8 GB</text>
-      {['06h', '07h', '08h', '09h', '11h', '12h', '13h', '14h ●', '15h', '16h'].map((label, index) => {
-        const positions = [52, 107, 162, 217, 272, 327, 382, 437, 492, 547]
-        const highlight = label.includes('●')
-        const dimmed = label === '15h' || label === '16h'
+      {[12, 40, 68, 96, 113].map((y) => (
+        <line key={y} x1="38" y1={y} x2="574" y2={y} stroke={y === 113 ? '#1a1a1a' : '#202020'} strokeWidth="1" />
+      ))}
+      {['max', '75%', '50%', '25%'].map((label, index) => (
+        <text key={label} x="34" y={14 + index * 28} fill="#5a5a5a" fontSize="7.5" fontFamily="DM Mono" textAnchor="end">{label}</text>
+      ))}
+      {coords.map((coord) => {
+        const barHeight = Math.max(3, (coord.point.jobs / Math.max(...safePoints.map((point) => point.jobs), 1)) * 88)
+        const failedHeight = Math.max(0, (coord.point.failed / Math.max(...safePoints.map((point) => point.failed), 1)) * 26)
+
         return (
-          <text
-            key={label}
-            x={positions[index]}
-            y="127"
-            fill={highlight ? '#4d9de0' : '#5a5a5a'}
-            opacity={dimmed ? '.45' : '1'}
-            fontSize="7.5"
-            fontFamily="DM Mono"
-            textAnchor="middle"
-            fontWeight={highlight ? '600' : undefined}
-          >
-            {label}
-          </text>
+          <g key={`${coord.point.label}-${coord.x}`}>
+            <rect x={coord.x - 6} y={PLOT_BOTTOM - barHeight} width="12" height={barHeight} fill="#4d9de0" opacity=".55" rx="1.5" />
+            {failedHeight > 0 ? <rect x={coord.x + 7} y={PLOT_BOTTOM - failedHeight} width="6" height={failedHeight} fill="#585858" opacity=".45" rx="1" /> : null}
+          </g>
         )
       })}
-    </svg>
-  )
-}
-
-export function WeeklyBars() {
-  return (
-    <svg viewBox="0 0 240 36" className="dash-mini-bars">
-      <rect x="0" y="22" width="28" height="14" fill="var(--signal-blue)" rx="2" opacity=".35" />
-      <rect x="34" y="16" width="28" height="20" fill="var(--signal-blue)" rx="2" opacity=".45" />
-      <rect x="68" y="10" width="28" height="26" fill="var(--signal-blue)" rx="2" opacity=".55" />
-      <rect x="102" y="4" width="28" height="32" fill="var(--signal-blue)" rx="2" opacity=".7" />
-      <rect x="136" y="8" width="28" height="28" fill="var(--signal-blue)" rx="2" opacity=".6" />
-      <rect x="170" y="18" width="28" height="18" fill="var(--signal-blue)" rx="2" opacity=".4" />
-      <rect x="204" y="0" width="28" height="36" fill="var(--signal-blue)" rx="2" opacity=".88" />
-      {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Hj'].map((label, index) => (
+      <path d={areaPath} fill="url(#dashVolumeArea)" opacity={status === 'backend-pending' ? '.45' : '1'} />
+      <path d={linePath} fill="none" stroke="#4d9de0" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={volumePath} fill="none" stroke="#3ccfcf" strokeWidth="1.3" strokeDasharray="4,3" opacity=".65" strokeLinecap="round" strokeLinejoin="round" />
+      {coords.map((coord) => (
+        <circle key={`${coord.point.label}-dot`} cx={coord.x} cy={coord.y} r="3" fill="#141414" stroke="#4d9de0" strokeWidth="1.5" />
+      ))}
+      {safePoints.map((point, index) => (
         <text
-          key={label}
-          x={14 + index * 34}
-          y="50"
-          textAnchor="middle"
-          fill={label === 'Hj' ? '#4d9de0' : '#5a5a5a'}
-          fontSize="7"
+          key={`${point.label}-label`}
+          x={coords[index]?.x ?? PLOT_LEFT}
+          y="127"
+          fill={index === safePoints.length - 1 ? '#4d9de0' : '#5a5a5a'}
+          fontSize="7.5"
           fontFamily="DM Mono"
+          textAnchor="middle"
+          fontWeight={index === safePoints.length - 1 ? '600' : undefined}
         >
-          {label}
+          {point.label}
         </text>
       ))}
     </svg>
   )
 }
 
-export function DistributionDonut() {
+export function WeeklyBars({ bars }: { bars: { label: string; value: number }[] }) {
+  const safeBars = bars.length > 0 ? bars : ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Hj'].map((label) => ({ label, value: 0 }))
+  const maxValue = Math.max(...safeBars.map((bar) => bar.value), 1)
+
   return (
-    <svg viewBox="0 0 110 110" width="96" height="96">
-      <circle cx="55" cy="55" r="40" fill="none" stroke="#1a1a1a" strokeWidth="13" />
-      <circle cx="55" cy="55" r="40" fill="none" stroke="#3ecf8e" strokeWidth="13" strokeDasharray="222 29" strokeDashoffset="63" />
-      <circle cx="55" cy="55" r="40" fill="none" stroke="#4d9de0" strokeWidth="13" strokeDasharray="15 236" strokeDashoffset="-159" />
-      <circle cx="55" cy="55" r="40" fill="none" stroke="#e05c5c" strokeWidth="13" strokeDasharray="14 237" strokeDashoffset="-174" />
-      <circle cx="55" cy="55" r="40" fill="none" stroke="#9b7fe8" strokeWidth="13" strokeDasharray="3 248" strokeDashoffset="-188" />
-      <text x="55" y="51" textAnchor="middle" fill="#f5f5f5" fontSize="17" fontWeight="300" fontFamily="Plus Jakarta Sans" letterSpacing="-1">148</text>
-      <text x="55" y="63" textAnchor="middle" fill="#5a5a5a" fontSize="7" fontFamily="DM Mono" letterSpacing=".06em">JOBS</text>
+    <svg viewBox="0 0 240 52" className="dash-mini-bars" role="img" aria-label="Jobs por dia da semana">
+      {safeBars.map((bar, index) => {
+        const height = Math.max(4, (bar.value / maxValue) * 36)
+        const x = index * 34
+
+        return (
+          <g key={bar.label}>
+            <rect x={x} y={36 - height} width="28" height={height} fill="var(--signal-blue)" rx="2" opacity={bar.value === maxValue ? '.88' : '.45'} />
+            <text x={x + 14} y="50" textAnchor="middle" fill={index === safeBars.length - 1 ? '#4d9de0' : '#5a5a5a'} fontSize="7" fontFamily="DM Mono">
+              {bar.label}
+            </text>
+          </g>
+        )
+      })}
     </svg>
   )
+}
+
+export function DistributionDonut({ rows, total }: { rows: DashboardDistributionRow[]; total: number }) {
+  const circumference = 2 * Math.PI * 40
+  const segments = rows.reduce<{
+    items: { row: DashboardDistributionRow; index: number; length: number; dashOffset: number }[]
+    nextOffset: number
+  }>((acc, row, index) => {
+    const length = total > 0 ? (row.count / total) * circumference : 0
+
+    return {
+      items: [...acc.items, { row, index, length, dashOffset: acc.nextOffset }],
+      nextOffset: acc.nextOffset - length,
+    }
+  }, { items: [], nextOffset: circumference * 0.25 }).items
+
+  return (
+    <svg viewBox="0 0 110 110" width="96" height="96" role="img" aria-label="Distribuicao de jobs">
+      <circle cx="55" cy="55" r="40" fill="none" stroke="#1a1a1a" strokeWidth="13" />
+      {segments.map(({ row, index, length, dashOffset }) => (
+        <circle
+          key={row.status}
+          cx="55"
+          cy="55"
+          r="40"
+          fill="none"
+          stroke={colorForRow(row, index)}
+          strokeWidth="13"
+          strokeDasharray={`${Math.max(0, length)} ${circumference}`}
+          strokeDashoffset={dashOffset}
+          transform="rotate(-90 55 55)"
+        />
+      ))}
+      <text x="55" y="51" textAnchor="middle" fill="#f5f5f5" fontSize="17" fontWeight="300" fontFamily="Plus Jakarta Sans" letterSpacing="0">
+        {total}
+      </text>
+      <text x="55" y="63" textAnchor="middle" fill="#5a5a5a" fontSize="7" fontFamily="DM Mono" letterSpacing="0">JOBS</text>
+    </svg>
+  )
+}
+
+function colorForRow(row: DashboardDistributionRow, index: number) {
+  if (row.tone.startsWith('var(')) return COLORS[index % COLORS.length]
+  return row.tone
 }

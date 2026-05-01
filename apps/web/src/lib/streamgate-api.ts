@@ -86,6 +86,88 @@ export type AnalyticsDashboardEvent = {
   upload_id: string | null
   status: string | null
   message: string
+  metadata?: Record<string, unknown>
+}
+
+export type AnalyticsDashboardTimeseriesPoint = {
+  label?: string
+  bucket?: string
+  timestamp?: string
+  records?: number
+  records_count?: number
+  volume_gb?: number
+  volume_bytes?: number
+  jobs?: number
+  jobs_total?: number
+  failed?: number
+  failed_jobs?: number
+}
+
+export type AnalyticsDashboardStatusDistributionItem = {
+  status: string
+  count: number
+}
+
+export type AnalyticsDashboardFormatItem = {
+  content_type?: string
+  format?: string
+  label?: string
+  count?: number
+  jobs?: number
+  volume_bytes?: number
+  percent?: number
+}
+
+export type AnalyticsDashboardHeatmap = {
+  rows?: { range: string; values: number[] }[]
+  days?: string[]
+}
+
+export type AnalyticsDashboardJobBoardItem = Partial<JobSummary> & {
+  file?: string
+  filename?: string
+  progress?: number
+  duration_seconds?: number
+}
+
+export type AnalyticsDashboardQueueItem = {
+  position?: number
+  pos?: number | string
+  name?: string
+  filename?: string
+  size?: string
+  byte_size?: number
+  eta?: string
+  job_id?: string
+}
+
+export type AnalyticsDashboardIngestion = {
+  supported_formats?: string[]
+  enabled_formats?: string[]
+  pending_formats?: string[]
+  uploads?: Partial<UploadSummary>[]
+}
+
+export type AnalyticsDashboardWorkerLive = {
+  id: string
+  name?: string
+  status: string
+  active?: boolean
+  current_job_id?: string | null
+  current_label?: string | null
+  progress?: number
+  heartbeat_at?: string | null
+}
+
+export type AnalyticsDashboardAlert = {
+  id: string
+  title: string
+  message: string
+  severity: 'info' | 'warning' | 'error' | string
+  href?: string
+  created_at?: string | null
+  reviewed_at?: string | null
+  dismissed_at?: string | null
 }
 
 export type AnalyticsDashboardSnapshot = {
@@ -96,9 +178,17 @@ export type AnalyticsDashboardSnapshot = {
     queue: AnalyticsDashboardSection<{ processed: number; retried: number; moved_to_dlq: number }>
     workers: AnalyticsDashboardSection<{ processed: number; failed_terminal: number; average_latency_ms: number }>
     throughput: AnalyticsDashboardSection<{ jobs_total: number; uploads_total: number; completed: number; failed: number; quarantined: number }>
-    formats: AnalyticsDashboardSection<{ content_type: string; count: number }[]>
+    formats: AnalyticsDashboardSection<AnalyticsDashboardFormatItem[]>
     warnings: AnalyticsDashboardSection<{ open: number; failed: number; resolved: number }>
     event_log: AnalyticsDashboardSection<AnalyticsDashboardEvent[]>
+    timeseries_24h?: AnalyticsDashboardSection<AnalyticsDashboardTimeseriesPoint[]>
+    status_distribution?: AnalyticsDashboardSection<AnalyticsDashboardStatusDistributionItem[]>
+    heatmap_7d?: AnalyticsDashboardSection<AnalyticsDashboardHeatmap>
+    jobs_board?: AnalyticsDashboardSection<AnalyticsDashboardJobBoardItem[]>
+    queue_items?: AnalyticsDashboardSection<AnalyticsDashboardQueueItem[]>
+    ingestion?: AnalyticsDashboardSection<AnalyticsDashboardIngestion>
+    workers_live?: AnalyticsDashboardSection<AnalyticsDashboardWorkerLive[]>
+    alerts?: AnalyticsDashboardSection<AnalyticsDashboardAlert[]>
   }
   dependencies: Record<string, { status: string; reason?: string; source?: string; fallback_reason?: string | null }>
   slo: {
