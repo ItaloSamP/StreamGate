@@ -28,53 +28,25 @@ module Worker
           storage_client: storage_client,
           logger: logger
         )
+        @connector_processor = ConnectorRequestedProcessor.new(
+          config: config,
+          storage_client: storage_client,
+          logger: logger
+        )
       end
 
       def run
-        session = Bunny.new(
-          hostname: config.broker_host,
-          port: config.broker_port,
-          username: config.broker_username,
-          password: config.broker_password,
-          vhost: config.broker_vhost,
-          automatically_recover: true
-        )
+        session = build_session
         session.start
         channel = session.create_channel
 
         exchange = channel.topic(config.exchange_name, durable: true)
-        dlq = channel.queue(config.dlq_queue_name, durable: true)
-        dlq.bind(exchange, routing_key: config.dlq_routing_key)
-        public_link_dlq = channel.queue(config.public_link_dlq_queue_name, durable: true)
-        public_link_dlq.bind(exchange, routing_key: config.public_link_dlq_routing_key)
-
-        queue = channel.queue(
-          config.queue_name,
-          durable: true,
-          arguments: {
-            "x-dead-letter-exchange" => config.exchange_name,
-            "x-dead-letter-routing-key" => config.dlq_routing_key
-          }
-        )
-        queue.bind(exchange, routing_key: config.routing_key)
-
-        public_link_queue = channel.queue(
-          config.public_link_queue_name,
-          durable: true,
-          arguments: {
-            "x-dead-letter-exchange" => config.exchange_name,
-            "x-dead-letter-routing-key" => config.public_link_dlq_routing_key
-          }
-        )
-        public_link_queue.bind(exchange, routing_key: config.public_link_routing_key)
+        queues = declare_topology(channel, exchange)
 
         logger.info("worker consumer started queue=#{config.queue_name} routing_key=#{config.routing_key}")
-        public_link_queue.subscribe(manual_ack: true, block: false) do |delivery_info, properties, payload|
-          handle_message(channel, exchange, delivery_info, properties, payload)
-        end
-        queue.subscribe(manual_ack: true, block: true) do |delivery_info, properties, payload|
-          handle_message(channel, exchange, delivery_info, properties, payload)
-        end
+        subscribe_queue(queues.fetch(:connector), channel, exchange, block: false)
+        subscribe_queue(queues.fetch(:public_link), channel, exchange, block: false)
+        subscribe_queue(queues.fetch(:upload), channel, exchange, block: true)
       ensure
         channel&.close if channel&.open?
         session&.close if session&.open?
@@ -82,7 +54,61 @@ module Worker
 
       private
 
-      attr_reader :config, :logger, :processor, :public_link_processor, :db_client, :storage_client, :parser
+      attr_reader :config, :logger, :processor, :public_link_processor, :connector_processor, :db_client, :storage_client, :parser
+
+      def build_session
+        Bunny.new(
+          hostname: config.broker_host,
+          port: config.broker_port,
+          username: config.broker_username,
+          password: config.broker_password,
+          vhost: config.broker_vhost,
+          automatically_recover: true
+        )
+      end
+
+      def declare_topology(channel, exchange)
+        bind_dlq(channel, exchange, config.dlq_queue_name, config.dlq_routing_key)
+        bind_dlq(channel, exchange, config.public_link_dlq_queue_name, config.public_link_dlq_routing_key)
+        bind_dlq(channel, exchange, config.connector_requested_dlq_queue_name, config.connector_requested_dlq_routing_key)
+
+        {
+          upload: bind_queue(channel, exchange, config.queue_name, config.routing_key, config.dlq_routing_key),
+          public_link: bind_queue(channel, exchange, config.public_link_queue_name, config.public_link_routing_key, config.public_link_dlq_routing_key),
+          connector: bind_queue(
+            channel,
+            exchange,
+            config.connector_requested_queue_name,
+            config.connector_requested_routing_key,
+            config.connector_requested_dlq_routing_key
+          )
+        }
+      end
+
+      def bind_dlq(channel, exchange, queue_name, routing_key)
+        channel.queue(queue_name, durable: true).tap do |queue|
+          queue.bind(exchange, routing_key: routing_key)
+        end
+      end
+
+      def bind_queue(channel, exchange, queue_name, routing_key, dlq_routing_key)
+        channel.queue(
+          queue_name,
+          durable: true,
+          arguments: {
+            "x-dead-letter-exchange" => config.exchange_name,
+            "x-dead-letter-routing-key" => dlq_routing_key
+          }
+        ).tap do |queue|
+          queue.bind(exchange, routing_key: routing_key)
+        end
+      end
+
+      def subscribe_queue(queue, channel, exchange, block:)
+        queue.subscribe(manual_ack: true, block: block) do |delivery_info, properties, payload|
+          handle_message(channel, exchange, delivery_info, properties, payload)
+        end
+      end
 
       def handle_message(channel, exchange, delivery_info, properties, payload)
         retry_count = (properties.headers || {}).fetch("x-retry-count", 0).to_i
@@ -216,6 +242,7 @@ module Worker
 
       def processor_for(event)
         return public_link_processor if event["event_name"] == config.public_link_routing_key
+        return connector_processor if event["event_name"] == config.connector_requested_routing_key
 
         processor
       end
@@ -237,11 +264,17 @@ module Worker
       end
 
       def retry_routing_key(event)
-        event && event["event_name"] == config.public_link_routing_key ? config.public_link_routing_key : config.routing_key
+        return config.public_link_routing_key if event && event["event_name"] == config.public_link_routing_key
+        return config.connector_requested_routing_key if event && event["event_name"] == config.connector_requested_routing_key
+
+        config.routing_key
       end
 
       def dlq_routing_key(event)
-        event && event["event_name"] == config.public_link_routing_key ? config.public_link_dlq_routing_key : config.dlq_routing_key
+        return config.public_link_dlq_routing_key if event && event["event_name"] == config.public_link_routing_key
+        return config.connector_requested_dlq_routing_key if event && event["event_name"] == config.connector_requested_routing_key
+
+        config.dlq_routing_key
       end
 
       def exponential_backoff(attempt)

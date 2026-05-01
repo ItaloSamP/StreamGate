@@ -39,6 +39,7 @@ module Worker
         )
         @notifier = notifier || OperationalNotifier.new(retention_days: config.notification_retention_days)
         @warehouse_loader = warehouse_loader || ClickhouseWarehouseLoader.new(config: config)
+        @realtime_writer = RealtimeEventWriter.new(retention_days: config.realtime_event_retention_days)
       end
 
       def process(event, retry_count:)
@@ -77,6 +78,15 @@ module Worker
               attempt_id: attempt_id,
               status: "processing"
             }
+          )
+          emit_realtime_event!(
+            connection,
+            ids,
+            event_type: "worker.job.processing_started",
+            resource_type: "Job",
+            resource_id: ids[:job_id],
+            severity: "info",
+            payload: { job_id: ids[:job_id], upload_id: ids[:upload_id], status: "processing" }
           )
           connection.exec("COMMIT")
         rescue StandardError
@@ -120,7 +130,7 @@ module Worker
 
       private
 
-      attr_reader :config, :db_client, :storage_client, :parser, :logger, :artifact_writer, :notifier, :warehouse_loader
+      attr_reader :config, :db_client, :storage_client, :parser, :logger, :artifact_writer, :notifier, :warehouse_loader, :realtime_writer
 
       def validate_event!(event)
         required = %w[event_id event_name payload upload_id job_id trace_id]
@@ -331,6 +341,23 @@ module Worker
           title: parse_result.invalid_rows.positive? ? "Job concluido com quarentena" : "Job concluido",
           body: notification_body(ids, parse_result)
         )
+        emit_realtime_event!(
+          connection,
+          ids,
+          event_type: event_name,
+          resource_type: "Job",
+          resource_id: ids[:job_id],
+          severity: parse_result.invalid_rows.positive? ? "warning" : "info",
+          payload: {
+            job_id: ids[:job_id],
+            upload_id: ids[:upload_id],
+            batch_id: batch_id,
+            status: new_status,
+            input_rows: parse_result.input_rows,
+            valid_rows: parse_result.valid_rows,
+            invalid_rows: parse_result.invalid_rows
+          }
+        )
       end
 
       def notification_body(ids, parse_result)
@@ -453,6 +480,15 @@ module Worker
             title: "Job falhou",
             body: "O job #{ids[:job_id]} falhou durante o processamento."
           )
+          emit_realtime_event!(
+            connection,
+            ids,
+            event_type: "job.failed",
+            resource_type: "Job",
+            resource_id: ids[:job_id],
+            severity: "error",
+            payload: { job_id: ids[:job_id], upload_id: ids[:upload_id], status: "failed", error_code: error_code }
+          )
         end
       end
 
@@ -524,6 +560,31 @@ module Worker
             safe_metadata.to_json
           ]
         )
+      end
+
+      def emit_realtime_event!(connection, ids, event_type:, resource_type:, resource_id:, severity:, payload:)
+        realtime_writer.emit(
+          connection: connection,
+          event_type: event_type,
+          organization_id: organization_id_for(connection, ids[:job_id]),
+          resource_type: resource_type,
+          resource_id: resource_id,
+          severity: severity,
+          payload: payload,
+          request_id: ids[:request_id],
+          trace_id: ids[:trace_id]
+        )
+      rescue StandardError => e
+        logger.warn("realtime event skipped job_id=#{ids[:job_id]} event_type=#{event_type} error=#{e.class.name}")
+        nil
+      end
+
+      def organization_id_for(connection, job_id)
+        result = connection.exec_params(
+          "SELECT u.organization_id FROM jobs j INNER JOIN users u ON u.id = j.requested_by_id WHERE j.id = $1",
+          [job_id]
+        )
+        result.ntuples.positive? ? result[0]["organization_id"] : "org_unknown"
       end
 
       def sanitize_metadata(metadata)

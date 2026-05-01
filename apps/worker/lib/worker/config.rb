@@ -16,8 +16,14 @@ module Worker
                 :public_link_queue_name,
                 :public_link_dlq_queue_name,
                 :public_link_dlq_routing_key,
+                :connector_requested_routing_key,
+                :connector_requested_queue_name,
+                :connector_requested_dlq_queue_name,
+                :connector_requested_dlq_routing_key,
                 :max_retries,
                 :public_link_max_bytes,
+                :worker_internal_api_url,
+                :worker_internal_token,
                 :postgres_host,
                 :postgres_port,
                 :postgres_db,
@@ -30,6 +36,7 @@ module Worker
                 :storage_secret_key,
                 :job_artifact_retention_days,
                 :notification_retention_days,
+                :realtime_event_retention_days,
                 :clickhouse_http_url,
                 :clickhouse_db,
                 :clickhouse_user,
@@ -52,8 +59,14 @@ module Worker
       @public_link_queue_name = env.fetch("BROKER_PUBLIC_LINK_REQUESTED_QUEUE", "streamgate.worker.upload.public_link.requested.v1")
       @public_link_dlq_queue_name = env.fetch("BROKER_PUBLIC_LINK_REQUESTED_DLQ", "streamgate.worker.upload.public_link.requested.v1.dlq")
       @public_link_dlq_routing_key = env.fetch("BROKER_PUBLIC_LINK_REQUESTED_DLQ_ROUTING_KEY", "upload.public_link.requested.v1.dlq")
+      @connector_requested_routing_key = env.fetch("BROKER_CONNECTOR_REQUESTED_ROUTING_KEY", "connector.ingestion.requested.v1")
+      @connector_requested_queue_name = env.fetch("BROKER_CONNECTOR_REQUESTED_QUEUE", "streamgate.worker.connector.ingestion.requested.v1")
+      @connector_requested_dlq_queue_name = env.fetch("BROKER_CONNECTOR_REQUESTED_DLQ", "streamgate.worker.connector.ingestion.requested.v1.dlq")
+      @connector_requested_dlq_routing_key = env.fetch("BROKER_CONNECTOR_REQUESTED_DLQ_ROUTING_KEY", "connector.ingestion.requested.v1.dlq")
       @max_retries = env.fetch("WORKER_MAX_RETRIES", "3").to_i
       @public_link_max_bytes = env.fetch("PUBLIC_LINK_MAX_BYTES", (10 * 1024 * 1024 * 1024).to_s).to_i
+      @worker_internal_api_url = env.fetch("WORKER_INTERNAL_API_URL", "http://api:3000")
+      @worker_internal_token = env.fetch("WORKER_INTERNAL_TOKEN", "streamgate-worker-dev-token")
 
       @postgres_host = env.fetch("POSTGRES_HOST", "postgres")
       @postgres_port = env.fetch("POSTGRES_PORT", "5432").to_i
@@ -68,6 +81,7 @@ module Worker
       @storage_secret_key = env.fetch("UPLOAD_STORAGE_SECRET_KEY", env.fetch("MINIO_ROOT_PASSWORD", "streamgate123"))
       @job_artifact_retention_days = env.fetch("JOB_ARTIFACT_RETENTION_DAYS", "30").to_i
       @notification_retention_days = env.fetch("NOTIFICATION_RETENTION_DAYS", "30").to_i
+      @realtime_event_retention_days = env.fetch("REALTIME_EVENT_RETENTION_DAYS", "7").to_i
       @clickhouse_http_url = env.fetch("CLICKHOUSE_HTTP_URL", "http://clickhouse:8123")
       @clickhouse_db = env.fetch("CLICKHOUSE_DB", "streamgate")
       @clickhouse_user = env.fetch("CLICKHOUSE_USER", "default")
