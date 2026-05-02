@@ -832,6 +832,7 @@ function workerToRow(worker: AnalyticsDashboardWorkerLive): DashboardWorkerRow {
 
 function alertToRow(alert: AnalyticsDashboardAlert): DashboardAlertRow {
   const href = alert.href ?? '/quarantine'
+  const persisted = Boolean(alert.id && !alert.id.startsWith('dashboard-warning-open'))
 
   return {
     id: alert.id,
@@ -839,16 +840,17 @@ function alertToRow(alert: AnalyticsDashboardAlert): DashboardAlertRow {
     message: alert.message,
     severity: alert.severity,
     href,
-    persistence: alert.dismissed_at || alert.reviewed_at ? 'persisted' : 'backend-pending',
-    detail: detail('alert', alert.title, 'Acao local ate a trilha backend implementar persistencia.', href, [
+    persistence: alert.dismissed_at || alert.reviewed_at || persisted ? 'persisted' : 'backend-pending',
+    detail: detail('alert', alert.title, 'Alerta operacional com review/dismiss persistente no backend.', href, [
       ['Severidade', alert.severity],
-      ['Persistencia', alert.dismissed_at || alert.reviewed_at ? 'persisted' : 'backend-pending'],
+      ['Persistencia', alert.dismissed_at || alert.reviewed_at || persisted ? 'persisted' : 'backend-pending'],
     ]),
   }
 }
 
-function eventToRow(event: AnalyticsDashboardEvent): DashboardEventRow {
-  const id = `${event.timestamp ?? 'no-time'}-${event.type}-${event.job_id ?? event.upload_id ?? event.message}`
+function eventToRow(event: AnalyticsDashboardEvent, index: number): DashboardEventRow {
+  const semanticId = event.id ?? `${event.timestamp ?? 'no-time'}-${event.type}-${event.job_id ?? event.upload_id ?? event.message}`
+  const id = `${semanticId}-${index}`
 
   return {
     id,

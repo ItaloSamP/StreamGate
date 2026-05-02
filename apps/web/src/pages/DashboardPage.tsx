@@ -1,15 +1,16 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { DashboardAlertStrip, WorkspaceOverview } from '@/components/app/workspace-overview'
 import { WorkspacePageFrame } from '@/components/app/workspace-page-frame'
 import { useAuth } from '@/features/auth/auth-context'
 import {
   buildDashboardCommandCenterModel,
-  buildDashboardExportContent,
   type DashboardExportKind,
 } from '@/lib/dashboard-command-center'
+import { useDashboardRealtime } from '@/lib/dashboard-realtime'
 import { downloadTextFile, humanizeOperationalError } from '@/lib/operational-utils'
 import {
+  createIdempotencyKey,
   streamgateApi,
   type AnalyticsDashboardSnapshot,
   type JobSummary,
@@ -18,10 +19,9 @@ import {
 } from '@/lib/streamgate-api'
 import { showSingletonToast } from '@/lib/toast'
 import {
-  computeChecksumSha256,
   createPublicLinkIdempotencyKey,
   inferUploadContentType,
-  sendFileToSignedUrl,
+  runSignedFileUpload,
 } from '@/lib/upload-flow'
 
 type DashboardViewState = {
@@ -61,6 +61,13 @@ export function DashboardPage() {
   const [quickUploadState, setQuickUploadState] = useState<QuickUploadState>(INITIAL_QUICK_UPLOAD)
   const [publicLinkUrl, setPublicLinkUrl] = useState('')
   const publicLinkBusy = quickUploadState.state === 'requesting_link'
+  const onRealtimeEvents = useCallback(() => {
+    setReloadToken((current) => current + 1)
+  }, [])
+  const realtime = useDashboardRealtime({
+    enabled: Boolean(session),
+    onEvents: onRealtimeEvents,
+  })
 
   useEffect(() => {
     let active = true
@@ -113,22 +120,60 @@ export function DashboardPage() {
     dismissedAlertIds,
   }), [dismissedAlertIds, role, viewState.dashboard, viewState.jobs, viewState.uploads])
 
-  function dismissAlert(alertId: string) {
+  function hideAlert(alertId: string) {
     setDismissedAlertIds((current) => {
       const next = Array.from(new Set([...current, alertId]))
       writeDismissedAlertIds(next)
       return next
     })
-    showSingletonToast('info', 'Alerta fechado localmente ate a API de review/dismiss do command center.')
   }
 
-  function handleExport(kind: DashboardExportKind, format: 'csv' | 'json') {
-    const content = buildDashboardExportContent(model, kind, format)
-    const suffix = format === 'json' ? 'json' : 'csv'
-    const filename = `streamgate-dashboard-${kind}.${suffix}`
-    const type = format === 'json' ? 'application/json;charset=utf-8' : 'text/csv;charset=utf-8'
-    downloadTextFile(filename, content, type)
-    showSingletonToast('success', `Export ${format.toUpperCase()} gerado do snapshot filtrado.`)
+  async function handleReviewAlert(alertId: string, reason: string) {
+    try {
+      await streamgateApi.reviewAlert(alertId, {
+        reason,
+        idempotencyKey: createIdempotencyKey(`alert-review-${alertId}`),
+      })
+      showSingletonToast('success', 'Alerta revisado com auditoria no backend.')
+      setReloadToken((current) => current + 1)
+    } catch (error) {
+      showSingletonToast('error', humanizeOperationalError(error, 'Nao foi possivel revisar o alerta.'))
+    }
+  }
+
+  async function handleDismissAlert(alertId: string, reason: string) {
+    hideAlert(alertId)
+
+    try {
+      await streamgateApi.dismissAlert(alertId, {
+        reason,
+        idempotencyKey: createIdempotencyKey(`alert-dismiss-${alertId}`),
+      })
+      showSingletonToast('success', 'Alerta dispensado com auditoria no backend.')
+      setReloadToken((current) => current + 1)
+    } catch (error) {
+      showSingletonToast('error', humanizeOperationalError(error, 'Nao foi possivel dispensar o alerta.'))
+    }
+  }
+
+  async function handleExport(kind: DashboardExportKind, format: 'csv' | 'json') {
+    try {
+      const window = viewState.dashboard?.window
+      const response = await streamgateApi.createDashboardExport({
+        kind,
+        format,
+        preset: window?.preset ?? 'last_24h',
+        from: window?.from,
+        to: window?.to,
+        timezone: window?.timezone ?? 'UTC',
+        idempotencyKey: createIdempotencyKey(`dashboard-export-${kind}-${format}`),
+      })
+      const type = response.data.content_type.includes('json') ? 'application/json;charset=utf-8' : 'text/csv;charset=utf-8'
+      downloadTextFile(response.data.filename, response.data.content, type)
+      showSingletonToast('success', `Export ${format.toUpperCase()} gerado e auditado no backend.`)
+    } catch (error) {
+      showSingletonToast('error', humanizeOperationalError(error, 'Falha ao gerar export auditavel.'))
+    }
   }
 
   async function handleQuickUploadFile(file: File) {
@@ -142,31 +187,10 @@ export function DashboardPage() {
     }
 
     try {
-      setQuickUploadState({ state: 'signing', message: 'Assinando URL de upload.' })
-      const checksumSha256 = await computeChecksumSha256(file)
-      const signed = await streamgateApi.requestUploadSignedUrl({
-        filename: file.name,
-        contentType,
-        byteSize: file.size,
-        checksumSha256,
-      })
-
-      setQuickUploadState({ state: 'uploading', message: 'Enviando arquivo ao storage.' })
-      await sendFileToSignedUrl({
-        uploadUrl: signed.data.upload_url,
-        headers: signed.data.required_headers,
+      const registered = await runSignedFileUpload({
         file,
-        contentType,
-      })
-
-      setQuickUploadState({ state: 'confirming', message: 'Confirmando upload e criando job.' })
-      const registered = await streamgateApi.registerUpload({
-        filename: file.name,
-        contentType,
-        byteSize: file.size,
-        checksumSha256,
-        storageKey: signed.data.storage_key,
         metadata: { ui_mode: 'dashboard_quick_upload' },
+        onStep: (state, message) => setQuickUploadState({ state, message }),
       })
 
       setQuickUploadState({ state: 'success', message: `Job ${registered.data.job.id} criado pelo quick upload.` })
@@ -212,10 +236,11 @@ export function DashboardPage() {
       eyebrow="Visao geral do sistema"
       title="Dashboard"
       secondaryActionLabel={null}
-      alertStrip={<DashboardAlertStrip model={model} onDismiss={dismissAlert} />}
+      alertStrip={<DashboardAlertStrip model={model} role={role} onReview={handleReviewAlert} onDismiss={handleDismissAlert} />}
     >
       <WorkspaceOverview
         model={model}
+        realtime={realtime}
         onExport={handleExport}
         onQuickUploadFile={handleQuickUploadFile}
         quickUploadState={quickUploadState}

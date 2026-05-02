@@ -1,4 +1,11 @@
-import type { UploadContentType } from '@/lib/streamgate-api'
+import {
+  streamgateApi,
+  type UploadContentType,
+  type UploadRegisterResponse,
+} from '@/lib/streamgate-api'
+import type { ApiSuccessEnvelope } from '@/lib/api-client'
+
+export type SignedUploadStep = 'signing' | 'uploading' | 'confirming'
 
 export function inferUploadContentType(file: File): UploadContentType | null {
   const lowerName = file.name.toLowerCase()
@@ -75,10 +82,60 @@ export async function sendFileToSignedUrl({
   }
 }
 
+export async function runSignedFileUpload({
+  file,
+  metadata,
+  onStep,
+}: {
+  file: File
+  metadata?: Record<string, unknown>
+  onStep?: (step: SignedUploadStep, message: string) => void
+}): Promise<ApiSuccessEnvelope<UploadRegisterResponse>> {
+  const contentType = inferUploadContentType(file)
+  if (!contentType) {
+    throw new Error('Formato nao suportado para upload.')
+  }
+
+  onStep?.('signing', 'Assinando URL de upload.')
+  const checksumSha256 = await computeChecksumSha256(file)
+  const signed = await streamgateApi.requestUploadSignedUrl({
+    filename: file.name,
+    contentType,
+    byteSize: file.size,
+    checksumSha256,
+  })
+
+  onStep?.('uploading', 'Enviando arquivo ao storage.')
+  await sendFileToSignedUrl({
+    uploadUrl: signed.data.upload_url,
+    headers: signed.data.required_headers,
+    file,
+    contentType,
+  })
+
+  onStep?.('confirming', 'Confirmando upload e criando job.')
+  return streamgateApi.registerUpload({
+    filename: file.name,
+    contentType,
+    byteSize: file.size,
+    checksumSha256,
+    storageKey: signed.data.storage_key,
+    metadata,
+  })
+}
+
 export function createPublicLinkIdempotencyKey() {
   const random = typeof crypto.randomUUID === 'function'
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(16).slice(2)}`
 
   return `public-link-${random}`
+}
+
+export function createConnectorIngestionIdempotencyKey() {
+  const random = typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(16).slice(2)}`
+
+  return `connector-ingestion-${random}`
 }

@@ -8,6 +8,7 @@ import {
   type DashboardDetailTarget,
   type DashboardExportKind,
 } from '@/lib/dashboard-command-center'
+import type { DashboardRealtimeState } from '@/lib/dashboard-realtime'
 
 type QuickUploadState = {
   state: 'idle' | 'signing' | 'uploading' | 'confirming' | 'requesting_link' | 'success' | 'error'
@@ -19,6 +20,7 @@ export function WorkspaceOverview({
   onExport,
   onQuickUploadFile,
   quickUploadState = { state: 'idle', message: 'Aguardando arquivo.' },
+  realtime,
   publicLinkValue = '',
   publicLinkBusy = false,
   onPublicLinkChange,
@@ -28,6 +30,7 @@ export function WorkspaceOverview({
   onExport?: (kind: DashboardExportKind, format: 'csv' | 'json') => void
   onQuickUploadFile?: (file: File) => void
   quickUploadState?: QuickUploadState
+  realtime?: DashboardRealtimeState
   publicLinkValue?: string
   publicLinkBusy?: boolean
   onPublicLinkChange?: (value: string) => void
@@ -45,6 +48,7 @@ export function WorkspaceOverview({
         <div>
           <div className="dash-toolbar-label">{model.demoState === 'demo-preview' ? 'demo-preview' : 'data-driven'}</div>
           <div className="dash-toolbar-copy">{model.sourceLabel} · {model.lastUpdatedLabel}</div>
+          {realtime ? <div className="dash-toolbar-copy">Realtime: {realtime.status} · {realtime.detail}</div> : null}
         </div>
         <div className="dash-toolbar-actions">
           <button type="button" className="dash-btn" disabled={!canExport} onClick={() => onExport?.('snapshot', 'csv')}>
@@ -324,12 +328,19 @@ export function WorkspaceOverview({
 
 export function DashboardAlertStrip({
   model,
+  role,
+  onReview,
   onDismiss,
 }: {
   model: DashboardCommandCenterModel
-  onDismiss: (alertId: string) => void
+  role: 'operator' | 'admin' | 'service_account'
+  onReview: (alertId: string, reason: string) => void
+  onDismiss: (alertId: string, reason: string) => void
 }) {
+  const [reason, setReason] = useState('')
   const alert = model.alerts.rows[0]
+  const canDismiss = role === 'admin'
+  const reasonReady = reason.trim().length >= 8
 
   if (!alert) {
     return (
@@ -347,9 +358,23 @@ export function DashboardAlertStrip({
       <span><strong>{alert.title}</strong> {alert.message}</span>
       <Link to={alert.href} className="dash-alert-link">Abrir triagem</Link>
       <span className="dash-alert-close">{alert.persistence}</span>
-      <button type="button" className="dash-alert-close dash-alert-button" onClick={() => onDismiss(alert.id)}>
-        Fechar alerta local
+      <label className="dash-sr-only" htmlFor="dashboard-alert-reason">Motivo do alerta</label>
+      <input
+        id="dashboard-alert-reason"
+        aria-label="Motivo do alerta"
+        className="dash-public-link-input dash-alert-reason"
+        value={reason}
+        onChange={(event) => setReason(event.target.value)}
+        placeholder="Motivo operacional"
+      />
+      <button type="button" className="dash-alert-close dash-alert-button" disabled={!reasonReady} onClick={() => onReview(alert.id, reason.trim())}>
+        Revisar alerta
       </button>
+      {canDismiss ? (
+        <button type="button" className="dash-alert-close dash-alert-button" disabled={!reasonReady} onClick={() => onDismiss(alert.id, reason.trim())}>
+          Dispensar alerta
+        </button>
+      ) : null}
     </div>
   )
 }
