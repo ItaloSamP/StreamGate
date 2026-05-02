@@ -70,7 +70,7 @@ describe('dashboard command center adapter', () => {
     }))
     expect(model.alerts.rows).toContainEqual(expect.objectContaining({
       id: 'alert_1',
-      persistence: 'backend-pending',
+      persistence: 'persisted',
     }))
   })
 
@@ -131,6 +131,38 @@ describe('dashboard command center adapter', () => {
         metadata: '{"token":"[masked]","trace_id":"trace_1"}',
       }),
     ])
+  })
+
+  it('keeps event log row ids unique when backend events share the same operational key', () => {
+    const repeatedEvent = {
+      timestamp: '2026-04-24T13:59:40Z',
+      type: 'worker_metric',
+      severity: 'info',
+      job_id: 'job_processing',
+      upload_id: 'upload_csv',
+      status: 'processed',
+      message: 'Worker processed event_fixture_1 with status processed.',
+    }
+    const model = buildDashboardCommandCenterModel({
+      dashboard: {
+        ...currentDashboard(),
+        sections: {
+          ...currentDashboard().sections,
+          event_log: {
+            status: 'derived',
+            generated_at: '2026-04-24T14:00:00Z',
+            empty_state: null,
+            data: [repeatedEvent, repeatedEvent],
+          },
+        },
+      } as unknown as AnalyticsDashboardSnapshot,
+      jobs: [],
+      uploads: [],
+      role: 'admin',
+      dismissedAlertIds: [],
+    })
+
+    expect(new Set(model.eventLog.rows.map((row) => row.id)).size).toBe(2)
   })
 })
 

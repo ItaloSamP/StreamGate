@@ -85,6 +85,7 @@ describe('operational pages', () => {
   }, 15000)
 
   it('renders command center dashboard parity with honest backend-pending interactions', async () => {
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>
     const createObjectUrl = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:dashboard-export')
     const revokeObjectUrl = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined)
 
@@ -104,16 +105,27 @@ describe('operational pages', () => {
     expect(screen.getByRole('link', { name: /Abrir rota especializada/i })).toHaveAttribute('href', '/analytics?preset=last_24h')
 
     fireEvent.click(screen.getByRole('button', { name: /Fechar painel/i }))
-    fireEvent.click(screen.getByRole('button', { name: /Fechar alerta local/i }))
+    fireEvent.change(screen.getByLabelText('Motivo do alerta'), {
+      target: { value: 'Triagem operacional validada.' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Revisar alerta/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Dispensar alerta/i }))
     expect(screen.queryByText(/Quarentena aberta/i)).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /Exportar CSV/i }))
     fireEvent.click(screen.getByRole('button', { name: /Exportar JSON/i }))
 
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([input]) => String(input).includes('/api/v1/realtime/tickets'))).toBe(true)
+      expect(fetchMock.mock.calls.some(([input, init]) => String(input).includes('/api/v1/alerts/dashboard-warning-open/review') && String(init?.method).toUpperCase() === 'POST')).toBe(true)
+      expect(fetchMock.mock.calls.some(([input, init]) => String(input).includes('/api/v1/alerts/dashboard-warning-open/dismiss') && String(init?.method).toUpperCase() === 'POST')).toBe(true)
+      expect(fetchMock.mock.calls.filter(([input, init]) => String(input).includes('/api/v1/analytics/dashboard/exports') && String(init?.method).toUpperCase() === 'POST')).toHaveLength(2)
+    })
     expect(createObjectUrl).toHaveBeenCalledTimes(2)
     expect((await screen.findAllByText('Quarentena')).length).toBeGreaterThan(0)
     expect(screen.getByRole('link', { name: '+ Upload' })).toHaveAttribute('href', '/upload')
     expect(await screen.findByText('Fonte: postgres_derived')).toBeInTheDocument()
+    expect(await screen.findByText(/Realtime:/i)).toBeInTheDocument()
     expect(await screen.findByText('Worker processed event_fixture_1 with status processed.')).toBeInTheDocument()
     expect(screen.queryByText('1.840.000')).not.toBeInTheDocument()
 
@@ -228,6 +240,32 @@ describe('operational pages', () => {
     expect(screen.getByLabelText('Webhook URL')).toHaveValue('https://hooks.example.test/streamgate')
   })
 
+  it('renders connector profile management only for admins in settings', async () => {
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>
+
+    const { unmount } = renderApp('/settings', 'operator')
+
+    expect(await screen.findByText(/Conectores restritos a administradores/i)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Criar perfil/i })).not.toBeInTheDocument()
+
+    unmount()
+    renderApp('/settings', 'admin')
+
+    expect(await screen.findByText('Perfis de conectores')).toBeInTheDocument()
+    expect(await screen.findByText('finance-s3')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Nome do perfil'), { target: { value: 'http-prod' } })
+    fireEvent.change(screen.getByLabelText('Tipo de conector'), { target: { value: 'http' } })
+    fireEvent.change(screen.getByLabelText('URL base HTTP'), { target: { value: 'https://data.example.test/orders.ndjson' } })
+    fireEvent.change(screen.getByLabelText('Header de autenticacao'), { target: { value: 'Authorization' } })
+    fireEvent.change(screen.getByLabelText('Valor do header'), { target: { value: 'Bearer secret-token' } })
+    fireEvent.click(screen.getByRole('button', { name: /Criar perfil/i }))
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([input, init]) => String(input).includes('/api/v1/connectors/profiles') && String(init?.method).toUpperCase() === 'POST')).toBe(true)
+    })
+    expect(screen.queryByText('Bearer secret-token')).not.toBeInTheDocument()
+  })
+
   it('executes inbox bulk actions and webhook test against the official adapter paths', async () => {
     const fetchMock = global.fetch as ReturnType<typeof vi.fn>
 
@@ -337,6 +375,130 @@ function createOperationalFetchMock() {
             trace_id: 'trace_auth',
           },
         },
+      }))
+    }
+
+    if (url.includes('/api/v1/realtime/tickets')) {
+      return Promise.resolve(jsonResponse(201, {
+        data: {
+          ticket: 'realtime-ticket-fixture',
+          organization_id: 'org_fixture',
+          role: readRoleFromStoredSession(),
+          expires_at: '2099-04-24T14:01:00Z',
+        },
+      }))
+    }
+
+    if (url.includes('/api/v1/realtime/events')) {
+      return Promise.resolve(jsonResponse(200, {
+        data: [
+          {
+            id: 'realtime_fixture_1',
+            event_type: 'worker.heartbeat',
+            organization_id: 'org_fixture',
+            actor_id: null,
+            resource_type: 'Worker',
+            resource_id: 'worker-01',
+            severity: 'info',
+            payload: { worker_id: 'worker-01' },
+            occurred_at: '2026-04-24T14:00:00Z',
+            expires_at: '2026-05-01T14:00:00Z',
+            trace_id: 'trace_realtime',
+            request_id: null,
+          },
+        ],
+      }))
+    }
+
+    if (url.includes('/api/v1/analytics/dashboard/exports')) {
+      const body = JSON.parse(String(init?.body ?? '{}')) as { export?: { format?: string; kind?: string } }
+      const format = body.export?.format ?? 'csv'
+      const kind = body.export?.kind ?? 'snapshot'
+      return Promise.resolve(jsonResponse(201, {
+        data: {
+          id: `export_${kind}_${format}`,
+          filename: `streamgate-dashboard-${kind}.${format}`,
+          content_type: format === 'json' ? 'application/json' : 'text/csv',
+          content: format === 'json' ? '[{"label":"jobs_total","value":12}]' : 'label,value\njobs_total,12\n',
+          checksum_sha256: 'e'.repeat(64),
+          byte_size: 24,
+          generated_at: '2026-04-24T14:00:00Z',
+          expires_at: '2026-05-24T14:00:00Z',
+          trace_id: 'trace_export',
+        },
+      }))
+    }
+
+    if (url.includes('/api/v1/alerts/') && url.endsWith('/review')) {
+      return Promise.resolve(jsonResponse(200, {
+        data: {
+          id: 'dashboard-warning-open',
+          status: 'reviewed',
+          reviewed_at: '2026-04-24T14:00:00Z',
+        },
+      }))
+    }
+
+    if (url.includes('/api/v1/alerts/') && url.endsWith('/dismiss')) {
+      return Promise.resolve(jsonResponse(200, {
+        data: {
+          id: 'dashboard-warning-open',
+          status: 'dismissed',
+          dismissed_at: '2026-04-24T14:01:00Z',
+        },
+      }))
+    }
+
+    if (url.includes('/api/v1/connectors/profiles') && url.endsWith('/test')) {
+      return Promise.resolve(jsonResponse(200, {
+        data: { id: 'conn_s3_fixture', status: 'configured', kind: 's3' },
+      }))
+    }
+
+    if (url.includes('/api/v1/connectors/profiles') && method === 'POST') {
+      return Promise.resolve(jsonResponse(201, {
+        data: {
+          id: 'conn_http_fixture',
+          organization_id: 'org_fixture',
+          kind: 'http',
+          name: 'http-prod',
+          status: 'active',
+          settings: { url: '[masked]' },
+          created_by_id: 'user_fixture_admin',
+          trace_id: 'trace_connector',
+          created_at: '2026-04-24T14:00:00Z',
+          updated_at: '2026-04-24T14:00:00Z',
+        },
+      }))
+    }
+
+    if (url.includes('/api/v1/connectors/profiles') && method === 'GET') {
+      if (readRoleFromStoredSession() !== 'admin') {
+        return Promise.resolve(jsonResponse(403, {
+          error: {
+            code: 'access_denied',
+            message: 'Acesso negado para conectores.',
+            request_id: 'req_connector_denied',
+            trace_id: 'trace_connector_denied',
+          },
+        }))
+      }
+
+      return Promise.resolve(jsonResponse(200, {
+        data: [
+          {
+            id: 'conn_s3_fixture',
+            organization_id: 'org_fixture',
+            kind: 's3',
+            name: 'finance-s3',
+            status: 'active',
+            settings: { bucket: '[masked]', region: 'us-east-1' },
+            created_by_id: 'user_fixture_admin',
+            trace_id: 'trace_connector',
+            created_at: '2026-04-24T14:00:00Z',
+            updated_at: '2026-04-24T14:00:00Z',
+          },
+        ],
       }))
     }
 
