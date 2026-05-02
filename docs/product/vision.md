@@ -27,7 +27,7 @@ Leitura de status em `2026-05-01`:
 - artefatos finais (`processed_dataset`, `quality_report`, `audit_report`) ja estao materializados;
 - notificacoes `in_app`, `email` e `webhook` ja estao materializadas;
 - dashboard v3 evoluiu para command center data-driven, com REST expandido, realtime/polling, exports e alert actions persistentes;
-- conectores de entrada `s3` e `http_url` estao materializados no corte API+worker, via perfis admin-only e lease interno, sem UI admin nova;
+- conectores de entrada `s3` e `http_url` estao materializados com perfis admin-only, lease interno, UX em `/settings` e solicitacao de ingestao em `/upload`;
 - `google_drive` e `oauth_delegated` continuam discovery-only.
 
 ## Problema
@@ -79,7 +79,7 @@ Precisa investigar eventos, reprocessar cargas, auditar trilhas e manter o pipel
 
 - upload local via SPA;
 - ingestao por link externo possui corte inicial como `public_link`; `oauth_delegated` continua evolucao futura;
-- conectores S3/HTTP possuem corte funcional API+worker para perfis admin-only, aquisicao por lease interno e processamento no pipeline padrao;
+- conectores S3/HTTP possuem corte funcional completo para perfis admin-only, aquisicao por lease interno, processamento no pipeline padrao e solicitacao operacional pela UI;
 - `google_drive` continua planejado/discovery-only;
 - entrada inicial suporta CSV, JSON, NDJSON, ZIP com exatamente um arquivo suportado, XLSX e Parquet quando o runtime nativo estiver disponivel.
 

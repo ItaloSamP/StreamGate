@@ -50,8 +50,8 @@ Padronizar operacao, diagnostico e resposta a incidentes da trilha de runtime re
   - conectores S3/HTTP consumidos pelo worker via lease interno da API e `X-Worker-Token`.
 - escopo fora do corte command center operacional:
   - `google_drive` e `oauth_delegated`;
-  - UI admin nova para conectores S3/HTTP;
   - automacao de cluster e reprocessamento avancado.
+- UX administrativa de perfis S3/HTTP vive em `/settings`; solicitacao de ingestao por perfil vive em `/upload` para admins, enquanto o worker continua consumindo apenas leases internos.
 - qualquer mudanca em runtime deve manter sincronia com:
   - `packages/contracts`;
   - `apps/api/openapi/v1/openapi.yaml` (quando houver reflexo em API);

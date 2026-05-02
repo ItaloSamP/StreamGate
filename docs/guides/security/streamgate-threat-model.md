@@ -181,7 +181,7 @@ flowchart LR
 - nao assumimos acesso direto do atacante ao host local do desenvolvedor sem outra falha previa
 - nao assumimos multi-tenancy produtivo ou dados regulados ja em producao
 - nao assumimos `google_drive` nem `oauth_delegated` funcionais
-- nao assumimos UI admin nova para conectores S3/HTTP neste corte
+- nao assumimos que operadores tenham acesso a configuracao, segredo ou teste de conectores S3/HTTP
 
 ## Entry points and attack surfaces
 

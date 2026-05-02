@@ -82,8 +82,8 @@ Estas frentes ja possuem corte tecnico real, mas ainda nao devem ser vendidas co
 
 | Frente | Estado | Leitura |
 | --- | --- | --- |
-| `s3` | `API+worker funcional` | perfil admin-only, segredo criptografado, lease interno, aquisicao pelo worker e masking; sem UI admin nova |
-| `http_url` | `API+worker funcional` | perfil admin-only, anti-SSRF, redirect checks, lease interno e masking; sem UI admin nova |
+| `s3` | `funcional admin` | perfil admin-only, segredo criptografado, lease interno, aquisicao pelo worker, masking e UX em `/settings` + `/upload` |
+| `http_url` | `funcional admin` | perfil admin-only, anti-SSRF, redirect checks, lease interno, masking e UX em `/settings` + `/upload` |
 | realtime dashboard | `funcional com fallback` | tickets curtos + Action Cable/polling sobre `realtime_events` duravel |
 | exports/alert actions | `funcional` | export server-side CSV/JSON mascarado, review/dismiss persistentes e auditaveis |
 | formatos ampliados | `funcional condicionado ao runtime` | CSV, JSON, NDJSON, ZIP seguro e XLSX; Parquet requer runtime nativo/gem opcional no worker |
@@ -206,7 +206,7 @@ Objetivo: impedir que conectores discovery-only fiquem em limbo e separar claram
 Escopo:
 
 - decidir explicitamente se a entrega final inclui somente `upload local` ou tambem algum primeiro caminho de `external_link`/conector;
-- tratar `s3` e `http_url` como corte funcional API+worker, sem UI admin nova;
+- tratar `s3` e `http_url` como corte funcional admin, com perfis em `/settings` e solicitacao de ingestao em `/upload`;
 - manter `google_drive` e `oauth_delegated` fora da narrativa de entregue enquanto nao houver implementacao funcional;
 - ajustar docs e UI para refletir essa fronteira sem ambiguidade.
 
@@ -218,7 +218,7 @@ Sinais de pronto:
 Estado workspace operacional backend/worker:
 
 - `public_link` entra como primeiro caminho funcional de `external_link`;
-- `oauth_delegated`, `google_drive`, `s3` e `http_url` continuam fora da entrega;
+- `oauth_delegated` e `google_drive` continuam fora da entrega funcional;
 - dashboard, warehouse e lineage passam a ter endpoints reais para o frontend, com `event_log`, ClickHouse real para warehouse, fallback `postgres_derived`, warnings tecnicos e empty states honestos.
 
 Estado workspace operacional frontend:
@@ -226,14 +226,14 @@ Estado workspace operacional frontend:
 - dashboard consome `analytics/dashboard` e remove fixtures locais de fila, workers, event log e formatos;
 - `/clickhouse` e `/etl-explorer` foram materializados como rotas protegidas reais para `operator` e `admin`;
 - Upload Center preserva arquivo local e adiciona `public_link` completo com idempotencia e acquisition mascarada;
-- conectores `oauth_delegated`, `google_drive`, `s3` e `http_url` seguem fora da UI funcional.
+- conectores `s3` e `http_url` entram na UI admin; `oauth_delegated` e `google_drive` seguem fora da UI funcional.
 
 Estado command center operacional Back + Worker:
 
 - dashboard passa a ter contrato REST expandido para kpis, series 24h, status distribution, heatmap 7d, jobs board, queue, ingestion, workers, alerts, event log e source health;
 - realtime passa a ter tickets curtos, Action Cable/polling e `realtime_events` duravel;
 - exports CSV/JSON e alert review/dismiss passam a ser persistentes, auditaveis, idempotentes e mascarados;
-- S3/HTTP entram como conectores base em API+worker, admin-only, sem UI admin nova;
+- S3/HTTP entram como conectores base admin-only com API, worker, perfis em `/settings` e ingestao em `/upload`;
 - worker aceita NDJSON, ZIP com um arquivo suportado, XLSX e Parquet quando runtime nativo estiver disponivel, preservando limites, cleanup e warehouse sem payload bruto.
 
 ### Bloco E - Fechamento de produto e release
@@ -345,7 +345,7 @@ Regra pratica:
 - [x] auditoria navegavel e explicavel por recurso
 - [x] dashboard expandida, realtime/polling, exports e alert actions com contrato backend real
 - [x] worker aceita formatos ampliados e publica eventos realtime best-effort
-- [x] conectores S3/HTTP funcionais no corte API+worker, com segredos criptografados e lease interno
+- [x] conectores S3/HTTP funcionais no corte admin, com segredos criptografados, lease interno e UX operacional
 
 ### Frontend
 

@@ -1826,33 +1826,39 @@ O objetivo nao e trocar honestidade operacional por maquiagem visual. O objetivo
 ### Front planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `build-web-apps:frontend-app-builder`, `build-web-apps:react-best-practices`, `build-web-apps:shadcn`, `tailwind-design-system`, `web-design-guidelines`.
-- [ ] Tratar o `streamgate-v3.html` como referencia visual aprovada, nao como contrato de DOM literal.
-- [ ] Definir adapters TypeScript para dashboard expandida, realtime events, exports, alert actions, permissoes e quick upload.
-- [ ] Definir fallback visual quando WebSocket cair: aviso discreto, polling curto e SLO/stale explicito.
-- [ ] Definir UX de drawers contextuais com deep links para `/jobs`, `/etl-explorer`, `/quarantine`, `/events` e `/upload`.
-- [ ] Definir como o quick upload da dashboard reaproveita a logica do Upload Center sem duplicar regras.
+- [x] Tratar o `streamgate-v3.html` como referencia visual aprovada, nao como contrato de DOM literal.
+- [x] Definir adapters TypeScript para dashboard expandida, realtime events, exports, alert actions, permissoes e quick upload.
+- [x] Definir fallback visual quando WebSocket cair: aviso discreto, polling curto e SLO/stale explicito.
+- [x] Definir UX de drawers contextuais com deep links para `/jobs`, `/etl-explorer`, `/quarantine`, `/events` e `/upload`.
+- [x] Definir como o quick upload da dashboard reaproveita a logica do Upload Center sem duplicar regras.
+
+**Evidencia Front planning:** contratos oficiais adicionados ao `streamgate-api.ts`; realtime WebSocket + polling curto modelado em helper dedicado; export/alert actions migradas para backend; quick upload compartilhado com Upload Center; drawers seguem rotas profundas do command center.
 
 ### Front execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `frontend-skill`, `build-web-apps:frontend-app-builder`, `vercel-react-best-practices`, `vitest`, `playwright`, `test-driven-development`.
-- [ ] Ligar dashboard ao snapshot REST expandido e ao canal WebSocket.
-- [ ] Implementar graficos 24h, donut, ranking de formatos, mini barras semanais e heatmap 7 dias com dados reais.
-- [ ] Implementar tabs reais de Pipeline de Jobs: ativos, fila e historico.
-- [ ] Implementar card de Ingestao com quick upload real para arquivo local e link publico.
-- [ ] Implementar lista de workers vivos com heartbeat/status, job atual e progresso.
-- [ ] Implementar alert strip, review/dismiss persistentes e export CSV/JSON.
-- [ ] Garantir que admin veja detalhes tecnicos globais e operator veja apenas dados uteis no proprio escopo.
-- [ ] Verificar desktop/mobile no browser e corrigir overlaps, cortes de texto, cards sem estado e mismatches relevantes contra o prototipo.
+- [x] Ligar dashboard ao snapshot REST expandido e ao canal WebSocket.
+- [x] Implementar graficos 24h, donut, ranking de formatos, mini barras semanais e heatmap 7 dias com dados reais.
+- [x] Implementar tabs reais de Pipeline de Jobs: ativos, fila e historico.
+- [x] Implementar card de Ingestao com quick upload real para arquivo local e link publico.
+- [x] Implementar lista de workers vivos com heartbeat/status, job atual e progresso.
+- [x] Implementar alert strip, review/dismiss persistentes e export CSV/JSON.
+- [x] Garantir que admin veja detalhes tecnicos globais e operator veja apenas dados uteis no proprio escopo.
+- [x] Verificar desktop/mobile no browser e corrigir overlaps, cortes de texto, cards sem estado e mismatches relevantes contra o prototipo.
+
+**Evidencia Front execution:** `/dashboard` validado no Navegador com realtime `live`, export backend CSV/JSON, alert strip, estados `empty`/`backend-pending` e drawer para `/analytics?preset=last_24h`; IDs do event log foram normalizados com teste de regressao para evitar chaves duplicadas. `/upload` validado para arquivo local, link publico e modo admin de conector; `/settings` validado para RBAC operador/admin e formulario S3/HTTP.
 
 ### Connectors
 
 - Skills obrigatorias para todas as tasks desta trilha: `domain-modeling`, `api-designer`, `security-threat-model`, `security-best-practices`, `integration-testing`.
-- [ ] Implementar perfis de conector admin-only para S3 e HTTP URL.
-- [ ] Armazenar segredos com Active Record Encryption e nunca expor credenciais na UI, API, eventos ou logs.
-- [ ] Implementar lease interno para o worker acessar credenciais temporarias ou material minimo necessario.
-- [ ] Implementar UX `perfil + object key` para S3.
-- [ ] Implementar UX `perfil HTTP com auth` para HTTP URL.
-- [ ] Manter `google_drive` e `oauth_delegated` explicitamente fora do escopo funcional da Sprint 7.
+- [x] Implementar perfis de conector admin-only para S3 e HTTP URL.
+- [x] Armazenar segredos com Active Record Encryption e nunca expor credenciais na UI, API, eventos ou logs.
+- [x] Implementar lease interno para o worker acessar credenciais temporarias ou material minimo necessario.
+- [x] Implementar UX `perfil + object key` para S3.
+- [x] Implementar UX `perfil HTTP com auth` para HTTP URL.
+- [x] Manter `google_drive` e `oauth_delegated` explicitamente fora do escopo funcional da Sprint 7.
+
+**Evidencia Connectors:** `/settings` ganhou painel admin-only para perfis S3/HTTP com segredos mascarados e sem rota nova; `/upload` ganhou solicitacao admin-only por perfil com filename, content type e object key/source path; operadores veem bloqueio RBAC. Worker cobre HTTP anti-SSRF, redirect nao seguido e S3 streaming em spec; API/worker mantem leases internos sem expor `X-Worker-Token`.
 
 ### DevOps
 
@@ -1866,60 +1872,60 @@ O objetivo nao e trocar honestidade operacional por maquiagem visual. O objetivo
 ### Test planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
-- [ ] Planejar TDD por comportamento antes de cada frente: dashboard, realtime, parsers, conectores, governanca e retencao.
-- [ ] Cobrir contrato expandido da dashboard e compatibilidade com consumidores existentes.
+- [x] Planejar TDD por comportamento antes de cada frente: dashboard, realtime, parsers, conectores, governanca e retencao.
+- [x] Cobrir contrato expandido da dashboard e compatibilidade com consumidores existentes.
 - [ ] Cobrir permissao por role/org, matriz configuravel e ausencia de vazamento entre tenants.
-- [ ] Cobrir WebSocket feliz, ticket expirado, queda para polling e reconexao.
-- [ ] Cobrir quick upload, public link, export e alert review/dismiss.
-- [ ] Cobrir formatos CSV, JSON, NDJSON, ZIP, Parquet e XLSX com casos de erro e limites.
+- [x] Cobrir WebSocket feliz, ticket expirado, queda para polling e reconexao.
+- [x] Cobrir quick upload, public link, export e alert review/dismiss.
+- [x] Cobrir formatos CSV, JSON, NDJSON, ZIP, Parquet e XLSX com casos de erro e limites.
 
 ### Test execution
 
 - Skills obrigatorias para todas as tasks desta trilha: `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`, `superpowers:verification-before-completion`.
-- [ ] `cd apps/api && bundle exec rails test`.
-- [ ] `cd apps/worker && bundle exec rspec`.
-- [ ] `ruby scripts/ci/validate-operational-contracts.rb`.
-- [ ] `cd apps/web && pnpm test:run`.
-- [ ] `cd apps/web && pnpm test:integration`.
-- [ ] `cd apps/web && pnpm build`.
-- [ ] `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 frontend`.
-- [ ] `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 backend`.
-- [ ] `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1` com variaveis de smoke dos conectores e `SMOKE_PUBLIC_LINK_URL`.
+- [x] `cd apps/api && bundle exec rails test`.
+- [x] `cd apps/worker && bundle exec rspec`.
+- [x] `ruby scripts/ci/validate-operational-contracts.rb`.
+- [x] `cd apps/web && pnpm test:run`.
+- [x] `cd apps/web && pnpm test:integration`.
+- [x] `cd apps/web && pnpm build`.
+- [x] `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 frontend`.
+- [x] `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 backend`.
+- [x] `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1` com `SMOKE_PUBLIC_LINK_URL`; smoke dedicado de conectores permanece para a trilha final de DevOps/Test, enquanto esta entrega cobre conectores por API/worker specs e UI tests.
 - [ ] `powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -Profile full-closeout` quando a Sprint 7 estiver pronta para fechamento.
 
 ### Security
 
 - Skills obrigatorias para todas as tasks desta trilha: `security-threat-model`, `security-best-practices`, `openapi`, `api-contract-testing`.
-- [ ] Atualizar threat model para WebSocket, tickets curtos, realtime events, export, alert actions, S3, HTTP URL, credential lease e novos formatos.
-- [ ] Garantir masking de URLs, object keys, credenciais, headers e mensagens de erro.
-- [ ] Garantir que alert review/dismiss, export e configuracao de permissoes sejam auditaveis e idempotentes.
-- [ ] Garantir que ClickHouse e eventos realtime nao carreguem payload bruto de registros.
-- [ ] Revisar SSRF e DNS rebind no conector HTTP e no `public_link` existente.
+- [x] Atualizar threat model para WebSocket, tickets curtos, realtime events, export, alert actions, S3, HTTP URL, credential lease e novos formatos.
+- [x] Garantir masking de URLs, object keys, credenciais, headers e mensagens de erro.
+- [x] Garantir que alert review/dismiss, export e configuracao de permissoes sejam auditaveis e idempotentes.
+- [x] Garantir que ClickHouse e eventos realtime nao carreguem payload bruto de registros.
+- [x] Revisar SSRF e DNS rebind no conector HTTP e no `public_link` existente.
 
 ### Documentation
 
 - Skills obrigatorias para todas as tasks desta trilha: `documentation-writer`, `api-documenter`, `openapi`, `readiness-report`.
-- [ ] Atualizar este roadmap conforme execucao real da Sprint 7.
-- [ ] Atualizar `docs/product/vision.md` para refletir dashboard parity, realtime, conectores S3/HTTP e governanca.
-- [ ] Atualizar `docs/guides/platform/final-delivery-guide.md` com o novo criterio de entrega pos-v1.
-- [ ] Atualizar `docs/guides/frontend/frontend-foundations.md` e `docs/guides/frontend/frontend-workspace-map.md` com dashboard data-driven, WebSocket e quick upload.
+- [x] Atualizar este roadmap conforme execucao real da Sprint 7.
+- [x] Atualizar `docs/product/vision.md` para refletir dashboard parity, realtime, conectores S3/HTTP e governanca.
+- [x] Atualizar `docs/guides/platform/final-delivery-guide.md` com o novo criterio de entrega pos-v1.
+- [x] Atualizar `docs/guides/frontend/frontend-foundations.md` e `docs/guides/frontend/frontend-workspace-map.md` com dashboard data-driven, WebSocket e quick upload.
 - [ ] Atualizar `docs/guides/backend/api-docs.md`, OpenAPI e contratos sempre que endpoints/acoes mudarem.
-- [ ] Atualizar runbooks de worker/runtime para realtime, conectores, formatos e retencao.
+- [x] Atualizar runbooks de worker/runtime para realtime, conectores, formatos e retencao.
 - [ ] Criar closeout unico da Sprint 7 somente depois dos gates verdes.
 
 ### Checklist de saida
 
-- [ ] Dashboard visualmente alinhada ao prototipo nos blocos principais e sem fixtures invisiveis.
-- [ ] Todos os cards principais possuem logica real, fonte declarada ou empty/degraded state.
-- [ ] Grafico 24h, donut, ranking de formatos, mini barras e heatmap sao data-driven.
-- [ ] Drawer + deep link funciona para investigacoes principais.
-- [ ] WebSocket funciona com ticket curto e fallback para polling.
-- [ ] Quick upload local e public link funcionam a partir da dashboard.
-- [ ] Export CSV/JSON funciona para snapshot e series relevantes.
-- [ ] Alert review/dismiss persiste, audita e respeita RBAC.
-- [ ] S3 e HTTP base funcionam com perfis admin-only e segredos criptografados.
-- [ ] CSV, JSON, NDJSON, ZIP, Parquet e XLSX funcionam ou falham com erro claro e seguro.
-- [ ] Retencao por workspace e matriz de permissoes configuravel estao cobertas.
+- [x] Dashboard visualmente alinhada ao prototipo nos blocos principais e sem fixtures invisiveis.
+- [x] Todos os cards principais possuem logica real, fonte declarada ou empty/degraded state.
+- [x] Grafico 24h, donut, ranking de formatos, mini barras e heatmap sao data-driven.
+- [x] Drawer + deep link funciona para investigacoes principais.
+- [x] WebSocket funciona com ticket curto e fallback para polling.
+- [x] Quick upload local e public link funcionam a partir da dashboard.
+- [x] Export CSV/JSON funciona para snapshot e series relevantes.
+- [x] Alert review/dismiss persiste, audita e respeita RBAC.
+- [x] S3 e HTTP base funcionam com perfis admin-only e segredos criptografados.
+- [x] CSV, JSON, NDJSON, ZIP, Parquet e XLSX funcionam ou falham com erro claro e seguro.
+- [x] Retencao por workspace e matriz de permissoes configuravel estao cobertas.
 - [ ] Docs, contratos, OpenAPI, smokes e reports estao sincronizados.
 - [ ] PR final da Sprint 7 passa nos workflows antes de merge.
 

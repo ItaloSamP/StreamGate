@@ -12,11 +12,12 @@ Estado alinhado a trilha de frontend operacional:
 - auth real esta conectado a API (`register`, `login`, `logout`, `me`, `session/refresh`, reset)
 - `/upload` e `/jobs` consomem dados reais desde a entrega de upload/job
 - `/dashboard`, `/analytics`, `/clickhouse`, `/etl-explorer`, `/quarantine`, `/events` e `/audit` consomem dados reais
-- `/upload` suporta arquivo local e `public_link`, mantendo conectores wave 1 fora do corte funcional
+- `/upload` suporta arquivo local, `public_link` e solicitacao admin-only por conectores S3/HTTP
+- `/settings` concentra perfis admin-only de conectores S3/HTTP sem expor segredos
 - `/audit` e DLQ sao superficies admin-only
 - filtros operacionais usam URL state compartilhavel
 - payloads/metadados sensiveis sao mascarados antes de renderizar previews ou CSV
-- refresh e frescor de dados sao explicitos, sem polling automatico neste ciclo de entrega
+- refresh, frescor de dados, WebSocket e fallback de polling curto sao explicitos no command center
 
 ## Regras/Contratos
 
@@ -108,9 +109,19 @@ Adapters reais disponiveis na workspace operacional:
 - `listJobs`
 - `getAnalytics`
 - `getAnalyticsDashboard`
+- `createRealtimeTicket`
+- `listRealtimeEvents`
+- `createDashboardExport`
+- `reviewAlert`
+- `dismissAlert`
 - `getAnalyticsWarehouse`
 - `getAnalyticsLineage`
 - `createPublicLinkUpload`
+- `listConnectorProfiles`
+- `createConnectorProfile`
+- `updateConnectorProfile`
+- `testConnectorProfile`
+- `createConnectorIngestion`
 - `listQuarantine`
 - `listQuarantineDlq`
 - `listAuditEvents`
@@ -175,7 +186,7 @@ Stale:
 
 - exibir `lastUpdatedAt`
 - marcar leitura como stale apos alguns minutos sem refresh
-- nao adicionar polling automatico neste ciclo de entrega
+- usar WebSocket com ticket curto no command center e fallback de polling curto sinalizado
 
 ### Dados sensiveis
 
@@ -197,11 +208,11 @@ Regras:
 
 ### O que nao entra neste ciclo de entrega
 
-- polling automatico
+- polling automatico generico fora do command center
 - mutacoes operacionais (`retry`, `resolve`, `replay`, `delete`, `acknowledge`, `reprocess`)
 - query library/cache externo
 - exportacao server-side de toda a base
-- conectores externos como fluxo funcional
+- `google_drive` e `oauth_delegated` como fluxo funcional
 
 ## Organizacao De Testes
 

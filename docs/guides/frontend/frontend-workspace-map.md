@@ -13,7 +13,8 @@ Estado atual do frontend operacional:
 - dashboard virou command center operacional real via `GET /api/v1/analytics/dashboard`, com secoes `live`, `derived`, `empty` ou `degraded`
 - jobs, uploads, analytics, quarentena, DLQ, audit e event log consomem API real
 - `/clickhouse` e `/etl-explorer` deixaram de ser placeholders e viraram drilldowns analiticos reais
-- Upload Center suporta arquivo local e `public_link`; `oauth_delegated`, `google_drive`, `s3` e `http_url` seguem fora do corte funcional
+- Upload Center suporta arquivo local, `public_link` e ingestao admin-only por perfis S3/HTTP; `oauth_delegated` e `google_drive` seguem fora do corte funcional
+- `/settings` concentra criacao, teste e status de perfis S3/HTTP sem renderizar segredos
 - audit e DLQ sao admin-only
 - operacoes mutaveis sensiveis vivem em painel admin-only dedicado
 - notificacoes in-app usam sino na topbar, inbox completa, arquivamento e canais
@@ -103,7 +104,8 @@ Paginas e fontes atuais:
 - `JobsPage`: `listJobs`
 - `OperationsPage`: `retryJob`, `resolveQuarantine`, `createDlqReplayRequest`, `approveDlqReplayRequest`, `executeDlqReplayRequest`
 - `NotificationsPage`: `listNotifications`, mutacoes de inbox, `getNotificationSettings`, `updateNotificationSettings`, `testWebhookNotification`
-- `UploadPage`: `requestUploadSignedUrl`, `registerUpload`, `createPublicLinkUpload`, `listUploads`, `listJobs`
+- `UploadPage`: `requestUploadSignedUrl`, `registerUpload`, `createPublicLinkUpload`, `createConnectorIngestion`, `listConnectorProfiles`, `listUploads`, `listJobs`
+- `SettingsPage`: `listConnectorProfiles`, `createConnectorProfile`, `updateConnectorProfile`, `testConnectorProfile`
 - `OperationalDetailPages`: listas oficiais filtradas por ID/search e `listJobArtifacts`/`createArtifactDownloadUrl`
 
 ### Dashboard, warehouse e lineage
@@ -122,9 +124,9 @@ Regras atuais:
 
 - filtros e paginacao operacionais ficam em URL
 - `preset=last_7d`, `timezone=UTC`, `page=1`, `per_page=20` sao defaults comuns
-- refresh e manual via `Recarregar`
+- refresh manual continua padrao fora do command center
 - `lastUpdatedAt` deve ficar visivel em telas operacionais
-- stale state deve indicar leitura potencialmente antiga sem iniciar polling automatico
+- stale state deve indicar leitura potencialmente antiga; no command center, WebSocket usa ticket curto e fallback de polling sinalizado
 
 ### Investigacao operacional
 
