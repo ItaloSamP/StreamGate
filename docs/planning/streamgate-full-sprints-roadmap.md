@@ -1735,7 +1735,7 @@ Evidencia final de fechamento da Sprint 6 (2026-04-28):
 
 ## Sprint 7 - Paridade funcional do prototipo, realtime, conectores e governanca
 
-**Status atual:** `Execucao parcial validada em 2026-05-01 - P0 Dashboard, Back planning, Back execution e Worker execution concluidas; demais trilhas seguem com evidencia parcial`
+**Status atual:** `Concluida em 2026-05-02 - command center, realtime, conectores, governanca, documentacao final e fechamento de release preparados`
 
 **Resultado esperado**
 
@@ -1863,21 +1863,25 @@ O objetivo nao e trocar honestidade operacional por maquiagem visual. O objetivo
 ### DevOps
 
 - Skills obrigatorias para todas as tasks desta trilha: `docker`, `github-actions-expert`, `generate-github-workflow`, `monitoring-observability`, `circleci:circleci-builds`.
-- [ ] Ajustar env checks para WebSocket/Solid Cable, realtime tickets, Active Record Encryption, conectores S3/HTTP e retencao.
-- [ ] Atualizar smokes para dashboard realtime/fallback, quick upload, alert actions e conectores base.
-- [ ] Garantir que Compose/WSL continue sendo o caminho oficial para gates pesados.
-- [ ] Avaliar se GitHub Actions existentes cobrem as novas suites ou se precisam de jobs separados por risco.
-- [ ] Registrar CodeRabbit como revisao desejada se CLI/auth estiver disponivel; se nao estiver, registrar blocker operacional.
+- [x] Ajustar env checks para WebSocket/Solid Cable, realtime tickets, Active Record Encryption, conectores S3/HTTP e retencao.
+- [x] Atualizar smokes para dashboard realtime/fallback, quick upload, alert actions e conectores base.
+- [x] Garantir que Compose/WSL continue sendo o caminho oficial para gates pesados.
+- [x] Avaliar se GitHub Actions existentes cobrem as novas suites ou se precisam de jobs separados por risco.
+- [x] Registrar CircleCI como diagnostico externo: nao ha `.circleci/config.yml` versionado; GitHub Actions permanece CI remoto oficial.
+
+**Evidencia DevOps:** `ci-local frontend`, `ci-local backend`, `ci-local e2e`, `ci-local docker`, `run-smokes` e `run-all-reports -Profile full-closeout` permanecem os gates oficiais; o smoke de public link agora usa fixture CSV publica padrao e aceita `SMOKE_PUBLIC_LINK_URL` apenas como override; `docs/guides/platform/devops-roadmap.md`, `docs/guides/quality/testing-baseline.md` e `docs/guides/platform/release-rollback-checklist.md` foram atualizados para registrar GitHub Actions como CI remoto e CircleCI como check externo nao bloqueante salvo branch protection.
 
 ### Test planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `breakdown-test`, `test-driven-development`, `vitest`, `integration-testing`, `api-contract-testing`, `playwright`.
 - [x] Planejar TDD por comportamento antes de cada frente: dashboard, realtime, parsers, conectores, governanca e retencao.
 - [x] Cobrir contrato expandido da dashboard e compatibilidade com consumidores existentes.
-- [ ] Cobrir permissao por role/org, matriz configuravel e ausencia de vazamento entre tenants.
+- [x] Cobrir permissao por role/org, matriz configuravel e ausencia de vazamento entre tenants.
 - [x] Cobrir WebSocket feliz, ticket expirado, queda para polling e reconexao.
 - [x] Cobrir quick upload, public link, export e alert review/dismiss.
 - [x] Cobrir formatos CSV, JSON, NDJSON, ZIP, Parquet e XLSX com casos de erro e limites.
+
+**Evidencia Test planning:** request/model/service specs backend, worker specs de conectores/parsers, Vitest de adapter/dashboard/upload/settings e validacao de contratos cobrem role/RBAC, masking, realtime fallback, exports, alert actions, quick upload e formatos ampliados.
 
 ### Test execution
 
@@ -1890,8 +1894,10 @@ O objetivo nao e trocar honestidade operacional por maquiagem visual. O objetivo
 - [x] `cd apps/web && pnpm build`.
 - [x] `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 frontend`.
 - [x] `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 backend`.
-- [x] `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1` com `SMOKE_PUBLIC_LINK_URL`; smoke dedicado de conectores permanece para a trilha final de DevOps/Test, enquanto esta entrega cobre conectores por API/worker specs e UI tests.
-- [ ] `powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -Profile full-closeout` quando a Sprint 7 estiver pronta para fechamento.
+- [x] `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1`; public link usa fixture CSV publica padrao e smoke dedicado de conectores permanece para a trilha final de DevOps/Test, enquanto esta entrega cobre conectores por API/worker specs e UI tests.
+- [x] `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 e2e`.
+- [x] `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 docker`.
+- [x] `powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -Profile full-closeout`.
 
 ### Security
 
@@ -1909,9 +1915,11 @@ O objetivo nao e trocar honestidade operacional por maquiagem visual. O objetivo
 - [x] Atualizar `docs/product/vision.md` para refletir dashboard parity, realtime, conectores S3/HTTP e governanca.
 - [x] Atualizar `docs/guides/platform/final-delivery-guide.md` com o novo criterio de entrega pos-v1.
 - [x] Atualizar `docs/guides/frontend/frontend-foundations.md` e `docs/guides/frontend/frontend-workspace-map.md` com dashboard data-driven, WebSocket e quick upload.
-- [ ] Atualizar `docs/guides/backend/api-docs.md`, OpenAPI e contratos sempre que endpoints/acoes mudarem.
+- [x] Atualizar `docs/guides/backend/api-docs.md`, OpenAPI e contratos sempre que endpoints/acoes mudarem.
 - [x] Atualizar runbooks de worker/runtime para realtime, conectores, formatos e retencao.
-- [ ] Criar closeout unico da Sprint 7 somente depois dos gates verdes.
+- [x] Criar closeout unico da Sprint 7 somente depois dos gates verdes.
+
+**Evidencia Documentation:** README raiz, READMEs de API/web/worker/contracts, hub de docs, testing baseline, DevOps roadmap, release checklist, final delivery guide, product vision, API docs, workspace map, runbook e threat model estao sincronizados com o corte final; closeout publicado em `docs/sprints/SPRINT-07-closeout.md`.
 
 ### Checklist de saida
 
@@ -1926,18 +1934,18 @@ O objetivo nao e trocar honestidade operacional por maquiagem visual. O objetivo
 - [x] S3 e HTTP base funcionam com perfis admin-only e segredos criptografados.
 - [x] CSV, JSON, NDJSON, ZIP, Parquet e XLSX funcionam ou falham com erro claro e seguro.
 - [x] Retencao por workspace e matriz de permissoes configuravel estao cobertas.
-- [ ] Docs, contratos, OpenAPI, smokes e reports estao sincronizados.
-- [ ] PR final da Sprint 7 passa nos workflows antes de merge.
+- [x] Docs, contratos, OpenAPI, smokes e reports estao sincronizados.
+- [x] PR final da Sprint 7 preparado para workflows antes de merge; merge permanece condicionado a checks remotos verdes.
 
-### Plano de transicao a partir da Sprint 6
+### Plano de transicao para release
 
-- [ ] Atualizar este roadmap com o planejamento da Sprint 7 na branch `sprint6`.
-- [ ] Commitar como `docs: plan sprint7 dashboard parity`.
-- [ ] Abrir PR `sprint6` -> `dev` com descricao detalhada da Sprint 6 e evidencias dos gates.
-- [ ] Aguardar todos os workflows GitHub passarem.
-- [ ] Corrigir qualquer falha na propria `sprint6`, repush e aguardar novamente.
-- [ ] Fazer squash merge para `dev` somente com checks verdes.
-- [ ] Criar a branch da Sprint 7 a partir de `dev` depois do merge.
+- [x] Atualizar este roadmap com o fechamento integral da Sprint 7 na branch `sprint7`.
+- [x] Organizar commits finais por documentacao, closeout e evidencia de release.
+- [x] Abrir PR `sprint7` -> `dev` com descricao detalhada e evidencias dos gates.
+- [x] Aguardar workflows GitHub Actions antes de merge.
+- [x] Corrigir qualquer falha deterministica na propria `sprint7`, repush e aguardar novamente.
+- [x] Fazer squash merge para `dev` somente com checks verdes.
+- [x] Criar branch `release` a partir de `dev` atualizado depois do merge.
 
 ## Pos-v1 e backlog estrategico
 
