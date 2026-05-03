@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Roadmap mestre
-    url: https://github.com/ItaloSamP/StreamGate/blob/sprint5/docs/planning/streamgate-full-sprints-roadmap.md
-    about: Consulte a trilha e o estado atual das sprints antes de abrir uma issue.
+    url: https://github.com/ItaloSamP/StreamGate/tree/main/docs/planning
+    about: Consulte a trilha e o estado atual do plano antes de abrir uma issue.
   - name: Hub de documentacao
-    url: https://github.com/ItaloSamP/StreamGate/blob/sprint5/docs/README.md
+    url: https://github.com/ItaloSamP/StreamGate/blob/main/docs/README.md
     about: Use os guias oficiais do repositorio para setup, operacao e contratos.

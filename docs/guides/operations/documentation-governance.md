@@ -4,7 +4,7 @@
 Este guia consolida diretrizes de documentation governance para uso consistente no projeto.
 
 ## Estado atual
-Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+Conteudo alinhado ao estado operacional atual; atualizar em cada mudanca relevante.
 
 
 ## Regras/Contratos
@@ -13,7 +13,7 @@ Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atual
 
 ## Validacao/Evidencias
 - Validar coerencia com README raiz, docs/README e roadmap da release atual.
-- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+- Registrar atualizacoes desta pagina no closeout do ciclo de entrega correspondente.
 
 
 ## Objetivo detalhado
@@ -34,9 +34,9 @@ Garantir documentacao profissional, consistente e intuitiva de ponta a ponta no 
 - toda task de documentacao deve usar `documentation-writer` como skill obrigatoria base.
 - reestruturacoes editoriais amplas exigem `brainstorming` antes da mudanca.
 - mudancas de contrato/API exigem `api-documenter` + `openapi` no mesmo ciclo.
-- mudancas em testes, coverage, smokes ou CI devem atualizar o mapa de reports em [docs/guides/quality/testing-baseline-sprint-0.md](C:/estudos/StreamGate/docs/guides/quality/testing-baseline-sprint-0.md) quando criarem, moverem ou removerem saidas oficiais.
+- mudancas em testes, coverage, smokes ou CI devem atualizar o mapa de reports em [docs/guides/quality/testing-baseline.md](C:/estudos/StreamGate/docs/guides/quality/testing-baseline.md) quando criarem, moverem ou removerem saidas oficiais.
 - o hub `docs/reports/index.html` e artefato local gerado; a documentacao deve apontar para o fluxo que o gera, nao versionar o HTML produzido.
-- docs historicos de sprint (closeout) permanecem como registro factual.
+- docs historicos de ciclo de entrega (closeout) permanecem como registro factual.
 
 ## Stack de skills para documentacao
 
@@ -62,20 +62,20 @@ Cada guia ativo deve, sempre que aplicavel, manter:
 3. atualizar `README.md`, `docs/README.md` e roadmap quando houver impacto transversal.
 4. atualizar o mapa de reports quando a mudanca tocar testes, coverage, smokes ou CI.
 5. validar links internos e coerencia entre docs.
-6. registrar no closeout da sprint os documentos atualizados.
+6. registrar no closeout do ciclo de entrega os documentos atualizados.
 
 ## Validacao e evidencias
 
 - varredura de links internos dos hubs principais:
   - `README.md`
   - `docs/README.md`
-  - `docs/planning/streamgate-full-sprints-roadmap.md`
+  - `docs/planning/`
   - `apps/*/README.md`
   - `packages/contracts/README.md`
-- checklist de transicao entre sprints executado.
+- checklist de transicao entre ciclos de entrega executado.
 
 ## Referencias
 
-- [Checklist de reavaliacao entre sprints](C:/estudos/StreamGate/docs/guides/quality/sprint-reassessment-checklist.md)
+- [Checklist de reavaliacao entre ciclos de entrega](C:/estudos/StreamGate/docs/guides/quality/delivery-reassessment-checklist.md)
 - [Definition of Done](C:/estudos/StreamGate/docs/guides/quality/definition-of-done.md)
-- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/)

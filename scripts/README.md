@@ -39,7 +39,7 @@ A raiz de `scripts/` agora fica apenas com a documentacao e as subpastas organiz
 
 - `fast`: validacao rapida por trilha com `scripts/ci/ci-local.(ps1|sh)` em um workflow por vez.
 - `operational`: validacao ponta a ponta de runtime com `scripts/smokes/run-smokes.(ps1|sh)`.
-- `full-closeout`: pacote final de evidencias com `scripts/reports/run-all-reports.(ps1|sh)`; use no fechamento de sprint, PR grande ou mudanca critica de runtime/CI.
+- `full-closeout`: pacote final de evidencias com `scripts/reports/run-all-reports.(ps1|sh)`; use no fechamento de ciclo de entrega, PR grande ou mudanca critica de runtime/CI.
 
 O caminho pesado oficial e `WSL/Compose-first`. No host Windows, prefira checks rapidos no dia a dia e deixe o pacote pesado para fechamento relevante.
 

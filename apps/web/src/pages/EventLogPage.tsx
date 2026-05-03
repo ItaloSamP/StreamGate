@@ -99,7 +99,7 @@ export function EventLogPage() {
               <div>
                 <div className="dash-panel-title">Event Log Operacional</div>
                 <div className="dash-module-copy">
-                  Timeline read-only alimentada por /audit nesta sprint, com request_id, trace_id e metadata segura.
+                  Timeline read-only alimentada por /audit neste ciclo de entrega, com request_id, trace_id e metadata segura.
                 </div>
               </div>
               <div className="dash-panel-right"><span className="dash-panel-tag">audit-backed</span></div>

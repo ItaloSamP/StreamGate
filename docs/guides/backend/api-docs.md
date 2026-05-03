@@ -4,7 +4,7 @@
 Este guia consolida diretrizes de api docs para uso consistente no projeto.
 
 ## Estado atual
-Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+Conteudo alinhado ao estado atual de Back + Worker; atualizar em cada mudanca relevante.
 
 ## Regras/Contratos
 - As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
@@ -12,18 +12,18 @@ Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atual
 
 ## Validacao/Evidencias
 - Validar coerencia com README raiz, docs/README e roadmap da release atual.
-- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+- Registrar atualizacoes desta pagina no closeout do ciclo de entrega correspondente.
 
 ## Referencias
-- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/)
 - [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)
 
 
 A API Rails do StreamGate usa OpenAPI como contrato publico versionado da v1.
 
-## Estado apos Sprint 4 (backend)
+## Estado apos command center operacional Back + Worker
 
-O contrato oficial agora cobre auth + runtime backend da trilha operacional:
+O contrato oficial cobre auth, runtime operacional, dashboard expandida, realtime, exports, alert actions e conectores base S3/HTTP:
 
 - auth: `register`, `login`, `logout`, `me`, `session/refresh`, reset de senha
 - upload/job:
@@ -40,6 +40,20 @@ O contrato oficial agora cobre auth + runtime backend da trilha operacional:
   - `GET /api/v1/quarantine`
   - `GET /api/v1/quarantine/dlq` (admin-only)
   - `GET /api/v1/audit` (admin-only)
+- dashboard/realtime:
+  - `POST /api/v1/analytics/dashboard/exports`
+  - `POST /api/v1/realtime/tickets`
+  - `GET /api/v1/realtime/events`
+  - `POST /api/v1/alerts/:id/review`
+  - `POST /api/v1/alerts/:id/dismiss`
+- conectores base:
+  - `GET /api/v1/connectors/profiles`
+  - `POST /api/v1/connectors/profiles`
+  - `GET /api/v1/connectors/profiles/:id`
+  - `PATCH /api/v1/connectors/profiles/:id`
+  - `POST /api/v1/connectors/profiles/:id/test`
+  - `POST /api/v1/connectors/profiles/:profile_id/ingestions`
+  - `POST /api/v1/internal/connectors/leases/:id/claim`
 
 Fonte unica do contrato:
 
@@ -56,16 +70,26 @@ UI da doc:
 
 - [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
 
-## Contratos da trilha upload/job (Sprint 4 backend)
+## Contratos da trilha upload/job
 
 ### `POST /api/v1/uploads/signed-url`
 
 Request (`upload`):
 
 - `filename`
-- `content_type` (`application/json`, `application/zip` ou `text/csv`)
+- `content_type`
 - `byte_size`
 - `checksum_sha256`
+
+Content types aceitos:
+
+- `text/csv`
+- `application/json`
+- `application/zip`
+- `application/x-ndjson`
+- `application/ndjson`
+- `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+- `application/vnd.apache.parquet`
 
 Response `201`:
 
@@ -148,9 +172,68 @@ Envelope padrao:
 
 ### `GET /api/v1/analytics/dashboard`
 
-Snapshot agregado para a dashboard final. Cada secao declara `status` como `live`, `derived`, `empty` ou `degraded`; dado ausente vira empty state explicito, nao fixture.
+Snapshot agregado para a dashboard final. Cada secao declara `status` como `live`, `derived`, `empty`, `degraded` ou `backend-pending`; dado ausente vira empty state explicito, nao fixture.
 
-Na Sprint 6, `sections.event_log` e parte requerida do contrato v1. Ele entrega uma timeline compacta derivada de `audit_events`, `operational_warnings` e `worker_processing_metrics`, com `timestamp`, `type`, `severity`, `job_id`, `upload_id`, `status` e `message`. Operator recebe somente dados do proprio escopo organizacional; admin pode consultar a visao global.
+Na command center operacional, o payload preserva compatibilidade com consumidores workspace operacional e adiciona secoes opcionais para command center:
+
+- `kpis`
+- `timeseries_24h`
+- `status_distribution`
+- `formats`
+- `heatmap_7d`
+- `jobs_board`
+- `queue_items`
+- `ingestion`
+- `workers_live`
+- `alerts`
+- `event_log`
+- `dependencies.source_health`
+
+ClickHouse e a fonte preferencial para series, heatmap, formatos, distribuicao, historico e workers. Quando ClickHouse esta indisponivel, a API retorna fallback Postgres com `source=postgres_derived`, `fallback_reason`, `stale`, `slo` e warning tecnico. Operator recebe somente dados do proprio escopo organizacional; admin pode consultar a visao global.
+
+### `POST /api/v1/analytics/dashboard/exports`
+
+Cria export server-side auditavel e idempotente para `snapshot`, `series`, `heatmap` ou `event_log`, nos formatos `csv` ou `json`.
+
+Regras:
+
+- exige `Idempotency-Key`;
+- aplica RBAC e escopo por organizacao;
+- mascara chaves sensiveis, URLs, headers, object keys e credenciais antes de retornar conteudo;
+- persiste metadata em `dashboard_exports`;
+- retorna o conteudo no response para o frontend baixar sem fixture local.
+
+### Realtime
+
+`POST /api/v1/realtime/tickets` emite ticket curto assinado com usuario, organizacao e role para uso em Action Cable/Solid Cable. `GET /api/v1/realtime/events` oferece fallback de polling sobre `realtime_events` duravel.
+
+Eventos realtime sao escopados por organizacao e recurso, possuem severidade, payload sanitizado, expiracao e indice para leitura operacional. Falhas de emissao nao bloqueiam upload, job, artefato, notificacao ou auditoria.
+
+### Alert actions
+
+`POST /api/v1/alerts/:id/review` e `POST /api/v1/alerts/:id/dismiss` persistem revisao/dispensa em `operational_warnings`.
+
+Regras:
+
+- exigem `Idempotency-Key`;
+- respeitam RBAC e escopo por organizacao;
+- registram motivo operacional quando informado;
+- auditam a acao;
+- sao idempotentes para repeticao segura pelo frontend.
+
+### Conectores S3/HTTP
+
+Perfis de conector sao admin-only e usam Active Record Encryption para segredos. As respostas publicas nunca retornam secrets, bucket, object key, URL completa com query, headers ou credenciais.
+
+Fluxo:
+
+1. admin cria perfil S3 ou HTTP em `POST /api/v1/connectors/profiles`;
+2. a API cria ingestion com `POST /api/v1/connectors/profiles/:profile_id/ingestions`;
+3. um lease interno e gerado para o worker;
+4. o worker reivindica `POST /api/v1/internal/connectors/leases/:id/claim` usando `X-Worker-Token`;
+5. o worker baixa S3/HTTP, grava no storage padrao e publica `upload.received.v1`.
+
+HTTP aplica anti-SSRF, bloqueio de localhost/private/link-local/metadata hosts, validacao de redirects e masking de URL/header. S3 nao expoe bucket, key ou credenciais em API, evento ou log.
 
 ### `GET /api/v1/analytics/warehouse`
 
@@ -219,6 +302,7 @@ Envelope de erro:
 
 - evento oficial de ingestao: `upload.received.v1`
 - evento oficial de aquisicao por public link: `upload.public_link.requested.v1`
+- evento oficial de requisicao de conector: `connector.ingestion.requested.v1`
 - topologia:
   - exchange: `streamgate.events`
   - routing key: `upload.received.v1`
@@ -227,6 +311,8 @@ Envelope de erro:
 - publicacao via outbox transacional:
   - tabela `integration_outbox_events`
   - despacho best-effort no registro + task `streamgate:outbox:dispatch`
+
+Eventos de worker tambem alimentam `realtime_events` best-effort para dashboard e polling. O payload deve ser sanitizado antes de persistir ou publicar.
 
 ## Relacao com contratos compartilhados
 
@@ -237,10 +323,14 @@ Os schemas/examples HTTP ficam organizados por dominio em:
 - `packages/contracts/schemas/http/operations`
 - `packages/contracts/schemas/http/artifacts`
 - `packages/contracts/schemas/http/notifications`
+- `packages/contracts/schemas/http/connectors`
+- `packages/contracts/schemas/events/connectors`
+- `packages/contracts/schemas/http/shared`
+- `packages/contracts/examples/http/<dominio-correspondente>`
 
 ### Notificacoes in-app
 
-A Sprint 5 expande a inbox sem expor payload sensivel:
+A operacao segura expande a inbox sem expor payload sensivel:
 
 - `GET /api/v1/notifications?status=active|unread|read|archived`
 - `PATCH /api/v1/notifications/:id/read`
@@ -251,8 +341,6 @@ A Sprint 5 expande a inbox sem expor payload sensivel:
 - `PATCH /api/v1/notifications/bulk-archive`
 
 Todas as mutacoes sao escopadas ao ator autenticado. `active` lista notificacoes nao arquivadas; arquivadas continuam sujeitas a expiracao por retencao.
-- `packages/contracts/schemas/http/shared`
-- `packages/contracts/examples/http/<dominio-correspondente>`
 
 Compatibilidade de contrato deve seguir sincronizada com OpenAPI no mesmo ciclo de mudanca.
 
@@ -260,4 +348,4 @@ Compatibilidade de contrato deve seguir sincronizada com OpenAPI no mesmo ciclo 
 
 - setup e envs: [docs/guides/platform/setup.md](C:/estudos/StreamGate/docs/guides/platform/setup.md)
 - autenticacao: [docs/guides/backend/authentication-guide.md](C:/estudos/StreamGate/docs/guides/backend/authentication-guide.md)
-- roadmap executivo: [docs/planning/streamgate-full-sprints-roadmap.md](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- roadmap executivo: docs/planning/

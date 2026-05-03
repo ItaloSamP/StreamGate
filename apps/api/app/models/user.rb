@@ -34,6 +34,9 @@ class User < ApplicationRecord
   has_many :notifications, foreign_key: :recipient_id, inverse_of: :recipient, dependent: :destroy
   has_one :notification_setting, dependent: :destroy
   has_many :operational_action_idempotency_keys, foreign_key: :actor_id, inverse_of: :actor, dependent: :destroy
+  has_many :dashboard_exports, foreign_key: :actor_id, inverse_of: :actor, dependent: :restrict_with_exception
+  has_many :connector_profiles, foreign_key: :created_by_id, inverse_of: :created_by, dependent: :restrict_with_exception
+  has_many :connector_ingestions, foreign_key: :requested_by_id, inverse_of: :requested_by, dependent: :restrict_with_exception
 
   normalizes :email, with: ->(value) { value.to_s.strip.downcase }
 

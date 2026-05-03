@@ -10,7 +10,7 @@ assignees: ["ItaloSamP"]
 
 - Area afetada:
 - Ambiente:
-- Sprint/trilha relacionada:
+- Roadmap/trilha relacionada:
 
 ## Comportamento atual
 

@@ -1,83 +1,109 @@
-# Checklist de Release e Rollback Pre-Cluster
+# Checklist De Release E Rollback
 
-## Objetivo
+Checklist operacional para fechar uma release do StreamGate em ambiente local/Compose e CI remoto.
 
-Padronizar o fechamento operacional do StreamGate no estagio atual do projeto: ambiente local/Compose, gates oficiais e rollback seguro sem depender de cluster ou automacao remota.
+## Quando Usar
 
-## Quando usar
+- PR grande envolvendo API, worker, web, contratos, scripts ou docs centrais.
+- Fechamento de release.
+- Mudanca em runtime, conectores, artifacts, notificacoes, auditoria ou safe operations.
+- Preparacao para demonstracao relevante.
 
-Use este checklist em:
+## Release Checklist
 
-- fechamento de sprint com runtime alterado;
-- PR grande que toca API, worker, web, contratos ou scripts operacionais;
-- validacao antes de demonstracao relevante ou pacote de evidencias final.
+### 1. Sanidade Do Ambiente
 
-## Release checklist
+- `.env` sincronizado com `.env.example`.
+- Segredos locais presentes e nao versionados.
+- Docker Desktop/WSL disponiveis para gates pesados.
+- `SMOKE_PUBLIC_LINK_URL` revisado somente quando o smoke de public link precisar de fixture propria; por padrao o runner usa um CSV publico pequeno.
+- Git remoto e branch alvo confirmados antes de PR/merge.
 
-### 1. Sanidade de ambiente
+### 2. Contratos E Documentacao
 
-- Confirmar `.env` sincronizado com `.env.example`.
-- Confirmar envs criticas de Sprint 5 presentes:
-  - email;
-  - webhook;
-  - artefatos;
-  - idempotencia;
-  - retenções;
-  - credenciais de smoke.
-- Confirmar Docker Desktop/WSL operacionais quando o gate for pesado.
+- OpenAPI atualizado para endpoints novos ou alterados.
+- `packages/contracts` atualizado com schemas e exemplos.
+- README, runbook, threat model, API docs e workspace map sincronizados quando afetados.
+- Roadmap e closeout registram evidencia real, nao intencao.
 
-### 2. Stack e health
+### 3. Gates Locais
 
-- Validar `docker compose -f compose.yaml config`.
-- Validar `docker compose -f compose.yaml --profile full config`.
-- Subir stack necessaria com `scripts/dev/dev-up`.
-- Confirmar servicos `healthy` antes de prosseguir.
+Executar conforme risco:
 
-### 3. Gates por perfil
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 frontend
+powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 backend
+powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 e2e
+powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 docker
+```
 
-- Rodar `fast` por trilha relevante com `scripts/ci/ci-local.ps1 <workflow>`.
-- Rodar `operational` com `scripts/smokes/run-smokes.ps1` quando houver impacto em runtime, worker, artefatos, notificacoes ou operacao segura.
-- Rodar `full-closeout` com `scripts/reports/run-all-reports.ps1 -Profile full-closeout` no fechamento relevante.
+Fechamento operacional:
 
-### 4. Evidencias obrigatorias
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -Profile full-closeout
+```
 
-- Conferir `docs/reports/index.html`.
-- Conferir `scripts/ci/reports/summary.json` quando `ci-local` entrar no fechamento.
-- Conferir `scripts/smokes/reports/summary.json` quando o runtime entrar no fechamento.
-- Registrar comandos, resultados e classificacao de falhas no closeout/roadmap.
+### 4. Browser E UX
 
-### 5. Criterios para abortar release
+Validar rotas principais com Browser Use/IAB ou fallback documentado:
 
-Aborte o fechamento e trate a causa raiz se ocorrer qualquer um dos casos:
+- `/dashboard`
+- `/upload`
+- `/settings`
+- `/clickhouse`
+- `/etl-explorer`
+- `/analytics`
+- `/events`
+- `/quarantine`
+- `/audit`
+
+Checar desktop e mobile para texto cortado, overlap, controles inertes, role gating e ausencia de dados demo escondidos.
+
+### 5. PR E CI Remoto
+
+- Abrir PR para `dev` com template completo.
+- Aguardar GitHub Actions: frontend, backend, docker e e2e-auth.
+- Se falhar, capturar primeiro job/step e corrigir causa deterministica.
+- CircleCI nao e gate versionado; se aparecer check externo, registrar diagnostico e tratar conforme politica do repositorio remoto.
+- Merge somente com checks verdes.
+
+## Criterios Para Abortar
+
+Aborte o fechamento se:
 
 - smoke operacional falhar;
-- Compose ficar `unhealthy`;
-- drift entre contrato/OpenAPI e implementacao;
-- falha sem classificacao clara entre `environment` e `implementation`;
-- rollback previsto nao estiver claro antes da promocao.
+- full-closeout falhar sem classificacao clara;
+- contrato e implementacao divergirem;
+- UI expuser segredo, payload sensivel ou controle indevido por role;
+- rollback nao estiver claro para mudanca sensivel;
+- PR remoto tiver check obrigatorio vermelho.
 
-## Rollback checklist
+## Rollback
 
-### App/Web/Worker
+### App, API Ou Worker
 
-- Derrubar a stack atual com `scripts/dev/dev-down`.
-- Restaurar o commit/tag anterior.
-- Subir novamente com `scripts/dev/dev-up` no perfil necessario.
-- Revalidar health e, no minimo, o gate `operational` se a falha tocou runtime.
+1. Derrubar stack com `scripts/dev/dev-down`.
+2. Voltar ao commit/tag anterior.
+3. Subir stack no perfil necessario.
+4. Rodar health e gate operacional minimo.
 
 ### Migrations
 
-- So executar rollback de migration quando houver plano explicito para dados e compatibilidade.
-- Rodar rollback localmente antes de repetir subida da stack.
-- Reexecutar os testes backend relevantes depois do rollback.
+- Planejar rollback antes de aplicar.
+- Validar impacto em dados e compatibilidade.
+- Rodar testes backend relevantes depois do rollback.
 
-### Scripts e CI local
+### Scripts, CI Ou Reports
 
-- Se a falha vier de runner/script, restaurar a versao anterior dos scripts.
-- Revalidar o workflow minimo afetado (`frontend`, `backend`, `e2e` ou `docker`) antes de tentar o pacote completo novamente.
+- Restaurar a versao anterior do script/config.
+- Reexecutar o menor workflow afetado.
+- Atualizar docs se a regra operacional tiver mudado.
 
-## Observacoes operacionais
+## Evidencia Minima De Fechamento
 
-- `ci-local all` continua disponivel, mas nao e obrigatorio em toda task pequena.
-- O caminho pesado oficial e `WSL/Compose-first`.
-- No Windows host, falhas de integracao Bash/WSL/sandbox devem ser registradas como falha de ambiente quando nao houver regressao funcional do projeto.
+- Comandos executados e status.
+- Falhas classificadas.
+- PR e checks remotos.
+- Browser verification das rotas afetadas.
+- Link ou referencia ao closeout.

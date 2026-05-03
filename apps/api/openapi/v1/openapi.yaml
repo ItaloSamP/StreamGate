@@ -4,7 +4,7 @@ info:
   version: v1
   description: |
     Base inicial da documentacao OpenAPI do StreamGate.
-    A Sprint 4 consolida runtime real de worker com RabbitMQ, camada materializada de analytics
+    O runtime operacional consolida runtime real de worker com RabbitMQ, camada materializada de analytics
     e leituras operacionais de quarantine/audit/DLQ.
 servers:
   - url: http://localhost:3000
@@ -20,6 +20,9 @@ tags:
   - name: Operations
   - name: Artifacts
   - name: Notifications
+  - name: Realtime
+  - name: Alerts
+  - name: Connectors
 paths:
   /up:
     get:
@@ -618,6 +621,338 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/analytics/dashboard/exports:
+    post:
+      summary: Gera export auditavel da dashboard
+      operationId: createAnalyticsDashboardExport
+      tags:
+        - Analytics
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DashboardExportRequest'
+      responses:
+        '201':
+          description: Export gerado com conteudo inline e metadados persistidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardExportEnvelope'
+        '403':
+          description: Sem permissao para exportar dashboard
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Payload invalido ou Idempotency-Key ausente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/realtime/tickets:
+    post:
+      summary: Emite ticket curto para canal realtime
+      operationId: createRealtimeTicket
+      tags:
+        - Realtime
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Ticket assinado por usuario, organizacao e role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RealtimeTicketEnvelope'
+        '403':
+          description: Sem permissao para realtime
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/realtime/events:
+    get:
+      summary: Fallback polling para eventos realtime duraveis
+      operationId: listRealtimeEvents
+      tags:
+        - Realtime
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: since
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 250
+      responses:
+        '200':
+          description: Eventos visiveis ao usuario atual
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RealtimeEventListEnvelope'
+        '403':
+          description: Sem permissao para realtime
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/alerts/{id}/review:
+    post:
+      summary: Marca alerta operacional como revisado
+      operationId: reviewAlert
+      tags:
+        - Alerts
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationActionRequest'
+      responses:
+        '200':
+          description: Alerta revisado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertActionEnvelope'
+
+  /api/v1/alerts/{id}/dismiss:
+    post:
+      summary: Fecha alerta operacional com motivo auditavel
+      operationId: dismissAlert
+      tags:
+        - Alerts
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationActionRequest'
+      responses:
+        '200':
+          description: Alerta fechado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertActionEnvelope'
+
+  /api/v1/connectors/profiles:
+    get:
+      summary: Lista perfis de conectores da organizacao atual
+      operationId: listConnectorProfiles
+      tags:
+        - Connectors
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Perfis sem segredos nem bucket/key expostos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorProfileListEnvelope'
+    post:
+      summary: Cria perfil de conector admin-only
+      operationId: createConnectorProfile
+      tags:
+        - Connectors
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectorProfileRequest'
+      responses:
+        '201':
+          description: Perfil criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorProfileEnvelope'
+
+  /api/v1/connectors/profiles/{id}:
+    get:
+      summary: Mostra um perfil de conector sem segredos
+      operationId: showConnectorProfile
+      tags:
+        - Connectors
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Perfil mascarado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorProfileEnvelope'
+    patch:
+      summary: Atualiza um perfil de conector admin-only
+      operationId: updateConnectorProfile
+      tags:
+        - Connectors
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectorProfileRequest'
+      responses:
+        '200':
+          description: Perfil atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorProfileEnvelope'
+
+  /api/v1/connectors/profiles/{id}/test:
+    post:
+      summary: Valida configuracao persistida de um conector
+      operationId: testConnectorProfile
+      tags:
+        - Connectors
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Resultado de teste de configuracao
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorProfileTestEnvelope'
+
+  /api/v1/connectors/profiles/{profile_id}/ingestions:
+    post:
+      summary: Solicita ingestao via conector e emite lease interno
+      operationId: createConnectorIngestion
+      tags:
+        - Connectors
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - name: profile_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectorIngestionRequest'
+      responses:
+        '201':
+          description: Upload/job/ingestion criados e lease curto retornado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorIngestionEnvelope'
+
+  /api/v1/internal/connectors/leases/{id}/claim:
+    post:
+      summary: Claim interno de lease de conector pelo worker
+      operationId: claimConnectorLease
+      tags:
+        - Connectors
+      parameters:
+        - name: X-Worker-Token
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Connector-Lease-Token
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lease:
+                  type: object
+                  properties:
+                    token:
+                      type: string
+      responses:
+        '200':
+          description: Material minimo para o worker baixar e armazenar o objeto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorLeaseClaimEnvelope'
 
   /api/v1/analytics/warehouse:
     get:
@@ -1747,6 +2082,10 @@ components:
               enum:
                 - application/json
                 - application/zip
+                - application/x-ndjson
+                - application/ndjson
+                - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+                - application/vnd.apache.parquet
                 - text/csv
             byte_size:
               type: integer
@@ -1810,6 +2149,10 @@ components:
               enum:
                 - application/json
                 - application/zip
+                - application/x-ndjson
+                - application/ndjson
+                - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+                - application/vnd.apache.parquet
                 - text/csv
             byte_size:
               type: integer
@@ -1866,7 +2209,7 @@ components:
               type: string
             content_type:
               type: string
-              enum: [application/json, application/zip, text/csv]
+              enum: [application/json, application/zip, application/x-ndjson, application/ndjson, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.apache.parquet, text/csv]
             byte_size:
               type: integer
               minimum: 1
@@ -2032,6 +2375,7 @@ components:
           enum:
             - upload
             - external_link
+            - connector
         status:
           type: string
           enum:
@@ -2362,20 +2706,20 @@ components:
           format: date-time
         source:
           type: string
-          enum: [postgres_derived, empty]
+          enum: [clickhouse, postgres_derived, empty]
         window:
           type: object
           additionalProperties: true
         sections:
           type: object
-          required: [queue, workers, throughput, formats, warnings, event_log]
+          required: [queue, workers, throughput, formats, warnings, event_log, timeseries_24h, status_distribution, heatmap_7d, jobs_board, queue_items, ingestion, workers_live, alerts]
           additionalProperties:
             type: object
             required: [status, generated_at, data]
             properties:
               status:
                 type: string
-                enum: [live, derived, empty, degraded]
+                enum: [live, derived, empty, degraded, backend-pending]
               generated_at:
                 type: string
                 format: date-time
@@ -2395,7 +2739,7 @@ components:
               properties:
                 status:
                   type: string
-                  enum: [live, derived, empty, degraded]
+                  enum: [live, derived, empty, degraded, backend-pending]
                 generated_at:
                   type: string
                   format: date-time
@@ -2411,7 +2755,7 @@ components:
                         format: date-time
                       type:
                         type: string
-                        enum: [worker_metric, operational_warning, audit]
+                        enum: [worker_metric, operational_warning, audit, realtime_event]
                       severity:
                         type: string
                       job_id:
@@ -2549,6 +2893,253 @@ components:
         error_budget_percent:
           type: number
 
+    DashboardExportRequest:
+      type: object
+      required: [export]
+      properties:
+        export:
+          type: object
+          required: [kind, format]
+          properties:
+            kind:
+              type: string
+              enum: [snapshot, series, heatmap, event_log]
+            format:
+              type: string
+              enum: [csv, json]
+            preset:
+              type: string
+              enum: [last_24h, last_7d, last_30d]
+            from:
+              type: string
+              format: date-time
+            to:
+              type: string
+              format: date-time
+            timezone:
+              type: string
+
+    DashboardExportEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          allOf:
+            - $ref: '#/components/schemas/DashboardExport'
+            - type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+
+    DashboardExport:
+      type: object
+      required: [id, organization_id, actor_id, kind, format, filename, content_type, byte_size, checksum_sha256, generated_at, expires_at, trace_id]
+      properties:
+        id: { type: string }
+        organization_id: { type: string }
+        actor_id: { type: string }
+        kind: { type: string, enum: [snapshot, series, heatmap, event_log] }
+        format: { type: string, enum: [csv, json] }
+        filename: { type: string }
+        content_type: { type: string, enum: [text/csv, application/json] }
+        byte_size: { type: integer, minimum: 0 }
+        checksum_sha256: { type: string }
+        metadata:
+          type: object
+          additionalProperties: true
+        generated_at: { type: string, format: date-time }
+        expires_at: { type: string, format: date-time }
+        trace_id: { type: string }
+
+    RealtimeTicketEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [ticket, organization_id, role, expires_at]
+          properties:
+            ticket: { type: string }
+            organization_id: { type: string }
+            role: { type: string, enum: [admin, operator, service_account] }
+            expires_at: { type: string, format: date-time }
+
+    RealtimeEventListEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/RealtimeEvent'
+
+    RealtimeEvent:
+      type: object
+      required: [id, event_type, organization_id, severity, payload, occurred_at, expires_at, trace_id]
+      properties:
+        id: { type: string }
+        event_type: { type: string }
+        organization_id: { type: string }
+        actor_id: { type: string, nullable: true }
+        resource_type: { type: string, nullable: true }
+        resource_id: { type: string, nullable: true }
+        severity: { type: string, enum: [info, warning, error] }
+        payload:
+          type: object
+          additionalProperties: true
+        occurred_at: { type: string, format: date-time }
+        expires_at: { type: string, format: date-time }
+        trace_id: { type: string }
+        request_id: { type: string, nullable: true }
+
+    AlertActionEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/OperationalWarning'
+
+    ConnectorProfileRequest:
+      type: object
+      required: [connector_profile]
+      properties:
+        connector_profile:
+          type: object
+          required: [name, kind]
+          properties:
+            name: { type: string }
+            kind: { type: string, enum: [s3, http] }
+            status: { type: string, enum: [active, disabled] }
+            settings:
+              type: object
+              additionalProperties: true
+            secrets:
+              type: object
+              additionalProperties: true
+
+    ConnectorProfileListEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConnectorProfile'
+
+    ConnectorProfileEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/ConnectorProfile'
+
+    ConnectorProfile:
+      type: object
+      required: [id, organization_id, kind, name, status, settings, created_by_id, trace_id]
+      properties:
+        id: { type: string }
+        organization_id: { type: string }
+        kind: { type: string, enum: [s3, http] }
+        name: { type: string }
+        status: { type: string, enum: [active, disabled] }
+        settings:
+          type: object
+          description: Configuracao mascarada; bucket, key, url e headers sensiveis nao sao expostos.
+          additionalProperties: true
+        created_by_id: { type: string }
+        trace_id: { type: string }
+        created_at: { type: string, format: date-time, nullable: true }
+        updated_at: { type: string, format: date-time, nullable: true }
+
+    ConnectorProfileTestEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [id, status, kind]
+          properties:
+            id: { type: string }
+            status: { type: string }
+            kind: { type: string, enum: [s3, http] }
+
+    ConnectorIngestionRequest:
+      type: object
+      required: [ingestion]
+      properties:
+        ingestion:
+          type: object
+          required: [filename, content_type]
+          properties:
+            object_key: { type: string }
+            source_path: { type: string, format: uri }
+            filename: { type: string }
+            content_type:
+              type: string
+              enum: [application/json, application/zip, application/x-ndjson, application/ndjson, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.apache.parquet, text/csv]
+            byte_size: { type: integer, minimum: 1 }
+
+    ConnectorIngestionEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [upload, job, ingestion, lease]
+          properties:
+            upload:
+              $ref: '#/components/schemas/Upload'
+            job:
+              $ref: '#/components/schemas/Job'
+            ingestion:
+              $ref: '#/components/schemas/ConnectorIngestion'
+            lease:
+              type: object
+              required: [id, token, expires_at]
+              properties:
+                id: { type: string }
+                token: { type: string }
+                expires_at: { type: string, format: date-time, nullable: true }
+
+    ConnectorIngestion:
+      type: object
+      required: [id, connector_profile_id, upload_id, job_id, requested_by_id, status, filename, content_type, trace_id]
+      properties:
+        id: { type: string }
+        connector_profile_id: { type: string }
+        upload_id: { type: string }
+        job_id: { type: string }
+        requested_by_id: { type: string }
+        status: { type: string, enum: [pending, leased, fetching, stored, failed] }
+        object_key: { type: string, nullable: true, description: Valor mascarado quando presente. }
+        source_path: { type: string, nullable: true, description: Valor mascarado quando presente. }
+        filename: { type: string }
+        content_type: { type: string }
+        byte_size: { type: integer, nullable: true }
+        trace_id: { type: string }
+        created_at: { type: string, format: date-time, nullable: true }
+        updated_at: { type: string, format: date-time, nullable: true }
+
+    ConnectorLeaseClaimEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [lease, connector, ingestion]
+          properties:
+            lease:
+              type: object
+              additionalProperties: true
+            connector:
+              type: object
+              description: Payload interno para worker; nunca retornado a usuarios finais.
+              additionalProperties: true
+            ingestion:
+              type: object
+              additionalProperties: true
+
     OperationalWarning:
       type: object
       required: [id, code, message, status, severity, retry_count, expires_at, trace_id]
@@ -2573,6 +3164,33 @@ components:
           enum: [info, warning, error]
         retry_count:
           type: integer
+        organization_id:
+          type: string
+          nullable: true
+        reviewed_by_id:
+          type: string
+          nullable: true
+        reviewed_at:
+          type: string
+          nullable: true
+          format: date-time
+        review_reason:
+          type: string
+          nullable: true
+        dismissed_by_id:
+          type: string
+          nullable: true
+        dismissed_at:
+          type: string
+          nullable: true
+          format: date-time
+        dismiss_reason:
+          type: string
+          nullable: true
+        resolved_at:
+          type: string
+          nullable: true
+          format: date-time
         expires_at:
           type: string
           format: date-time

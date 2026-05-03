@@ -1,4 +1,4 @@
-class AddSprint6BackendWorkerFoundations < ActiveRecord::Migration[8.1]
+class AddBackendWorkerFoundations < ActiveRecord::Migration[8.1]
   def change
     add_column :uploads, :source_type, :string, null: false, default: "upload"
     add_index :uploads, [ :source_type, :created_at ], if_not_exists: true

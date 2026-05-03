@@ -1,4 +1,4 @@
-﻿# Mapa do Workspace Frontend
+# Mapa do Workspace Frontend
 
 ## Objetivo
 
@@ -6,14 +6,15 @@ Este guia registra a malha oficial do workspace autenticado do StreamGate. Ele s
 
 ## Estado atual
 
-Estado alinhado a entrega de frontend da Sprint 6:
+Estado atual do frontend operacional:
 
 - workspace protegido usa `DashboardSurface` + `WorkspacePageFrame`
 - navegacao oficial vive em `workspace-config.ts`
 - dashboard virou command center operacional real via `GET /api/v1/analytics/dashboard`, com secoes `live`, `derived`, `empty` ou `degraded`
 - jobs, uploads, analytics, quarentena, DLQ, audit e event log consomem API real
 - `/clickhouse` e `/etl-explorer` deixaram de ser placeholders e viraram drilldowns analiticos reais
-- Upload Center suporta arquivo local e `public_link`; `oauth_delegated`, `google_drive`, `s3` e `http_url` seguem fora do corte funcional
+- Upload Center suporta arquivo local, `public_link` e ingestao admin-only por perfis S3/HTTP; `oauth_delegated` e `google_drive` seguem fora do corte funcional
+- `/settings` concentra criacao, teste e status de perfis S3/HTTP sem renderizar segredos
 - audit e DLQ sao admin-only
 - operacoes mutaveis sensiveis vivem em painel admin-only dedicado
 - notificacoes in-app usam sino na topbar, inbox completa, arquivamento e canais
@@ -103,12 +104,13 @@ Paginas e fontes atuais:
 - `JobsPage`: `listJobs`
 - `OperationsPage`: `retryJob`, `resolveQuarantine`, `createDlqReplayRequest`, `approveDlqReplayRequest`, `executeDlqReplayRequest`
 - `NotificationsPage`: `listNotifications`, mutacoes de inbox, `getNotificationSettings`, `updateNotificationSettings`, `testWebhookNotification`
-- `UploadPage`: `requestUploadSignedUrl`, `registerUpload`, `createPublicLinkUpload`, `listUploads`, `listJobs`
+- `UploadPage`: `requestUploadSignedUrl`, `registerUpload`, `createPublicLinkUpload`, `createConnectorIngestion`, `listConnectorProfiles`, `listUploads`, `listJobs`
+- `SettingsPage`: `listConnectorProfiles`, `createConnectorProfile`, `updateConnectorProfile`, `testConnectorProfile`
 - `OperationalDetailPages`: listas oficiais filtradas por ID/search e `listJobArtifacts`/`createArtifactDownloadUrl`
 
 ### Dashboard, warehouse e lineage
 
-Regras da Sprint 6:
+Regras do workspace operacional:
 
 - a dashboard nao usa mais `scaffoldQueue`, `scaffoldWorkers`, `scaffoldEventRows` ou `scaffoldFormatRows`
 - ausencia de dado vira empty state explicito, nao numero sintetico
@@ -122,9 +124,9 @@ Regras atuais:
 
 - filtros e paginacao operacionais ficam em URL
 - `preset=last_7d`, `timezone=UTC`, `page=1`, `per_page=20` sao defaults comuns
-- refresh e manual via `Recarregar`
+- refresh manual continua padrao fora do command center
 - `lastUpdatedAt` deve ficar visivel em telas operacionais
-- stale state deve indicar leitura potencialmente antiga sem iniciar polling automatico
+- stale state deve indicar leitura potencialmente antiga; no command center, WebSocket usa ticket curto e fallback de polling sinalizado
 
 ### Investigacao operacional
 
@@ -169,7 +171,7 @@ Regras de UX:
 
 ### Operacoes seguras
 
-`/operations` e admin-only e concentra as mutacoes sensiveis da Sprint 5:
+`/operations` e admin-only e concentra as mutacoes sensiveis de operacao segura:
 
 - retry de job
 - resolve de quarantine record
@@ -186,7 +188,7 @@ O wizard deve sempre exigir alvo, revisao de regras, motivo operacional e confir
 
 ## Validacao/Evidencias
 
-Evidencias da trilha de frontend Sprint 6:
+Evidencias da trilha de frontend workspace operacional:
 
 - testes de adapter cobrem `getAnalyticsDashboard`, `getAnalyticsWarehouse`, `getAnalyticsLineage` e `createPublicLinkUpload`
 - testes de paginas cobrem dashboard sem fixtures enganosas, `/clickhouse`, `/etl-explorer`, Upload Center com arquivo local e `public_link`
@@ -198,5 +200,5 @@ Evidencias da trilha de frontend Sprint 6:
 
 - [Fundacoes do frontend](C:/estudos/StreamGate/docs/guides/frontend/frontend-foundations.md)
 - [README do web](C:/estudos/StreamGate/apps/web/README.md)
-- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/)
 - [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)

@@ -1,6 +1,6 @@
 require "test_helper"
 
-class Sprint6BackendTest < ActionDispatch::IntegrationTest
+class BackendContractTest < ActionDispatch::IntegrationTest
   test "dashboard snapshot returns honest sections, dependency status and SLO metadata" do
     token = login_as("admin@example.com", "StrongPass123!")
     WorkerProcessingMetric.create!(
@@ -152,7 +152,7 @@ class Sprint6BackendTest < ActionDispatch::IntegrationTest
 
   test "public link creates external_link upload and job idempotently without exposing URL secrets" do
     token = login_as("operator@example.com", "StrongPass123!")
-    idempotency_key = "sprint6-public-link-key"
+    idempotency_key = "public-link-key"
 
     post "/api/v1/uploads/public-link",
          params: {
@@ -194,7 +194,7 @@ class Sprint6BackendTest < ActionDispatch::IntegrationTest
 
     post "/api/v1/uploads/public-link",
          params: { public_link: { url: "http://127.0.0.1/private.csv", filename: "private.csv", content_type: "text/csv" } },
-         headers: auth_header(token).merge("Idempotency-Key" => "sprint6-ssrf-key"),
+         headers: auth_header(token).merge("Idempotency-Key" => "public-link-ssrf-key"),
          as: :json
 
     assert_response :unprocessable_entity

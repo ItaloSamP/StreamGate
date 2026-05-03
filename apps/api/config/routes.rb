@@ -27,8 +27,22 @@ Rails.application.routes.draw do
       post "jobs/:job_id/artifacts/:artifact_id/download-url", to: "job_artifacts#download_url"
       get "analytics", to: "analytics#index"
       get "analytics/dashboard", to: "analytics_dashboard#show"
+      post "analytics/dashboard/exports", to: "dashboard_exports#create"
       get "analytics/warehouse", to: "analytics_warehouse#show"
       get "analytics/lineage", to: "analytics_lineage#show"
+      post "realtime/tickets", to: "realtime_tickets#create"
+      get "realtime/events", to: "realtime_events#index"
+      post "alerts/:id/review", to: "alerts#review"
+      post "alerts/:id/dismiss", to: "alerts#dismiss"
+      namespace :connectors do
+        resources :profiles, only: [ :index, :show, :create, :update ] do
+          post "test", on: :member
+          post "ingestions", to: "ingestions#create"
+        end
+      end
+      namespace :internal do
+        post "connectors/leases/:id/claim", to: "connector_leases#claim"
+      end
       get "quarantine", to: "quarantine#index"
       post "quarantine/:id/resolve", to: "quarantine_resolutions#create"
       get "quarantine/dlq", to: "dlq#index"
@@ -48,6 +62,8 @@ Rails.application.routes.draw do
       post "notification-settings/webhook/test", to: "notification_settings#test_webhook"
     end
   end
+
+  mount ActionCable.server => "/cable"
 
   if defined?(Rswag::Api::Engine) && defined?(Rswag::Ui::Engine)
     mount Rswag::Api::Engine => "/api-docs"

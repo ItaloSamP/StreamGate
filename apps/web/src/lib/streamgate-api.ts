@@ -79,6 +79,7 @@ export type AnalyticsDashboardSection<T> = {
 }
 
 export type AnalyticsDashboardEvent = {
+  id?: string | null
   timestamp: string | null
   type: string
   severity: 'info' | 'warning' | 'error' | string
@@ -86,6 +87,110 @@ export type AnalyticsDashboardEvent = {
   upload_id: string | null
   status: string | null
   message: string
+  metadata?: Record<string, unknown>
+}
+
+export type AnalyticsDashboardTimeseriesPoint = {
+  label?: string
+  bucket?: string
+  timestamp?: string
+  records?: number
+  records_count?: number
+  volume_gb?: number
+  volume_bytes?: number
+  jobs?: number
+  jobs_total?: number
+  failed?: number
+  failed_jobs?: number
+}
+
+export type AnalyticsDashboardStatusDistributionItem = {
+  status: string
+  count: number
+}
+
+export type AnalyticsDashboardFormatItem = {
+  content_type?: string
+  format?: string
+  label?: string
+  count?: number
+  jobs?: number
+  volume_bytes?: number
+  percent?: number
+}
+
+export type AnalyticsDashboardHeatmap = {
+  rows?: { range: string; values: number[] }[]
+  days?: string[]
+}
+
+export type AnalyticsDashboardJobBoardItem = Partial<JobSummary> & {
+  file?: string
+  filename?: string
+  progress?: number
+  duration_seconds?: number
+}
+
+export type AnalyticsDashboardQueueItem = {
+  position?: number
+  pos?: number | string
+  name?: string
+  filename?: string
+  size?: string
+  byte_size?: number
+  eta?: string
+  job_id?: string
+}
+
+export type AnalyticsDashboardIngestion = {
+  supported_formats?: string[]
+  enabled_formats?: string[]
+  pending_formats?: string[]
+  uploads?: Partial<UploadSummary>[]
+}
+
+export type AnalyticsDashboardWorkerLive = {
+  id: string
+  name?: string
+  status: string
+  active?: boolean
+  current_job_id?: string | null
+  current_label?: string | null
+  progress?: number
+  heartbeat_at?: string | null
+}
+
+export type AnalyticsDashboardAlert = {
+  id: string
+  title: string
+  message: string
+  severity: 'info' | 'warning' | 'error' | string
+  href?: string
+  created_at?: string | null
+  reviewed_at?: string | null
+  dismissed_at?: string | null
+}
+
+export type RealtimeTicketResponse = {
+  ticket: string
+  organization_id: string
+  role: 'admin' | 'operator' | 'service_account' | string
+  expires_at: string
+}
+
+export type RealtimeEvent = {
+  id: string
+  event_type: string
+  organization_id: string
+  actor_id?: string | null
+  resource_type?: string | null
+  resource_id?: string | null
+  severity: 'info' | 'warning' | 'error' | string
+  payload: Record<string, unknown>
+  occurred_at: string
+  expires_at: string
+  trace_id: string
+  request_id?: string | null
 }
 
 export type AnalyticsDashboardSnapshot = {
@@ -96,9 +201,17 @@ export type AnalyticsDashboardSnapshot = {
     queue: AnalyticsDashboardSection<{ processed: number; retried: number; moved_to_dlq: number }>
     workers: AnalyticsDashboardSection<{ processed: number; failed_terminal: number; average_latency_ms: number }>
     throughput: AnalyticsDashboardSection<{ jobs_total: number; uploads_total: number; completed: number; failed: number; quarantined: number }>
-    formats: AnalyticsDashboardSection<{ content_type: string; count: number }[]>
+    formats: AnalyticsDashboardSection<AnalyticsDashboardFormatItem[]>
     warnings: AnalyticsDashboardSection<{ open: number; failed: number; resolved: number }>
     event_log: AnalyticsDashboardSection<AnalyticsDashboardEvent[]>
+    timeseries_24h?: AnalyticsDashboardSection<AnalyticsDashboardTimeseriesPoint[]>
+    status_distribution?: AnalyticsDashboardSection<AnalyticsDashboardStatusDistributionItem[]>
+    heatmap_7d?: AnalyticsDashboardSection<AnalyticsDashboardHeatmap>
+    jobs_board?: AnalyticsDashboardSection<AnalyticsDashboardJobBoardItem[]>
+    queue_items?: AnalyticsDashboardSection<AnalyticsDashboardQueueItem[]>
+    ingestion?: AnalyticsDashboardSection<AnalyticsDashboardIngestion>
+    workers_live?: AnalyticsDashboardSection<AnalyticsDashboardWorkerLive[]>
+    alerts?: AnalyticsDashboardSection<AnalyticsDashboardAlert[]>
   }
   dependencies: Record<string, { status: string; reason?: string; source?: string; fallback_reason?: string | null }>
   slo: {
@@ -196,7 +309,14 @@ export type AuditQuery = OperationalQuery & {
   request_id?: string
 }
 
-export type UploadContentType = 'application/zip' | 'text/csv'
+export type UploadContentType =
+  | 'application/zip'
+  | 'text/csv'
+  | 'application/json'
+  | 'application/x-ndjson'
+  | 'application/ndjson'
+  | 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  | 'application/vnd.apache.parquet'
 
 export type JobSummary = {
   id: string
@@ -406,6 +526,110 @@ export type PublicLinkUploadResponse = UploadRegisterResponse & {
   acquisition: UploadAcquisition | null
 }
 
+export type DashboardExportKind = 'snapshot' | 'series' | 'heatmap' | 'event_log'
+export type DashboardExportFormat = 'csv' | 'json'
+
+export type DashboardExportRequest = {
+  kind: DashboardExportKind
+  format: DashboardExportFormat
+  preset?: string
+  from?: string
+  to?: string
+  timezone?: string
+  idempotencyKey?: string
+}
+
+export type DashboardExportResponse = {
+  id: string
+  organization_id?: string
+  actor_id?: string
+  kind: DashboardExportKind | string
+  format: DashboardExportFormat | string
+  filename: string
+  content_type: string
+  byte_size?: number
+  checksum_sha256?: string
+  metadata?: Record<string, unknown>
+  generated_at?: string | null
+  expires_at?: string | null
+  trace_id?: string
+  content: string
+}
+
+export type AlertActionResponse = {
+  id: string
+  status: string
+  reviewed_at?: string | null
+  dismissed_at?: string | null
+  [key: string]: unknown
+}
+
+export type ConnectorKind = 's3' | 'http'
+export type ConnectorStatus = 'active' | 'disabled'
+
+export type ConnectorProfile = {
+  id: string
+  organization_id?: string
+  kind: ConnectorKind
+  name: string
+  status: ConnectorStatus | string
+  settings: Record<string, unknown>
+  created_by_id?: string
+  trace_id?: string
+  created_at?: string | null
+  updated_at?: string | null
+}
+
+export type ConnectorProfileInput = {
+  name?: string
+  kind?: ConnectorKind
+  status?: ConnectorStatus
+  settings?: Record<string, unknown>
+  secrets?: Record<string, unknown>
+  idempotencyKey?: string
+}
+
+export type ConnectorProfileTestResponse = {
+  id: string
+  status: string
+  kind: ConnectorKind
+}
+
+export type ConnectorIngestion = {
+  id: string
+  connector_profile_id: string
+  upload_id: string
+  job_id: string
+  requested_by_id?: string
+  status: string
+  object_key?: string | null
+  source_path?: string | null
+  filename: string
+  content_type: string
+  byte_size?: number | null
+  trace_id: string
+  created_at?: string | null
+  updated_at?: string | null
+}
+
+export type ConnectorIngestionRequest = {
+  filename: string
+  contentType: UploadContentType
+  objectKey?: string
+  sourcePath?: string
+  byteSize?: number
+  idempotencyKey?: string
+}
+
+export type ConnectorIngestionResponse = UploadRegisterResponse & {
+  ingestion: ConnectorIngestion
+  lease: {
+    id: string
+    token?: string
+    expires_at?: string | null
+  }
+}
+
 export type AnalyticsLineage = {
   job: JobSummary
   upload: UploadSummary
@@ -606,6 +830,10 @@ const endpoints = {
   dlqReplayRequests: '/api/v1/dlq-replay-requests',
   notifications: '/api/v1/notifications',
   notificationSettings: '/api/v1/notification-settings',
+  realtimeTickets: '/api/v1/realtime/tickets',
+  realtimeEvents: '/api/v1/realtime/events',
+  dashboardExports: '/api/v1/analytics/dashboard/exports',
+  connectorProfiles: '/api/v1/connectors/profiles',
   uploads: '/api/v1/uploads',
   uploadPublicLink: '/api/v1/uploads/public-link',
   uploadSignedUrl: '/api/v1/uploads/signed-url',
@@ -709,6 +937,84 @@ export function createStreamgateApi(client: StreamgateHttpClient = apiClient) {
       return { data }
     },
 
+    listConnectorProfiles: async (): Promise<ApiSuccessEnvelope<ConnectorProfile[]>> => {
+      if (client.getEnvelope) {
+        return client.getEnvelope<ConnectorProfile[]>(endpoints.connectorProfiles)
+      }
+
+      const data = await client.get<ConnectorProfile[]>(endpoints.connectorProfiles)
+      return { data }
+    },
+
+    createConnectorProfile: async (input: ConnectorProfileInput): Promise<ApiSuccessEnvelope<ConnectorProfile>> => {
+      const payload: Record<string, unknown> = {}
+      if (input.name !== undefined) payload.name = input.name
+      if (input.kind !== undefined) payload.kind = input.kind
+      if (input.status !== undefined) payload.status = input.status
+      if (input.settings !== undefined) payload.settings = input.settings
+      if (input.secrets !== undefined) payload.secrets = input.secrets
+
+      const options = {
+        body: { connector_profile: payload },
+        headers: idempotencyHeaders(input.idempotencyKey),
+      }
+
+      if (client.postEnvelope) {
+        return client.postEnvelope<ConnectorProfile>(endpoints.connectorProfiles, options)
+      }
+
+      const data = await client.post<ConnectorProfile>(endpoints.connectorProfiles, options)
+      return { data }
+    },
+
+    updateConnectorProfile: (profileId: string, input: ConnectorProfileInput) => {
+      const payload: Record<string, unknown> = {}
+      if (input.name !== undefined) payload.name = input.name
+      if (input.kind !== undefined) payload.kind = input.kind
+      if (input.status !== undefined) payload.status = input.status
+      if (input.settings !== undefined) payload.settings = input.settings
+      if (input.secrets !== undefined) payload.secrets = input.secrets
+
+      return patchEnvelope<ConnectorProfile>(client, `${endpoints.connectorProfiles}/${profileId}`, {
+        body: { connector_profile: payload },
+        headers: idempotencyHeaders(input.idempotencyKey),
+      })
+    },
+
+    testConnectorProfile: async (profileId: string): Promise<ApiSuccessEnvelope<ConnectorProfileTestResponse>> => {
+      const path = `${endpoints.connectorProfiles}/${profileId}/test`
+
+      if (client.postEnvelope) {
+        return client.postEnvelope<ConnectorProfileTestResponse>(path)
+      }
+
+      const data = await client.post<ConnectorProfileTestResponse>(path)
+      return { data }
+    },
+
+    createConnectorIngestion: async (profileId: string, input: ConnectorIngestionRequest): Promise<ApiSuccessEnvelope<ConnectorIngestionResponse>> => {
+      const ingestion: Record<string, unknown> = {
+        filename: input.filename,
+        content_type: input.contentType,
+      }
+      if (input.objectKey) ingestion.object_key = input.objectKey
+      if (input.sourcePath) ingestion.source_path = input.sourcePath
+      if (input.byteSize) ingestion.byte_size = input.byteSize
+
+      const options = {
+        body: { ingestion },
+        headers: idempotencyHeaders(input.idempotencyKey),
+      }
+
+      const path = `${endpoints.connectorProfiles}/${profileId}/ingestions`
+      if (client.postEnvelope) {
+        return client.postEnvelope<ConnectorIngestionResponse>(path, options)
+      }
+
+      const data = await client.post<ConnectorIngestionResponse>(path, options)
+      return { data }
+    },
+
     listJobs: async (query?: ListQuery): Promise<ApiSuccessEnvelope<JobSummary[]>> => {
       const normalizedQuery = normalizeListQuery(query)
 
@@ -753,6 +1059,74 @@ export function createStreamgateApi(client: StreamgateHttpClient = apiClient) {
       const data = await client.get<AnalyticsDashboardSnapshot>(path, { query: normalizedQuery })
       return { data }
     },
+
+    createRealtimeTicket: async (): Promise<ApiSuccessEnvelope<RealtimeTicketResponse>> => {
+      if (client.postEnvelope) {
+        return client.postEnvelope<RealtimeTicketResponse>(endpoints.realtimeTickets)
+      }
+
+      const data = await client.post<RealtimeTicketResponse>(endpoints.realtimeTickets)
+      return { data }
+    },
+
+    listRealtimeEvents: async (query?: { since?: string; limit?: number }): Promise<ApiSuccessEnvelope<RealtimeEvent[]>> => {
+      if (client.getEnvelope) {
+        return client.getEnvelope<RealtimeEvent[]>(endpoints.realtimeEvents, { query })
+      }
+
+      const data = await client.get<RealtimeEvent[]>(endpoints.realtimeEvents, { query })
+      return { data }
+    },
+
+    createDashboardExport: async (input: DashboardExportRequest): Promise<ApiSuccessEnvelope<DashboardExportResponse>> => {
+      const payload: Record<string, unknown> = {
+        kind: input.kind,
+        format: input.format,
+      }
+      if (input.preset !== undefined) payload.preset = input.preset
+      if (input.from !== undefined) payload.from = input.from
+      if (input.to !== undefined) payload.to = input.to
+      if (input.timezone !== undefined) payload.timezone = input.timezone
+
+      const body = {
+        export: payload,
+      }
+
+      if (client.postEnvelope) {
+        return client.postEnvelope<DashboardExportResponse>(endpoints.dashboardExports, {
+          body,
+          headers: idempotencyHeaders(input.idempotencyKey),
+        })
+      }
+
+      const data = await client.post<DashboardExportResponse>(endpoints.dashboardExports, {
+        body,
+        headers: idempotencyHeaders(input.idempotencyKey),
+      })
+      return { data }
+    },
+
+    reviewAlert: (alertId: string, input: OperationActionInput) =>
+      client.postEnvelope
+        ? client.postEnvelope<AlertActionResponse>(`/api/v1/alerts/${alertId}/review`, {
+            body: operationBody(input.reason),
+            headers: idempotencyHeaders(input.idempotencyKey),
+          })
+        : client.post<AlertActionResponse>(`/api/v1/alerts/${alertId}/review`, {
+            body: operationBody(input.reason),
+            headers: idempotencyHeaders(input.idempotencyKey),
+          }).then((data) => ({ data })),
+
+    dismissAlert: (alertId: string, input: OperationActionInput) =>
+      client.postEnvelope
+        ? client.postEnvelope<AlertActionResponse>(`/api/v1/alerts/${alertId}/dismiss`, {
+            body: operationBody(input.reason),
+            headers: idempotencyHeaders(input.idempotencyKey),
+          })
+        : client.post<AlertActionResponse>(`/api/v1/alerts/${alertId}/dismiss`, {
+            body: operationBody(input.reason),
+            headers: idempotencyHeaders(input.idempotencyKey),
+          }).then((data) => ({ data })),
 
     getAnalyticsWarehouse: async (query?: OperationalQuery): Promise<ApiSuccessEnvelope<AnalyticsWarehouseSnapshot>> => {
       const normalizedQuery = normalizeOperationalQuery(query)

@@ -1,68 +1,74 @@
-# packages/contracts
+# StreamGate Contracts
 
-Fonte compartilhada dos contratos do StreamGate entre API, worker e frontend.
+Pacote de contratos compartilhados entre API, worker, frontend e validadores operacionais.
 
-## Estrutura atual
+## Papel
 
-- `version.json`: versao publicada do pacote e politica de compatibilidade.
-- `COMPATIBILITY.md`: regra oficial de evolucao de contratos.
-- `schemas/http/shared/envelopes`: envelopes HTTP reutilizaveis.
-- `schemas/http/shared/resources`: recursos HTTP compartilhados.
-- `schemas/http/uploads`: contratos HTTP de upload e registro de job.
-- `schemas/http/operational-reads`: contratos HTTP de leituras operacionais.
-- `schemas/http/operations`: contratos HTTP de mutacoes operacionais.
-- `schemas/http/artifacts`: contratos HTTP de artefatos finais.
-- `schemas/http/notifications`: contratos HTTP de notificacoes e deliveries.
-- `schemas/events/uploads`: contratos de eventos assincronos de upload.
-- `examples/http/<dominio>` e `examples/events/<dominio>`: exemplos concretos espelhando a taxonomia dos schemas.
+`packages/contracts` reduz drift entre implementacao, OpenAPI, eventos e exemplos. Qualquer endpoint, evento ou payload operacional relevante deve ter schema e exemplo versionados quando fizer parte do contrato publico ou interservico.
 
-## Convencoes oficiais
+## Estrutura
 
-### Entidades operacionais
+```text
+packages/contracts/
+|-- version.json
+|-- COMPATIBILITY.md
+|-- schemas/
+|   |-- http/
+|   |   |-- shared/
+|   |   |-- uploads/
+|   |   |-- operational-reads/
+|   |   |-- operations/
+|   |   |-- connectors/
+|   |   |-- artifacts/
+|   |   `-- notifications/
+|   `-- events/
+|       |-- uploads/
+|       `-- connectors/
+`-- examples/
+    |-- http/
+    `-- events/
+```
 
-- `user`
-- `upload`
-- `job`
-- `job_batch`
-- `quarantine_record`
-- `audit_event`
-- `processing_attempt`
+## Dominios Cobertos
 
-### Eventos iniciais
+- Uploads: signed URL, registro idempotente, public link e listagem.
+- Operational reads: jobs, uploads, analytics, dashboard, warehouse, lineage, quarantine, audit, DLQ e realtime events.
+- Operations: retry, resolve, replay DLQ, exports e alert actions.
+- Connectors: profiles admin-only, ingestions e leases internos.
+- Artifacts: listagem e signed download URL curta.
+- Notifications: inbox, bulk actions, settings e deliveries.
+- Events: upload received, public link requested e connector ingestion requested.
 
-- `upload.received`
-- `upload.public_link.requested`
-- `etl.validation.failed`
-- `etl.batch.loaded`
-- `etl.job.completed`
+## Convencoes
 
-### Campos minimos de rastreabilidade
+- Schemas usam versionamento semantico no nome, por exemplo `analytics-dashboard-response.v1.json`.
+- Exemplos devem representar payloads reais, mascarados e seguros.
+- Campos sensiveis devem ser omitidos ou mascarados no contrato exposto.
+- Eventos devem carregar `event_id`, `event_name`, `payload_version`, `occurred_at`, `trace_id`, `request_id` e IDs de recurso quando aplicavel.
+- Contratos HTTP usam envelope `data` e `meta` quando aplicavel.
 
-Todo contrato de evento deve prever, quando aplicavel:
+## Validacao
 
-- `event_id`
-- `event_name`
-- `occurred_at`
-- `producer`
-- `payload_version`
-- `trace_id`
-- `request_id`
-- `correlation_id`
-- `upload_id`
-- `job_id`
-- `batch_id`
+Na raiz do repositorio:
 
-## Contratos HTTP por dominio
+```bash
+ruby scripts/ci/validate-operational-contracts.rb
+```
 
-- `uploads`: signed URL, registro idempotente, public link e listagem de uploads.
-- `operational-reads`: jobs, analytics, dashboard, warehouse, lineage, quarantine, audit e DLQ read-only.
-- `operations`: retry, resolve e ciclo de replay DLQ.
-- `artifacts`: listagem e URL assinada curta de download.
-- `notifications`: inbox, leitura/arquivo/delete, acoes em massa essenciais, settings e webhook/email deliveries.
+Esse gate compara schemas, exemplos, OpenAPI e arquivos esperados para evitar drift silencioso.
 
-Exemplos correspondentes ficam no mesmo dominio em `examples/http`.
-## Fonte de verdade complementar
+## Compatibilidade
 
-- [Glossario de dominio](C:/estudos/StreamGate/docs/guides/backend/domain-glossary.md)
-- [Fundacoes do backend](C:/estudos/StreamGate/docs/guides/backend/backend-foundations.md)
-- [ADR 0002](C:/estudos/StreamGate/docs/adr/0002-domain-boundaries-identifiers-and-contracts.md)
+Consulte [COMPATIBILITY.md](COMPATIBILITY.md).
+
+Regra pratica:
+
+- adicionar campo opcional e compativel e aceitavel;
+- remover campo, alterar tipo ou mudar semantica exige novo contrato/versionamento;
+- endpoints ou eventos novos entram com schema, exemplo e referencia em docs no mesmo ciclo.
+
+## Referencias
+
+- [API docs](../../docs/guides/backend/api-docs.md)
+- [Domain glossary](../../docs/guides/backend/domain-glossary.md)
+- [Backend foundations](../../docs/guides/backend/backend-foundations.md)

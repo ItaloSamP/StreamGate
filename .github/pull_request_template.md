@@ -3,11 +3,11 @@
 ## Summary
 
 - What is being delivered?
-- Which sprint or roadmap item does this change close?
+- Which roadmap item does this change close?
 
 ## Definition of Done
 
-Reference: [docs/guides/definition-of-done.md](C:/estudos/StreamGate/docs/guides/definition-of-done.md)
+Reference: [docs/guides/quality/definition-of-done.md](C:/estudos/StreamGate/docs/guides/quality/definition-of-done.md)
 
 - [ ] Scope is implemented coherently and matches the stated goal
 - [ ] Documentation was updated where the change has impact

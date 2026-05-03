@@ -21,12 +21,15 @@ A evolucao do produto segue uma estrategia equilibrada entre operacao e conectiv
 - manter confiabilidade operacional e rastreabilidade ponta a ponta;
 - ampliar flexibilidade de entrada e saida de dados sem perder governanca.
 
-Leitura de status em `2026-04-21`:
+Leitura de status em `2026-05-02`:
 
 - operacao segura (`retry`, `resolve`, `dlq replay request/approve/execute`) ja esta materializada;
 - artefatos finais (`processed_dataset`, `quality_report`, `audit_report`) ja estao materializados;
 - notificacoes `in_app`, `email` e `webhook` ja estao materializadas;
-- conectores de entrada `google_drive`, `s3`, `http_url` e `oauth_delegated` continuam discovery-only, sem implementacao funcional na v1 atual.
+- dashboard v3 evoluiu para command center data-driven, com REST expandido, realtime/polling, exports e alert actions persistentes;
+- conectores de entrada `s3` e `http_url` estao materializados com perfis admin-only, lease interno, UX em `/settings` e solicitacao de ingestao em `/upload`;
+- `google_drive` e `oauth_delegated` continuam discovery-only;
+- a proxima branch deve concentrar o pente fino de release, com revisao visual ampla, hardening final e fechamento de qualquer detalhe residual.
 
 ## Problema
 
@@ -77,8 +80,9 @@ Precisa investigar eventos, reprocessar cargas, auditar trilhas e manter o pipel
 
 - upload local via SPA;
 - ingestao por link externo possui corte inicial como `public_link`; `oauth_delegated` continua evolucao futura;
-- conectores wave 1 continuam planejados/discovery-only: `google_drive`, `s3`, `http_url`;
-- entrada inicial com foco em arquivo zipado e portabilidade para outras extensoes.
+- conectores S3/HTTP possuem corte funcional completo para perfis admin-only, aquisicao por lease interno, processamento no pipeline padrao e solicitacao operacional pela UI;
+- `google_drive` continua planejado/discovery-only;
+- entrada inicial suporta CSV, JSON, NDJSON, ZIP com exatamente um arquivo suportado, XLSX e Parquet quando o runtime nativo estiver disponivel.
 
 ### Fluxo principal
 
@@ -168,13 +172,13 @@ Ao final, o produto entrega artefatos de resultado para consumo humano e tecnico
 
 ### Analytics
 
-O frontend consulta a API para ler status operacionais e metricas agregadas. Na v1, atualizacao quase em tempo real por polling curto, com evolucao futura para SSE/WebSocket. Quando ClickHouse estiver indisponivel, a API retorna fallback honesto `postgres_derived`, SLO e aviso tecnico sem interromper a entrega operacional.
+O frontend consulta a API para ler status operacionais e metricas agregadas. O command center operacional adiciona realtime por ticket curto + Action Cable, mantendo polling como fallback. Quando ClickHouse estiver indisponivel, a API retorna fallback honesto `postgres_derived`, SLO e aviso tecnico sem interromper a entrega operacional.
 
-## Interfaces e conceitos de produto (direcao, sem implementacao imediata)
+## Interfaces e conceitos de produto
 
 - `source_type`: `upload`, `external_link`, `connector`
 - `link_mode`: `public_link`, `oauth_delegated`
-- `connector_type` wave 1: `google_drive`, `s3`, `http_url`
+- `connector_type` wave 1: `s3`, `http_url` funcionais no corte API+worker; `google_drive` planejado
 - `output_artifact_type`: `processed_dataset`, `quality_report`, `audit_report`
 - `ui_mode`: `guided`, `advanced`
 - `notification_channel`: `in_app`, `email`, `webhook`
@@ -217,7 +221,7 @@ Para manter o projeto alinhado com esta visao, o desenvolvimento deve priorizar:
 
 ## Fora do escopo imediato
 
-- tempo real completo por WebSocket;
+- realtime amplo para todas as superficies fora do command center;
 - automacao completa de deploy em cluster;
 - observabilidade avancada com tracing distribuido em todos os servicos;
 - marketplace amplo de conectores alem da wave inicial;
@@ -231,16 +235,16 @@ Data-base: `2026-04-07`
 | Tema | Decisao | Status |
 | --- | --- | --- |
 | Estrategia de evolucao | Operacao e conectividade evoluem em paralelo (`dual-track`) | `aprovado` |
-| Cadencia de entrega | Sem dependencia de sprint curta para evolucao de produto | `aprovado` |
+| Cadencia de entrega | Sem dependencia de ciclo de entrega curta para evolucao de produto | `aprovado` |
 | Ingestao por link | Suporte a links publicos + evolucao para OAuth | `aprovado` |
-| Conectores wave 1 | `Google Drive`, `S3`, `URL HTTP` | `planejado` |
-| Entrada de arquivos | Foco inicial em zipado com portabilidade para outras extensoes | `planejado` |
+| Conectores wave 1 | `S3` e `URL HTTP` funcionais em API+worker; `Google Drive` segue discovery-only | `parcialmente materializado` |
+| Entrada de arquivos | CSV, JSON, NDJSON, ZIP seguro, XLSX e Parquet quando runtime nativo estiver disponivel | `aprovado` |
 | Saida final | Dataset processado + relatorio operacional/auditoria | `aprovado` |
 | UX de ingestao | Fluxo hibrido (`guided` + `advanced`) | `aprovado` |
 | UX operacional | Priorizar observabilidade + produtividade | `aprovado` |
-| Notificacoes | `in_app`, `email`, `webhook` | `planejado` |
-| Governanca | RBAC inicial + trilha de auditoria navegavel | `planejado` |
-| Retencao | Politica configuravel por workspace | `planejado` |
+| Notificacoes | `in_app`, `email`, `webhook` | `materializado` |
+| Governanca | RBAC inicial + trilha de auditoria navegavel + matriz configuravel por role/org | `aprovado` |
+| Retencao | Politica configuravel por workspace operacional (`organization_id`) | `aprovado` |
 | Diferencial inicial | Diagnostico guiado para reduzir tempo de resolucao | `futuro` |
 
 ## Resultado esperado

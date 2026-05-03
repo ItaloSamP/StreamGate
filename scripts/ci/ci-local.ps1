@@ -81,9 +81,9 @@ function Ensure-EnvFile {
   Write-Host 'Arquivo .env nao encontrado; copia temporaria criada a partir de .env.example.' -ForegroundColor Yellow
 }
 
-function Ensure-Sprint5OperationalEnv {
+function Ensure-OperationalEnv {
   $envPath = Join-Path $root '.env'
-  Assert-Sprint5OperationalEnv -Path $envPath
+  Assert-OperationalEnv -Path $envPath
 }
 
 function Invoke-WorkflowStep {
@@ -359,7 +359,7 @@ function Run-BackendWorkflow {
   }
 
   Ensure-EnvFile
-  Ensure-Sprint5OperationalEnv
+  Ensure-OperationalEnv
 
     $postgresHost = Get-DotEnvValue -Path (Join-Path $root '.env') -Key 'POSTGRES_HOST'
   if ([string]::IsNullOrWhiteSpace($postgresHost)) { $postgresHost = 'localhost' }
@@ -447,7 +447,7 @@ function Run-E2EWorkflow {
   }
 
   Ensure-EnvFile
-  Ensure-Sprint5OperationalEnv
+  Ensure-OperationalEnv
 
   $seedOperatorPassword = Get-DotEnvValue -Path (Join-Path $root '.env') -Key 'SEED_OPERATOR_PASSWORD'
   if ([string]::IsNullOrWhiteSpace($seedOperatorPassword)) { $seedOperatorPassword = 'ChangeMe123!' }
@@ -498,7 +498,7 @@ function Run-DockerWorkflow {
   }
 
   Ensure-EnvFile
-  Ensure-Sprint5OperationalEnv
+  Ensure-OperationalEnv
 
   $composeHealthCommand = Get-PowerShellFileCommand -FilePath '.\\scripts\\compose\\compose-health.tests.ps1'
   $bashHealthCommand = 'bash -lc "if ! command -v jq >/dev/null 2>&1; then echo ''SKIP: jq is not available in local WSL bash; GitHub docker-ci installs jq and validates this helper.''; exit 0; fi; bash scripts/compose/compose-health-tests.sh"'

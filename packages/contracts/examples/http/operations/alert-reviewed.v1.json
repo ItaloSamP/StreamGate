@@ -1,0 +1,18 @@
+{
+  "data": {
+    "id": "warn_72b7c82f2e6f47d78e8d661b680aa711",
+    "job_id": "job_fixture_pending",
+    "upload_id": "upload_fixture_registered",
+    "code": "dashboard_warning",
+    "message": "Needs review",
+    "status": "reviewed",
+    "severity": "warning",
+    "retry_count": 0,
+    "organization_id": "org_fixture_alpha",
+    "reviewed_by_id": "user_fixture_admin",
+    "reviewed_at": "2026-04-26T12:00:00Z",
+    "dismissed_by_id": null,
+    "dismissed_at": null,
+    "trace_id": "trace_fixture_1"
+  }
+}

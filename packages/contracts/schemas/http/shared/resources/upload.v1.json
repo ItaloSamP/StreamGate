@@ -11,7 +11,7 @@
     "byte_size": { "type": "integer", "minimum": 1 },
     "checksum_sha256": { "type": "string" },
     "storage_key": { "type": "string" },
-    "source_type": { "type": "string", "enum": ["upload", "external_link"] },
+    "source_type": { "type": "string", "enum": ["upload", "external_link", "connector"] },
     "status": { "type": "string" },
     "sensitivity_level": { "type": "string" },
     "user_id": { "type": "string" },

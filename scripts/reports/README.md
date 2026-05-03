@@ -18,7 +18,7 @@ PROFILE=full-closeout bash scripts/reports/run-all-reports.sh
 
 ## Quando usar
 
-Use o `run-all-reports` como gate `full-closeout`: fechamento de sprint, PR grande, alteracao critica de runtime/CI ou quando voce precisar regenerar o hub oficial de evidencias sem rerodar `ci-local all` em cascata.
+Use o `run-all-reports` como gate `full-closeout`: fechamento de ciclo de entrega, PR grande, alteracao critica de runtime/CI ou quando voce precisar regenerar o hub oficial de evidencias sem rerodar `ci-local all` em cascata.
 
 Para o dia a dia:
 
@@ -37,7 +37,7 @@ O runner agora trabalha por perfil:
    - `rspec`;
    - atualizacao do hub.
 2. `operational`
-   - smoke operacional completo da Sprint 5;
+   - smoke operacional completo de operacao segura;
    - atualizacao do hub.
 3. `full-closeout`
    - tudo de `fast`;

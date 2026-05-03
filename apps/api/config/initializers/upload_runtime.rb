@@ -45,7 +45,7 @@ module UploadRuntime
   end
 
   def allowed_content_types
-    ENV.fetch("UPLOAD_ALLOWED_CONTENT_TYPES", "application/json,application/zip,text/csv")
+    ENV.fetch("UPLOAD_ALLOWED_CONTENT_TYPES", "application/json,application/zip,text/csv,application/x-ndjson,application/ndjson,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.apache.parquet")
       .split(",")
       .map { |value| value.to_s.strip.downcase }
       .reject(&:blank?)

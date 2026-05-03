@@ -1,4 +1,4 @@
-﻿import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { createStreamgateApi } from '@/lib/streamgate-api'
 
@@ -256,7 +256,7 @@ describe('streamgateApi auth adapter', () => {
     })
   })
 
-  it('aligns Sprint 4 operational endpoints with api v1 and keeps query shape stable', async () => {
+  it('aligns operational endpoints with api v1 and keeps query shape stable', async () => {
     const getEnvelope = vi.fn()
       .mockResolvedValueOnce({
         data: {
@@ -333,7 +333,7 @@ describe('streamgateApi auth adapter', () => {
     })
   })
 
-  it('maps Sprint 6 analytics dashboard, warehouse and lineage endpoints', async () => {
+  it('maps analytics dashboard, warehouse and lineage endpoints', async () => {
     const getEnvelope = vi.fn()
       .mockResolvedValueOnce({
         data: {
@@ -394,6 +394,108 @@ describe('streamgateApi auth adapter', () => {
     })
     expect(getEnvelope).toHaveBeenNthCalledWith(3, '/api/v1/analytics/lineage', {
       query: { job_id: 'job_1' },
+    })
+  })
+
+  it('maps realtime, dashboard export and alert action endpoints', async () => {
+    const getEnvelope = vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: 'realtime_1',
+          event_type: 'job.completed',
+          severity: 'info',
+          payload: { token: '[masked]' },
+          occurred_at: '2026-04-24T14:00:00Z',
+        },
+      ],
+    })
+    const postEnvelope = vi.fn()
+      .mockResolvedValueOnce({ data: { ticket: 'ticket_1', organization_id: 'org_1', role: 'admin', expires_at: '2026-04-24T14:01:00Z' } })
+      .mockResolvedValueOnce({ data: { id: 'export_1', filename: 'streamgate-dashboard-snapshot.csv', content_type: 'text/csv', content: 'label,value\njobs,12\n' } })
+      .mockResolvedValueOnce({ data: { id: 'alert_1', status: 'reviewed' } })
+      .mockResolvedValueOnce({ data: { id: 'alert_1', status: 'dismissed' } })
+    const api = createStreamgateApi({ get: vi.fn(), post: vi.fn(), getEnvelope, postEnvelope })
+
+    await api.createRealtimeTicket()
+    await api.listRealtimeEvents({ since: '2026-04-24T13:59:00Z', limit: 25 })
+    await api.createDashboardExport({ kind: 'snapshot', format: 'csv', preset: 'last_24h', timezone: 'UTC', idempotencyKey: 'idem-export' })
+    await api.reviewAlert('alert_1', { reason: 'Triagem operacional concluida.', idempotencyKey: 'idem-review' })
+    await api.dismissAlert('alert_1', { reason: 'Alerta conhecido e resolvido.', idempotencyKey: 'idem-dismiss' })
+
+    expect(postEnvelope).toHaveBeenNthCalledWith(1, '/api/v1/realtime/tickets')
+    expect(getEnvelope).toHaveBeenCalledWith('/api/v1/realtime/events', {
+      query: { since: '2026-04-24T13:59:00Z', limit: 25 },
+    })
+    expect(postEnvelope).toHaveBeenNthCalledWith(2, '/api/v1/analytics/dashboard/exports', {
+      body: { export: { kind: 'snapshot', format: 'csv', preset: 'last_24h', timezone: 'UTC' } },
+      headers: { 'Idempotency-Key': 'idem-export' },
+    })
+    expect(postEnvelope).toHaveBeenNthCalledWith(3, '/api/v1/alerts/alert_1/review', {
+      body: { operation: { reason: 'Triagem operacional concluida.' } },
+      headers: { 'Idempotency-Key': 'idem-review' },
+    })
+    expect(postEnvelope).toHaveBeenNthCalledWith(4, '/api/v1/alerts/alert_1/dismiss', {
+      body: { operation: { reason: 'Alerta conhecido e resolvido.' } },
+      headers: { 'Idempotency-Key': 'idem-dismiss' },
+    })
+  })
+
+  it('maps connector profile and ingestion endpoints without exposing secret shape in responses', async () => {
+    const getEnvelope = vi.fn().mockResolvedValue({
+      data: [
+        { id: 'conn_1', kind: 's3', name: 'finance-s3', status: 'active', settings: { bucket: '[masked]' } },
+      ],
+    })
+    const postEnvelope = vi.fn()
+      .mockResolvedValueOnce({ data: { id: 'conn_1', kind: 's3', name: 'finance-s3', status: 'active', settings: { bucket: '[masked]' } } })
+      .mockResolvedValueOnce({ data: { id: 'conn_1', kind: 's3', status: 'configured' } })
+      .mockResolvedValueOnce({ data: { upload: { id: 'upload_connector' }, job: { id: 'job_connector' }, ingestion: { id: 'ing_connector' }, lease: { id: 'lease_1', token: 'lease-token', expires_at: '2026-04-24T14:05:00Z' } } })
+    const patchEnvelope = vi.fn().mockResolvedValue({ data: { id: 'conn_1', status: 'disabled' } })
+    const api = createStreamgateApi({ get: vi.fn(), post: vi.fn(), getEnvelope, postEnvelope, patchEnvelope })
+
+    await api.listConnectorProfiles()
+    await api.createConnectorProfile({
+      name: 'finance-s3',
+      kind: 's3',
+      settings: { region: 'us-east-1', bucket: 'finance' },
+      secrets: { access_key_id: 'AKIASECRET', secret_access_key: 'top-secret' },
+      idempotencyKey: 'idem-profile',
+    })
+    await api.updateConnectorProfile('conn_1', { status: 'disabled', idempotencyKey: 'idem-profile-update' })
+    await api.testConnectorProfile('conn_1')
+    await api.createConnectorIngestion('conn_1', {
+      filename: 'orders.ndjson',
+      contentType: 'application/x-ndjson',
+      objectKey: 'incoming/orders.ndjson',
+      idempotencyKey: 'idem-ingestion',
+    })
+
+    expect(getEnvelope).toHaveBeenCalledWith('/api/v1/connectors/profiles')
+    expect(postEnvelope).toHaveBeenNthCalledWith(1, '/api/v1/connectors/profiles', {
+      body: {
+        connector_profile: {
+          name: 'finance-s3',
+          kind: 's3',
+          settings: { region: 'us-east-1', bucket: 'finance' },
+          secrets: { access_key_id: 'AKIASECRET', secret_access_key: 'top-secret' },
+        },
+      },
+      headers: { 'Idempotency-Key': 'idem-profile' },
+    })
+    expect(patchEnvelope).toHaveBeenCalledWith('/api/v1/connectors/profiles/conn_1', {
+      body: { connector_profile: { status: 'disabled' } },
+      headers: { 'Idempotency-Key': 'idem-profile-update' },
+    })
+    expect(postEnvelope).toHaveBeenNthCalledWith(2, '/api/v1/connectors/profiles/conn_1/test')
+    expect(postEnvelope).toHaveBeenNthCalledWith(3, '/api/v1/connectors/profiles/conn_1/ingestions', {
+      body: {
+        ingestion: {
+          filename: 'orders.ndjson',
+          content_type: 'application/x-ndjson',
+          object_key: 'incoming/orders.ndjson',
+        },
+      },
+      headers: { 'Idempotency-Key': 'idem-ingestion' },
     })
   })
 

@@ -109,7 +109,7 @@ function Test-HttpsUrlValue {
   return $uri.Scheme -eq 'https' -and -not [string]::IsNullOrWhiteSpace($uri.Host)
 }
 
-function Assert-Sprint5OperationalEnv {
+function Assert-OperationalEnv {
   param(
     [Parameter(Mandatory)]
     [string]$Path
@@ -140,7 +140,7 @@ function Assert-Sprint5OperationalEnv {
   foreach ($key in @('SEED_OPERATOR_PASSWORD', 'SEED_ADMIN_PASSWORD', 'SMOKE_ADMIN_EMAIL', 'SMOKE_SECOND_ADMIN_EMAIL', 'SMOKE_SECOND_ADMIN_PASSWORD', 'SMOKE_NOTIFICATION_EMAIL', 'SMOKE_WEBHOOK_URL')) {
     $value = Get-EnvOrDotEnvValue -Path $Path -Key $key
     if ([string]::IsNullOrWhiteSpace($value)) {
-      $issues.Add("$key deve estar definido antes de rodar CI local, smokes ou reports da Sprint 5.") | Out-Null
+      $issues.Add("$key deve estar definido antes de rodar CI local, smokes ou reports de operacao segura.") | Out-Null
     }
   }
 
@@ -157,7 +157,7 @@ function Assert-Sprint5OperationalEnv {
   }
 
   if ($issues.Count -gt 0) {
-    throw ("Configuracao Sprint 5 incompleta:`n- " + ($issues -join "`n- ") + "`nSincronize seu .env com .env.example antes de continuar.")
+    throw ("Configuracao operacao segura incompleta:`n- " + ($issues -join "`n- ") + "`nSincronize seu .env com .env.example antes de continuar.")
   }
 }
 

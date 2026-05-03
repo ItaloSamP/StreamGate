@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/http/dashboard-export-response.v1.json",
+  "title": "DashboardExportResponseV1",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": ["id", "organization_id", "actor_id", "kind", "format", "filename", "content_type", "byte_size", "checksum_sha256", "generated_at", "expires_at", "trace_id", "content"],
+      "properties": {
+        "id": { "type": "string" },
+        "organization_id": { "type": "string" },
+        "actor_id": { "type": "string" },
+        "kind": { "type": "string", "enum": ["snapshot", "series", "heatmap", "event_log"] },
+        "format": { "type": "string", "enum": ["csv", "json"] },
+        "filename": { "type": "string" },
+        "content_type": { "type": "string", "enum": ["text/csv", "application/json"] },
+        "byte_size": { "type": "integer", "minimum": 0 },
+        "checksum_sha256": { "type": "string" },
+        "metadata": { "type": "object", "additionalProperties": true },
+        "generated_at": { "type": "string", "format": "date-time" },
+        "expires_at": { "type": "string", "format": "date-time" },
+        "trace_id": { "type": "string" },
+        "content": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

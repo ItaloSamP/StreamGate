@@ -10,7 +10,7 @@ Review the current state of a file set, directory, or the whole repository with 
 
 - auditing a backend slice after implementation
 - reviewing a directory before refactoring
-- checking whether a repo is ready to support the next sprint safely
+- checking whether a repo is ready to support the next ciclo de entrega safely
 - looking for architectural drift, maintainability issues, and weak boundaries
 
 ## Inputs

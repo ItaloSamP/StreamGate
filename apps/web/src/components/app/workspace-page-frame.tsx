@@ -13,6 +13,7 @@ export function WorkspacePageFrame({
   children,
   primaryActionLabel = '+ Upload',
   secondaryActionLabel,
+  alertStrip,
 }: {
   pathname: WorkspaceRoute
   eyebrow: string
@@ -20,6 +21,7 @@ export function WorkspacePageFrame({
   children: ReactNode
   primaryActionLabel?: string
   secondaryActionLabel?: string | null
+  alertStrip?: ReactNode
 }) {
   const navigate = useNavigate()
   const { session, logout } = useAuth()
@@ -43,6 +45,7 @@ export function WorkspacePageFrame({
         primaryActionLabel={primaryActionLabel}
         secondaryActionLabel={secondaryActionLabel}
         enableOperationalBadges={pathname === '/dashboard'}
+        alertStrip={alertStrip}
       >
         {children}
       </DashboardSurface>

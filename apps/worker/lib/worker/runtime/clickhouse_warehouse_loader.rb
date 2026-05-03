@@ -21,6 +21,7 @@ module Worker
             upload_id String,
             organization_id String,
             source_type LowCardinality(String),
+            content_type LowCardinality(String),
             status LowCardinality(String),
             input_rows UInt64,
             valid_rows UInt64,
@@ -47,6 +48,7 @@ module Worker
             record_status LowCardinality(String),
             error_code String,
             source_type LowCardinality(String),
+            content_type LowCardinality(String),
             column_names Array(String),
             field_count UInt64,
             record_hash String,
@@ -59,6 +61,9 @@ module Worker
           ORDER BY (organization_id, job_id, batch_id, row_number, record_status)
           TTL processed_at + INTERVAL #{config.clickhouse_ttl_days} DAY
         SQL
+
+        client.execute("ALTER TABLE streamgate_jobs ADD COLUMN IF NOT EXISTS content_type LowCardinality(String) DEFAULT ''")
+        client.execute("ALTER TABLE streamgate_records ADD COLUMN IF NOT EXISTS content_type LowCardinality(String) DEFAULT ''")
       rescue ClickhouseClient::Error => e
         raise Error, e.message
       end
@@ -96,6 +101,7 @@ module Worker
           "upload_id" => snapshot.fetch("upload_id"),
           "organization_id" => snapshot.fetch("organization_id"),
           "source_type" => snapshot.fetch("source_type"),
+          "content_type" => snapshot.fetch("content_type", ""),
           "status" => snapshot.fetch("status"),
           "quarantined_records_count" => snapshot.fetch("quarantined_records_count"),
           "job_created_at" => snapshot.fetch("job_created_at"),
@@ -118,14 +124,16 @@ module Worker
             SELECT
               j.id AS job_id,
               j.upload_id AS upload_id,
-              u.organization_id AS organization_id,
+              actor.organization_id AS organization_id,
               j.source_type AS source_type,
+              up.content_type AS content_type,
               j.status AS status,
               j.quarantined_records_count AS quarantined_records_count,
               j.created_at AS job_created_at,
               NOW() AS processed_at
             FROM jobs j
-            INNER JOIN users u ON u.id = j.requested_by_id
+            INNER JOIN users actor ON actor.id = j.requested_by_id
+            INNER JOIN uploads up ON up.id = j.upload_id
             WHERE j.id = $1
           SQL
           [job_id]
@@ -141,6 +149,7 @@ module Worker
           upload_id: context.fetch("upload_id"),
           organization_id: context.fetch("organization_id"),
           source_type: context.fetch("source_type"),
+          content_type: context.fetch("content_type", ""),
           status: context.fetch("status"),
           input_rows: parse_result.input_rows.to_i,
           valid_rows: parse_result.valid_rows.to_i,
@@ -187,6 +196,7 @@ module Worker
           record_status: status,
           error_code: error_code,
           source_type: context.fetch("source_type"),
+          content_type: context.fetch("content_type", ""),
           column_names: keys,
           field_count: keys.size,
           record_hash: record_hash(payload),

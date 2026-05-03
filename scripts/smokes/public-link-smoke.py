@@ -13,7 +13,8 @@ import http.client
 API_BASE_URL = os.environ.get("SMOKE_API_BASE_URL", "http://127.0.0.1:3000").rstrip("/")
 OPERATOR_EMAIL = os.environ.get("SMOKE_OPERATOR_EMAIL", "operator@streamgate.local")
 OPERATOR_PASSWORD = os.environ.get("SEED_OPERATOR_PASSWORD", "ChangeMe123!")
-PUBLIC_LINK_URL = os.environ.get("SMOKE_PUBLIC_LINK_URL", "").strip()
+DEFAULT_PUBLIC_LINK_URL = "https://raw.githubusercontent.com/plotly/datasets/master/2014_apple_stock.csv"
+PUBLIC_LINK_URL = os.environ.get("SMOKE_PUBLIC_LINK_URL", "").strip() or DEFAULT_PUBLIC_LINK_URL
 TIMEOUT_SECONDS = int(os.environ.get("SMOKE_HTTP_TIMEOUT_SECONDS", "60"))
 WORKER_TIMEOUT_SECONDS = int(os.environ.get("SMOKE_WORKER_TIMEOUT_SECONDS", "180"))
 POLL_INTERVAL_SECONDS = int(os.environ.get("SMOKE_POLL_INTERVAL_SECONDS", "3"))
@@ -159,12 +160,16 @@ def assert_ssrf_block(headers: dict[str, str], suffix: str) -> None:
 
 
 def main() -> int:
-    require(bool(PUBLIC_LINK_URL), "SMOKE_PUBLIC_LINK_URL must point to a small public CSV file for public_link smoke")
     parsed = urllib.parse.urlparse(PUBLIC_LINK_URL)
-    require(parsed.scheme in ("http", "https") and parsed.netloc, "SMOKE_PUBLIC_LINK_URL must be an absolute http(s) URL")
+    require(parsed.scheme in ("http", "https") and parsed.netloc, "public_link smoke URL must be an absolute http(s) URL")
 
     suffix = f"{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{random.randint(1000, 9999)}"
     filename = f"public-link-smoke-{suffix}.csv"
+
+    if PUBLIC_LINK_URL == DEFAULT_PUBLIC_LINK_URL:
+        log("[public-link-smoke] using default public CSV fixture")
+    else:
+        log("[public-link-smoke] using configured public CSV fixture")
 
     log("[public-link-smoke] login operator")
     headers = login_operator()

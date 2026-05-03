@@ -4,7 +4,7 @@
 Este guia consolida diretrizes de backend foundations para uso consistente no projeto.
 
 ## Estado atual
-Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+Conteudo alinhado ao estado operacional atual; atualizar em cada mudanca relevante.
 
 
 ## Regras/Contratos
@@ -13,16 +13,16 @@ Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atual
 
 ## Validacao/Evidencias
 - Validar coerencia com README raiz, docs/README e roadmap da release atual.
-- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+- Registrar atualizacoes desta pagina no closeout do ciclo de entrega correspondente.
 
 ## Referencias
-- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/)
 - [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)
 
 
 ## Objetivo detalhado
 
-Este guia consolida as decisoes operacionais do backend na fase pos-Sprint 3 e orienta a evolucao da Sprint 4 em diante.
+Este guia consolida as decisoes operacionais do backend na fase pos-entrega de upload/job e orienta a evolucao do runtime operacional em diante.
 
 O backend do StreamGate e composto por:
 
@@ -38,10 +38,10 @@ Este documento complementa:
 
 ## Estado atual detalhado
 
-No fechamento da Sprint 3:
+No fechamento da entrega de upload/job:
 
 - a API Rails ja opera auth real + trilha base de upload/job;
-- o worker permanece sem runtime real de fila (escopo central da Sprint 4);
+- o worker permanece sem runtime real de fila (escopo central do runtime operacional);
 - contratos HTTP da trilha base ja estao sincronizados com OpenAPI e `packages/contracts`;
 - a documentacao esta organizada por dominio para reduzir drift entre trilhas.
 
@@ -368,7 +368,7 @@ Os campos abaixo sao obrigatorios sempre que o contexto existir.
 
 ## Limites entre backend e produto
 
-Para manter coesao nas proximas sprints:
+Para manter coesao nas proximos ciclos de entrega:
 
 - autenticacao, upload assinado, registro de job e leitura operacional pertencem primeiro a API
 - ETL, validacao em lote, quarentena e replay pertencem ao worker
@@ -385,11 +385,11 @@ Uma entrega de backend so e considerada pronta quando:
 - deixa claro o impacto em logs, auditoria e contratos
 - registra qualquer excecao de ambiente ou risco remanescente
 
-## Decisoes materializadas na Sprint 1
+## Decisoes materializadas na fundacao do dominio
 
 ### Estrategia oficial de identificadores
 
-A partir da Sprint 1, o backend adota IDs string prefixados como identificadores oficiais do dominio operacional.
+A partir da fundacao do dominio, o backend adota IDs string prefixados como identificadores oficiais do dominio operacional.
 
 Regras:
 
@@ -429,7 +429,7 @@ Regras:
 
 Classificacao minima inicial:
 
-- `public`: nao adotado para o dominio operacional da Sprint 1;
+- `public`: nao adotado para o dominio operacional da fundacao do dominio;
 - `internal`: metadados operacionais que podem aparecer em respostas autenticadas e logs estruturados controlados;
 - `restricted`: campos sensiveis cujo conteudo nao deve ir para logs e deve ser minimizado em auditoria e payloads.
 
@@ -442,7 +442,7 @@ Regras iniciais:
 
 ### Separacao OLTP e OLAP
 
-Na Sprint 1, o PostgreSQL e a fonte de verdade do estado operacional. ClickHouse continua reservado para leitura derivada e agregada das proximas sprints.
+Na fundacao do dominio, o PostgreSQL e a fonte de verdade do estado operacional. ClickHouse continua reservado para leitura derivada e agregada das proximos ciclos de entrega.
 
 Vai para PostgreSQL agora:
 
@@ -461,7 +461,7 @@ Fica derivado para ClickHouse depois:
 - throughput por origem e periodo;
 - metricas do dashboard analitico.
 
-## Decisoes materializadas na Sprint 2
+## Decisoes materializadas na fundacao de autenticacao
 
 ### Mecanismo de autenticacao e sessao da v1
 
@@ -526,6 +526,6 @@ Codigos obrigatorios:
 - `session_expired`
 - `access_denied`
 
-### Gate de prontidao da Sprint 2.5
+### Gate de prontidao do gate de prontidao
 
-Antes da Sprint 3, fica congelado que os recursos de upload e job da trilha base devem seguir o namespace /api/v1 e o envelope padrao (data + meta.pagination + meta.filters) quando houver listagem. A Sprint 2.5 nao abre endpoints novos de negocio; ela apenas reduz drift de contrato, naming e preparacao de ambiente para a entrega funcional da Sprint 3.
+Antes da entrega de upload/job, fica congelado que os recursos de upload e job da trilha base devem seguir o namespace /api/v1 e o envelope padrao (data + meta.pagination + meta.filters) quando houver listagem. O gate de prontidao nao abre endpoints novos de negocio; ela apenas reduz drift de contrato, naming e preparacao de ambiente para a entrega funcional da entrega de upload/job.

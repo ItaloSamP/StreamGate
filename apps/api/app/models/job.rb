@@ -33,6 +33,7 @@ class Job < ApplicationRecord
   has_many :audit_events, as: :auditable, dependent: :restrict_with_exception
   has_one :upload_acquisition, dependent: :restrict_with_exception
   has_one :analytics_job_snapshot, dependent: :restrict_with_exception
+  has_one :connector_ingestion, dependent: :restrict_with_exception
 
   validates :trace_id, :source_type, :status, presence: true
 

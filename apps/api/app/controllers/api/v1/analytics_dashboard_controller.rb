@@ -13,6 +13,10 @@ module Api
         job_ids = snapshots.pluck(:job_id)
         metrics = WorkerProcessingMetric.where(job_id: job_ids, processed_at: window[:from]..window[:to])
         warnings = OperationalWarning.where(job_id: job_ids).where(created_at: window[:from]..window[:to])
+        clickhouse_payload = clickhouse_dashboard(window)
+        if clickhouse_payload.present?
+          return render_expanded_clickhouse(window: window, payload: clickhouse_payload, snapshots: snapshots, metrics: metrics, warnings: warnings)
+        end
 
         render_success(
           data: {
@@ -25,7 +29,15 @@ module Api
               throughput: section(status: snapshots.exists? ? "derived" : "empty", data: throughput_data(snapshots)),
               formats: section(status: snapshots.exists? ? "derived" : "empty", data: format_data(snapshots)),
               warnings: section(status: warnings.exists? ? "degraded" : "empty", data: warning_data(warnings)),
-              event_log: section(status: event_log_status(metrics, warnings), data: event_log(job_ids, metrics, warnings, window))
+              event_log: section(status: event_log_status(metrics, warnings), data: event_log(job_ids, metrics, warnings, window)),
+              timeseries_24h: section(status: "backend-pending", data: aggregate_timeseries(snapshots)),
+              status_distribution: section(status: snapshots.exists? ? "derived" : "empty", data: status_distribution_data(snapshots)),
+              heatmap_7d: section(status: "backend-pending", data: empty_heatmap),
+              jobs_board: section(status: snapshots.exists? ? "derived" : "empty", data: jobs_board_data(snapshots)),
+              queue_items: section(status: "derived", data: queue_items_data(snapshots)),
+              ingestion: section(status: "derived", data: ingestion_data),
+              workers_live: section(status: "backend-pending", data: []),
+              alerts: section(status: warnings.exists? ? "degraded" : "empty", data: alerts_data(warnings))
             },
             dependencies: {
               broker: broker_dependency(metrics),
@@ -49,6 +61,65 @@ module Api
         return AnalyticsJobSnapshot.all if current_actor.admin?
 
         AnalyticsJobSnapshot.where(organization_id: current_actor.organization_id)
+      end
+
+      def clickhouse_dashboard(window)
+        reader = Analytics::ClickhouseWarehouseReader.new
+        return nil unless reader.available? && reader.respond_to?(:dashboard)
+
+        reader.dashboard(window: window, organization_id: current_actor.admin? ? nil : current_actor.organization_id)
+      rescue Analytics::ClickhouseWarehouseReader::Unavailable, StandardError => e
+        record_clickhouse_warning(e)
+        nil
+      end
+
+      def render_expanded_clickhouse(window:, payload:, snapshots:, metrics:, warnings:)
+        sections = {
+          queue: section(status: "live", data: payload.fetch(:queue, queue_data(metrics))),
+          workers: section(status: "live", data: payload.fetch(:workers, worker_data(metrics))),
+          throughput: section(status: "live", data: payload.fetch(:throughput, throughput_data(snapshots))),
+          formats: section(status: "live", data: payload.fetch(:formats, format_data(snapshots))),
+          warnings: section(status: warnings.exists? ? "degraded" : "empty", data: warning_data(warnings)),
+          event_log: section(status: event_log_status(metrics, warnings), data: event_log(snapshots.pluck(:job_id), metrics, warnings, window)),
+          kpis: section(status: "live", data: payload.fetch(:throughput, throughput_data(snapshots))),
+          timeseries_24h: section(status: "live", data: payload.fetch(:timeseries_24h, [])),
+          status_distribution: section(status: "live", data: payload.fetch(:status_distribution, [])),
+          heatmap_7d: section(status: "live", data: payload.fetch(:heatmap_7d, empty_heatmap)),
+          jobs_board: section(status: "live", data: payload.fetch(:jobs_board, [])),
+          queue_items: section(status: "live", data: payload.fetch(:queue_items, [])),
+          ingestion: section(status: "live", data: payload.fetch(:ingestion, ingestion_data)),
+          workers_live: section(status: "live", data: payload.fetch(:workers_live, [])),
+          alerts: section(status: warnings.exists? ? "degraded" : "empty", data: alerts_data(warnings))
+        }
+        last_event_at = payload[:last_event_at]
+        target = Rails.application.config.x.analytics_slo_target_seconds
+        lag_seconds = last_event_at ? (Time.current - last_event_at).round : nil
+
+        render_success(
+          data: {
+            generated_at: Time.current.iso8601,
+            source: "clickhouse",
+            window: serialize_window(window),
+            sections: sections,
+            dependencies: {
+              broker: broker_dependency(metrics),
+              warehouse: { status: "healthy", source: "clickhouse", fallback_reason: nil },
+              storage: { status: snapshots.exists? ? "healthy" : "unavailable" },
+              source_health: {
+                status: "healthy",
+                source: "clickhouse"
+              }
+            },
+            slo: {
+              slo_target_seconds: target,
+              last_event_at: last_event_at&.iso8601,
+              lag_seconds: lag_seconds,
+              stale: lag_seconds.nil? || lag_seconds > target,
+              p95_ms: payload.fetch(:p95_ms, 0),
+              error_budget_percent: payload.fetch(:error_budget_percent, 100.0)
+            }
+          }
+        )
       end
 
       def serialize_window(window)
@@ -113,6 +184,81 @@ module Api
           .group(:content_type)
           .count
           .map { |content_type, count| { content_type: content_type, count: count } }
+      end
+
+      def status_distribution_data(snapshots)
+        snapshots.group(:status).count.map { |status, count| { status: status, count: count } }
+      end
+
+      def aggregate_timeseries(snapshots)
+        return [] unless snapshots.exists?
+
+        [ {
+          label: "janela",
+          records: JobBatch.where(job_id: snapshots.select(:job_id)).sum(:input_rows),
+          jobs: snapshots.count,
+          failed: snapshots.where(status: "failed").count,
+          volume_gb: 0
+        } ]
+      end
+
+      def empty_heatmap
+        {
+          days: %w[Seg Ter Qua Qui Sex Sab Dom],
+          rows: %w[00-03 03-06 06-09 09-12 12-15 15-18 18-21 21-24].map { |range| { range: range, values: Array.new(7, 0) } }
+        }
+      end
+
+      def jobs_board_data(snapshots)
+        snapshots.order(job_created_at: :desc).limit(50).map do |snapshot|
+          {
+            id: snapshot.job_id,
+            upload_id: snapshot.upload_id,
+            requested_by_id: snapshot.actor_id,
+            source_type: snapshot.source_type,
+            status: snapshot.status,
+            quarantined_records_count: snapshot.quarantined_records_count,
+            trace_id: snapshot.job&.trace_id,
+            created_at: snapshot.job_created_at&.iso8601,
+            updated_at: snapshot.last_synced_at&.iso8601
+          }
+        end
+      end
+
+      def queue_items_data(snapshots)
+        snapshots.where(status: "pending").order(job_created_at: :asc).limit(25).each_with_index.map do |snapshot, index|
+          upload = Upload.find_by(id: snapshot.upload_id)
+          {
+            position: index + 1,
+            name: upload&.filename || snapshot.upload_id,
+            byte_size: upload&.byte_size,
+            eta: "~",
+            job_id: snapshot.job_id
+          }
+        end
+      end
+
+      def ingestion_data
+        {
+          supported_formats: %w[CSV JSON NDJSON ZIP XLSX Parquet],
+          enabled_formats: %w[CSV JSON NDJSON ZIP XLSX Parquet],
+          pending_formats: []
+        }
+      end
+
+      def alerts_data(warnings)
+        warnings.order(created_at: :desc).limit(10).map do |warning|
+          {
+            id: warning.id,
+            title: warning.code.humanize,
+            message: warning.message,
+            severity: warning.severity,
+            href: "/quarantine",
+            created_at: warning.created_at&.iso8601,
+            reviewed_at: warning.reviewed_at&.iso8601,
+            dismissed_at: warning.dismissed_at&.iso8601
+          }
+        end
       end
 
       def warning_data(warnings)
@@ -224,6 +370,22 @@ module Api
 
         failures = metrics.where(status: %w[dlq failed_terminal]).count
         ((1 - (failures.to_f / total)) * 100).round(2)
+      end
+
+      def record_clickhouse_warning(error)
+        OperationalWarning.create!(
+          code: "clickhouse_dashboard_read_failed",
+          message: error.message.to_s[0, 1_000],
+          status: "open",
+          severity: "warning",
+          retry_count: 0,
+          expires_at: Rails.application.config.x.operational_warning_retention_days.days.from_now,
+          trace_id: Current.trace_id,
+          request_id: Current.request_id,
+          organization_id: current_actor.organization_id
+        )
+      rescue ActiveRecord::ActiveRecordError
+        Rails.logger.warn("failed to persist clickhouse dashboard warning")
       end
     end
   end

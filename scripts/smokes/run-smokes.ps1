@@ -164,7 +164,7 @@ function Ensure-SeedPasswordEnv {
   }
 }
 
-function Ensure-Sprint5SmokeEnv {
+function Ensure-SmokeEnv {
   $envPath = Join-Path $root '.env'
 
   if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable('SMOKE_API_BASE_URL'))) {
@@ -180,13 +180,13 @@ function Ensure-Sprint5SmokeEnv {
     }
   }
 
-  Assert-Sprint5OperationalEnv -Path $envPath
+  Assert-OperationalEnv -Path $envPath
 }
 
 try {
   Initialize-SmokeReports
   Ensure-SeedPasswordEnv
-  Ensure-Sprint5SmokeEnv
+  Ensure-SmokeEnv
 
   Write-Host "Preparando ambiente limpo para smokes..." -ForegroundColor Cyan
   Stop-StreamGateStack

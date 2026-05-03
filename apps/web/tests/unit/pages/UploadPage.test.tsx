@@ -11,6 +11,7 @@ const originalCrypto = globalThis.crypto
 
 type UploadApiMockOptions = {
   failSignedUrl?: boolean
+  role?: 'operator' | 'admin'
 }
 
 function renderUploadPage(initialEntry = '/upload') {
@@ -26,16 +27,20 @@ function renderUploadPage(initialEntry = '/upload') {
 }
 
 function setupUploadApiMock(options: UploadApiMockOptions = {}) {
+  const role = options.role ?? 'operator'
   const counters = {
     uploadsList: 0,
     jobsList: 0,
     signedUrl: 0,
     register: 0,
     publicLink: 0,
+    connectorProfiles: 0,
+    connectorIngestion: 0,
     signedPut: 0,
     uploadsUrls: [] as string[],
     jobsUrls: [] as string[],
     lastPublicLinkBody: null as Record<string, unknown> | null,
+    lastConnectorIngestionBody: null as Record<string, unknown> | null,
     lastIdempotencyKey: null as string | null,
   }
 
@@ -50,7 +55,7 @@ function setupUploadApiMock(options: UploadApiMockOptions = {}) {
             id: 'user_1',
             email: 'ana@empresa.com',
             full_name: 'Ana Costa',
-            role: 'operator',
+            role,
             status: 'active',
           },
           session: {
@@ -232,6 +237,91 @@ function setupUploadApiMock(options: UploadApiMockOptions = {}) {
       }))
     }
 
+    if (url.includes('/api/v1/connectors/profiles/conn_s3_fixture/ingestions') && method === 'POST') {
+      counters.connectorIngestion += 1
+      counters.lastConnectorIngestionBody = JSON.parse(String(init?.body ?? '{}')) as Record<string, unknown>
+      counters.lastIdempotencyKey = readHeader(init?.headers, 'Idempotency-Key')
+      return Promise.resolve(jsonResponse(201, {
+        data: {
+          upload: {
+            id: 'upload_connector_1',
+            filename: 'orders.ndjson',
+            content_type: 'application/x-ndjson',
+            byte_size: 1,
+            checksum_sha256: '0'.repeat(64),
+            storage_key: 'uploads/connectors/orders.ndjson',
+            source_type: 'connector',
+            status: 'registered',
+            sensitivity_level: 'internal',
+            user_id: 'user_1',
+            trace_id: 'trace_connector_1',
+            created_at: '2026-04-08T10:00:00Z',
+            updated_at: '2026-04-08T10:00:00Z',
+          },
+          job: {
+            id: 'job_connector_1',
+            upload_id: 'upload_connector_1',
+            requested_by_id: 'user_1',
+            source_type: 'connector',
+            status: 'pending',
+            error_code: null,
+            error_category: null,
+            quarantined_records_count: 0,
+            trace_id: 'trace_connector_job_1',
+            created_at: '2026-04-08T10:00:00Z',
+            updated_at: '2026-04-08T10:00:00Z',
+          },
+          ingestion: {
+            id: 'ing_connector_1',
+            connector_profile_id: 'conn_s3_fixture',
+            status: 'leased',
+            object_key: 'inco**************djson',
+            source_path: null,
+            filename: 'orders.ndjson',
+            content_type: 'application/x-ndjson',
+            trace_id: 'trace_connector_ingestion_1',
+          },
+          lease: {
+            id: 'lease_connector_1',
+            token: 'lease-token-secret',
+            expires_at: '2026-04-08T10:05:00Z',
+          },
+        },
+      }))
+    }
+
+    if (url.includes('/api/v1/connectors/profiles') && method === 'GET') {
+      counters.connectorProfiles += 1
+
+      if (role !== 'admin') {
+        return Promise.resolve(jsonResponse(403, {
+          error: {
+            code: 'access_denied',
+            message: 'Acesso negado para conectores.',
+            request_id: 'req_connector_denied',
+            trace_id: 'trace_connector_denied',
+          },
+        }))
+      }
+
+      return Promise.resolve(jsonResponse(200, {
+        data: [
+          {
+            id: 'conn_s3_fixture',
+            organization_id: 'org_fixture',
+            kind: 's3',
+            name: 'finance-s3',
+            status: 'active',
+            settings: { bucket: '[masked]', region: 'us-east-1' },
+            created_by_id: 'user_1',
+            trace_id: 'trace_connector_profile',
+            created_at: '2026-04-08T10:00:00Z',
+            updated_at: '2026-04-08T10:00:00Z',
+          },
+        ],
+      }))
+    }
+
     return Promise.resolve(jsonResponse(404, {
       error: {
         code: 'not_found',
@@ -379,6 +469,59 @@ describe('UploadPage', () => {
     expect(await screen.findByText('Link publico aceito: upload upload_link_1 e job job_link_1 criados.')).toBeInTheDocument()
     expect(screen.getByText('https://example.test/files/remote.csv')).toBeInTheDocument()
     expect(screen.queryByText(/google_drive|oauth_delegated|s3|http_url/i)).not.toBeInTheDocument()
+  })
+
+  it('lets admins request connector ingestion without rendering lease tokens', async () => {
+    storeAuthSession(
+      createStoredAuthSession({
+        remember: true,
+        user: {
+          id: 'user_1',
+          email: 'admin@empresa.com',
+          full_name: 'Admin Costa',
+          role: 'admin',
+          status: 'active',
+        },
+        session: {
+          id: 'sess_admin',
+          token_type: 'Bearer',
+          access_token: 'token_admin',
+          expires_at: '2099-04-07T12:00:00Z',
+        },
+      }),
+    )
+    const counters = setupUploadApiMock({ role: 'admin' })
+
+    renderUploadPage('/upload')
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Conector' }))
+    expect(await screen.findByText('finance-s3')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Arquivo de destino'), {
+      target: { value: 'orders.ndjson' },
+    })
+    fireEvent.change(screen.getByLabelText('Object key S3 ou caminho HTTP'), {
+      target: { value: 'incoming/orders.ndjson' },
+    })
+    fireEvent.change(screen.getByLabelText('Content type do conector'), {
+      target: { value: 'application/x-ndjson' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Solicitar ingestao por conector' }))
+
+    await waitFor(() => {
+      expect(counters.connectorProfiles).toBeGreaterThanOrEqual(1)
+      expect(counters.connectorIngestion).toBe(1)
+    })
+    expect(counters.lastConnectorIngestionBody).toEqual({
+      ingestion: {
+        filename: 'orders.ndjson',
+        content_type: 'application/x-ndjson',
+        object_key: 'incoming/orders.ndjson',
+      },
+    })
+    expect(counters.lastIdempotencyKey).toMatch(/^connector-ingestion-/)
+    expect(await screen.findByText('Conector aceito: upload upload_connector_1 e job job_connector_1 criados.')).toBeInTheDocument()
+    expect(screen.queryByText('lease-token-secret')).not.toBeInTheDocument()
+    expect(screen.queryByText(/lease token|x-worker-token/i)).not.toBeInTheDocument()
   })
 })
 

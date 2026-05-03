@@ -5,9 +5,16 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { WorkspacePageFrame } from '@/components/app/workspace-page-frame'
+import { useAuth } from '@/features/auth/auth-context'
 import { ApiClientError } from '@/lib/api-client'
-import { streamgateApi, type JobSummary, type UploadContentType, type UploadSummary } from '@/lib/streamgate-api'
+import { streamgateApi, type ConnectorProfile, type JobSummary, type UploadContentType, type UploadSummary } from '@/lib/streamgate-api'
 import { showSingletonToast } from '@/lib/toast'
+import {
+  createConnectorIngestionIdempotencyKey,
+  createPublicLinkIdempotencyKey,
+  inferUploadContentType,
+  runSignedFileUpload,
+} from '@/lib/upload-flow'
 
 const DEFAULT_PER_PAGE = 20
 
@@ -30,8 +37,8 @@ const JOB_STATUS_OPTIONS = [
   { value: 'quarantined_with_warnings', label: 'Quarentena com alertas' },
 ] as const
 
-type UploadMode = 'file' | 'public_link'
-type UploadFlowState = 'idle' | 'signing' | 'uploading' | 'confirming' | 'requesting_link' | 'success' | 'error'
+type UploadMode = 'file' | 'public_link' | 'connector'
+type UploadFlowState = 'idle' | 'signing' | 'uploading' | 'confirming' | 'requesting_link' | 'requesting_connector' | 'success' | 'error'
 
 type ListState<T> = {
   status: 'loading' | 'success' | 'empty' | 'error'
@@ -71,6 +78,8 @@ const INITIAL_JOBS_STATE: ListState<JobSummary> = {
 
 export function UploadPage() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const { session } = useAuth()
+  const isAdmin = session?.user.role === 'admin'
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [detectedContentType, setDetectedContentType] = useState<UploadContentType | null>(null)
@@ -80,6 +89,14 @@ export function UploadPage() {
     filename: '',
     contentType: 'text/csv' as UploadContentType,
     byteSize: '',
+  })
+  const [connectorProfiles, setConnectorProfiles] = useState<ConnectorProfile[]>([])
+  const [connectorProfileState, setConnectorProfileState] = useState<'idle' | 'loading' | 'success' | 'error' | 'denied'>('idle')
+  const [connectorForm, setConnectorForm] = useState({
+    profileId: '',
+    filename: '',
+    contentType: 'text/csv' as UploadContentType,
+    source: '',
   })
   const [flowState, setFlowState] = useState<UploadFlowState>('idle')
   const [flowError, setFlowError] = useState<string | null>(null)
@@ -101,7 +118,7 @@ export function UploadPage() {
   const jobStatusFilter = (searchParams.get('job_status') ?? '').trim()
   const jobPage = useMemo(() => parsePage(searchParams.get('job_page')), [searchParams])
 
-  const busy = flowState === 'signing' || flowState === 'uploading' || flowState === 'confirming' || flowState === 'requesting_link'
+  const busy = flowState === 'signing' || flowState === 'uploading' || flowState === 'confirming' || flowState === 'requesting_link' || flowState === 'requesting_connector'
 
   useEffect(() => {
     let active = true
@@ -197,6 +214,42 @@ export function UploadPage() {
     }
   }, [jobPage, jobStatusFilter, reloadToken])
 
+  useEffect(() => {
+    if (!isAdmin) {
+      setConnectorProfiles([])
+      setConnectorProfileState('denied')
+      if (uploadMode === 'connector') setUploadMode('file')
+      return
+    }
+
+    let active = true
+
+    async function loadConnectorProfiles() {
+      setConnectorProfileState('loading')
+
+      try {
+        const response = await streamgateApi.listConnectorProfiles()
+        if (!active) return
+
+        const rows = Array.isArray(response.data) ? response.data : []
+        setConnectorProfiles(rows)
+        setConnectorProfileState(rows.length > 0 ? 'success' : 'idle')
+        setConnectorForm((current) => ({
+          ...current,
+          profileId: current.profileId || rows[0]?.id || '',
+        }))
+      } catch {
+        if (active) setConnectorProfileState('error')
+      }
+    }
+
+    loadConnectorProfiles()
+
+    return () => {
+      active = false
+    }
+  }, [isAdmin, reloadToken, uploadMode])
+
   function updateUrlState(next: {
     upload_status?: string
     upload_page?: number
@@ -236,7 +289,7 @@ export function UploadPage() {
       return
     }
 
-    const nextContentType = inferContentType(file)
+    const nextContentType = inferUploadContentType(file)
     if (!nextContentType) {
       setSelectedFile(null)
       setDetectedContentType(null)
@@ -261,34 +314,12 @@ export function UploadPage() {
       setFlowError(null)
       setFlowSummary(null)
 
-      const checksumSha256 = await computeChecksumSha256(selectedFile)
-
-      setFlowState('signing')
-      const signed = await streamgateApi.requestUploadSignedUrl({
-        filename: selectedFile.name,
-        contentType: detectedContentType,
-        byteSize: selectedFile.size,
-        checksumSha256,
-      })
-
-      setFlowState('uploading')
-      await sendFileToSignedUrl({
-        uploadUrl: signed.data.upload_url,
-        headers: signed.data.required_headers,
+      const registered = await runSignedFileUpload({
         file: selectedFile,
-        contentType: detectedContentType,
-      })
-
-      setFlowState('confirming')
-      const registered = await streamgateApi.registerUpload({
-        filename: selectedFile.name,
-        contentType: detectedContentType,
-        byteSize: selectedFile.size,
-        checksumSha256,
-        storageKey: signed.data.storage_key,
         metadata: {
           ui_mode: 'guided',
         },
+        onStep: (step) => setFlowState(step),
       })
 
       setFlowSummary({
@@ -357,6 +388,51 @@ export function UploadPage() {
     }
   }
 
+  async function handleConnectorSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    if (busy || !isAdmin) return
+
+    const profile = connectorProfiles.find((entry) => entry.id === connectorForm.profileId)
+    const filename = connectorForm.filename.trim()
+    const source = connectorForm.source.trim()
+
+    if (!profile || !filename || !source) {
+      setFlowState('error')
+      setFlowError('Selecione perfil, arquivo de destino e object key/caminho HTTP.')
+      return
+    }
+
+    try {
+      setFlowError(null)
+      setFlowSummary(null)
+      setFlowState('requesting_connector')
+
+      const response = await streamgateApi.createConnectorIngestion(profile.id, {
+        filename,
+        contentType: connectorForm.contentType,
+        objectKey: profile.kind === 's3' ? source : undefined,
+        sourcePath: profile.kind === 'http' ? source : undefined,
+        idempotencyKey: createConnectorIngestionIdempotencyKey(),
+      })
+
+      setFlowSummary({
+        mode: 'connector',
+        uploadId: response.data.upload.id,
+        jobId: response.data.job.id,
+        idempotent: response.meta?.idempotent === true,
+      })
+      setFlowState('success')
+      showSingletonToast('success', 'Ingestao por conector solicitada.')
+      setReloadToken((current) => current + 1)
+    } catch (error) {
+      const message = humanizeError(error, 'Falha ao solicitar ingestao por conector.')
+      setFlowState('error')
+      setFlowError(message)
+      showSingletonToast('error', message)
+    }
+  }
+
   return (
     <WorkspacePageFrame
       pathname="/upload"
@@ -385,6 +461,11 @@ export function UploadPage() {
                 <Button type="button" variant={uploadMode === 'public_link' ? 'panel' : 'outline'} size="xl" onClick={() => switchUploadMode('public_link')} disabled={busy}>
                   Link publico
                 </Button>
+                {isAdmin ? (
+                  <Button type="button" variant={uploadMode === 'connector' ? 'panel' : 'outline'} size="xl" onClick={() => switchUploadMode('connector')} disabled={busy}>
+                    Conector
+                  </Button>
+                ) : null}
               </div>
 
               {uploadMode === 'file' ? (
@@ -394,7 +475,7 @@ export function UploadPage() {
                     <Input
                       id="upload-file"
                       type="file"
-                      accept=".zip,.csv,text/csv,application/zip"
+                      accept=".zip,.csv,.json,.ndjson,.jsonl,.xlsx,.parquet,text/csv,application/json,application/zip,application/x-ndjson,application/ndjson,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.apache.parquet"
                       onChange={(event) => {
                         const file = event.target.files?.[0] ?? null
                         handleFileSelection(file)
@@ -422,7 +503,7 @@ export function UploadPage() {
                     </Button>
                   </div>
                 </form>
-              ) : (
+              ) : uploadMode === 'public_link' ? (
                 <form key="public-link-upload-form" className="grid gap-4" onSubmit={handlePublicLinkSubmit}>
                   <div className="grid gap-2">
                     <Label htmlFor="public-link-url">URL publica</Label>
@@ -458,7 +539,11 @@ export function UploadPage() {
                         disabled={busy}
                       >
                         <option value="text/csv">text/csv</option>
+                        <option value="application/json">application/json</option>
+                        <option value="application/x-ndjson">application/x-ndjson</option>
                         <option value="application/zip">application/zip</option>
+                        <option value="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">application/vnd.openxmlformats-officedocument.spreadsheetml.sheet</option>
+                        <option value="application/vnd.apache.parquet">application/vnd.apache.parquet</option>
                       </select>
                     </div>
 
@@ -492,6 +577,92 @@ export function UploadPage() {
                     </Button>
                     <Button type="button" variant="outline" size="xl" onClick={() => setReloadToken((current) => current + 1)}>
                       Atualizar listas
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <form key="connector-upload-form" className="grid gap-4" onSubmit={handleConnectorSubmit}>
+                  <div className="grid gap-2 md:grid-cols-2">
+                    <div className="grid gap-2">
+                      <Label htmlFor="connector-profile">Perfil de conector</Label>
+                      <select
+                        id="connector-profile"
+                        className="input-shell"
+                        value={connectorForm.profileId}
+                        onChange={(event) => setConnectorForm((current) => ({ ...current, profileId: event.target.value }))}
+                        disabled={busy || connectorProfileState === 'loading'}
+                      >
+                        {connectorProfiles.map((profile) => (
+                          <option key={profile.id} value={profile.id}>{profile.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="connector-filename">Arquivo de destino</Label>
+                      <Input
+                        id="connector-filename"
+                        value={connectorForm.filename}
+                        onChange={(event) => setConnectorForm((current) => ({ ...current, filename: event.target.value }))}
+                        placeholder="orders.ndjson"
+                        disabled={busy}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2 md:grid-cols-2">
+                    <div className="grid gap-2">
+                      <Label htmlFor="connector-source">Object key S3 ou caminho HTTP</Label>
+                      <Input
+                        id="connector-source"
+                        value={connectorForm.source}
+                        onChange={(event) => setConnectorForm((current) => ({ ...current, source: event.target.value }))}
+                        placeholder="incoming/orders.ndjson"
+                        disabled={busy}
+                      />
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="connector-content-type">Content type do conector</Label>
+                      <select
+                        id="connector-content-type"
+                        className="input-shell"
+                        value={connectorForm.contentType}
+                        onChange={(event) => setConnectorForm((current) => ({ ...current, contentType: event.target.value as UploadContentType }))}
+                        disabled={busy}
+                      >
+                        <option value="text/csv">text/csv</option>
+                        <option value="application/json">application/json</option>
+                        <option value="application/x-ndjson">application/x-ndjson</option>
+                        <option value="application/ndjson">application/ndjson</option>
+                        <option value="application/zip">application/zip</option>
+                        <option value="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">application/vnd.openxmlformats-officedocument.spreadsheetml.sheet</option>
+                        <option value="application/vnd.apache.parquet">application/vnd.apache.parquet</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="text-mono text-[11px] text-[var(--text-dim)]">
+                    Perfis e segredos ficam no backend; a UI nunca exibe tokens internos, bucket/key completo ou headers sensiveis retornados.
+                  </div>
+
+                  {connectorProfileState === 'error' ? (
+                    <div className="text-mono text-[11px] text-[var(--signal-red)]">Nao foi possivel carregar perfis de conectores.</div>
+                  ) : null}
+
+                  <FlowReadout flowState={flowState} flowError={flowError} flowSummary={flowSummary} />
+
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="submit"
+                      variant="panel"
+                      size="xl"
+                      disabled={!connectorForm.profileId || !connectorForm.filename.trim() || !connectorForm.source.trim() || busy}
+                    >
+                      {busy ? 'Solicitando ingestao...' : 'Solicitar ingestao por conector'}
+                    </Button>
+                    <Button type="button" variant="outline" size="xl" onClick={() => setReloadToken((current) => current + 1)}>
+                      Atualizar perfis
                     </Button>
                   </div>
                 </form>
@@ -735,7 +906,9 @@ function FlowReadout({
         <div className="rounded-lg border border-[color:rgb(62_207_142_/_0.3)] bg-[color:rgb(62_207_142_/_0.08)] px-3 py-2 text-mono text-[11px] text-[var(--signal-green)]">
           {flowSummary.mode === 'public_link'
             ? `Link publico aceito: upload ${flowSummary.uploadId} e job ${flowSummary.jobId} criados${flowSummary.idempotent ? ' (idempotente).' : '.'}`
-            : `Upload ${flowSummary.uploadId} confirmado e job ${flowSummary.jobId} criado${flowSummary.idempotent ? ' (idempotente).' : '.'}`}
+            : flowSummary.mode === 'connector'
+              ? `Conector aceito: upload ${flowSummary.uploadId} e job ${flowSummary.jobId} criados${flowSummary.idempotent ? ' (idempotente).' : '.'}`
+              : `Upload ${flowSummary.uploadId} confirmado e job ${flowSummary.jobId} criado${flowSummary.idempotent ? ' (idempotente).' : '.'}`}
           {flowSummary.acquisitionUrl ? <div className="mt-1 text-[var(--text-soft)]">{flowSummary.acquisitionUrl}</div> : null}
         </div>
       ) : null}
@@ -764,65 +937,6 @@ function setOptionalPageParam(params: URLSearchParams, key: string, value: numbe
   }
 }
 
-function inferContentType(file: File): UploadContentType | null {
-  const lowerName = file.name.toLowerCase()
-  const normalizedType = file.type.toLowerCase().trim()
-
-  if (lowerName.endsWith('.zip') || normalizedType === 'application/zip' || normalizedType === 'application/x-zip-compressed') {
-    return 'application/zip'
-  }
-
-  if (lowerName.endsWith('.csv') || normalizedType === 'text/csv' || normalizedType === 'application/csv') {
-    return 'text/csv'
-  }
-
-  return null
-}
-
-async function computeChecksumSha256(file: File) {
-  const subtle = globalThis.crypto?.subtle
-
-  if (!subtle) {
-    throw new Error('Ambiente sem suporte a SHA-256 no navegador.')
-  }
-
-  const buffer = await file.arrayBuffer()
-  const hashBuffer = await subtle.digest('SHA-256', buffer)
-  return Array.from(new Uint8Array(hashBuffer))
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join('')
-}
-
-async function sendFileToSignedUrl({
-  uploadUrl,
-  headers,
-  file,
-  contentType,
-}: {
-  uploadUrl: string
-  headers: Record<string, string>
-  file: File
-  contentType: UploadContentType
-}) {
-  const uploadHeaders: HeadersInit = {
-    ...headers,
-  }
-
-  if (!Object.keys(headers).some((key) => key.toLowerCase() === 'content-type')) {
-    uploadHeaders['Content-Type'] = contentType
-  }
-
-  const response = await fetch(uploadUrl, {
-    method: 'PUT',
-    headers: uploadHeaders,
-    body: file,
-  })
-
-  if (!response.ok) {
-    throw new Error(`Falha no envio para storage (${response.status}).`)
-  }
-}
-
 function flowStepLabel(state: UploadFlowState) {
   switch (state) {
     case 'idle':
@@ -835,6 +949,8 @@ function flowStepLabel(state: UploadFlowState) {
       return 'Confirmando upload e criando job'
     case 'requesting_link':
       return 'Solicitando acquisition por link publico'
+    case 'requesting_connector':
+      return 'Solicitando ingestion por conector'
     case 'success':
       return 'Fluxo concluido com sucesso'
     case 'error':
@@ -934,12 +1050,4 @@ function humanizeError(error: unknown, fallback: string) {
   }
 
   return fallback
-}
-
-function createPublicLinkIdempotencyKey() {
-  const random = typeof crypto.randomUUID === 'function'
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random().toString(16).slice(2)}`
-
-  return `public-link-${random}`
 }

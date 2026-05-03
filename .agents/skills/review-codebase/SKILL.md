@@ -42,7 +42,7 @@ For architecture-only feedback, use `review-architecture`.
 - After a backend slice lands and needs a quality pass
 - When planning a refactor of an app, folder, or service
 - When a module grew quickly and likely accumulated debt
-- Before declaring a sprint done for backend or worker work
+- Before declaring o ciclo de entrega done for backend or worker work
 - When the user explicitly asks for a codebase review
 
 ## Review Dimensions

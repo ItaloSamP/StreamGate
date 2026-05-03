@@ -90,7 +90,7 @@ export function AnalyticsPage() {
               <div>
                 <div className="dash-panel-title">Command Center Analytics</div>
                 <div className="dash-module-copy">
-                  KPIs e breakdowns reais do backend Sprint 4 com janela por URL, default last_7d e leitura read-only.
+                  KPIs e breakdowns reais do backend operacional com janela por URL, default last_7d e leitura read-only.
                 </div>
               </div>
               <div className="dash-panel-right">

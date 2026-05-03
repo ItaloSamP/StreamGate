@@ -54,6 +54,61 @@
           }
         ],
         "empty_state": null
+      },
+      "timeseries_24h": {
+        "status": "backend-pending",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": [{ "label": "janela", "records": 1200, "jobs": 12, "failed": 0, "volume_gb": 0 }],
+        "empty_state": null
+      },
+      "status_distribution": {
+        "status": "derived",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": [{ "status": "completed", "count": 11 }, { "status": "quarantined_with_warnings", "count": 1 }],
+        "empty_state": null
+      },
+      "heatmap_7d": {
+        "status": "backend-pending",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": {
+          "days": ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"],
+          "rows": [{ "range": "00-03", "values": [0, 0, 0, 0, 0, 0, 0] }]
+        },
+        "empty_state": null
+      },
+      "jobs_board": {
+        "status": "derived",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": [{ "id": "job_public_link", "upload_id": "upload_public_link", "status": "completed", "trace_id": "trace_public_link" }],
+        "empty_state": null
+      },
+      "queue_items": {
+        "status": "derived",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": [],
+        "empty_state": null
+      },
+      "ingestion": {
+        "status": "derived",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": {
+          "supported_formats": ["CSV", "JSON", "NDJSON", "ZIP", "XLSX", "Parquet"],
+          "enabled_formats": ["CSV", "JSON", "NDJSON", "ZIP", "XLSX", "Parquet"],
+          "pending_formats": []
+        },
+        "empty_state": null
+      },
+      "workers_live": {
+        "status": "backend-pending",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": [],
+        "empty_state": null
+      },
+      "alerts": {
+        "status": "empty",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": [],
+        "empty_state": "no_data_in_window"
       }
     },
     "dependencies": {

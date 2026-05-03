@@ -57,7 +57,7 @@ is_valid_https_url() {
   [[ "$value" =~ ^https://[^[:space:]]+$ ]]
 }
 
-assert_sprint5_operational_env() {
+assert_operational_env() {
   local path="$1"
   local issues=()
   local key value
@@ -96,7 +96,7 @@ assert_sprint5_operational_env() {
   for key in "${required_keys[@]}"; do
     value="$(get_env_or_dotenv_value "$path" "$key")"
     if [[ -z "$value" ]]; then
-      issues+=("$key deve estar definido antes de rodar CI local, smokes ou reports da Sprint 5.")
+      issues+=("$key deve estar definido antes de rodar CI local, smokes ou reports de operacao segura.")
     fi
   done
 
@@ -113,7 +113,7 @@ assert_sprint5_operational_env() {
   fi
 
   if [[ ${#issues[@]} -gt 0 ]]; then
-    printf 'Configuracao Sprint 5 incompleta:\n' >&2
+    printf 'Configuracao operacao segura incompleta:\n' >&2
     printf -- '- %s\n' "${issues[@]}" >&2
     printf 'Sincronize seu .env com .env.example antes de continuar.\n' >&2
     return 1

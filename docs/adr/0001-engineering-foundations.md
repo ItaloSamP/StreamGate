@@ -12,7 +12,7 @@ Sem uma decisao explicita de metodo, o risco natural e este:
 - frontend avanca mais rapido que backend e inventa contratos tacitos;
 - backend implementa endpoints sem dominio fechado;
 - worker nasce atrasado e herda responsabilidades demais;
-- Docker, CI, Swagger e documentacao ficam sempre um sprint atras do codigo.
+- Docker, CI, Swagger e documentacao ficam sempre um ciclo de entrega atras do codigo.
 
 Esta ADR existe para fixar a ordem certa de construcao do produto e a responsabilidade de cada camada.
 
@@ -73,9 +73,9 @@ Endpoints novos ou alterados so sao considerados prontos quando:
 - exemplos de request/response relevantes foram incluidos;
 - a documentacao publica bate com o comportamento real.
 
-### 6. Cada sprint fecha com evidencias, nao com percepcao
+### 6. Cado ciclo de entrega fecha com evidencias, nao com percepcao
 
-Nao basta parecer que funciona. Cada sprint deve encerrar com:
+Nao basta parecer que funciona. Cado ciclo de entrega deve encerrar com:
 
 - documentacao atualizada;
 - testes planejados executados;
@@ -96,13 +96,13 @@ Nao basta parecer que funciona. Cada sprint deve encerrar com:
 
 - mais documentacao no inicio;
 - mais disciplina de contrato antes de implementar feature;
-- mais revisoes estruturais em sprint de fundacao.
+- mais revisoes estruturais em ciclo de entrega de fundacao.
 
 ## Decisoes derivadas
 
 As decisoes abaixo passam a valer como extensao pratica desta ADR:
 
-- `docs/planning/streamgate-full-sprints-roadmap.md` e o backlog executivo principal;
+- `docs/planning/` e o backlog executivo principal;
 - `.agents/skills/README.md` e o catalogo oficial de skills recorrentes do projeto;
 - `apps/web/README.md`, `apps/api/README.md` e `apps/worker/README.md` devem sempre refletir o estado real de cada app;
 - `infra/k8s/` so deixa de ser placeholder depois que a stack estiver funcional e endurecida em Docker.

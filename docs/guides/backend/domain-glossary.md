@@ -4,11 +4,11 @@
 Este guia consolida diretrizes de domain glossary para uso consistente no projeto.
 
 ## Estado atual
-Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+Conteudo alinhado ao estado operacional atual; atualizar em cada mudanca relevante.
 
 
 ## Estado atual detalhado
-Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atualizar em cada mudanca relevante.
+Conteudo alinhado ao estado operacional atual; atualizar em cada mudanca relevante.
 
 ## Regras/Contratos
 - As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
@@ -16,16 +16,16 @@ Conteudo alinhado ao fechamento da Sprint 3 e ao planejamento da Sprint 4; atual
 
 ## Validacao/Evidencias
 - Validar coerencia com README raiz, docs/README e roadmap da release atual.
-- Registrar atualizacoes desta pagina no closeout da sprint correspondente.
+- Registrar atualizacoes desta pagina no closeout do ciclo de entrega correspondente.
 
 ## Referencias
-- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/streamgate-full-sprints-roadmap.md)
+- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/)
 - [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)
 
 
 ## Objetivo detalhado
 
-Este glossario congela a linguagem operacional da Sprint 1 para evitar que API, worker, frontend e contratos usem nomes diferentes para o mesmo conceito.
+Este glossario congela a linguagem operacional da fundacao do dominio para evitar que API, worker, frontend e contratos usem nomes diferentes para o mesmo conceito.
 
 ## Entidades centrais
 
@@ -155,7 +155,7 @@ Campos centrais:
 
 ## Identificadores oficiais
 
-A Sprint 1 fecha a estrategia oficial de IDs do dominio operacional:
+A fundacao do dominio fecha a estrategia oficial de IDs do dominio operacional:
 
 - IDs publicos e internos do dominio sao strings prefixadas.
 - O formato padrao e `<prefixo>_<32 hex>`.
@@ -181,7 +181,7 @@ Ocorre quando a execucao falha por indisponibilidade, integracao, infraestrutura
 
 ## O que fica no PostgreSQL agora
 
-Na Sprint 1, o PostgreSQL guarda o estado transacional e auditavel:
+Na fundacao do dominio, o PostgreSQL guarda o estado transacional e auditavel:
 
 - usuarios
 - uploads

@@ -1,4 +1,4 @@
-class AddSprint5BackendOperations < ActiveRecord::Migration[8.1]
+class AddBackendOperations < ActiveRecord::Migration[8.1]
   def change
     create_table :job_artifacts, id: false, if_not_exists: true do |t|
       t.string :id, null: false, primary_key: true
