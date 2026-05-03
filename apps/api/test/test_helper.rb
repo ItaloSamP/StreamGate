@@ -16,7 +16,8 @@ require "rails/test_help"
 module ActiveSupport
   class TestCase
     # Run tests in parallel with specified workers
-    parallelize(workers: :number_of_processors, with: :threads)
+    parallel_workers = ENV.fetch("PARALLEL_WORKERS", Gem.win_platform? ? "1" : "number_of_processors")
+    parallelize(workers: parallel_workers == "number_of_processors" ? :number_of_processors : parallel_workers.to_i, with: :threads)
 
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
