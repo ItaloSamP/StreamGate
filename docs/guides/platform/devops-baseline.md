@@ -1,146 +1,80 @@
 # Baseline DevOps
 
-## Objetivo
-Este guia consolida diretrizes de devops baseline para uso consistente no projeto.
+Este documento registra a linha operacional atual do StreamGate para ambiente local, CI remoto e fechamento de release.
 
-## Estado atual
-Conteudo alinhado ao estado operacional atual; atualizar em cada mudanca relevante.
+## Ambiente Recomendado
 
+| Ambiente | Papel | Status |
+| --- | --- | --- |
+| WSL2/Ubuntu | caminho principal para gates pesados | recomendado |
+| Windows + PowerShell | suporte local e fallback operacional | suportado |
+| Docker Compose | dependencias e stack completa local | funcional |
+| GitHub Actions | validacao remota oficial | funcional |
+| CircleCI | integracao externa sem config versionada | diagnostico apenas |
 
-## Estado atual detalhado
-Conteudo alinhado ao estado operacional atual; atualizar em cada mudanca relevante.
+## Scripts Oficiais
 
-## Regras/Contratos
-- As regras normativas deste tema estao descritas nas secoes tecnicas abaixo.
-- Mudancas devem manter alinhamento com roadmap, ADRs e READMEs.
+- `scripts/bootstrap`: pre-checks e preparacao.
+- `scripts/dev`: sobe e derruba stack local.
+- `scripts/compose`: validacao de Compose e health helpers.
+- `scripts/ci`: workflows locais por trilha.
+- `scripts/smokes`: fluxo operacional ponta a ponta.
+- `scripts/reports`: pacote agregado de evidencias.
 
-## Validacao/Evidencias
-- Validar coerencia com README raiz, docs/README e roadmap da release atual.
-- Registrar atualizacoes desta pagina no closeout do ciclo de entrega correspondente.
+## Gates Fonte De Verdade
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 frontend
+powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 backend
+powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 e2e
+powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 docker
+```
+
+Fechamento operacional:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -Profile full-closeout
+```
+
+O runner operacional possui uma fixture CSV publica padrao para o fluxo de public link. Configure `SMOKE_PUBLIC_LINK_URL` somente quando o ambiente exigir uma fonte espelhada.
+
+## CI Remoto
+
+GitHub Actions contem os workflows oficiais:
+
+- frontend;
+- backend;
+- docker;
+- e2e-auth.
+
+Falhas remotas devem ser investigadas pelo primeiro job/step quebrado. Checks externos, incluindo CircleCI caso aparecam, devem ser tratados como integracoes externas e nao como configuracao versionada deste repositorio.
+
+## Politica De Falhas
+
+Classifique toda falha antes de seguir:
+
+- `implementation`: bug, contrato quebrado, teste deterministico vermelho, drift de docs ou configuracao incorreta.
+- `environment`: Docker/WSL indisponivel, permissao local, rede externa bloqueada, credencial ausente ou limitacao do host.
+- `external`: check remoto fora de GitHub Actions sem configuracao versionada no repo.
+
+Uma falha de ambiente ou externa precisa de causa concreta, comando usado e caminho de reexecucao.
+
+## Reports
+
+- `scripts/ci/reports/`
+- `scripts/smokes/reports/`
+- `apps/web/reports/`
+- `apps/web/e2e/reports/`
+- `apps/api/test/reports/`
+- `apps/worker/spec/reports/`
+- `docs/reports/index.html`
+
+Reports sao regeneraveis e nao devem virar deposito manual de evidencias soltas.
 
 ## Referencias
-- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/)
-- [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)
 
-
-## Objetivo detalhado
-
-Este documento registra o estado operacional real do projeto ao fim da trilha DevOps do baseline inicial. Ele existe para separar:
-
-- o que ja funciona
-- o que falha por ambiente
-- o que falhava por implementacao e ja foi corrigido
-- qual ambiente deve ser tratado como caminho principal de desenvolvimento
-
-## Recomendacao oficial de ambiente
-
-O StreamGate deve ser tratado como `WSL-first` no Windows.
-
-### Ambientes suportados
-
-| Ambiente | Papel | Status atual | Leitura pratica |
-| --- | --- | --- | --- |
-| `WSL2 + Ubuntu` | ambiente principal de desenvolvimento | Recomendado | deve ser o fluxo padrao para scripts `.sh`, Node/Vite/Vitest e Compose |
-| `Windows host + PowerShell` | fallback local | Parcial | util para comandos pontuais, mas nao e o fluxo principal |
-| `Docker infra` | dependencias locais | Funcional | `compose config` valida e os helpers de health check estao consistentes |
-| `Docker full` | stack completa de desenvolvimento | Parcial | definicao valida, mas ainda depende do runtime real do worker para representar o produto completo |
-| `GitHub Actions` | validacao remota oficial | Parcial | workflows existem, mas ainda refletem um produto em fundacao |
-
-## Classificacao formal das falhas conhecidas
-
-### Vitest no Windows atual
-
-Classificacao:
-
-- `ambiente`: o fluxo via `pnpm` em PowerShell falha por politica de execucao do `pnpm.ps1`
-- `permissao`: o Windows atual bloqueia a execucao do script shim do `pnpm` sem bypass explicito
-- `compatibilidade de runner`: mesmo contornando o shim com `pnpm.cmd`, o ecossistema `Vite/Vitest` falha com `spawn EPERM` ao carregar a configuracao
-
-Evidencia observada nesta sessao:
-
-- `pnpm test:run` em `apps/web`: falha com `PSSecurityException` porque `pnpm.ps1` nao esta assinado digitalmente
-- `pnpm.cmd test:run` em `apps/web`: falha com `spawn EPERM` em `externalize-deps` ao carregar `vitest.config.ts`
-- `pnpm.cmd build` em `apps/web`: falha com `spawn EPERM` e tambem com carga nativa do `@tailwindcss/oxide-win32-x64-msvc`
-- `pnpm.cmd lint` em `apps/web`: passa, o que mostra que o problema nao e uma falha geral do frontend
-
-Conclusao operacional:
-
-- a falha do Vitest no Windows atual nao deve ser tratada como bug isolado de teste
-- ela faz parte de uma trilha Windows puro parcial para o stack `pnpm + Vite + Vitest + bindings nativos`
-- o fluxo correto do projeto continua sendo `WSL-first`
-
-### Worker e `git ls-files` no gemspec
-
-Classificacao:
-
-- `implementacao`: o `worker.gemspec` dependia de `git ls-files` para descobrir arquivos da gem
-- `compatibilidade de ambiente`: no Windows atual essa execucao podia falhar com erro de permissao ao chamar `git`
-
-Estado atual:
-
-- a causa raiz foi corrigida
-- o `worker.gemspec` agora usa descoberta local de arquivos e nao depende mais de `git ls-files`
-
-Evidencia observada nesta sessao:
-
-- `bundle exec rspec` em `apps/worker`: `PASS`
-
-Conclusao operacional:
-
-- este problema deixou de ser um bloqueador tecnico do worker na baseline inicial
-- a falha original era de implementacao com impacto ampliado no ambiente Windows atual
-
-## Registro de checks por escopo
-
-| Escopo | Comando | Resultado | Classificacao |
-| --- | --- | --- | --- |
-| Frontend | `pnpm test:run` | FAIL | ambiente/permissao no PowerShell (`pnpm.ps1` bloqueado) |
-| Frontend | `pnpm.cmd test:run` | FAIL | compatibilidade de runner no Windows (`spawn EPERM`) |
-| Frontend | `pnpm.cmd lint` | PASS | sem bloqueio relevante no ambiente atual |
-| Frontend | `pnpm.cmd build` | FAIL | compatibilidade no Windows (`spawn EPERM` + binding nativo do Tailwind oxide) |
-| Worker | `bundle exec rspec` | PASS | implementacao corrigida para o ambiente atual |
-| Docker | `docker compose -f compose.yaml config` | PASS com warning | compose valido; warning externo de acesso ao `docker config.json` do host |
-| Docker | `docker compose -f compose.yaml --profile full config` | PASS com warning | definicao full valida; mesmo warning externo do host |
-| Compose helpers | `powershell -ExecutionPolicy Bypass -File .\scripts\compose\compose-health.tests.ps1` | PASS | fallback PowerShell funcional |
-| Compose helpers | `bash scripts/compose/compose-health-tests.sh` | FAIL | ambiente/permite integracao Bash-WSL indisponivel nesta sessao (`E_ACCESSDENIED`) |
-| API | `bundle exec rails test` | NA nesta sessao | nao executado por limitacao do sandbox da sessao Windows do agente |
-| API | `bundle exec rubocop` | NA nesta sessao | nao executado por limitacao do sandbox da sessao Windows do agente |
-
-## Leitura pratica dos resultados
-
-### O que ja esta confiavel
-
-- `worker` apos a correcao do gemspec
-- validacao estatica do compose
-- helpers PowerShell de compose-health
-- lint do frontend
-
-### O que continua parcial no Windows host
-
-- execucao de `pnpm` via PowerShell sem bypass
-- stack `Vite/Vitest` no Windows atual
-- build frontend com binding nativo do Tailwind oxide neste host
-- execucao de helpers Bash/WSL a partir desta sessao especifica
-
-### O que o time deve fazer daqui para frente
-
-- tratar `WSL2 + Ubuntu` como ambiente principal para desenvolvimento diario
-- usar `PowerShell` apenas como fallback operacional, nao como referencia de compatibilidade da stack frontend
-- considerar falhas de `spawn EPERM` no Windows host como falhas de ambiente ate prova em contrario
-- manter os checks do worker sem dependencia de `git` ou de processos externos desnecessarios
-
-## Comandos fonte de verdade
-
-Para a baseline inicial, estes continuam sendo os comandos oficiais de referencia:
-
-- `pnpm lint` em `apps/web`
-- `pnpm test:run` em `apps/web`
-- `pnpm build` em `apps/web`
-- `bundle exec rails test` em `apps/api`
-- `bundle exec rspec` em `apps/worker`
-- `docker compose -f compose.yaml config`
-- `docker compose -f compose.yaml --profile full config`
-- `./scripts/compose/compose-health-tests.sh`
-- `powershell -ExecutionPolicy Bypass -File .\scripts\compose\compose-health.tests.ps1`
-
-A diferenca agora e que o projeto passa a registrar explicitamente quando um comando falha por ambiente, em vez de atribuir automaticamente a falha ao codigo do produto.
+- [DevOps roadmap](devops-roadmap.md)
+- [Testing baseline](../quality/testing-baseline.md)
+- [Release/rollback checklist](release-rollback-checklist.md)
+- [Setup](setup.md)

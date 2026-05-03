@@ -1,33 +1,36 @@
 # StreamGate Worker
 
-Worker Ruby do StreamGate.
+Runtime Ruby responsavel por consumir eventos, baixar entradas, processar arquivos, gerar artefatos, alimentar ClickHouse e publicar sinais operacionais para o command center.
 
-## Papel do worker
+## Responsabilidades
 
-O worker sera responsavel por:
+- Consumir `upload.received.v1`, `upload.public_link.requested.v1` e `connector.ingestion.requested.v1`.
+- Baixar objetos do MinIO, links publicos e conectores S3/HTTP por lease interno.
+- Processar CSV, JSON, NDJSON, ZIP seguro, XLSX e Parquet quando o runtime nativo estiver disponivel.
+- Manter idempotencia por evento, upload, job e tentativa.
+- Criar batches, attempts, quarantine records, warnings, audit events e artifacts.
+- Carregar agregados e metadados seguros no ClickHouse, sem payload bruto sensivel.
+- Emitir realtime events best-effort sem bloquear o fluxo principal.
 
-- consumir eventos publicados pela API
-- ler arquivos do storage
-- processar lotes
-- validar dados
-- registrar progresso, falha, quarentena e replay
-- alimentar as camadas operacional e analitica
+## Pipeline
 
-## Estado atual
+1. Recebe evento duravel via RabbitMQ.
+2. Valida idempotencia e contexto.
+3. Resolve entrada no storage ou em conector externo.
+4. Faz spool/streaming com limites e cleanup best effort.
+5. Parseia registros e separa validos de invalidos.
+6. Atualiza PostgreSQL com progresso, batches e warnings.
+7. Alimenta ClickHouse com agregados e fingerprints.
+8. Gera `processed_dataset`, `quality_report` e `audit_report`.
+9. Publica notificacoes, audit trail e eventos realtime.
 
-O worker executa runtime real de fila e fecha a trilha de artefatos/notificacoes de operacao segura:
+## Conectores
 
-- consumo RabbitMQ (`upload.received.v1`) com retry controlado e DLQ
-- idempotencia por `event_id` para evitar reprocessamento duplicado
-- leitura de objetos no MinIO via S3 API
-- parse inicial de `text/csv` (`,` e `;`) e `application/zip` (exatamente 1 CSV)
-- atualizacao de `jobs`, `processing_attempts`, `job_batches`, `quarantine_records` e `audit_events`
-- geracao dos artefatos `processed_dataset`, `quality_report` e `audit_report` em `job_artifacts`
-- notificacoes operacionais `job.completed`, `job.quarantined_with_warnings` e `job.failed`
-- sincronizacao de `analytics_job_snapshots` e metricas em `worker_processing_metrics`
-- rastreabilidade por `trace_id`, `request_id`, `upload_id` e `job_id`
+- S3: usa perfil admin-only criptografado na API e lease interno reivindicado pelo worker.
+- HTTP: aplica anti-SSRF, bloqueio de localhost/private/link-local/metadata, validacao de redirect e masking.
+- Credenciais e secrets nunca devem aparecer em resposta, evento ou log.
 
-## Comandos atuais
+## Desenvolvimento Local
 
 ```bash
 bundle install
@@ -35,35 +38,35 @@ bundle exec rspec
 bundle exec ruby -e 'require "worker"; Worker.run!'
 ```
 
-Para gerar logs, resumo HTML e coverage SimpleCov no padrao oficial, rode o runner unico na raiz:
-
-```bash
-bash scripts/reports/run-all-reports.sh
-```
-
-No PowerShell:
+Com stack completa:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/reports/run-all-reports.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\dev\dev-up.ps1 -Mode full
 ```
 
-Os artefatos do worker ficam em `apps/worker/spec/reports/` e sao sobrescritos a cada execucao.
+## Qualidade
 
-## Observacao importante
+```bash
+bundle exec rspec
+bundle exec rubocop
+```
 
-O gap antigo do `gemspec` baseado em `git ls-files` ja foi removido na baseline inicial.
+Gate coordenado na raiz:
 
-No ambiente Windows atual, o principal cuidado do worker passa a ser a validacao do setup Ruby local, do runtime real de fila e da disponibilidade de Postgres/MinIO quando a suite sair dos mocks.
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 backend
+```
 
-## Proximo passo esperado
+## Operacao E Diagnostico
 
-A evolucao apos este baseline deve focar em:
-
-1. parser por dominio e regras de validacao ricas
-2. smoke completo de artefato baixavel ponta a ponta
-3. observabilidade mais profunda (metricas e alertas por fila/tentativa/artefato)
+- DLQ recebe mensagens que excedem retry ou falham de forma controlada.
+- Falhas de ClickHouse, realtime ou cleanup viram warnings tecnicos quando nao devem bloquear artefatos/auditoria.
+- Toda investigacao deve partir de `trace_id`, `request_id`, `upload_id`, `job_id` e `event_id`.
+- Runbook oficial: [worker-runtime-runbook.md](../../docs/guides/operations/worker-runtime-runbook.md).
 
 ## Referencias
 
-- [Baseline de testes e reports](C:/estudos/StreamGate/docs/guides/quality/testing-baseline.md)
-- [Runbook do worker](C:/estudos/StreamGate/docs/guides/operations/worker-runtime-runbook.md)
+- [API docs](../../docs/guides/backend/api-docs.md)
+- [Contracts](../../packages/contracts/README.md)
+- [Testing baseline](../../docs/guides/quality/testing-baseline.md)
+- [Threat model](../../docs/guides/security/streamgate-threat-model.md)

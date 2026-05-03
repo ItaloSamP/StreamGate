@@ -1,42 +1,63 @@
-# Documentacao do StreamGate
+# Documentacao Do StreamGate
 
-## Objetivo
+Este diretorio concentra a documentacao viva do StreamGate. A leitura deve permitir que produto, engenharia e operacao entendam o que existe, como rodar, como validar e quais limites ainda precisam ser respeitados.
 
-Este diretorio centraliza a documentacao viva do projeto, com navegacao por dominio para reduzir arquivos soltos e facilitar descoberta de contexto.
+## Como Navegar
 
-## Estado atual
+Comece por estes documentos:
 
-A documentacao foi reorganizada com estrutura tematica em `docs/guides/`:
+1. [Visao de produto](product/vision.md)
+2. [Guia de fechamento do produto](guides/platform/final-delivery-guide.md)
+3. [Arquitetura](guides/platform/architecture.md)
+4. [Setup](guides/platform/setup.md)
+5. [API docs](guides/backend/api-docs.md)
+6. [Frontend foundations](guides/frontend/frontend-foundations.md)
+7. [Workspace map](guides/frontend/frontend-workspace-map.md)
+8. [Worker runbook](guides/operations/worker-runtime-runbook.md)
+9. [Testing baseline](guides/quality/testing-baseline.md)
+10. [Threat model](guides/security/streamgate-threat-model.md)
+11. [Release/rollback checklist](guides/platform/release-rollback-checklist.md)
+12. [Roadmap e closeouts](planning/)
 
-- `platform/`: arquitetura macro, setup e trilha DevOps.
-- `backend/`: API, auth, fundacoes de dominio e glossario.
-- `frontend/`: fundacoes de UI e mapa do workspace.
-- `quality/`: DoD, baseline de testes e checklist entre ciclos de entrega.
-- `security/`: baseline e threat model.
-- `operations/`: runbooks e governanca documental.
-- `reports/`: hub local gerado para reports/coverage; artefatos sao ignorados pelo Git.
+## Mapa Por Area
 
-## Leitura recomendada
+| Area | Documentos principais |
+| --- | --- |
+| Produto | `product/vision.md`, `guides/platform/final-delivery-guide.md` |
+| Plataforma | `guides/platform/architecture.md`, `setup.md`, `devops-roadmap.md`, `release-rollback-checklist.md` |
+| Backend | `guides/backend/api-docs.md`, `backend-foundations.md`, `authentication-guide.md`, `domain-glossary.md` |
+| Frontend | `guides/frontend/frontend-foundations.md`, `frontend-workspace-map.md` |
+| Worker e operacao | `guides/operations/worker-runtime-runbook.md`, `documentation-governance.md` |
+| Qualidade | `guides/quality/definition-of-done.md`, `testing-baseline.md`, `delivery-reassessment-checklist.md` |
+| Seguranca | `guides/security/security-baseline.md`, `streamgate-threat-model.md` |
+| Evidencias | `reports/index.html`, `sprints/` |
 
-1. [Visao do produto](C:/estudos/StreamGate/docs/product/vision.md)
-2. [Roadmap mestre](C:/estudos/StreamGate/docs/planning/)
-3. [Arquitetura base](C:/estudos/StreamGate/docs/guides/platform/architecture.md)
-4. [Setup do ambiente](C:/estudos/StreamGate/docs/guides/platform/setup.md)
-5. [Guia de fechamento do produto](C:/estudos/StreamGate/docs/guides/platform/final-delivery-guide.md)
-6. [Fundacoes do backend](C:/estudos/StreamGate/docs/guides/backend/backend-foundations.md)
-7. [Swagger/OpenAPI da API](C:/estudos/StreamGate/docs/guides/backend/api-docs.md)
-8. [Fundacoes do frontend](C:/estudos/StreamGate/docs/guides/frontend/frontend-foundations.md)
-9. [Definition of Done](C:/estudos/StreamGate/docs/guides/quality/definition-of-done.md)
-10. [Baseline de testes e reports](C:/estudos/StreamGate/docs/guides/quality/testing-baseline.md)
-11. [Threat model inicial do repositorio](C:/estudos/StreamGate/docs/guides/security/streamgate-threat-model.md)
-12. [Runbook do worker runtime](C:/estudos/StreamGate/docs/guides/operations/worker-runtime-runbook.md)
-13. [Governanca de documentacao](C:/estudos/StreamGate/docs/guides/operations/documentation-governance.md)
-14. [ADR 0001 - Fundacoes de engenharia](C:/estudos/StreamGate/docs/adr/0001-engineering-foundations.md)
-15. [ADR 0003 - Estrategia de autenticacao e sessao](C:/estudos/StreamGate/docs/adr/0003-authentication-and-session-strategy.md)
-16. [Guia de fechamento do produto](C:/estudos/StreamGate/docs/guides/platform/final-delivery-guide.md)
-17. [Catalogo de skills do projeto](C:/estudos/StreamGate/.agents/skills/README.md)
+## Principios De Governanca
 
-## Referencias
+- Documentos de produto descrevem comportamento atual e limites aprovados.
+- Guias tecnicos devem apontar para comandos reais e contratos versionados.
+- Mudancas de API exigem atualizacao coordenada de OpenAPI, contratos, exemplos e docs.
+- Mudancas em runtime, worker, seguranca ou UX operacional devem atualizar runbook, threat model ou workspace map quando houver impacto.
+- Referencias historicas de ciclos ficam no roadmap e closeouts; docs permanentes devem falar em produto, release, operacao e contrato.
 
-- specs de discovery: `docs/superpowers/specs/`
-- template de fechamento: `docs/templates/delivery-closeout-template.md`
+## Evidencias E Reports
+
+O hub `docs/reports/index.html` e gerado pelos scripts de reports e serve como indice local dos artefatos de validacao.
+
+Reports detalhados ficam em:
+
+- `apps/web/reports/`
+- `apps/web/e2e/reports/`
+- `apps/api/test/reports/`
+- `apps/worker/spec/reports/`
+- `scripts/ci/reports/`
+- `scripts/smokes/reports/`
+
+Esses artefatos sao sobrescritos pelos gates e, em geral, nao devem ser versionados.
+
+## Templates E Historico
+
+- Templates: `docs/templates/`
+- Closeouts historicos: consulte o indice de planejamento e os arquivos de fechamento historico.
+- Roadmap mestre: `docs/planning/`
+- ADRs: `docs/adr/`

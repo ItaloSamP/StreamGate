@@ -1,69 +1,54 @@
 # StreamGate API
 
-API Rails do StreamGate. Esta aplicacao e o centro de orquestracao do produto.
+Rails API-only responsavel por autenticacao, autorizacao, contratos HTTP, orquestracao de ingestao, auditoria, dashboard operacional e integracao com o worker.
 
-## Papel da API
+## Responsabilidades
 
-A API e responsavel por:
+- Emitir signed URLs e registrar uploads/jobs de forma idempotente.
+- Validar auth, RBAC, organization scope e acoes sensiveis.
+- Expor leituras operacionais: jobs, uploads, analytics, dashboard, warehouse, lineage, quarantine, DLQ, audit, events e artifacts.
+- Persistir warnings, exports, realtime events, connector profiles, connector ingestions e leases internos.
+- Servir OpenAPI em `/api-docs` e manter `apps/api/openapi/v1/openapi.yaml` como contrato publico.
+- Garantir masking de payloads, headers, URLs, object keys e credenciais antes de resposta, evento ou log.
 
-- autenticacao e autorizacao
-- emissao de URL assinada para upload
-- criacao e consulta de uploads, jobs e auditoria
-- leitura da visao operacional
-- exposicao futura da visao analitica preparada
+Processamento pesado de arquivo pertence ao worker. A API orquestra, valida, audita e publica eventos.
 
-A API nao deve assumir processamento pesado de arquivo. Esse trabalho pertence ao worker.
+## Superficies HTTP Principais
 
-## Estado atual
+- Auth: `register`, `login`, `logout`, `me`, `session/refresh`, reset de senha.
+- Upload/job: signed URL, registro de upload, `public_link`, listagem de uploads e jobs.
+- Analytics: dashboard expandida, warehouse ClickHouse/fallback, lineage, KPIs e breakdowns.
+- Realtime: tickets curtos e polling de eventos persistentes.
+- Dashboard actions: exports CSV/JSON, alert review e alert dismiss.
+- Operacao segura: retry, resolve e replay DLQ com request/approve/execute.
+- Connectors: perfis S3/HTTP admin-only, teste, ingestions e lease interno para worker.
+- Artifacts: listagem e signed download URL curta.
+- Notifications: inbox, arquivo, delete, acoes em massa, settings e teste de webhook.
 
-Depois do fechamento da entrega de upload/job, a API possui auth real + trilha base de upload/job:
+## Dados E Modulos
 
-- health check disponivel em `GET /up`
-- OpenAPI v1 servido em `/api-docs`
-- dominio operacional base materializado com `User`, `Upload`, `Job`, `JobBatch`, `QuarantineRecord`, `ProcessingAttempt` e `AuditEvent`
-- autenticacao real com `register`, `login`, `logout`, `me`, `session/refresh` e reset de senha
-- tabela de sessao persistida (`auth_sessions`) com expiracao e revogacao
-- hardening inicial com rate limit configuravel por env para login/register/reset
-- endpoints de upload/job reais:
-  - `POST /api/v1/uploads/signed-url`
-  - `POST /api/v1/uploads`
-  - `GET /api/v1/uploads`
-  - `GET /api/v1/jobs`
-- idempotencia no registro de upload por `storage_key + checksum_sha256`
-- validacao de objeto no storage antes de registrar upload/job
-- paginacao padrao com `data + meta.pagination + meta.filters`
-- seeds e fixtures minimas para desenvolvimento e testes
-- suite de Minitest cobrindo validacoes de dominio e fluxo de auth
+| Dominio | Modelos principais |
+| --- | --- |
+| Auth | `User`, `AuthSession` |
+| Ingestao | `Upload`, `Job`, `JobBatch`, `ProcessingAttempt` |
+| Qualidade | `QuarantineRecord`, `OperationalWarning` |
+| Operacao | `AuditEvent`, `SafeOperationRequest`, `Notification` |
+| Artefatos | `JobArtifact` |
+| Command center | `RealtimeEvent`, `DashboardExport` |
+| Conectores | `ConnectorProfile`, `ConnectorIngestion`, `ConnectorLease` |
 
-As convencoes oficiais desta fase estao em [docs/guides/backend/backend-foundations.md](C:/estudos/StreamGate/docs/guides/backend/backend-foundations.md), [docs/guides/backend/authentication-guide.md](C:/estudos/StreamGate/docs/guides/backend/authentication-guide.md), [docs/guides/backend/domain-glossary.md](C:/estudos/StreamGate/docs/guides/backend/domain-glossary.md) e [docs/adr/0003-authentication-and-session-strategy.md](C:/estudos/StreamGate/docs/adr/0003-authentication-and-session-strategy.md).
+## Arquitetura Interna
 
-## Convencao arquitetural adotada
+- `controllers`: traduzem HTTP, auth e parametros.
+- `services`: concentram orquestracao de aplicacao.
+- `policies`: concentram autorizacao por role/org.
+- `serializers`: definem contratos de saida e masking.
+- `jobs`: tarefas leves da API, sem ETL pesado.
+- `channels`: canal realtime autenticado por ticket curto.
 
-A API assume estas fronteiras:
+## Desenvolvimento Local
 
-- `controllers` traduzem HTTP e delegam fluxo
-- `services` concentram orquestracao de aplicacao
-- `policies` concentram autorizacao
-- `serializers` controlam o contrato de saida
-- `jobs` da API sao auxiliares leves e nao substituem o worker
-
-O detalhamento completo de envelopes de erro, sucesso, nomenclatura e rastreabilidade tambem esta no guia de fundacoes do backend.
-
-## Arquivos importantes
-
-- rotas: `config/routes.rb`
-- OpenAPI: `openapi/v1/openapi.yaml`
-- modelos de dominio: `app/models/`
-- servicos de aplicacao: `app/services/`
-- politicas de acesso: `app/policies/`
-- serializers: `app/serializers/`
-- migrations base:
-  - `db/migrate/20260405000100_create_streamgate_domain_foundations.rb`
-  - `db/migrate/20260406000100_add_authentication_foundations.rb`
-
-## Fluxo local
-
-Com o PostgreSQL local disponivel:
+Em desenvolvimento e teste, a API carrega automaticamente o `.env` da raiz do repositorio durante o boot, sem sobrescrever variaveis ja exportadas no processo. Use `STREAMGATE_SKIP_DOTENV=1` apenas quando quiser testar explicitamente um ambiente sem esse carregamento local.
 
 ```bash
 bundle install
@@ -72,51 +57,44 @@ bundle exec rails db:seed
 bundle exec rails server
 ```
 
-Com a app rodando localmente:
+Endpoints uteis:
 
-- health: [http://localhost:3000/up](http://localhost:3000/up)
-- docs: [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+- Health: <http://localhost:3000/up>
+- OpenAPI UI: <http://localhost:3000/api-docs>
 
-## Testes e qualidade
+## Qualidade
 
 ```bash
 bundle exec rails test
-bundle exec rails test test/requests/uploads_jobs_flow_test.rb
-bundle exec rails test test/requests/auth_flow_test.rb
 bundle exec rubocop
-bundle exec brakeman
+bundle exec brakeman -q
 ```
 
-Para gerar logs, resumo HTML e coverage SimpleCov no padrao oficial, rode o runner unico na raiz:
-
-```bash
-bash scripts/reports/run-all-reports.sh
-```
-
-No PowerShell:
+Gate coordenado na raiz:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/reports/run-all-reports.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 backend
 ```
 
-Os artefatos da API ficam em `apps/api/test/reports/` e sao sobrescritos a cada execucao.
+Contratos:
 
-## Proximo passo esperado
+```bash
+ruby scripts/ci/validate-operational-contracts.rb
+```
 
-A API deve evoluir nesta ordem:
+## Regras De Evolucao
 
-1. ampliar cobertura operacional (analytics/quarantine/audit) sobre a base upload/job ja entregue
-2. conectar worker real aos contratos versionados
-3. abrir ingestao por link/conector em ciclo de entrega posterior (3.x/4)
+- Endpoint novo ou alterado exige OpenAPI, contratos e exemplos sincronizados.
+- Mutacoes sensiveis exigem RBAC, motivo quando aplicavel, auditoria e `Idempotency-Key`.
+- Eventos realtime e exports nunca devem carregar payload bruto sensivel.
+- Conectores nunca retornam credenciais, secrets, bucket/key completo ou headers sensiveis.
+- Fallback operacional deve ser explicito: `live`, `derived`, `empty`, `degraded`, `backend-pending` ou equivalente contratual.
 
-O backlog executivo detalhado dessa evolucao esta em [docs/planning/](C:/estudos/StreamGate/docs/planning/).
+## Referencias
 
-O padrao completo de reports locais esta em [docs/guides/quality/testing-baseline.md](C:/estudos/StreamGate/docs/guides/quality/testing-baseline.md).
-
-## Gate de prontidao estrutural
-
-O gate de prontidao nao abriu endpoints de negocio novos. O foco foi alinhar prontidao estrutural para entrega de upload/job:
-
-- congelamento do namespace alvo para trilha upload/job base em /api/v1;
-- alinhamento de envs oficiais de upload em setup/compose/CI;
-- hardening de logs para reduzir risco de vazamento de URL assinada e segredos.
+- [API docs](../../docs/guides/backend/api-docs.md)
+- [Backend foundations](../../docs/guides/backend/backend-foundations.md)
+- [Authentication guide](../../docs/guides/backend/authentication-guide.md)
+- [Domain glossary](../../docs/guides/backend/domain-glossary.md)
+- [Threat model](../../docs/guides/security/streamgate-threat-model.md)
+- [Contracts](../../packages/contracts/README.md)

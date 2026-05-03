@@ -1,411 +1,139 @@
-# Guia de Fechamento do Produto
-
-## Objetivo
-
-Este guia traduz o estado real do StreamGate apos a execucao Back + Worker do command center operacional em um plano pratico para chegar a uma entrega de produto sem lacunas escondidas.
-
-Ele existe para responder quatro perguntas de forma objetiva:
-
-- o que ja e produto funcional de verdade;
-- o que hoje ainda e principalmente scaffold visual ou superficie preparada;
-- o que falta para chamar o StreamGate de entrega pronta, e nao apenas base promissora;
-- em que ordem devemos fechar o restante para evitar retrabalho, desvios de prioridade e buracos de release.
-
-Este documento nao substitui a visao de produto nem o roadmap mestre. Ele e a ponte entre os dois: pega a visao aprovada, compara com o estado entregue e orienta a fase de fechamento.
-
-## Como ler este guia
-
-Use este documento como referencia principal quando a pergunta for "o que falta para entregar o produto".
-
-Relacao com os outros documentos:
-
-- `docs/product/vision.md`: define a visao e a direcao de produto.
-- `docs/planning/`: registra a cadencia de ciclos de entrega, gates e evidencias de fechamento.
-- `docs/`: registra o fechamento funcional de operacao segura.
-- `docs/planning/`: registra o corte command center operacional de dashboard parity, back e worker.
-- este guia: transforma o estado atual em trilha de finalizacao do produto.
-
-Regra de uso:
-
-- se uma frente estiver marcada aqui como `scaffold` ou `parcial`, ela nao deve ser tratada como entrega final, mesmo que a UI esteja forte;
-- se uma frente estiver marcada como `funcional`, ela ja pode ser usada como base real para wiring, refinamento e validacao final;
-- se uma decisao de produto mudar, atualize primeiro `docs/product/vision.md` e depois sincronize este guia.
-
-## Estado real do produto em 2026-05-01
-
-A base do produto deixou de ser um esqueleto. O StreamGate ja tem um nucleo operacional consistente, com backend, worker, frontend, contratos, docs e gates reais para a espinha dorsal da v1.
-
-Leitura sintetica:
-
-- o nucleo operacional do produto esta materializado;
-- o shell do workspace e a dashboard ja fecharam a trilha frontend do workspace operacional como superficies reais, sem fixtures enganosas no command center;
-- a maior distancia para a entrega final nao esta mais na fundacao tecnica, e sim em fechar a experiencia administrativa final de conectores, validar deploy/observabilidade produtiva e manter a narrativa documental coerente.
-
-Termometro pragmatico de maturidade:
-
-- `v1 operacional forte`: perto;
-- `visao final completa do produto`: ainda existe um bloco relevante pela frente.
-
-## Matriz: funcional x scaffold x faltando
-
-### Ja funcional de verdade
-
-Estas frentes ja devem ser tratadas como produto real:
-
-| Frente | Estado | Observacoes |
-| --- | --- | --- |
-| Auth e sessao | `funcional` | login, protecao de rotas, bootstrap de sessao e UX de expiracao real |
-| Upload local | `funcional` | signed URL, registro de upload, criacao de job e listagens reais |
-| Pipeline assincrono | `funcional` | API, worker, RabbitMQ, idempotencia e estado de job reais |
-| Quarantine e DLQ | `funcional` | leituras operacionais, detalhes e replay controlado |
-| Safe operations | `funcional` | retry, resolve e replay request/approve/execute com RBAC, auditoria e idempotencia |
-| Artefatos finais | `funcional` | `processed_dataset`, `quality_report`, `audit_report`, historico e signed download |
-| Notificacoes | `funcional` | `in_app`, `email`, `webhook`, inbox, arquivamento, filtros e teste de webhook |
-| Auditoria | `funcional` | trilha navegavel, eventos operacionais e detalhes por recurso |
-| Docs/contratos/gates | `funcional` | OpenAPI, contracts, smokes, reports, closeout e repo readiness |
-
-### Ja forte visualmente, mas ainda parcial como produto final
-
-Estas frentes ja ajudam muito na experiencia final, mas ainda nao devem ser lidas como completamente entregues:
-
-| Frente | Estado | O que falta |
-| --- | --- | --- |
-| Dashboard v3 | `funcional` | command center real via `analytics/dashboard`, com estados `live`, `derived`, `empty` e `degraded` |
-| Shell do workspace | `funcional` | sidebar/topbar estaveis, rotas analiticas reais e chips/gauges fixos neutralizados |
-| ClickHouse | `funcional` | warehouse OLAP minimo visivel no front com fallback honesto, SLO e agregados |
-| ETL Explorer | `funcional` | lineage por job com batches, attempts, quarantine, artifacts, warnings e audit refs |
-| Camada analitica visivel no front | `funcional minimo` | `Analytics`, `ClickHouse` e `ETL Explorer` possuem papeis distintos e dados reais |
-
-### Materializado parcialmente apos command center operacional
-
-Estas frentes ja possuem corte tecnico real, mas ainda nao devem ser vendidas como suite completa de conectores com UI admin final:
-
-| Frente | Estado | Leitura |
-| --- | --- | --- |
-| `s3` | `funcional admin` | perfil admin-only, segredo criptografado, lease interno, aquisicao pelo worker, masking e UX em `/settings` + `/upload` |
-| `http_url` | `funcional admin` | perfil admin-only, anti-SSRF, redirect checks, lease interno, masking e UX em `/settings` + `/upload` |
-| realtime dashboard | `funcional com fallback` | tickets curtos + Action Cable/polling sobre `realtime_events` duravel |
-| exports/alert actions | `funcional` | export server-side CSV/JSON mascarado, review/dismiss persistentes e auditaveis |
-| formatos ampliados | `funcional condicionado ao runtime` | CSV, JSON, NDJSON, ZIP seguro e XLSX; Parquet requer runtime nativo/gem opcional no worker |
-
-### Aprovado na visao, mas ainda nao materializado
-
-Estas frentes continuam fora da entrega funcional atual:
-
-| Frente | Estado | Leitura |
-| --- | --- | --- |
-| `google_drive` | `discovery-only` | aprovado na visao, sem implementacao funcional |
-| `oauth_delegated` | `discovery-only` | aprovado na visao, sem implementacao funcional |
-| automacao completa de cluster | `futuro` | fora da entrega imediata |
-
-## O que significa "produto entregue"
-
-O StreamGate so deve ser tratado como entregue quando todos os itens abaixo forem verdade ao mesmo tempo.
-
-### 1. O fluxo principal esta inteiro
-
-Fluxo minimo de entrega:
-
-- usuario autenticado entra no workspace final;
-- inicia ingestao por pelo menos um caminho suportado oficialmente;
-- acompanha jobs e estados com clareza;
-- entende falhas e consegue navegar por quarantine, audit e operacao segura;
-- recebe ou consulta notificacoes relevantes;
-- baixa os artefatos finais corretos;
-- o time interno consegue auditar, resolver, reprocessar e explicar o que aconteceu.
-
-### 2. A dashboard nao e mais so uma tela bonita
-
-A dashboard final precisa ser lida como command center real:
-
-- cada bloco principal tem papel claro;
-- o usuario entende o que e leitura real e o que ainda nao existe;
-- nao existem cards "cenograficos" que parecam prontos mas escondam ausencia de produto;
-- os drilldowns saem da dashboard para paginas reais e consistentes.
-
-### 3. O produto fecha a narrativa de ingestao e operacao
-
-A entrega final nao pode parecer duas metades desconectadas.
-
-Sinais de fechamento real:
-
-- ingestao, jobs, notificacoes, artefatos e auditoria contam a mesma historia;
-- UI operacional, contratos e docs usam a mesma linguagem;
-- roles `admin` e `operator` compartilham a mesma espinha visual, mudando apenas profundidade e mutacao permitida.
-
-### 4. A release nao depende de contexto escondido
-
-A entrega nao pode depender de memoria oral da equipe.
-
-Antes de chamar de entregue, precisamos ter:
-
-- docs sincronizadas com o produto real;
-- gates oficiais reproduziveis;
-- limite claro entre `implementation` e `environment` nos runners;
-- checklist final de release/rollback seguido;
-- backlog residual explicitamente classificado como `pos-v1`, e nao esquecido.
-
-## Gaps reais para a entrega final
-
-### Bloco A - Fechar o workspace final
-
-Objetivo: fazer o shell e a dashboard representarem o produto final sem mascarar ausencia de logica.
-
-Escopo:
-
-- fechar a fidelidade visual do shell autenticado em relacao ao prototipo aprovado;
-- concluir a dashboard v3 como command center real;
-- revisar bloco por bloco da dashboard e classificar cada um em `real`, `derivado` ou `placeholder transitivo`;
-- remover qualquer area que passe impressao falsa de feature pronta sem trilha de materializacao definida.
-
-Sinais de pronto:
-
-- sidebar e topbar fixas, consistentes e finais;
-- dashboard navegavel, densa e confiavel;
-- cards principais ligados a fontes de dados reais ou a placeholders explicitamente controlados;
-- `ClickHouse` e `ETL Explorer` com superficies coerentes, mesmo que ainda limitadas.
-
-### Bloco B - Fechar a experiencia de ingestao da v1
-
-Objetivo: transformar a entrada de dados em um fluxo finalizado do ponto de vista de produto, e nao apenas de infraestrutura funcional.
-
-Escopo:
-
-- revisar `UploadPage` contra a visao de fluxo hibrido (`guided` e `advanced`);
-- decidir o que entra de forma real no fechamento da v1 e o que fica claramente postergado;
-- garantir coerencia entre dashboard, CTA global `+ Upload` e jornada completa de ingestao;
-- revisar mensagens de erro, validacao, estados de progresso e handoff para acompanhamento do job.
-
-Sinais de pronto:
-
-- upload local e claramente o caminho oficial da v1;
-- UX de ingestao esta pronta para usuario final, nao so para time interno;
-- qualquer caminho nao implementado esta rotulado como futuro e nao confunde o usuario.
-
-### Bloco C - Materializar a fronteira analitica
-
-Objetivo: reduzir o gap entre a promessa analitica do produto e o que o usuario realmente consegue explorar hoje.
-
-Escopo:
-
-- definir o papel real de `Analytics`, `ClickHouse` e `ETL Explorer` na v1;
-- escolher o minimo util que precisa estar vivo para justificar a camada analitica na entrega;
-- ligar consultas, filtros e visualizacoes a dados consistentes;
-- evitar tres superficies diferentes contando a mesma historia sem um criterio claro.
-
-Sinais de pronto:
-
-- o usuario entende onde ve leitura operacional e onde faz exploracao analitica;
-- existe uma superficie analitica que entrega valor real, nao apenas promessa arquitetural;
-- o nome `ClickHouse` nao aparece so como placeholder de tecnologia, mas como parte compreensivel do produto.
-
-### Bloco D - Decidir o que e v1 e o que e pos-v1 em conectividade
-
-Objetivo: impedir que conectores discovery-only fiquem em limbo e separar claramente o corte API+worker da experiencia administrativa final.
-
-Escopo:
-
-- decidir explicitamente se a entrega final inclui somente `upload local` ou tambem algum primeiro caminho de `external_link`/conector;
-- tratar `s3` e `http_url` como corte funcional admin, com perfis em `/settings` e solicitacao de ingestao em `/upload`;
-- manter `google_drive` e `oauth_delegated` fora da narrativa de entregue enquanto nao houver implementacao funcional;
-- ajustar docs e UI para refletir essa fronteira sem ambiguidade.
-
-Sinais de pronto:
-
-- a narrativa comercial e tecnica do produto nao promete mais do que a v1 realmente entrega;
-- o backlog de conectores fica priorizado, mas sem confundir corte tecnico com experiencia de produto completa.
-
-Estado workspace operacional backend/worker:
-
-- `public_link` entra como primeiro caminho funcional de `external_link`;
-- `oauth_delegated` e `google_drive` continuam fora da entrega funcional;
-- dashboard, warehouse e lineage passam a ter endpoints reais para o frontend, com `event_log`, ClickHouse real para warehouse, fallback `postgres_derived`, warnings tecnicos e empty states honestos.
-
-Estado workspace operacional frontend:
-
-- dashboard consome `analytics/dashboard` e remove fixtures locais de fila, workers, event log e formatos;
-- `/clickhouse` e `/etl-explorer` foram materializados como rotas protegidas reais para `operator` e `admin`;
-- Upload Center preserva arquivo local e adiciona `public_link` completo com idempotencia e acquisition mascarada;
-- conectores `s3` e `http_url` entram na UI admin; `oauth_delegated` e `google_drive` seguem fora da UI funcional.
-
-Estado command center operacional Back + Worker:
-
-- dashboard passa a ter contrato REST expandido para kpis, series 24h, status distribution, heatmap 7d, jobs board, queue, ingestion, workers, alerts, event log e source health;
-- realtime passa a ter tickets curtos, Action Cable/polling e `realtime_events` duravel;
-- exports CSV/JSON e alert review/dismiss passam a ser persistentes, auditaveis, idempotentes e mascarados;
-- S3/HTTP entram como conectores base admin-only com API, worker, perfis em `/settings` e ingestao em `/upload`;
-- worker aceita NDJSON, ZIP com um arquivo suportado, XLSX e Parquet quando runtime nativo estiver disponivel, preservando limites, cleanup e warehouse sem payload bruto.
-
-### Bloco E - Fechamento de produto e release
-
-Objetivo: transformar o estado "quase pronto" em entrega confiavel.
-
-Escopo:
-
-- rodada final de UX e consistencia por papel;
-- revisao de docs centrais (`vision`, roadmap, workspace map, api docs, security, closeout da release);
-- validacao final dos gates oficiais;
-- registro do backlog residual aceito para a fase seguinte.
-
-Sinais de pronto:
-
-- existe uma leitura unica e coerente do que foi entregue;
-- a release pode ser explicada para engenharia, operacao e stakeholder sem contradicao;
-- o backlog residual esta nomeado, priorizado e separado da entrega.
-
-## Ordem recomendada para finalizar o produto sem retrabalho
-
-### Etapa 1 - Fechar shell e dashboard primeiro
-
-Motivo:
-
-- e o ponto onde o usuario percebe mais rapidamente se o produto parece final ou inacabado;
-- varios fluxos ja estao funcionais, mas ainda aparecem dentro de uma moldura que nao comunica produto fechado;
-- sem essa etapa, o wiring seguinte fica espalhado e sujeito a retrabalho visual.
-
-Prioridade dentro da etapa:
-
-1. shell autenticado final;
-2. dashboard v3 com classificacao dos blocos;
-3. consistencia de navegacao e estados de permissao.
-
-### Etapa 2 - Fechar a jornada de ingestao da v1
-
-Motivo:
-
-- a dashboard passa a apontar para `+ Upload` como CTA principal;
-- a ingestao e a porta de entrada funcional do produto atual;
-- qualquer ambiguidade aqui contamina a leitura da entrega inteira.
-
-Prioridade dentro da etapa:
-
-1. ajustar UX final do upload local;
-2. decidir o papel de `guided` e `advanced` na v1;
-3. alinhar mensagens, estados e handoff para jobs.
-
-### Etapa 3 - Materializar a superficie analitica minima
-
-Motivo:
-
-- sem isso, a visao analitica continua parecendo promessa mais do que entrega;
-- essa etapa precisa acontecer depois do shell, para evitar construir exploracao em cima de uma arquitetura visual ainda instavel.
-
-Prioridade dentro da etapa:
-
-1. definir papel de `Analytics`, `ClickHouse` e `ETL Explorer`;
-2. tornar pelo menos uma dessas superficies claramente util e real;
-3. eliminar redundancias entre elas.
-
-### Etapa 4 - Fechar a narrativa de release
-
-Motivo:
-
-- essa e a etapa que impede "entrega que ainda depende de contexto";
-- sem ela, o produto pode ate funcionar, mas segue dificil de explicar, manter e evoluir.
-
-Prioridade dentro da etapa:
-
-1. sincronizar docs centrais;
-2. reexecutar gates oficiais;
-3. revisar backlog residual;
-4. escrever closeout de release.
-
-## O que nao pode ficar invisivel daqui para frente
-
-Itens que devem ser sempre classificados explicitamente:
-
-- o que e dado real;
-- o que e scaffold visual temporario;
-- o que e discovery-only;
-- o que e bloqueador de release;
-- o que e backlog pos-v1.
-
-Regra pratica:
-
-- se uma superficie ainda depender de placeholder para parecer completa, registrar isso na propria task e no closeout da frente;
-- se uma feature estiver aprovada na visao, mas nao entregue, nao deixar a UI ou a doc sugerirem o contrario;
-- se um runner falhar por ambiente, registrar o residual sem misturar com regressao de implementacao.
-
-## Checklist oficial para declarar a entrega pronta
+# Guia De Fechamento Do Produto
+
+Este guia resume o estado final do StreamGate antes da branch de release. Ele existe para deixar claro o que esta entregue, quais gates provam essa leitura e quais pontos devem ser revisados no pente fino final.
+
+## Leitura Atual
+
+O StreamGate possui um nucleo operacional completo para ingestao, processamento assincrono, command center, auditoria, artefatos, notificacoes, conectores base e leitura analitica.
+
+O produto ja pode ser explicado como uma plataforma de ingestao operacional com:
+
+- entrada por arquivo local, link publico e conectores S3/HTTP admin-only;
+- API Rails como orquestradora segura;
+- worker Ruby como runtime de ETL;
+- PostgreSQL como fonte operacional;
+- ClickHouse como fonte analitica com fallback honesto;
+- frontend React como workspace operacional;
+- contratos versionados em OpenAPI e `packages/contracts`;
+- gates locais, smokes e GitHub Actions como caminho de validacao.
+
+## O Que Esta Entregue
+
+| Frente | Estado |
+| --- | --- |
+| Auth, sessao e role gating | funcional |
+| Upload local e public link | funcional |
+| Conectores S3/HTTP | funcional no corte admin/API/worker/UI |
+| Pipeline RabbitMQ + worker | funcional |
+| CSV, JSON, NDJSON, ZIP seguro, XLSX e Parquet condicionado ao runtime | funcional |
+| Jobs, batches, attempts e quarantine | funcional |
+| Safe operations | funcional para fluxo aprovado |
+| Artefatos finais | funcional |
+| Notificacoes | funcional |
+| Audit trail | funcional |
+| Dashboard command center | funcional, data-driven e com estados honestos |
+| Realtime dashboard | funcional com ticket curto e polling fallback |
+| Exports e alert actions | funcional, auditavel e mascarado |
+| ClickHouse/warehouse | funcional com fallback Postgres |
+| ETL Explorer | funcional por lineage de job |
+| OpenAPI e contratos | versionados e validados |
+| Reports, smokes e CI local | operacionalizados |
+
+## Limites Declarados
+
+- `google_drive` e `oauth_delegated` continuam discovery-only.
+- A branch de release deve focar em pente fino visual/UX, hardening final, verificacao ampla e fechamento de qualquer detalhe residual.
+- Deploy produtivo em cluster, tracing distribuido completo e observabilidade avancada ficam fora do corte atual.
+- CircleCI nao e gate versionado neste repositorio; GitHub Actions e o CI remoto oficial.
+
+## Fluxo Principal Que Deve Permanecer Intacto
+
+1. Usuario autenticado entra no workspace.
+2. Inicia ingestao por arquivo, link publico ou conector permitido.
+3. API valida permissao, idempotencia e contrato.
+4. Storage recebe o bruto.
+5. Evento vai para RabbitMQ.
+6. Worker processa, cria batches, separa quarentena e gera artefatos.
+7. PostgreSQL, ClickHouse, realtime events, warnings e audit trail sao atualizados.
+8. Frontend reflete estado em dashboard, jobs, lineage, analytics, artifacts, notificacoes e audit.
+
+## Checklist De Release
 
 ### Produto
 
-- [x] shell autenticado finalizado e coerente com o prototipo aprovado
-- [x] dashboard v3 fechada como command center real
-- [x] upload local fechado como experiencia final da v1
-- [x] superfices analiticas com papel real definido e implementado no minimo util
-- [x] backlog de conectores e ingestao externa classificado sem ambiguidade
+- [x] Workspace autenticado coerente e navegavel.
+- [x] Dashboard sem fixtures invisiveis.
+- [x] Upload Center e quick upload ligados ao fluxo real.
+- [x] Settings com conectores admin-only e sem exposicao de segredo.
+- [x] Analytics, ClickHouse e ETL Explorer com papeis distintos.
+- [x] Admin/operator com profundidade correta por papel.
 
-### Backend e worker
+### Backend, Worker E Contratos
 
-- [x] pipeline assincrono validado ponta a ponta
-- [x] operacao segura validada com RBAC, motivo, auditoria e idempotencia
-- [x] artefatos finais validos e baixaveis
-- [x] notificacoes e deliveries coerentes com eventos operacionais
-- [x] auditoria navegavel e explicavel por recurso
-- [x] dashboard expandida, realtime/polling, exports e alert actions com contrato backend real
-- [x] worker aceita formatos ampliados e publica eventos realtime best-effort
-- [x] conectores S3/HTTP funcionais no corte admin, com segredos criptografados, lease interno e UX operacional
+- [x] OpenAPI e contracts cobrem endpoints e eventos atuais.
+- [x] Mutacoes sensiveis exigem RBAC, idempotencia e auditoria.
+- [x] Realtime, exports, alert actions e conectores possuem contratos e testes.
+- [x] Worker processa formatos suportados e falha de forma segura.
+- [x] ClickHouse nao recebe payload bruto sensivel.
 
-### Frontend
+### Operacao E Qualidade
 
-- [x] rotas principais coerentes entre shell, dashboard e modulos
-- [x] estados de denied/error/loading consistentes em superficies sensiveis
-- [x] visual final sem cards cenograficos ou lacunas de produto disfarcadas
-- [x] mobile/tablet utilizaveis nas rotas principais
+- [x] Gates frontend/backend/e2e/docker definidos.
+- [x] Smoke operacional definido.
+- [x] Full-closeout definido como pacote final de evidencia.
+- [x] GitHub Actions documentado como CI remoto oficial.
+- [x] CircleCI documentado como diagnostico externo, sem config versionada.
 
 ### Documentacao
 
-- [x] `docs/product/vision.md` reflete exatamente a entrega
-- [x] `docs/planning/` sincronizado com o estado real
-- [x] `docs/guides/frontend/frontend-workspace-map.md` descreve o workspace final
-- [x] `docs/guides/backend/api-docs.md` e OpenAPI sincronizados
-- [x] docs de seguranca e release atualizadas
-- [x] closeout final de release escrito
+- [x] README raiz explica o produto final.
+- [x] READMEs de API, web, worker e contracts explicam responsabilidades atuais.
+- [x] API docs, threat model, workspace map, runbook e release checklist sincronizados.
+- [x] Roadmap e closeout registram o fechamento historico.
 
-### Testes e operacao
+## Gates De Fechamento
 
-- [x] fast gates relevantes verdes
-- [x] smoke operacional verde
-- [x] full-closeout verde
-- [x] hub `docs/reports/index.html` atualizado
-- [x] backlog residual aceito explicitamente
+Comandos obrigatorios para uma entrega final:
 
-Evidencia final da v1 (2026-04-28):
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 frontend
+powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 backend
+powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 e2e
+powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 docker
+powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -Profile full-closeout
+```
 
-- `ruby scripts/ci/validate-operational-contracts.rb`: PASS.
-- `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 backend`: PASS.
-- `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 frontend`: PASS.
-- `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 e2e`: PASS.
-- `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 docker` com `SMOKE_PUBLIC_LINK_URL=https://raw.githubusercontent.com/plotly/datasets/master/2014_apple_stock.csv`: PASS.
-- `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1 -TimeoutSeconds 900` com `SMOKE_PUBLIC_LINK_URL`: PASS.
-- `powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -Profile full-closeout -TimeoutSeconds 900` com `SMOKE_PUBLIC_LINK_URL`: PASS; hub atualizado com `PASS:7 FAIL:0 NOT_RUN:0` em `2026-04-28T19:48:41.768Z`.
+`SMOKE_PUBLIC_LINK_URL` e opcional. O smoke usa uma fixture CSV publica padrao e so precisa de override quando a rede local exige uma origem propria.
 
-## Recomendacao de governanca daqui para frente
+Comandos diretos de apoio:
 
-Para fechar o produto com eficiencia, toda nova frente deve nascer com tres rotulos explicitos:
+```bash
+cd apps/api && bundle exec rails test
+cd apps/worker && bundle exec rspec
+ruby scripts/ci/validate-operational-contracts.rb
+cd apps/web && pnpm test:run
+cd apps/web && pnpm test:integration
+cd apps/web && pnpm build
+```
 
-- `entrega real agora`
-- `scaffold para wiring posterior`
-- `futuro / discovery-only`
+## Pente Fino Da Branch De Release
 
-Isso evita tres tipos de desperdicio:
+A branch de release deve concentrar:
 
-- gastar tempo fechando visual de algo que ainda nao tem papel funcional decidido;
-- assumir como entregue algo que ainda depende de muito wiring;
-- abrir novas frentes enquanto as ja aprovadas seguem sem fechamento.
-
-Regra de prioridade recomendada:
-
-1. fechar o que ja esta quase pronto e tem impacto direto na narrativa de produto;
-2. materializar o minimo util das superficies que hoje ainda sao scaffold;
-3. empurrar conectores e expansoes para a fase seguinte so depois da entrega principal ficar limpa.
+- revisao visual completa de todas as rotas;
+- mobile/tablet e acessibilidade;
+- consistencia de copy e estados vazios/degradados;
+- varredura de segredo/payload sensivel em UI, docs e logs;
+- revisao de branch protection, CI e docs finais;
+- decisao explicita sobre qualquer backlog residual.
 
 ## Referencias
 
-- [Visao do produto](C:/estudos/StreamGate/docs/product/vision.md)
-- [Roadmap mestre](C:/estudos/StreamGate/docs/planning/)
-- [Closeout operacao segura](C:/estudos/StreamGate/docs/)
-- [Mapa do workspace frontend](C:/estudos/StreamGate/docs/guides/frontend/frontend-workspace-map.md)
-- [Roadmap DevOps](C:/estudos/StreamGate/docs/guides/platform/devops-roadmap.md)
-- [Hub de reports](C:/estudos/StreamGate/docs/reports/index.html)
+- [Visao de produto](../../product/vision.md)
+- [Roadmap mestre](../../planning/)
+- [Testing baseline](../quality/testing-baseline.md)
+- [Release/rollback checklist](release-rollback-checklist.md)
+- [Workspace map](../frontend/frontend-workspace-map.md)
+- [API docs](../backend/api-docs.md)
+- [Worker runbook](../operations/worker-runtime-runbook.md)

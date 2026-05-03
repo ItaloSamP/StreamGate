@@ -21,14 +21,15 @@ A evolucao do produto segue uma estrategia equilibrada entre operacao e conectiv
 - manter confiabilidade operacional e rastreabilidade ponta a ponta;
 - ampliar flexibilidade de entrada e saida de dados sem perder governanca.
 
-Leitura de status em `2026-05-01`:
+Leitura de status em `2026-05-02`:
 
 - operacao segura (`retry`, `resolve`, `dlq replay request/approve/execute`) ja esta materializada;
 - artefatos finais (`processed_dataset`, `quality_report`, `audit_report`) ja estao materializados;
 - notificacoes `in_app`, `email` e `webhook` ja estao materializadas;
 - dashboard v3 evoluiu para command center data-driven, com REST expandido, realtime/polling, exports e alert actions persistentes;
 - conectores de entrada `s3` e `http_url` estao materializados com perfis admin-only, lease interno, UX em `/settings` e solicitacao de ingestao em `/upload`;
-- `google_drive` e `oauth_delegated` continuam discovery-only.
+- `google_drive` e `oauth_delegated` continuam discovery-only;
+- a proxima branch deve concentrar o pente fino de release, com revisao visual ampla, hardening final e fechamento de qualquer detalhe residual.
 
 ## Problema
 
@@ -220,7 +221,7 @@ Para manter o projeto alinhado com esta visao, o desenvolvimento deve priorizar:
 
 ## Fora do escopo imediato
 
-- tempo real completo por WebSocket;
+- realtime amplo para todas as superficies fora do command center;
 - automacao completa de deploy em cluster;
 - observabilidade avancada com tracing distribuido em todos os servicos;
 - marketplace amplo de conectores alem da wave inicial;

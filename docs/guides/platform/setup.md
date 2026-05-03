@@ -34,7 +34,9 @@ Os scripts `.ps1` continuam disponiveis apenas como fallback para Windows puro.
 
 A raiz de `scripts/` agora expoe apenas os comandos principais; helpers internos ficam organizados em `scripts/bootstrap`, `scripts/dev`, `scripts/ci`, `scripts/compose`, `scripts/reports` e `scripts/smokes`.
 
-A classificacao operacional real do baseline inicial para ambientes, checks e falhas conhecidas esta em [docs/guides/platform/devops-baseline.md](C:/estudos/StreamGate/docs/guides/platform/devops-baseline.md).
+A classificacao operacional atual para ambientes, checks e falhas conhecidas esta em [docs/guides/platform/devops-baseline.md](C:/estudos/StreamGate/docs/guides/platform/devops-baseline.md).
+
+Em desenvolvimento e teste, a API Rails carrega automaticamente o `.env` da raiz do repositorio durante o boot, sem sobrescrever variaveis ja exportadas no processo. Isso evita que comandos diretos como `bundle exec rails test` dependam de um wrapper manual so para popular credenciais locais. Para desabilitar esse comportamento em diagnosticos especificos, defina `STREAMGATE_SKIP_DOTENV=1`.
 
 ## O que voce precisa instalar
 
