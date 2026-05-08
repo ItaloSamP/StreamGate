@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { WorkspacePageFrame } from '@/components/app/workspace-page-frame'
 import { useAuth } from '@/features/auth/auth-context'
 import { ApiClientError } from '@/lib/api-client'
-import { streamgateApi, type ConnectorProfile, type JobSummary, type UploadContentType, type UploadSummary } from '@/lib/streamgate-api'
+import { streamgateApi, type ConnectorProfile, type GoogleDriveItem, type JobSummary, type UploadContentType, type UploadSummary } from '@/lib/streamgate-api'
 import { showSingletonToast } from '@/lib/toast'
 import {
   createConnectorIngestionIdempotencyKey,
@@ -97,7 +97,10 @@ export function UploadPage() {
     filename: '',
     contentType: 'text/csv' as UploadContentType,
     source: '',
+    driveItemId: '',
   })
+  const [driveItems, setDriveItems] = useState<GoogleDriveItem[]>([])
+  const [driveItemsState, setDriveItemsState] = useState<'idle' | 'loading' | 'success' | 'empty' | 'error'>('idle')
   const [flowState, setFlowState] = useState<UploadFlowState>('idle')
   const [flowError, setFlowError] = useState<string | null>(null)
   const [flowSummary, setFlowSummary] = useState<{
@@ -119,6 +122,15 @@ export function UploadPage() {
   const jobPage = useMemo(() => parsePage(searchParams.get('job_page')), [searchParams])
 
   const busy = flowState === 'signing' || flowState === 'uploading' || flowState === 'confirming' || flowState === 'requesting_link' || flowState === 'requesting_connector'
+
+  const selectedConnectorProfile = useMemo(
+    () => connectorProfiles.find((entry) => entry.id === connectorForm.profileId) ?? null,
+    [connectorForm.profileId, connectorProfiles],
+  )
+  const selectedDriveItem = useMemo(
+    () => driveItems.find((entry) => entry.id === connectorForm.driveItemId) ?? null,
+    [connectorForm.driveItemId, driveItems],
+  )
 
   useEffect(() => {
     let active = true
@@ -219,6 +231,8 @@ export function UploadPage() {
       setConnectorProfiles([])
       setConnectorProfileState('denied')
       if (uploadMode === 'connector') setUploadMode('file')
+      setDriveItems([])
+      setDriveItemsState('idle')
       return
     }
 
@@ -249,6 +263,14 @@ export function UploadPage() {
       active = false
     }
   }, [isAdmin, reloadToken, uploadMode])
+
+  useEffect(() => {
+    if (selectedConnectorProfile?.kind === 'google_drive') return
+
+    setDriveItems([])
+    setDriveItemsState('idle')
+    setConnectorForm((current) => current.driveItemId ? { ...current, driveItemId: '' } : current)
+  }, [selectedConnectorProfile?.kind])
 
   function updateUrlState(next: {
     upload_status?: string
@@ -396,10 +418,13 @@ export function UploadPage() {
     const profile = connectorProfiles.find((entry) => entry.id === connectorForm.profileId)
     const filename = connectorForm.filename.trim()
     const source = connectorForm.source.trim()
+    const driveItem = profile?.kind === 'google_drive' ? selectedDriveItem : null
 
-    if (!profile || !filename || !source) {
+    if (!profile || !filename || (profile.kind === 'google_drive' ? !driveItem : !source)) {
       setFlowState('error')
-      setFlowError('Selecione perfil, arquivo de destino e object key/caminho HTTP.')
+      setFlowError(profile?.kind === 'google_drive'
+        ? 'Selecione perfil, arquivo de destino e item do Google Drive.'
+        : 'Selecione perfil, arquivo de destino e object key/caminho HTTP.')
       return
     }
 
@@ -413,6 +438,8 @@ export function UploadPage() {
         contentType: connectorForm.contentType,
         objectKey: profile.kind === 's3' ? source : undefined,
         sourcePath: profile.kind === 'http' ? source : undefined,
+        driveFileId: profile.kind === 'google_drive' && driveItem && driveItem.kind !== 'folder' ? driveItem.id : undefined,
+        driveFolderId: profile.kind === 'google_drive' && driveItem && driveItem.kind === 'folder' ? driveItem.id : undefined,
         idempotencyKey: createConnectorIngestionIdempotencyKey(),
       })
 
@@ -430,6 +457,25 @@ export function UploadPage() {
       setFlowState('error')
       setFlowError(message)
       showSingletonToast('error', message)
+    }
+  }
+
+  async function handleLoadGoogleDriveItems() {
+    if (!isAdmin || busy || selectedConnectorProfile?.kind !== 'google_drive') return
+
+    try {
+      setDriveItemsState('loading')
+      const response = await streamgateApi.listGoogleDriveItems()
+      const rows = Array.isArray(response.data) ? response.data : []
+      setDriveItems(rows)
+      setDriveItemsState(rows.length > 0 ? 'success' : 'empty')
+      setConnectorForm((current) => ({
+        ...current,
+        driveItemId: current.driveItemId || rows[0]?.id || '',
+      }))
+    } catch {
+      setDriveItems([])
+      setDriveItemsState('error')
     }
   }
 
@@ -589,7 +635,7 @@ export function UploadPage() {
                         id="connector-profile"
                         className="input-shell"
                         value={connectorForm.profileId}
-                        onChange={(event) => setConnectorForm((current) => ({ ...current, profileId: event.target.value }))}
+                        onChange={(event) => setConnectorForm((current) => ({ ...current, profileId: event.target.value, source: '', driveItemId: '' }))}
                         disabled={busy || connectorProfileState === 'loading'}
                       >
                         {connectorProfiles.map((profile) => (
@@ -611,16 +657,60 @@ export function UploadPage() {
                   </div>
 
                   <div className="grid gap-2 md:grid-cols-2">
-                    <div className="grid gap-2">
-                      <Label htmlFor="connector-source">Object key S3 ou caminho HTTP</Label>
-                      <Input
-                        id="connector-source"
-                        value={connectorForm.source}
-                        onChange={(event) => setConnectorForm((current) => ({ ...current, source: event.target.value }))}
-                        placeholder="incoming/orders.ndjson"
-                        disabled={busy}
-                      />
-                    </div>
+                    {selectedConnectorProfile?.kind === 'google_drive' ? (
+                      <div className="grid gap-3 rounded-lg border border-[var(--border)] bg-[color:rgb(255_255_255_/_0.02)] p-4">
+                        <div>
+                          <div className="dash-panel-title">Google Drive delegated</div>
+                          <div className="dash-module-copy">
+                            Arquivos e pastas usam OAuth delegado; refresh token e client secret ficam criptografados apenas no backend.
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <span className="dash-pill dash-pill--neutral">Drive restricted scope</span>
+                          <span className="dash-pill dash-pill--neutral">scan-first</span>
+                          <span className="dash-pill dash-pill--neutral">file/folder ingestion</span>
+                        </div>
+                        <Button type="button" variant="outline" size="xl" onClick={handleLoadGoogleDriveItems} disabled={busy || driveItemsState === 'loading'}>
+                          {driveItemsState === 'loading' ? 'Listando Drive...' : 'Listar Google Drive'}
+                        </Button>
+                        <div className="grid gap-2">
+                          <Label htmlFor="connector-drive-item">Item do Google Drive</Label>
+                          <select
+                            id="connector-drive-item"
+                            className="input-shell"
+                            value={connectorForm.driveItemId}
+                            onChange={(event) => setConnectorForm((current) => ({ ...current, driveItemId: event.target.value }))}
+                            disabled={busy || driveItems.length === 0}
+                          >
+                            {driveItems.map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name} ({item.kind === 'folder' ? 'pasta' : 'arquivo'})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        {driveItemsState === 'idle' ? (
+                          <div className="text-mono text-[11px] text-[var(--text-dim)]">Liste os itens do Drive para escolher arquivo ou pasta.</div>
+                        ) : null}
+                        {driveItemsState === 'empty' ? (
+                          <div className="text-mono text-[11px] text-[var(--text-dim)]">Nenhum item do Google Drive disponivel.</div>
+                        ) : null}
+                        {driveItemsState === 'error' ? (
+                          <div className="text-mono text-[11px] text-[var(--signal-red)]">Nao foi possivel listar itens do Google Drive.</div>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <div className="grid gap-2">
+                        <Label htmlFor="connector-source">Object key S3 ou caminho HTTP</Label>
+                        <Input
+                          id="connector-source"
+                          value={connectorForm.source}
+                          onChange={(event) => setConnectorForm((current) => ({ ...current, source: event.target.value }))}
+                          placeholder="incoming/orders.ndjson"
+                          disabled={busy}
+                        />
+                      </div>
+                    )}
 
                     <div className="grid gap-2">
                       <Label htmlFor="connector-content-type">Content type do conector</Label>
@@ -657,7 +747,7 @@ export function UploadPage() {
                       type="submit"
                       variant="panel"
                       size="xl"
-                      disabled={!connectorForm.profileId || !connectorForm.filename.trim() || !connectorForm.source.trim() || busy}
+                      disabled={!connectorForm.profileId || !connectorForm.filename.trim() || (selectedConnectorProfile?.kind === 'google_drive' ? !connectorForm.driveItemId : !connectorForm.source.trim()) || busy}
                     >
                       {busy ? 'Solicitando ingestao...' : 'Solicitar ingestao por conector'}
                     </Button>

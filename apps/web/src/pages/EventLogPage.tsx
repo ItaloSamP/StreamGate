@@ -8,29 +8,22 @@ import {
   PaginationSummary,
 } from '@/components/app/operational-readout'
 import { WorkspacePageFrame } from '@/components/app/workspace-page-frame'
-import { useOperationalQueryState } from '@/hooks/use-operational-query-state'
 import { ApiClientError } from '@/lib/api-client'
-import { buildCsv, buildOperationalQuery, downloadCsv, formatDateTime, humanizeOperationalError } from '@/lib/operational-utils'
-import { streamgateApi, type AuditEvent, type PaginationMeta } from '@/lib/streamgate-api'
+import { buildCsv, downloadCsv, formatDateTime, humanizeOperationalError } from '@/lib/operational-utils'
+import { streamgateApi, type RealtimeEvent } from '@/lib/streamgate-api'
 
 type EventLogViewState = {
   status: 'loading' | 'success' | 'empty' | 'error' | 'denied'
-  events: AuditEvent[]
-  pagination: PaginationMeta
+  events: RealtimeEvent[]
   lastUpdatedAt: Date | null
   errorMessage: string | null
 }
 
-const EXTRA_KEYS = ['action', 'actor_id', 'auditable_type', 'trace_id', 'request_id']
-const INITIAL_PAGINATION = { page: 1, per_page: 20, total_count: 0, total_pages: 0 }
-
 export function EventLogPage() {
-  const { query, queryKey } = useOperationalQueryState({ defaultSortBy: 'occurred_at', extraKeys: EXTRA_KEYS })
   const [reloadToken, setReloadToken] = useState(0)
   const [viewState, setViewState] = useState<EventLogViewState>({
     status: 'loading',
     events: [],
-    pagination: INITIAL_PAGINATION,
     lastUpdatedAt: null,
     errorMessage: null,
   })
@@ -42,13 +35,12 @@ export function EventLogPage() {
       setViewState((current) => ({ ...current, status: 'loading', errorMessage: null }))
 
       try {
-        const response = await streamgateApi.listAuditEvents(buildOperationalQuery(query))
+        const response = await streamgateApi.listRealtimeEvents({ limit: 100 })
         if (!active) return
 
         setViewState({
           status: response.data.length > 0 ? 'success' : 'empty',
           events: response.data,
-          pagination: response.meta?.pagination ?? INITIAL_PAGINATION,
           lastUpdatedAt: new Date(),
           errorMessage: null,
         })
@@ -61,7 +53,7 @@ export function EventLogPage() {
           ...current,
           status: denied ? 'denied' : 'error',
           errorMessage: denied
-            ? 'Sem permissao para consultar o audit trail desta superficie.'
+            ? 'Sem permissao para consultar o event log desta superficie.'
             : humanizeOperationalError(error, 'Nao foi possivel carregar event log.'),
           lastUpdatedAt: new Date(),
         }))
@@ -73,12 +65,14 @@ export function EventLogPage() {
     return () => {
       active = false
     }
-  }, [query, queryKey, reloadToken])
+  }, [reloadToken])
 
   const csvRows = useMemo(
     () => viewState.events.map((event) => ({
       id: event.id,
-      action: event.action,
+      event_type: event.event_type,
+      resource_type: event.resource_type ?? '',
+      resource_id: event.resource_id ?? '',
       request_id: event.request_id,
       trace_id: event.trace_id,
       occurred_at: event.occurred_at,
@@ -87,7 +81,7 @@ export function EventLogPage() {
   )
 
   function exportCsv() {
-    downloadCsv('streamgate-event-log.csv', buildCsv(csvRows, ['id', 'action', 'request_id', 'trace_id', 'occurred_at']))
+    downloadCsv('streamgate-event-log.csv', buildCsv(csvRows, ['id', 'event_type', 'resource_type', 'resource_id', 'request_id', 'trace_id', 'occurred_at']))
   }
 
   return (
@@ -99,10 +93,10 @@ export function EventLogPage() {
               <div>
                 <div className="dash-panel-title">Event Log Operacional</div>
                 <div className="dash-module-copy">
-                  Timeline read-only alimentada por /audit neste ciclo de entrega, com request_id, trace_id e metadata segura.
+                  Timeline read-only alimentada por eventos realtime sanitizados, com request_id, trace_id e payload seguro.
                 </div>
               </div>
-              <div className="dash-panel-right"><span className="dash-panel-tag">audit-backed</span></div>
+              <div className="dash-panel-right"><span className="dash-panel-tag">realtime-backed</span></div>
             </div>
             <OperationalToolbar
               lastUpdatedAt={viewState.lastUpdatedAt}
@@ -122,24 +116,24 @@ export function EventLogPage() {
                 {viewState.events.map((event) => (
                   <article key={event.id} className="dash-event">
                     <span className="dash-event-time">{formatDateTime(event.occurred_at)}</span>
-                    <span className="dash-event-tag blue">{event.action}</span>
+                    <span className="dash-event-tag blue">{event.event_type}</span>
                     <span className="dash-event-msg">
-                      {event.auditable_type}:{event.auditable_id}
+                      {eventResourceLabel(event)}
                       <span className="ml-2 text-[var(--text-faint)]">{event.request_id}</span>
                     </span>
                     <span className="flex flex-wrap gap-2">
                       <IdCopy label="request_id" value={event.request_id} />
                       <IdCopy label="trace_id" value={event.trace_id} />
                     </span>
-                    <JsonPreview value={event.metadata ?? {}} />
+                    <JsonPreview value={event.payload ?? {}} />
                   </article>
                 ))}
               </div>
               <div className="flex items-center justify-between gap-4 border-t border-[var(--border)] px-4 py-3">
                 <PaginationSummary
-                  page={viewState.pagination.page}
-                  totalPages={viewState.pagination.total_pages}
-                  totalCount={viewState.pagination.total_count}
+                  page={1}
+                  totalPages={1}
+                  totalCount={viewState.events.length}
                 />
               </div>
             </OperationalStateBlock>
@@ -148,4 +142,12 @@ export function EventLogPage() {
       </div>
     </WorkspacePageFrame>
   )
+}
+
+function eventResourceLabel(event: RealtimeEvent) {
+  if (event.resource_type && event.resource_id) {
+    return `${event.resource_type}:${event.resource_id}`
+  }
+
+  return event.resource_id ?? event.resource_type ?? event.id
 }

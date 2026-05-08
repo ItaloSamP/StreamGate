@@ -564,7 +564,7 @@ export type AlertActionResponse = {
   [key: string]: unknown
 }
 
-export type ConnectorKind = 's3' | 'http'
+export type ConnectorKind = 's3' | 'http' | 'google_drive'
 export type ConnectorStatus = 'active' | 'disabled'
 
 export type ConnectorProfile = {
@@ -604,6 +604,9 @@ export type ConnectorIngestion = {
   status: string
   object_key?: string | null
   source_path?: string | null
+  drive_file_id?: string | null
+  drive_folder_id?: string | null
+  parent_ingestion_id?: string | null
   filename: string
   content_type: string
   byte_size?: number | null
@@ -617,6 +620,8 @@ export type ConnectorIngestionRequest = {
   contentType: UploadContentType
   objectKey?: string
   sourcePath?: string
+  driveFileId?: string
+  driveFolderId?: string
   byteSize?: number
   idempotencyKey?: string
 }
@@ -625,9 +630,225 @@ export type ConnectorIngestionResponse = UploadRegisterResponse & {
   ingestion: ConnectorIngestion
   lease: {
     id: string
-    token?: string
     expires_at?: string | null
   }
+}
+
+export type Organization = {
+  id: string
+  slug?: string
+  name: string
+  status: string
+  quotas: Record<string, number>
+  retention_days: number
+  compliance_profile: Record<string, unknown>
+  created_at?: string | null
+  updated_at?: string | null
+}
+
+export type OrganizationMembership = {
+  id: string
+  organization_id: string
+  user_id: string
+  email?: string | null
+  full_name?: string | null
+  role: 'admin' | 'operator' | string
+  status: 'active' | 'invited' | 'suspended' | string
+  joined_at?: string | null
+  created_at?: string | null
+  updated_at?: string | null
+}
+
+export type OrganizationInvite = {
+  id: string
+  organization_id: string
+  email: string
+  role: 'admin' | 'operator' | string
+  status: string
+  expires_at?: string | null
+  invited_by_id?: string | null
+  accepted_by_id?: string | null
+  accepted_at?: string | null
+  created_at?: string | null
+  updated_at?: string | null
+  debug_invite_token?: string
+}
+
+export type OrganizationPayload = {
+  organization: Organization
+  members: OrganizationMembership[]
+  invites: OrganizationInvite[]
+}
+
+export type OrganizationUpdateInput = {
+  name?: string
+  retentionDays?: number
+  quotas?: Record<string, number>
+  settings?: Record<string, unknown>
+  complianceProfile?: Record<string, unknown>
+  idempotencyKey?: string
+}
+
+export type OrganizationInviteInput = {
+  email: string
+  role: 'admin' | 'operator'
+  idempotencyKey?: string
+}
+
+export type OrganizationMemberInput = {
+  role?: 'admin' | 'operator'
+  status?: 'active' | 'suspended'
+  idempotencyKey?: string
+}
+
+export type MfaSetupResponse = {
+  factor_id: string
+  secret: string
+  provisioning_uri: string
+  status: string
+}
+
+export type MfaVerifyInput = {
+  code: string
+  challengeToken?: string
+}
+
+export type MfaVerifyResponse = AuthPayload | {
+  factor_id: string
+  status: string
+  recovery_codes: string[]
+}
+
+export type OidcProvider = {
+  id: string
+  organization_id: string
+  provider: 'google_workspace' | string
+  issuer: string
+  client_id: string
+  hosted_domain: string
+  scopes: string[]
+  status: string
+  created_at?: string | null
+  updated_at?: string | null
+}
+
+export type GoogleOidcProviderInput = {
+  issuer: string
+  clientId: string
+  clientSecret: string
+  hostedDomain: string
+}
+
+export type OidcStartResponse = {
+  authorization_url: string
+  state: string
+  nonce: string
+  expires_at: string
+}
+
+export type GoogleDriveAuthorizeResponse = {
+  authorization_url: string
+  state: string
+  expires_at: string
+  scopes: string[]
+}
+
+export type GoogleDriveConnection = {
+  id: string
+  organization_id: string
+  user_id: string
+  provider: 'google_drive' | string
+  status: string
+  scopes: string[]
+  token_expires_at?: string | null
+  revoked_at?: string | null
+  created_at?: string | null
+  updated_at?: string | null
+}
+
+export type GoogleDriveItem = {
+  id: string
+  name: string
+  mime_type: string
+  kind: 'file' | 'folder' | string
+}
+
+export type SaasReadiness = {
+  generated_at: string
+  organization: {
+    id: string
+    members: {
+      active: number
+      invited: number
+      suspended: number
+    }
+  }
+  access: {
+    role: string
+    admin: boolean
+  }
+  identity: {
+    mfa: {
+      mode: string
+      status: string
+      recovery_codes: string
+    }
+    sso: {
+      protocol: string
+      validated_provider: string
+      status: string
+    }
+    saml: {
+      enabled: boolean
+      status: string
+    }
+  }
+  billing: {
+    status: string
+    reason: string
+  }
+  quotas: {
+    status: string
+    defaults: Record<string, number>
+  }
+  connectors: {
+    configured_count: number
+    active_profiles: number
+    supported: string[]
+    google_drive: {
+      status: string
+      acquisition_modes: string[]
+    }
+    oauth_delegated: {
+      status: string
+      provider: string
+    }
+    clear_lease_credentials_circulate: boolean
+  }
+  security: {
+    controls: string[]
+    sensitive_surface: Record<string, boolean>
+  }
+  infrastructure: {
+    runtime: string
+    ingress_tls: boolean
+    credential_store: string
+    data_services: string[]
+  }
+  observability: {
+    stack: string
+    telemetry: string
+    metrics: string
+    logs: string
+    dashboards: string
+    alerts: string
+  }
+  compliance: {
+    target: string
+    status: string
+    evidence_sections: string[]
+  }
+  external_blockers: string[]
 }
 
 export type AnalyticsLineage = {
@@ -833,6 +1054,18 @@ const endpoints = {
   realtimeTickets: '/api/v1/realtime/tickets',
   realtimeEvents: '/api/v1/realtime/events',
   dashboardExports: '/api/v1/analytics/dashboard/exports',
+  saasReadiness: '/api/v1/saas/readiness',
+  organization: '/api/v1/organization',
+  organizationMembers: '/api/v1/organization/members',
+  organizationInvites: '/api/v1/organization/invites',
+  mfaSetup: '/api/v1/auth/mfa/setup',
+  mfaVerify: '/api/v1/auth/mfa/verify',
+  mfaRecoveryCodes: '/api/v1/auth/mfa/recovery-codes/regenerate',
+  oidcConfig: '/api/v1/auth/oidc/config',
+  oidcStart: '/api/v1/auth/oidc/google/start',
+  googleDriveAuthorize: '/api/v1/connectors/google-drive/authorize',
+  googleDriveItems: '/api/v1/connectors/google-drive/items',
+  googleDriveRevoke: '/api/v1/connectors/google-drive/revoke',
   connectorProfiles: '/api/v1/connectors/profiles',
   uploads: '/api/v1/uploads',
   uploadPublicLink: '/api/v1/uploads/public-link',
@@ -937,6 +1170,92 @@ export function createStreamgateApi(client: StreamgateHttpClient = apiClient) {
       return { data }
     },
 
+    getSaasReadiness: async (): Promise<ApiSuccessEnvelope<SaasReadiness>> => {
+      if (client.getEnvelope) {
+        return client.getEnvelope<SaasReadiness>(endpoints.saasReadiness)
+      }
+
+      const data = await client.get<SaasReadiness>(endpoints.saasReadiness)
+      return { data }
+    },
+
+    getOrganization: async (): Promise<ApiSuccessEnvelope<OrganizationPayload>> => {
+      if (client.getEnvelope) return client.getEnvelope<OrganizationPayload>(endpoints.organization)
+      const data = await client.get<OrganizationPayload>(endpoints.organization)
+      return { data }
+    },
+
+    updateOrganization: (input: OrganizationUpdateInput) => {
+      const payload: Record<string, unknown> = {}
+      if (input.name !== undefined) payload.name = input.name
+      if (input.retentionDays !== undefined) payload.retention_days = input.retentionDays
+      if (input.quotas !== undefined) payload.quotas = input.quotas
+      if (input.settings !== undefined) payload.settings = input.settings
+      if (input.complianceProfile !== undefined) payload.compliance_profile = input.complianceProfile
+
+      return patchEnvelope<OrganizationPayload>(client, endpoints.organization, {
+        body: { organization: payload },
+        headers: idempotencyHeaders(input.idempotencyKey ?? createIdempotencyKey('organization')),
+      })
+    },
+
+    listOrganizationMembers: async (): Promise<ApiSuccessEnvelope<OrganizationMembership[]>> => {
+      if (client.getEnvelope) return client.getEnvelope<OrganizationMembership[]>(endpoints.organizationMembers)
+      const data = await client.get<OrganizationMembership[]>(endpoints.organizationMembers)
+      return { data }
+    },
+
+    createOrganizationInvite: (input: OrganizationInviteInput) =>
+      client.postEnvelope
+        ? client.postEnvelope<OrganizationInvite>(endpoints.organizationInvites, {
+            body: { invite: { email: input.email, role: input.role } },
+            headers: idempotencyHeaders(input.idempotencyKey),
+          })
+        : client.post<OrganizationInvite>(endpoints.organizationInvites, {
+            body: { invite: { email: input.email, role: input.role } },
+            headers: idempotencyHeaders(input.idempotencyKey),
+          }).then((data) => ({ data })),
+
+    updateOrganizationMember: (memberId: string, input: OrganizationMemberInput) => {
+      const payload: Record<string, unknown> = {}
+      if (input.role !== undefined) payload.role = input.role
+      if (input.status !== undefined) payload.status = input.status
+
+      return patchEnvelope<OrganizationMembership>(client, `${endpoints.organizationMembers}/${memberId}`, {
+        body: { membership: payload },
+        headers: idempotencyHeaders(input.idempotencyKey),
+      })
+    },
+
+    deleteOrganizationMember: (memberId: string, input?: { idempotencyKey?: string }) =>
+      deleteEnvelope<OrganizationMembership>(client, `${endpoints.organizationMembers}/${memberId}`, {
+        headers: idempotencyHeaders(input?.idempotencyKey),
+      }),
+
+    acceptOrganizationInvite: (token: string, input: { fullName: string; password: string; passwordConfirmation: string }) =>
+      client.postEnvelope
+        ? client.postEnvelope<{ user: AuthUser; membership: OrganizationMembership }>(`${endpoints.organizationInvites}/${token}/accept`, {
+            body: { acceptance: { full_name: input.fullName, password: input.password, password_confirmation: input.passwordConfirmation } },
+          })
+        : client.post<{ user: AuthUser; membership: OrganizationMembership }>(`${endpoints.organizationInvites}/${token}/accept`, {
+            body: { acceptance: { full_name: input.fullName, password: input.password, password_confirmation: input.passwordConfirmation } },
+          }).then((data) => ({ data })),
+
+    authorizeGoogleDrive: async (): Promise<ApiSuccessEnvelope<GoogleDriveAuthorizeResponse>> => {
+      if (client.getEnvelope) return client.getEnvelope<GoogleDriveAuthorizeResponse>(endpoints.googleDriveAuthorize)
+      const data = await client.get<GoogleDriveAuthorizeResponse>(endpoints.googleDriveAuthorize)
+      return { data }
+    },
+
+    listGoogleDriveItems: async (): Promise<ApiSuccessEnvelope<GoogleDriveItem[]>> => {
+      if (client.getEnvelope) return client.getEnvelope<GoogleDriveItem[]>(endpoints.googleDriveItems)
+      const data = await client.get<GoogleDriveItem[]>(endpoints.googleDriveItems)
+      return { data }
+    },
+
+    revokeGoogleDrive: () =>
+      deleteEnvelope<GoogleDriveConnection>(client, endpoints.googleDriveRevoke),
+
     listConnectorProfiles: async (): Promise<ApiSuccessEnvelope<ConnectorProfile[]>> => {
       if (client.getEnvelope) {
         return client.getEnvelope<ConnectorProfile[]>(endpoints.connectorProfiles)
@@ -999,6 +1318,8 @@ export function createStreamgateApi(client: StreamgateHttpClient = apiClient) {
       }
       if (input.objectKey) ingestion.object_key = input.objectKey
       if (input.sourcePath) ingestion.source_path = input.sourcePath
+      if (input.driveFileId) ingestion.drive_file_id = input.driveFileId
+      if (input.driveFolderId) ingestion.drive_folder_id = input.driveFolderId
       if (input.byteSize) ingestion.byte_size = input.byteSize
 
       const options = {
@@ -1402,6 +1723,46 @@ export function createStreamgateApi(client: StreamgateHttpClient = apiClient) {
             },
           },
         }),
+
+      setupMfa: () =>
+        client.postEnvelope
+          ? client.postEnvelope<MfaSetupResponse>(endpoints.mfaSetup)
+          : client.post<MfaSetupResponse>(endpoints.mfaSetup).then((data) => ({ data })),
+
+      verifyMfa: (input: MfaVerifyInput) => {
+        const body: { mfa: { code: string; challenge_token?: string } } = {
+          mfa: { code: input.code },
+        }
+        if (input.challengeToken) body.mfa.challenge_token = input.challengeToken
+
+        return client.postEnvelope
+          ? client.postEnvelope<MfaVerifyResponse>(endpoints.mfaVerify, { body })
+          : client.post<MfaVerifyResponse>(endpoints.mfaVerify, { body }).then((data) => ({ data }))
+      },
+
+      regenerateMfaRecoveryCodes: () =>
+        client.postEnvelope
+          ? client.postEnvelope<{ recovery_codes: string[] }>(endpoints.mfaRecoveryCodes)
+          : client.post<{ recovery_codes: string[] }>(endpoints.mfaRecoveryCodes).then((data) => ({ data })),
+
+      updateGoogleOidcProvider: (input: GoogleOidcProviderInput) =>
+        patchEnvelope<OidcProvider>(client, endpoints.oidcConfig, {
+          body: {
+            oidc_provider: {
+              issuer: input.issuer,
+              client_id: input.clientId,
+              client_credential: input.clientSecret,
+              hosted_domain: input.hostedDomain,
+            },
+          },
+        }),
+
+      startGoogleOidc: async ({ organizationId }: { organizationId: string }): Promise<ApiSuccessEnvelope<OidcStartResponse>> => {
+        const query = { organization_id: organizationId }
+        if (client.getEnvelope) return client.getEnvelope<OidcStartResponse>(endpoints.oidcStart, { query })
+        const data = await client.get<OidcStartResponse>(endpoints.oidcStart, { query })
+        return { data }
+      },
     },
   }
 }

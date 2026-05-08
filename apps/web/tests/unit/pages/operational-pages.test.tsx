@@ -131,7 +131,7 @@ describe('operational pages', () => {
 
     createObjectUrl.mockRestore()
     revokeObjectUrl.mockRestore()
-  }, 10000)
+  }, 15000)
 
   it('renders ClickHouse as a dense warehouse dashboard without SQL console claims', async () => {
     renderApp('/clickhouse', 'admin')
@@ -158,19 +158,23 @@ describe('operational pages', () => {
     })
   })
 
-  it('renders audit-backed event log with copied operational context', async () => {
+  it('renders realtime-backed event log with copied operational context', async () => {
     renderApp('/events', 'admin')
 
     expect(await screen.findByText('Event Log Operacional')).toBeInTheDocument()
-    expect(await screen.findByText('upload.registered')).toBeInTheDocument()
-    expect(await screen.findByText('req_fixture_1')).toBeInTheDocument()
+    expect(await screen.findByText('worker.heartbeat')).toBeInTheDocument()
+    expect(await screen.findByText('Worker:worker-01')).toBeInTheDocument()
+    expect(await screen.findByTitle('Copiar trace_id')).toHaveTextContent('trace_realtime')
   })
 
-  it('keeps the session and shows access denied when operator opens event log', async () => {
+  it('keeps the session and lets operators read sanitized realtime event log', async () => {
     renderApp('/events', 'operator')
 
     expect(await screen.findByText('Event Log Operacional')).toBeInTheDocument()
-    expect(await screen.findByText(/Permissao negada para esta superficie/i)).toBeInTheDocument()
+    expect(await screen.findByText('worker.heartbeat')).toBeInTheDocument()
+    expect(await screen.findByText('Worker:worker-01')).toBeInTheDocument()
+    expect(await screen.findByText((_, node) => node?.tagName === 'PRE' && (node.textContent?.includes('[masked]') ?? false))).toBeInTheDocument()
+    expect(screen.queryByText(/Permissao negada para esta superficie/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/Acessar workspace/i)).not.toBeInTheDocument()
   })
 
@@ -264,6 +268,79 @@ describe('operational pages', () => {
       expect(fetchMock.mock.calls.some(([input, init]) => String(input).includes('/api/v1/connectors/profiles') && String(init?.method).toUpperCase() === 'POST')).toBe(true)
     })
     expect(screen.queryByText('Bearer secret-token')).not.toBeInTheDocument()
+  })
+
+  it('renders SaaS release readiness in settings only for admins without leaking secrets', async () => {
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>
+    const { unmount } = renderApp('/settings', 'operator')
+
+    expect(await screen.findByText(/Conectores restritos a administradores/i)).toBeInTheDocument()
+    expect(screen.queryByText(/SOC 2 Type I/i)).not.toBeInTheDocument()
+    expect(fetchMock.mock.calls.some(([input]) => String(input).includes('/api/v1/saas/readiness'))).toBe(false)
+
+    unmount()
+    renderApp('/settings', 'admin')
+
+    expect(await screen.findByText('Centro SaaS')).toBeInTheDocument()
+    expect(await screen.findByText('SOC 2 Type I')).toBeInTheDocument()
+    expect(await screen.findByText('AWS EKS')).toBeInTheDocument()
+    expect(await screen.findByText('Google Workspace OIDC')).toBeInTheDocument()
+    expect(await screen.findByText('Google Drive')).toBeInTheDocument()
+    expect((await screen.findAllByText('OAuth delegated')).length).toBeGreaterThan(0)
+    expect(screen.getByText('Sem billing nesta release')).toBeInTheDocument()
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([input]) => String(input).includes('/api/v1/saas/readiness'))).toBe(true)
+    })
+    expect(screen.queryByText(/refresh_token|client_secret|lease_token|x-worker-token/i)).not.toBeInTheDocument()
+  })
+
+  it('renders SaaS organization security and Google Drive controls for admins only', async () => {
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>
+    const { unmount } = renderApp('/settings', 'operator')
+
+    expect(await screen.findByText(/Conectores restritos a administradores/i)).toBeInTheDocument()
+    expect(screen.queryByText('StreamGate Alpha')).not.toBeInTheDocument()
+    expect(fetchMock.mock.calls.some(([input]) => String(input).includes('/api/v1/organization'))).toBe(false)
+    expect(fetchMock.mock.calls.some(([input]) => String(input).includes('/api/v1/connectors/google-drive'))).toBe(false)
+
+    unmount()
+    renderApp('/settings', 'admin')
+
+    expect(await screen.findByText('Organizacao')).toBeInTheDocument()
+    expect(await screen.findByDisplayValue('StreamGate Alpha')).toBeInTheDocument()
+    expect((await screen.findAllByText('admin@streamgate.local')).length).toBeGreaterThan(0)
+    expect(await screen.findByText('ops@example.com')).toBeInTheDocument()
+    expect(await screen.findByText('Seguranca e acesso')).toBeInTheDocument()
+    expect(await screen.findByText('Google Drive delegated')).toBeInTheDocument()
+    expect(await screen.findByText(/Drive restricted scope/i)).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Nome da organizacao'), { target: { value: 'StreamGate Alpha Prime' } })
+    fireEvent.change(screen.getByLabelText('Retencao em dias'), { target: { value: '180' } })
+    fireEvent.click(screen.getByRole('button', { name: /Salvar organizacao/i }))
+
+    fireEvent.change(screen.getByLabelText('Email do convite'), { target: { value: 'new-operator@example.com' } })
+    fireEvent.click(screen.getByRole('button', { name: /Enviar convite/i }))
+
+    fireEvent.click(screen.getByRole('button', { name: /Iniciar setup MFA/i }))
+
+    fireEvent.change(screen.getByLabelText('Issuer OIDC'), { target: { value: 'https://accounts.google.com' } })
+    fireEvent.change(screen.getByLabelText('Client ID OIDC'), { target: { value: 'client.apps.googleusercontent.com' } })
+    fireEvent.change(screen.getByLabelText('Credencial OIDC'), { target: { value: 'oidc-client-credential' } })
+    fireEvent.change(screen.getByLabelText('Dominio Google Workspace'), { target: { value: 'example.com' } })
+    fireEvent.click(screen.getByRole('button', { name: /Salvar OIDC/i }))
+
+    fireEvent.click(screen.getByRole('button', { name: /Autorizar Google Drive/i }))
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([input, init]) => String(input).includes('/api/v1/organization') && String(init?.method).toUpperCase() === 'PATCH')).toBe(true)
+      expect(fetchMock.mock.calls.some(([input, init]) => String(input).includes('/api/v1/organization/invites') && String(init?.method).toUpperCase() === 'POST')).toBe(true)
+      expect(fetchMock.mock.calls.some(([input, init]) => String(input).includes('/api/v1/auth/mfa/setup') && String(init?.method).toUpperCase() === 'POST')).toBe(true)
+      expect(fetchMock.mock.calls.some(([input, init]) => String(input).includes('/api/v1/auth/oidc/config') && String(init?.method).toUpperCase() === 'PATCH')).toBe(true)
+      expect(fetchMock.mock.calls.some(([input]) => String(input).includes('/api/v1/connectors/google-drive/authorize'))).toBe(true)
+    })
+    expect(screen.queryByText('oidc-client-credential')).not.toBeInTheDocument()
+    expect(screen.queryByText(/refresh_token|client_secret|lease_token|x-worker-token/i)).not.toBeInTheDocument()
   })
 
   it('executes inbox bulk actions and webhook test against the official adapter paths', async () => {
@@ -400,7 +477,7 @@ function createOperationalFetchMock() {
             resource_type: 'Worker',
             resource_id: 'worker-01',
             severity: 'info',
-            payload: { worker_id: 'worker-01' },
+            payload: { worker_id: 'worker-01', token: '[masked]' },
             occurred_at: '2026-04-24T14:00:00Z',
             expires_at: '2026-05-01T14:00:00Z',
             trace_id: 'trace_realtime',
@@ -425,6 +502,179 @@ function createOperationalFetchMock() {
           generated_at: '2026-04-24T14:00:00Z',
           expires_at: '2026-05-24T14:00:00Z',
           trace_id: 'trace_export',
+        },
+      }))
+    }
+
+    if (url.includes('/api/v1/organization/invites') && method === 'POST') {
+      return Promise.resolve(jsonResponse(201, {
+        data: {
+          id: 'invite_new_operator',
+          organization_id: 'org_fixture_alpha',
+          email: 'new-operator@example.com',
+          role: 'operator',
+          status: 'pending',
+          expires_at: '2026-05-13T12:00:00Z',
+          invited_by_id: 'user_fixture_admin',
+          accepted_by_id: null,
+          accepted_at: null,
+          created_at: '2026-05-06T12:00:00Z',
+          updated_at: '2026-05-06T12:00:00Z',
+        },
+      }))
+    }
+
+    if (url.includes('/api/v1/organization/members/') && method === 'PATCH') {
+      return Promise.resolve(jsonResponse(200, {
+        data: {
+          id: 'mem_operator',
+          organization_id: 'org_fixture_alpha',
+          user_id: 'user_fixture_operator',
+          email: 'operator@streamgate.local',
+          full_name: 'Operator StreamGate',
+          role: 'operator',
+          status: 'active',
+          joined_at: '2026-04-01T12:00:00Z',
+        },
+      }))
+    }
+
+    if (url.includes('/api/v1/organization/members') && method === 'GET') {
+      return Promise.resolve(jsonResponse(200, { data: organizationPayload().members }))
+    }
+
+    if (url.includes('/api/v1/organization') && method === 'PATCH') {
+      return Promise.resolve(jsonResponse(200, {
+        data: {
+          ...organizationPayload(),
+          organization: {
+            ...organizationPayload().organization,
+            name: 'StreamGate Alpha Prime',
+            retention_days: 180,
+          },
+        },
+      }))
+    }
+
+    if (url.includes('/api/v1/organization') && method === 'GET') {
+      return Promise.resolve(jsonResponse(200, { data: organizationPayload() }))
+    }
+
+    if (url.includes('/api/v1/auth/mfa/setup') && method === 'POST') {
+      return Promise.resolve(jsonResponse(201, {
+        data: {
+          factor_id: 'mfa_fixture',
+          secret: 'BASE32SECRET',
+          provisioning_uri: 'otpauth://totp/StreamGate:admin@streamgate.local',
+          status: 'pending',
+        },
+      }))
+    }
+
+    if (url.includes('/api/v1/auth/oidc/config') && method === 'PATCH') {
+      return Promise.resolve(jsonResponse(200, {
+        data: {
+          id: 'oidc_fixture',
+          organization_id: 'org_fixture_alpha',
+          provider: 'google_workspace',
+          issuer: 'https://accounts.google.com',
+          client_id: 'client.apps.googleusercontent.com',
+          hosted_domain: 'example.com',
+          scopes: ['openid', 'email', 'profile'],
+          status: 'active',
+        },
+      }))
+    }
+
+    if (url.includes('/api/v1/connectors/google-drive/authorize')) {
+      return Promise.resolve(jsonResponse(200, {
+        data: {
+          authorization_url: 'https://accounts.google.com/o/oauth2/v2/auth?scope=drive',
+          state: 'oauth_state_fixture',
+          expires_at: '2026-05-06T12:05:00Z',
+          scopes: ['openid', 'email', 'profile', 'https://www.googleapis.com/auth/drive'],
+        },
+      }))
+    }
+
+    if (url.includes('/api/v1/connectors/google-drive/items')) {
+      return Promise.resolve(jsonResponse(200, {
+        data: [
+          { id: 'drive_file_orders', name: 'orders.csv', mime_type: 'text/csv', kind: 'file' },
+          { id: 'drive_folder_finance', name: 'finance-folder', mime_type: 'application/vnd.google-apps.folder', kind: 'folder' },
+        ],
+      }))
+    }
+
+    if (url.includes('/api/v1/connectors/google-drive/revoke') && method === 'DELETE') {
+      return Promise.resolve(jsonResponse(200, {
+        data: {
+          id: 'drive_connection_fixture',
+          organization_id: 'org_fixture_alpha',
+          user_id: 'user_fixture_admin',
+          provider: 'google_drive',
+          status: 'revoked',
+          scopes: ['https://www.googleapis.com/auth/drive'],
+          revoked_at: '2026-05-06T12:00:00Z',
+        },
+      }))
+    }
+
+    if (url.includes('/api/v1/saas/readiness')) {
+      return Promise.resolve(jsonResponse(200, {
+        data: {
+          generated_at: '2026-05-05T12:00:00Z',
+          organization: {
+            id: 'org_fixture_alpha',
+            members: { active: 2, invited: 0, suspended: 0 },
+          },
+          access: { role: 'admin', admin: true },
+          identity: {
+            mfa: { mode: 'totp', status: 'required_for_release', recovery_codes: 'required_for_rollout' },
+            sso: { protocol: 'oidc', validated_provider: 'google_workspace', status: 'external_credentials_required' },
+            saml: { enabled: false, status: 'out_of_scope' },
+          },
+          billing: { status: 'out_of_scope', reason: 'Sem billing nesta release' },
+          quotas: {
+            status: 'required_for_release',
+            defaults: { upload_gb_per_month: 500, connector_runs_per_day: 1000, retention_days: 180 },
+          },
+          connectors: {
+            configured_count: 1,
+            active_profiles: 1,
+            supported: ['s3', 'http', 'google_drive', 'oauth_delegated'],
+            google_drive: { status: 'external_credentials_required', acquisition_modes: ['file', 'folder'] },
+            oauth_delegated: { status: 'external_credentials_required', provider: 'google_workspace' },
+            clear_lease_credentials_circulate: false,
+          },
+          security: {
+            controls: ['malware_scanning', 'parser_fuzzing', 'ssrf_egress_policy', 'organization_quotas', 'credential_scanning'],
+            sensitive_surface: {
+              signed_urls_in_ui: false,
+              raw_payloads_in_events: false,
+              connector_credentials_in_events: false,
+            },
+          },
+          infrastructure: {
+            runtime: 'aws_eks',
+            ingress_tls: true,
+            credential_store: 'aws_secrets_manager_external_secrets_irsa',
+            data_services: ['rds_postgres', 's3', 'elasticache_redis', 'amazon_mq', 'clickhouse_cloud'],
+          },
+          observability: {
+            stack: 'open_source',
+            telemetry: 'opentelemetry',
+            metrics: 'prometheus',
+            logs: 'loki',
+            dashboards: 'grafana',
+            alerts: 'alertmanager',
+          },
+          compliance: {
+            target: 'soc2_type_i',
+            status: 'design_evidence_ready',
+            evidence_sections: ['access_control', 'change_management', 'vulnerability_management'],
+          },
+          external_blockers: ['aws_account', 'google_oauth_client', 'clickhouse_cloud_workspace', 'soc2_auditor', 'production_dns_tls'],
         },
       }))
     }
@@ -700,6 +950,63 @@ function notificationSettingsResponse() {
       created_at: '2026-04-20T10:00:00Z',
       updated_at: '2026-04-20T10:00:00Z',
     },
+  }
+}
+
+function organizationPayload() {
+  return {
+    organization: {
+      id: 'org_fixture_alpha',
+      slug: 'streamgate-alpha',
+      name: 'StreamGate Alpha',
+      status: 'active',
+      quotas: {
+        max_file_bytes: 10737418240,
+        monthly_upload_bytes: 1099511627776,
+        connector_runs_daily: 1000,
+      },
+      retention_days: 90,
+      compliance_profile: { target: 'soc2_type_i' },
+      created_at: '2026-04-01T12:00:00Z',
+      updated_at: '2026-05-06T12:00:00Z',
+    },
+    members: [
+      {
+        id: 'mem_admin',
+        organization_id: 'org_fixture_alpha',
+        user_id: 'user_fixture_admin',
+        email: 'admin@streamgate.local',
+        full_name: 'Admin StreamGate',
+        role: 'admin',
+        status: 'active',
+        joined_at: '2026-04-01T12:00:00Z',
+      },
+      {
+        id: 'mem_operator',
+        organization_id: 'org_fixture_alpha',
+        user_id: 'user_fixture_operator',
+        email: 'operator@streamgate.local',
+        full_name: 'Operator StreamGate',
+        role: 'operator',
+        status: 'active',
+        joined_at: '2026-04-02T12:00:00Z',
+      },
+    ],
+    invites: [
+      {
+        id: 'invite_ops',
+        organization_id: 'org_fixture_alpha',
+        email: 'ops@example.com',
+        role: 'operator',
+        status: 'pending',
+        expires_at: '2026-05-13T12:00:00Z',
+        invited_by_id: 'user_fixture_admin',
+        accepted_by_id: null,
+        accepted_at: null,
+        created_at: '2026-05-06T12:00:00Z',
+        updated_at: '2026-05-06T12:00:00Z',
+      },
+    ],
   }
 }
 

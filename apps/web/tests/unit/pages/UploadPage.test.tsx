@@ -36,6 +36,7 @@ function setupUploadApiMock(options: UploadApiMockOptions = {}) {
     publicLink: 0,
     connectorProfiles: 0,
     connectorIngestion: 0,
+    googleDriveItems: 0,
     signedPut: 0,
     uploadsUrls: [] as string[],
     jobsUrls: [] as string[],
@@ -237,7 +238,27 @@ function setupUploadApiMock(options: UploadApiMockOptions = {}) {
       }))
     }
 
-    if (url.includes('/api/v1/connectors/profiles/conn_s3_fixture/ingestions') && method === 'POST') {
+    if (url.includes('/api/v1/connectors/google-drive/items') && method === 'GET') {
+      counters.googleDriveItems += 1
+      return Promise.resolve(jsonResponse(200, {
+        data: [
+          {
+            id: 'file_drive_1',
+            name: 'forecast.csv',
+            mime_type: 'text/csv',
+            kind: 'file',
+          },
+          {
+            id: 'folder_drive_1',
+            name: 'Quarterly Pipeline Folder',
+            mime_type: 'application/vnd.google-apps.folder',
+            kind: 'folder',
+          },
+        ],
+      }))
+    }
+
+    if ((url.includes('/api/v1/connectors/profiles/conn_s3_fixture/ingestions') || url.includes('/api/v1/connectors/profiles/conn_drive_fixture/ingestions')) && method === 'POST') {
       counters.connectorIngestion += 1
       counters.lastConnectorIngestionBody = JSON.parse(String(init?.body ?? '{}')) as Record<string, unknown>
       counters.lastIdempotencyKey = readHeader(init?.headers, 'Idempotency-Key')
@@ -272,18 +293,19 @@ function setupUploadApiMock(options: UploadApiMockOptions = {}) {
             updated_at: '2026-04-08T10:00:00Z',
           },
           ingestion: {
-            id: 'ing_connector_1',
-            connector_profile_id: 'conn_s3_fixture',
+            id: url.includes('conn_drive_fixture') ? 'ing_drive_1' : 'ing_connector_1',
+            connector_profile_id: url.includes('conn_drive_fixture') ? 'conn_drive_fixture' : 'conn_s3_fixture',
             status: 'leased',
-            object_key: 'inco**************djson',
+            object_key: url.includes('conn_drive_fixture') ? null : 'inco**************djson',
             source_path: null,
             filename: 'orders.ndjson',
             content_type: 'application/x-ndjson',
+            drive_file_id: null,
+            drive_folder_id: url.includes('conn_drive_fixture') ? 'folder_drive_1' : null,
             trace_id: 'trace_connector_ingestion_1',
           },
           lease: {
             id: 'lease_connector_1',
-            token: 'lease-token-secret',
             expires_at: '2026-04-08T10:05:00Z',
           },
         },
@@ -315,6 +337,18 @@ function setupUploadApiMock(options: UploadApiMockOptions = {}) {
             settings: { bucket: '[masked]', region: 'us-east-1' },
             created_by_id: 'user_1',
             trace_id: 'trace_connector_profile',
+            created_at: '2026-04-08T10:00:00Z',
+            updated_at: '2026-04-08T10:00:00Z',
+          },
+          {
+            id: 'conn_drive_fixture',
+            organization_id: 'org_fixture',
+            kind: 'google_drive',
+            name: 'Google Drive workspace',
+            status: 'active',
+            settings: { scope: 'drive', connection: 'delegated' },
+            created_by_id: 'user_1',
+            trace_id: 'trace_connector_profile_drive',
             created_at: '2026-04-08T10:00:00Z',
             updated_at: '2026-04-08T10:00:00Z',
           },
@@ -522,6 +556,62 @@ describe('UploadPage', () => {
     expect(await screen.findByText('Conector aceito: upload upload_connector_1 e job job_connector_1 criados.')).toBeInTheDocument()
     expect(screen.queryByText('lease-token-secret')).not.toBeInTheDocument()
     expect(screen.queryByText(/lease token|x-worker-token/i)).not.toBeInTheDocument()
+  })
+
+  it('lets admins ingest Google Drive folders without rendering OAuth or lease secrets', async () => {
+    storeAuthSession(
+      createStoredAuthSession({
+        remember: true,
+        user: {
+          id: 'user_1',
+          email: 'admin@empresa.com',
+          full_name: 'Admin Costa',
+          role: 'admin',
+          status: 'active',
+        },
+        session: {
+          id: 'sess_admin',
+          token_type: 'Bearer',
+          access_token: 'token_admin',
+          expires_at: '2099-04-07T12:00:00Z',
+        },
+      }),
+    )
+    const counters = setupUploadApiMock({ role: 'admin' })
+
+    renderUploadPage('/upload')
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Conector' }))
+    expect(await screen.findByText('Google Drive workspace')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Perfil de conector'), {
+      target: { value: 'conn_drive_fixture' },
+    })
+
+    expect(await screen.findByText(/Google Drive delegated/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Listar Google Drive/i }))
+    expect(await screen.findByText(/Quarterly Pipeline Folder/)).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Arquivo de destino'), {
+      target: { value: 'drive-folder.csv' },
+    })
+    fireEvent.change(screen.getByLabelText('Item do Google Drive'), {
+      target: { value: 'folder_drive_1' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Solicitar ingestao por conector' }))
+
+    await waitFor(() => {
+      expect(counters.googleDriveItems).toBe(1)
+      expect(counters.connectorIngestion).toBe(1)
+    })
+    expect(counters.lastConnectorIngestionBody).toEqual({
+      ingestion: {
+        filename: 'drive-folder.csv',
+        content_type: 'text/csv',
+        drive_folder_id: 'folder_drive_1',
+      },
+    })
+    expect(await screen.findByText('Conector aceito: upload upload_connector_1 e job job_connector_1 criados.')).toBeInTheDocument()
+    expect(screen.queryByText(/refresh_token|client_secret|lease_token|x-worker-token|bearer/i)).not.toBeInTheDocument()
   })
 })
 
