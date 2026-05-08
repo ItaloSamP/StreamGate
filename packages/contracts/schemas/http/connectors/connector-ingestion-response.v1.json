@@ -14,10 +14,9 @@
         "ingestion": { "type": "object", "additionalProperties": true },
         "lease": {
           "type": "object",
-          "required": ["id", "token", "expires_at"],
+          "required": ["id", "expires_at"],
           "properties": {
             "id": { "type": "string" },
-            "token": { "type": "string" },
             "expires_at": { "type": ["string", "null"], "format": "date-time" }
           },
           "additionalProperties": false

@@ -237,7 +237,7 @@ Data-base: `2026-04-07`
 | Estrategia de evolucao | Operacao e conectividade evoluem em paralelo (`dual-track`) | `aprovado` |
 | Cadencia de entrega | Sem dependencia de ciclo de entrega curta para evolucao de produto | `aprovado` |
 | Ingestao por link | Suporte a links publicos + evolucao para OAuth | `aprovado` |
-| Conectores wave 1 | `S3` e `URL HTTP` funcionais em API+worker; `Google Drive` segue discovery-only | `parcialmente materializado` |
+| Conectores wave 1 | `S3`, `URL HTTP` e `Google Drive` funcionais em API+worker, com OAuth delegated e scan-first | `materializado na release` |
 | Entrada de arquivos | CSV, JSON, NDJSON, ZIP seguro, XLSX e Parquet quando runtime nativo estiver disponivel | `aprovado` |
 | Saida final | Dataset processado + relatorio operacional/auditoria | `aprovado` |
 | UX de ingestao | Fluxo hibrido (`guided` + `advanced`) | `aprovado` |

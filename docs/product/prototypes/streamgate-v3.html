@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>StreamGate · Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:   #0a0a0a;
+  --s0:   #0f0f0f;
+  --s1:   #141414;
+  --s2:   #1a1a1a;
+  --s3:   #202020;
+  --b0:   #242424;
+  --b1:   #2c2c2c;
+  --b2:   #383838;
+  --t0:   #ffffff;
+  --t1:   #d4d4d4;
+  --t2:   #909090;
+  --t3:   #5a5a5a;
+  --c-blue:   #4d9de0;
+  --c-teal:   #3ccfcf;
+  --c-green:  #3ecf8e;
+  --c-yellow: #f0c040;
+  --c-red:    #e05c5c;
+  --c-purple: #9b7fe8;
+  --c-orange: #e8834a;
+  --ok:   #3ecf8e;
+  --warn: #f0c040;
+  --err:  #e05c5c;
+  --info: #4d9de0;
+  --fh: 'Plus Jakarta Sans', sans-serif;
+  --fm: 'DM Mono', monospace;
+  --r: 8px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--t0);font-family:var(--fh);font-size:12.5px;display:flex;}
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
+
+/* SIDEBAR */
+.sidebar{width:220px;min-width:220px;background:var(--s0);border-right:1px solid var(--b0);display:flex;flex-direction:column;height:100vh;}
+.logo-area{padding:20px 16px 16px;border-bottom:1px solid var(--b0);display:flex;align-items:center;gap:10px;}
+.logo-main{font-size:15px;font-weight:700;letter-spacing:-.3px;color:var(--t0);}
+.logo-main em{font-style:normal;color:var(--t2);font-weight:400;}
+.logo-sub{font-family:var(--fm);font-size:8.5px;color:var(--t3);letter-spacing:.07em;}
+nav{flex:1;padding:10px 8px;overflow-y:auto;}
+.nav-group{margin-bottom:20px;}
+.nav-group-label{font-family:var(--fm);font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);padding:0 8px 5px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:6px;cursor:pointer;color:var(--t2);font-size:12.5px;transition:all .12s;}
+.nav-item:hover{background:var(--s2);color:var(--t1);}
+.nav-item.active{background:var(--s3);color:var(--t0);font-weight:500;}
+.nv-icon{width:15px;height:15px;opacity:.45;flex-shrink:0;}
+.nv-icon svg{width:15px;height:15px;}
+.nav-item.active .nv-icon{opacity:.9;}
+.nav-badge{margin-left:auto;font-family:var(--fm);font-size:8.5px;padding:1px 5px;border-radius:3px;background:var(--s3);color:var(--t2);}
+.nav-badge.alert{background:rgba(224,92,92,.15);color:var(--err);}
+.nav-badge.info{background:rgba(77,157,224,.12);color:var(--info);}
+.sb-footer{padding:10px 8px 12px;border-top:1px solid var(--b0);}
+.sb-gauges{padding:0 4px;margin-bottom:10px;display:flex;flex-direction:column;gap:7px;}
+.sg-row{display:flex;justify-content:space-between;font-family:var(--fm);font-size:8.5px;color:var(--t2);margin-bottom:3px;}
+.sg-bar{height:2px;background:var(--b1);border-radius:1px;overflow:hidden;}
+.sg-fill{height:100%;border-radius:1px;}
+.user-row{display:flex;align-items:center;gap:9px;padding:8px 9px;background:var(--s2);border-radius:7px;border:1px solid var(--b0);}
+.avatar{width:26px;height:26px;border-radius:6px;background:var(--s3);border:1px solid var(--b2);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:10px;color:var(--t1);flex-shrink:0;}
+.user-name{font-size:12px;font-weight:500;color:var(--t0);}
+.user-role{font-family:var(--fm);font-size:8.5px;color:var(--t3);}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;min-width:0;}
+
+/* TOPBAR */
+.topbar{height:50px;background:var(--s0);border-bottom:1px solid var(--b0);display:flex;align-items:center;padding:0 22px;gap:6px;flex-shrink:0;}
+.topbar-left{display:flex;flex-direction:column;gap:1px;}
+.topbar-eyebrow{font-family:var(--fm);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);}
+.topbar-title{font-size:14px;font-weight:700;letter-spacing:-.3px;color:var(--t0);line-height:1;}
+.tb-divider{width:1px;height:20px;background:var(--b1);margin:0 6px;}
+.tb-chip{display:flex;align-items:center;gap:5px;font-family:var(--fm);font-size:9px;padding:4px 9px;border-radius:4px;background:var(--s2);border:1px solid var(--b0);color:var(--t2);}
+.live-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.ld-ok{background:var(--ok);}
+.ld-warn{background:var(--warn);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.ld-ok{animation:pulse 2.5s ease-in-out infinite;}
+.ld-warn{animation:pulse 1.8s ease-in-out infinite;}
+.tb-spacer{flex:1;}
+.btn{font-family:var(--fm);font-size:10px;padding:6px 14px;border-radius:5px;border:1px solid var(--b1);background:var(--s2);color:var(--t1);cursor:pointer;transition:all .12s;letter-spacing:.02em;}
+.btn:hover{border-color:var(--b2);color:var(--t0);}
+.btn.prim{background:var(--t0);color:#000;border-color:var(--t0);font-weight:600;}
+.btn.prim:hover{background:var(--t1);border-color:var(--t1);}
+
+/* ALERT STRIP */
+.alert-strip{display:flex;align-items:center;gap:8px;padding:7px 22px;background:rgba(224,92,92,.06);border-bottom:1px solid rgba(224,92,92,.14);font-family:var(--fm);font-size:9.5px;flex-shrink:0;}
+.alert-strip strong{color:var(--err);}
+.alert-strip .alert-link{color:var(--info);cursor:pointer;margin-left:auto;}
+.alert-strip .alert-x{color:var(--t3);cursor:pointer;margin-left:8px;}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:16px 22px 26px;display:flex;flex-direction:column;gap:12px;}
+
+/* KPI STRIP */
+.kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+.kpi{background:var(--s1);border:1px solid var(--b0);border-radius:var(--r);padding:14px 16px 12px;position:relative;overflow:hidden;cursor:default;transition:border-color .15s;}
+.kpi:hover{border-color:var(--b2);}
+.kpi::before{content:'';position:absolute;top:0;left:16px;right:16px;height:2px;border-radius:0 0 2px 2px;opacity:.65;}
+.kpi.k1::before{background:var(--c-blue);}
+.kpi.k2::before{background:var(--c-green);}
+.kpi.k3::before{background:var(--c-teal);}
+.kpi.k4::before{background:var(--c-red);}
+.kpi.k5::before{background:var(--c-purple);}
+.kpi-lbl{font-family:var(--fm);font-size:8.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--t2);margin-bottom:9px;}
+.kpi-val{font-size:32px;font-weight:300;letter-spacing:-1.5px;line-height:1;color:var(--t0);font-variant-numeric:tabular-nums;}
+.kpi-foot{display:flex;align-items:center;justify-content:space-between;margin-top:9px;}
+.kpi-sub{font-family:var(--fm);font-size:9px;color:var(--t3);}
+.kpi-tag{font-family:var(--fm);font-size:8.5px;padding:1.5px 6px;border-radius:3px;}
+.kt-up{background:rgba(62,207,142,.12);color:var(--ok);}
+.kt-down{background:rgba(224,92,92,.12);color:var(--err);}
+.kt-info{background:rgba(77,157,224,.1);color:var(--info);}
+.kt-warn{background:rgba(240,192,64,.1);color:var(--warn);}
+
+/* PANELS */
+.panel{background:var(--s1);border:1px solid var(--b0);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;}
+.ph{padding:12px 16px;border-bottom:1px solid var(--b0);display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.ph-title{font-size:12.5px;font-weight:600;color:var(--t0);letter-spacing:-.2px;}
+.ph-right{margin-left:auto;display:flex;align-items:center;gap:7px;}
+.ph-sub{font-family:var(--fm);font-size:8.5px;color:var(--t3);}
+.ph-tag{font-family:var(--fm);font-size:8px;padding:2px 7px;border-radius:3px;border:1px solid var(--b1);color:var(--t3);background:var(--s2);}
+.tabs{display:flex;border-bottom:1px solid var(--b0);background:var(--s0);flex-shrink:0;}
+.tab{font-family:var(--fm);font-size:9.5px;padding:8px 14px;cursor:pointer;color:var(--t3);border-bottom:1.5px solid transparent;margin-bottom:-1px;letter-spacing:.04em;transition:color .12s;}
+.tab:hover{color:var(--t1);}
+.tab.active{color:var(--t0);border-bottom-color:var(--t0);}
+
+/* STATUS PILLS */
+.pill{font-family:var(--fm);font-size:8px;padding:2px 7px;border-radius:3px;letter-spacing:.03em;}
+.pp{background:rgba(77,157,224,.1);color:var(--info);border:1px solid rgba(77,157,224,.2);}
+.pd{background:rgba(62,207,142,.1);color:var(--ok);border:1px solid rgba(62,207,142,.2);}
+.pf{background:rgba(224,92,92,.1);color:var(--err);border:1px solid rgba(224,92,92,.2);}
+.pn{background:var(--s3);color:var(--t3);border:1px solid var(--b1);}
+.pq{background:rgba(155,127,232,.1);color:var(--c-purple);border:1px solid rgba(155,127,232,.2);}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1.5fr 1fr;gap:12px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.g3b{display:grid;grid-template-columns:2fr 1fr;gap:12px;}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;}
+.col{display:flex;flex-direction:column;gap:12px;}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;}
+thead th{font-family:var(--fm);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);text-align:left;padding:8px 14px;border-bottom:1px solid var(--b0);background:var(--s0);white-space:nowrap;}
+tbody td{padding:8px 14px;border-bottom:1px solid var(--b0);font-family:var(--fm);font-size:11px;color:var(--t1);vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:rgba(255,255,255,.025);}
+.td-name{color:var(--t0);}
+.td-dim{color:var(--t3);font-size:10px;}
+.td-file{display:flex;align-items:center;gap:7px;}
+.fext{font-family:var(--fm);font-size:7px;padding:1px 5px;border-radius:2px;text-transform:uppercase;letter-spacing:.06em;border:1px solid var(--b1);color:var(--t3);background:var(--s2);}
+
+/* PROGRESS */
+.prog{height:3px;background:var(--b1);border-radius:2px;overflow:hidden;width:70px;}
+.pbar{height:100%;border-radius:2px;}
+.pb-blue{background:var(--c-blue);}
+.pb-green{background:var(--c-green);}
+.pb-red{background:var(--c-red);opacity:.7;}
+.pb-purple{background:var(--c-purple);opacity:.8;}
+@keyframes flow{0%{background-position:0 0}100%{background-position:80px 0}}
+.pb-anim{background:repeating-linear-gradient(90deg,var(--c-blue) 0,var(--c-teal) 40px,var(--c-blue) 80px);background-size:80px 100%;animation:flow 1.6s linear infinite;}
+
+/* RANK BAR */
+.rank-bar-wrap{display:flex;align-items:center;gap:8px;}
+.rank-bar-track{flex:1;height:4px;background:var(--b1);border-radius:2px;overflow:hidden;}
+.rank-bar-fill{height:100%;border-radius:2px;background:var(--c-blue);opacity:.7;}
+.rank-pct{font-family:var(--fm);font-size:9px;color:var(--t2);min-width:32px;text-align:right;}
+
+/* METRIC INLINE */
+.metric-block{display:flex;border-bottom:1px solid var(--b0);}
+.metric-cell{flex:1;padding:10px 14px;border-right:1px solid var(--b0);}
+.metric-cell:last-child{border-right:none;}
+.mc-val{font-size:18px;font-weight:300;letter-spacing:-.8px;line-height:1;}
+.mc-lbl{font-family:var(--fm);font-size:7.5px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;}
+
+/* HEATMAP */
+.hm-wrap{padding:12px 16px 14px;}
+.hm-grid{display:flex;flex-direction:column;gap:3px;}
+.hm-row{display:flex;gap:3px;align-items:center;}
+.hm-rl{font-family:var(--fm);font-size:7.5px;color:var(--t3);width:28px;text-align:right;margin-right:5px;flex-shrink:0;}
+.hm-c{flex:1;height:14px;border-radius:2px;cursor:default;transition:opacity .1s;}
+.hm-c:hover{opacity:.6;}
+.hm-days{display:flex;justify-content:space-around;padding-left:33px;margin-top:5px;font-family:var(--fm);font-size:7.5px;color:var(--t3);}
+.hm-legend-row{display:flex;align-items:center;gap:8px;margin-top:10px;font-family:var(--fm);font-size:8.5px;color:var(--t3);}
+.hm-grad{flex:1;height:4px;border-radius:2px;background:linear-gradient(90deg,rgba(77,157,224,.06),rgba(77,157,224,.3),rgba(77,157,224,.65),rgba(60,207,207,.8));}
+
+/* DONUT */
+.donut-wrap{display:flex;align-items:center;gap:16px;padding:14px 16px;}
+.legend{display:flex;flex-direction:column;gap:7px;flex:1;}
+.legend-row{display:flex;align-items:center;gap:8px;font-family:var(--fm);font-size:10px;color:var(--t2);}
+.ldot{width:6px;height:6px;border-radius:2px;flex-shrink:0;}
+.lval{margin-left:auto;color:var(--t1);font-weight:500;}
+.lpct{color:var(--t3);font-size:8.5px;margin-left:3px;}
+
+/* EVENT LOG */
+.ev-log{display:flex;flex-direction:column;}
+.ev{display:flex;align-items:flex-start;gap:12px;padding:7px 16px;border-bottom:1px solid var(--b0);transition:background .1s;}
+.ev:hover{background:rgba(255,255,255,.015);}
+.ev:last-child{border-bottom:none;}
+.ev-t{font-family:var(--fm);font-size:9px;color:var(--t3);min-width:58px;padding-top:1px;}
+.ev-tag{font-family:var(--fm);font-size:9px;min-width:170px;font-weight:500;}
+.et-up{color:var(--info);}
+.et-ok{color:var(--ok);}
+.et-wn{color:var(--warn);}
+.et-er{color:var(--err);}
+.et-et{color:var(--c-teal);}
+.ev-msg{font-family:var(--fm);font-size:9px;color:var(--t3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* WORKERS */
+.worker-list{display:flex;flex-direction:column;gap:8px;padding:12px 14px;}
+.worker{background:var(--s2);border:1px solid var(--b0);border-radius:6px;padding:10px 12px;}
+.w-top{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
+.w-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.wd-on{background:var(--ok);animation:pulse 2s ease-in-out infinite;}
+.wd-off{background:var(--t3);}
+.w-name{font-family:var(--fm);font-size:10px;font-weight:500;color:var(--t0);}
+.w-job{font-family:var(--fm);font-size:8.5px;color:var(--t3);margin-bottom:6px;}
+.w-prog{height:2px;background:var(--b1);border-radius:1px;overflow:hidden;}
+
+/* UPLOAD */
+.upload-zone{border:1px dashed var(--b2);border-radius:6px;padding:18px 12px;text-align:center;cursor:pointer;transition:all .18s;}
+.upload-zone:hover{border-color:var(--t2);background:rgba(255,255,255,.02);}
+.uz-icon{font-size:18px;color:var(--t3);margin-bottom:5px;}
+.uz-title{font-size:12.5px;font-weight:500;color:var(--t1);margin-bottom:2px;}
+.uz-sub{font-family:var(--fm);font-size:8.5px;color:var(--t3);}
+.uz-fmts{display:flex;gap:4px;justify-content:center;margin-top:8px;flex-wrap:wrap;}
+.uf{font-family:var(--fm);font-size:7.5px;padding:2px 6px;border-radius:3px;border:1px solid var(--b1);color:var(--t3);}
+.up-item{}
+.up-top{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.up-name{font-family:var(--fm);font-size:10px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t1);}
+.up-pct{font-family:var(--fm);font-size:8.5px;color:var(--t3);}
+.up-track{height:2px;background:var(--b1);border-radius:1px;overflow:hidden;}
+
+/* QUEUE */
+.q-list{display:flex;flex-direction:column;}
+.q-item{display:flex;align-items:center;gap:9px;padding:8px 16px;border-bottom:1px solid var(--b0);transition:background .1s;}
+.q-item:hover{background:var(--s2);}
+.q-item:last-child{border-bottom:none;}
+.q-pos{font-family:var(--fm);font-size:9px;color:var(--t3);width:14px;}
+.q-name{font-family:var(--fm);font-size:10.5px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t1);}
+.q-sz{font-family:var(--fm);font-size:9px;color:var(--t3);}
+.q-eta{font-family:var(--fm);font-size:9px;color:var(--c-blue);min-width:26px;text-align:right;}
+
+/* FADE IN */
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.kpi{animation:fadeUp .35s ease both;}
+.kpi:nth-child(1){animation-delay:.03s}
+.kpi:nth-child(2){animation-delay:.06s}
+.kpi:nth-child(3){animation-delay:.09s}
+.kpi:nth-child(4){animation-delay:.12s}
+.kpi:nth-child(5){animation-delay:.15s}
+.panel{animation:fadeUp .4s ease both;animation-delay:.15s;}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo-area">
+    <svg width="30" height="30" viewBox="0 0 30 30" fill="none" style="flex-shrink:0;">
+      <line x1="1" y1="6"  x2="14" y2="15" stroke="#444" stroke-width="1.4" stroke-linecap="round"/>
+      <line x1="1" y1="15" x2="14" y2="15" stroke="#444" stroke-width="1.4" stroke-linecap="round"/>
+      <line x1="1" y1="24" x2="14" y2="15" stroke="#444" stroke-width="1.4" stroke-linecap="round"/>
+      <circle cx="14" cy="15" r="2" fill="#999"/>
+      <line x1="14" y1="15" x2="29" y2="9"  stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
+      <line x1="14" y1="15" x2="29" y2="21" stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <div class="logo-main">Stream<em>Gate</em></div>
+      <div class="logo-sub">data pipeline · v1.0</div>
+    </div>
+  </div>
+
+  <nav>
+    <div class="nav-group">
+      <div class="nav-group-label">Principal</div>
+      <div class="nav-item active">
+        <div class="nv-icon"><svg viewBox="0 0 15 15" fill="none"><rect x="1" y="1" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.2"/><rect x="8.5" y="1" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.2"/><rect x="1" y="8.5" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.2"/><rect x="8.5" y="8.5" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.2"/></svg></div>
+        Dashboard
+      </div>
+      <div class="nav-item">
+        <div class="nv-icon"><svg viewBox="0 0 15 15" fill="none"><path d="M7.5 12V3M7.5 3L3.5 7M7.5 3l4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        Upload
+      </div>
+      <div class="nav-item">
+        <div class="nv-icon"><svg viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M7.5 4.5v3.5l1.8 1.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+        Jobs <span class="nav-badge info">9</span>
+      </div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Análise</div>
+      <div class="nav-item">
+        <div class="nv-icon"><svg viewBox="0 0 15 15" fill="none"><path d="M1.5 11l3.5-4 3 2 3-5.5 3.5 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        Analytics
+      </div>
+      <div class="nav-item">
+        <div class="nv-icon"><svg viewBox="0 0 15 15" fill="none"><rect x="1.5" y="4" width="12" height="8.5" rx="1.2" stroke="currentColor" stroke-width="1.2"/><path d="M5 4V2.5M7.5 4V2M10 4V2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+        ClickHouse
+      </div>
+      <div class="nav-item">
+        <div class="nv-icon"><svg viewBox="0 0 15 15" fill="none"><path d="M7.5 2v5M7.5 9.5v1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="7.5" cy="7.5" r="5.5" stroke="currentColor" stroke-width="1.2"/></svg></div>
+        Quarentena <span class="nav-badge alert">7</span>
+      </div>
+      <div class="nav-item">
+        <div class="nv-icon"><svg viewBox="0 0 15 15" fill="none"><path d="M1.5 7.5h3l1.5-3.5 2 7 1.5-3.5h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        ETL Explorer
+      </div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Sistema</div>
+      <div class="nav-item">
+        <div class="nv-icon"><svg viewBox="0 0 15 15" fill="none"><path d="M2 4h11M2 7.5h11M2 11h7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+        Event Log <span class="nav-badge">3</span>
+      </div>
+      <div class="nav-item">
+        <div class="nv-icon"><svg viewBox="0 0 15 15" fill="none"><path d="M5.5 2h4v2.5l2.5 3-2.5 3V13h-4v-2.5L3 7.5 5.5 5V2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></div>
+        Auditoria
+      </div>
+      <div class="nav-item">
+        <div class="nv-icon"><svg viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="2.2" stroke="currentColor" stroke-width="1.2"/><path d="M7.5 1.5v1.8M7.5 11.7v1.8M1.5 7.5h1.8M11.7 7.5h1.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+        Configurações
+      </div>
+    </div>
+  </nav>
+
+  <div class="sb-footer">
+    <div class="sb-gauges">
+      <div>
+        <div class="sg-row"><span>MinIO Storage</span><span style="color:var(--warn)">72%</span></div>
+        <div class="sg-bar"><div class="sg-fill" style="width:72%;background:var(--warn);opacity:.55"></div></div>
+      </div>
+      <div>
+        <div class="sg-row"><span>RabbitMQ</span><span>3 msgs</span></div>
+        <div class="sg-bar"><div class="sg-fill" style="width:18%;background:var(--info);opacity:.5"></div></div>
+      </div>
+    </div>
+    <div class="user-row">
+      <div class="avatar">AL</div>
+      <div>
+        <div class="user-name">Ana Lima</div>
+        <div class="user-role">Data Engineer</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-eyebrow">Visão geral do sistema</div>
+      <div class="topbar-title">Dashboard Operacional</div>
+    </div>
+    <div class="tb-divider"></div>
+    <div class="tb-chip"><div class="live-dot ld-ok"></div>Workers 4/4</div>
+    <div class="tb-chip"><div class="live-dot ld-ok"></div>RabbitMQ</div>
+    <div class="tb-chip"><div class="live-dot ld-ok"></div>ClickHouse</div>
+    <div class="tb-chip"><div class="live-dot ld-warn"></div>MinIO 72%</div>
+    <div class="tb-spacer"></div>
+    <button class="btn">Exportar</button>
+    <button class="btn prim" style="margin-left:4px;">+ Upload</button>
+  </header>
+
+  <!-- ALERT STRIP -->
+  <div class="alert-strip">
+    <span style="color:var(--err);font-size:11px;">⚠</span>
+    <span style="color:var(--t1)"><strong>2 jobs falharam</strong> nas últimas 2h — #JB-0436, #JB-0431. Reprocessamento disponível.</span>
+    <span class="alert-link">Revisar →</span>
+    <span class="alert-x">✕</span>
+  </div>
+
+  <div class="content">
+
+    <!-- KPI STRIP -->
+    <div class="kpi-strip">
+      <div class="kpi k1">
+        <div class="kpi-lbl">Jobs hoje</div>
+        <div class="kpi-val">148</div>
+        <div class="kpi-foot"><span class="kpi-sub">total do dia</span><span class="kpi-tag kt-up">↑ +23</span></div>
+      </div>
+      <div class="kpi k2">
+        <div class="kpi-lbl">Concluídos</div>
+        <div class="kpi-val">131</div>
+        <div class="kpi-foot"><span class="kpi-sub">taxa de sucesso</span><span class="kpi-tag kt-up">88.5%</span></div>
+      </div>
+      <div class="kpi k3">
+        <div class="kpi-lbl">Em processo</div>
+        <div class="kpi-val">9</div>
+        <div class="kpi-foot"><span class="kpi-sub">ao vivo</span><span class="kpi-tag kt-info">↻ live</span></div>
+      </div>
+      <div class="kpi k4">
+        <div class="kpi-lbl">Falhos</div>
+        <div class="kpi-val">8</div>
+        <div class="kpi-foot"><span class="kpi-sub">requer atenção</span><span class="kpi-tag kt-down">↑ +2</span></div>
+      </div>
+      <div class="kpi k5">
+        <div class="kpi-lbl">Quarentena</div>
+        <div class="kpi-val">7</div>
+        <div class="kpi-foot"><span class="kpi-sub">43 registros</span><span class="kpi-tag kt-warn">revisar</span></div>
+      </div>
+    </div>
+
+    <!-- ROW 2: Area chart + Jobs -->
+    <div class="g2">
+
+      <!-- MAIN CHART — area + grouped bars (print 123/124 style) -->
+      <div class="panel">
+        <div class="ph">
+          <div class="ph-title">Volume Processado · Últimas 24h</div>
+          <div class="ph-right"><span class="ph-tag">ClickHouse</span><span class="ph-sub">atualizado há 42s</span></div>
+        </div>
+        <div class="metric-block">
+          <div class="metric-cell"><div class="mc-val" style="color:var(--c-blue)">1.84 M</div><div class="mc-lbl">Registros</div></div>
+          <div class="metric-cell"><div class="mc-val" style="color:var(--c-teal)">3.2 GB</div><div class="mc-lbl">Ingerido</div></div>
+          <div class="metric-cell"><div class="mc-val" style="color:var(--err)">43</div><div class="mc-lbl">Quarentena</div></div>
+          <div class="metric-cell"><div class="mc-val" style="color:var(--ok)">98.9%</div><div class="mc-lbl">Idempotência</div></div>
+        </div>
+        <div style="padding:12px 16px 8px;flex:1;">
+          <svg viewBox="0 0 580 132" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;">
+            <defs>
+              <linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#4d9de0" stop-opacity=".22"/>
+                <stop offset="100%" stop-color="#4d9de0" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <!-- grid -->
+            <line x1="38" y1="12"  x2="574" y2="12"  stroke="#202020" stroke-width="1"/>
+            <line x1="38" y1="40"  x2="574" y2="40"  stroke="#202020" stroke-width="1"/>
+            <line x1="38" y1="68"  x2="574" y2="68"  stroke="#202020" stroke-width="1"/>
+            <line x1="38" y1="96"  x2="574" y2="96"  stroke="#202020" stroke-width="1"/>
+            <line x1="38" y1="113" x2="574" y2="113" stroke="#1a1a1a" stroke-width="1"/>
+            <!-- y labels -->
+            <text x="34" y="14"  fill="#5a5a5a" font-size="7.5" font-family="DM Mono" text-anchor="end">150k</text>
+            <text x="34" y="42"  fill="#5a5a5a" font-size="7.5" font-family="DM Mono" text-anchor="end">100k</text>
+            <text x="34" y="70"  fill="#5a5a5a" font-size="7.5" font-family="DM Mono" text-anchor="end">50k</text>
+            <text x="34" y="98"  fill="#5a5a5a" font-size="7.5" font-family="DM Mono" text-anchor="end">10k</text>
+            <!-- GROUPED BARS — success (blue) + fail (grey) per hour -->
+            <rect x="46"  y="100" width="12" height="13" fill="#4d9de0" opacity=".4" rx="1.5"/>
+            <rect x="59"  y="107" width="6"  height="6"  fill="#585858" opacity=".35" rx="1"/>
+            <rect x="101" y="88"  width="12" height="25" fill="#4d9de0" opacity=".5" rx="1.5"/>
+            <rect x="114" y="104" width="6"  height="9"  fill="#585858" opacity=".35" rx="1"/>
+            <rect x="156" y="76"  width="12" height="37" fill="#4d9de0" opacity=".55" rx="1.5"/>
+            <rect x="169" y="101" width="6"  height="12" fill="#585858" opacity=".35" rx="1"/>
+            <rect x="211" y="28"  width="12" height="85" fill="#4d9de0" opacity=".72" rx="1.5"/>
+            <rect x="224" y="97"  width="6"  height="16" fill="#585858" opacity=".4" rx="1"/>
+            <rect x="266" y="50"  width="12" height="63" fill="#4d9de0" opacity=".62" rx="1.5"/>
+            <rect x="279" y="100" width="6"  height="13" fill="#585858" opacity=".35" rx="1"/>
+            <rect x="321" y="40"  width="12" height="73" fill="#4d9de0" opacity=".67" rx="1.5"/>
+            <rect x="334" y="98"  width="6"  height="15" fill="#585858" opacity=".35" rx="1"/>
+            <rect x="376" y="60"  width="12" height="53" fill="#4d9de0" opacity=".55" rx="1.5"/>
+            <rect x="389" y="102" width="6"  height="11" fill="#585858" opacity=".35" rx="1"/>
+            <!-- peak bar highlighted -->
+            <rect x="431" y="18"  width="12" height="95" fill="#4d9de0" opacity=".88" rx="1.5"/>
+            <rect x="444" y="100" width="6"  height="13" fill="#585858" opacity=".35" rx="1"/>
+            <!-- future dim -->
+            <rect x="486" y="90"  width="12" height="23" fill="#4d9de0" opacity=".2" rx="1.5"/>
+            <rect x="541" y="96"  width="12" height="17" fill="#4d9de0" opacity=".14" rx="1.5"/>
+            <!-- AREA LINE over bars -->
+            <path d="M52,106 C90,96 128,82 164,70 C200,58 234,88 272,66 C308,44 342,36 378,42 C414,48 450,22 488,28 L488,113 L52,113 Z" fill="url(#gArea)"/>
+            <path d="M52,106 C90,96 128,82 164,70 C200,58 234,88 272,66 C308,44 342,36 378,42 C414,48 450,22 488,28" fill="none" stroke="#4d9de0" stroke-width="1.8"/>
+            <!-- GB dashed -->
+            <path d="M52,110 C90,105 128,99 164,91 C200,83 234,96 272,84 C308,72 342,58 378,62 C414,66 450,44 488,48" fill="none" stroke="#3ccfcf" stroke-width="1.3" stroke-dasharray="4,3" opacity=".65"/>
+            <!-- peak indicator -->
+            <line x1="437" y1="12" x2="437" y2="113" stroke="#2c2c2c" stroke-width="1" stroke-dasharray="2,3"/>
+            <circle cx="437" cy="22" r="3.5" fill="#141414" stroke="#4d9de0" stroke-width="1.5"/>
+            <circle cx="437" cy="46" r="3" fill="#141414" stroke="#3ccfcf" stroke-width="1.5"/>
+            <!-- tooltip -->
+            <rect x="448" y="10" width="95" height="44" rx="4" fill="#0f0f0f" stroke="#2c2c2c" stroke-width="1"/>
+            <text x="454" y="22" fill="#707070" font-size="7.5" font-family="DM Mono">14h — pico diário</text>
+            <circle cx="453" cy="31" r="3" fill="#4d9de0" opacity=".7"/>
+            <text x="459" y="34" fill="#999" font-size="7.5" font-family="DM Mono">Registros</text>
+            <text x="536" y="34" fill="#f5f5f5" font-size="7.5" font-family="DM Mono" text-anchor="end">42.1k</text>
+            <circle cx="453" cy="43" r="3" fill="#3ccfcf" opacity=".7"/>
+            <text x="459" y="46" fill="#999" font-size="7.5" font-family="DM Mono">Volume</text>
+            <text x="536" y="46" fill="#f5f5f5" font-size="7.5" font-family="DM Mono" text-anchor="end">0.8 GB</text>
+            <!-- x labels -->
+            <text x="52"  y="127" fill="#5a5a5a" font-size="7.5" font-family="DM Mono" text-anchor="middle">06h</text>
+            <text x="107" y="127" fill="#5a5a5a" font-size="7.5" font-family="DM Mono" text-anchor="middle">07h</text>
+            <text x="162" y="127" fill="#5a5a5a" font-size="7.5" font-family="DM Mono" text-anchor="middle">08h</text>
+            <text x="217" y="127" fill="#5a5a5a" font-size="7.5" font-family="DM Mono" text-anchor="middle">09h</text>
+            <text x="272" y="127" fill="#5a5a5a" font-size="7.5" font-family="DM Mono" text-anchor="middle">11h</text>
+            <text x="327" y="127" fill="#5a5a5a" font-size="7.5" font-family="DM Mono" text-anchor="middle">12h</text>
+            <text x="382" y="127" fill="#5a5a5a" font-size="7.5" font-family="DM Mono" text-anchor="middle">13h</text>
+            <text x="437" y="127" fill="#4d9de0" font-size="7.5" font-family="DM Mono" text-anchor="middle" font-weight="600">14h ●</text>
+            <text x="492" y="127" fill="#5a5a5a" font-size="7.5" font-family="DM Mono" text-anchor="middle" opacity=".45">15h</text>
+            <text x="547" y="127" fill="#5a5a5a" font-size="7.5" font-family="DM Mono" text-anchor="middle" opacity=".45">16h</text>
+          </svg>
+          <div style="display:flex;gap:16px;padding:0 4px 4px;font-family:var(--fm);font-size:9px;color:var(--t3);">
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:2px;background:var(--c-blue);display:inline-block;border-radius:1px"></span>Registros</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;border-top:1.2px dashed var(--c-teal);display:inline-block"></span>Volume GB</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:9px;height:9px;background:var(--c-blue);border-radius:2px;display:inline-block;opacity:.7"></span>Jobs/h</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:9px;height:9px;background:#444;border-radius:2px;display:inline-block;opacity:.6"></span>Falhos/h</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- JOBS TABLE -->
+      <div class="panel">
+        <div class="ph">
+          <div class="ph-title">Pipeline de Jobs</div>
+          <div class="ph-right"><span class="ph-tag">RabbitMQ</span></div>
+        </div>
+        <div class="tabs">
+          <div class="tab active">Ativos (9)</div>
+          <div class="tab">Fila (3)</div>
+          <div class="tab">Histórico</div>
+        </div>
+        <div style="flex:1;overflow-y:auto;">
+          <table>
+            <thead><tr><th>ID</th><th>Arquivo</th><th>Prog.</th><th>Dur.</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td class="td-dim">#0441</td><td><div class="td-file"><span class="fext">csv</span><span class="td-name">vendas_q4.csv</span></div></td><td><div class="prog"><div class="pbar pb-anim" style="width:67%"></div></div></td><td class="td-dim">2m 14s</td><td><span class="pill pp">processing</span></td></tr>
+              <tr><td class="td-dim">#0440</td><td><div class="td-file"><span class="fext">json</span><span class="td-name">logs_app.json</span></div></td><td><div class="prog"><div class="pbar pb-anim" style="width:42%"></div></div></td><td class="td-dim">1m 03s</td><td><span class="pill pp">processing</span></td></tr>
+              <tr><td class="td-dim">#0439</td><td><div class="td-file"><span class="fext">csv</span><span class="td-name">catalog_sku.csv</span></div></td><td><div class="prog"><div class="pbar pb-green" style="width:100%"></div></div></td><td class="td-dim">4m 22s</td><td><span class="pill pd">completed</span></td></tr>
+              <tr><td class="td-dim">#0438</td><td><div class="td-file"><span class="fext">csv</span><span class="td-name">financeiro_q3.csv</span></div></td><td><div class="prog"><div class="pbar pb-green" style="width:100%"></div></div></td><td class="td-dim">6m 11s</td><td><span class="pill pd">completed</span></td></tr>
+              <tr><td class="td-dim">#0437</td><td><div class="td-file"><span class="fext">json</span><span class="td-name">users_export.json</span></div></td><td><div class="prog"><div class="pbar pb-purple" style="width:100%"></div></div></td><td class="td-dim">3m 44s</td><td><span class="pill pq">quarantined</span></td></tr>
+              <tr><td class="td-dim">#0436</td><td><div class="td-file"><span class="fext">csv</span><span class="td-name">pedidos_batch.csv</span></div></td><td><div class="prog"><div class="pbar pb-red" style="width:34%"></div></div></td><td class="td-dim">1m 58s</td><td><span class="pill pf">failed</span></td></tr>
+              <tr><td class="td-dim">#0435</td><td><div class="td-file"><span class="fext">parq</span><span class="td-name">dados_raw.parquet</span></div></td><td><div class="prog"><div class="pbar pb-anim" style="width:81%"></div></div></td><td class="td-dim">5m 32s</td><td><span class="pill pp">processing</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 3 -->
+    <div class="g4">
+
+      <!-- DONUT -->
+      <div class="panel">
+        <div class="ph"><div class="ph-title">Distribuição</div><div class="ph-right"><span class="ph-tag">hoje</span></div></div>
+        <div class="donut-wrap" style="flex-direction:column;align-items:center;gap:12px;">
+          <svg viewBox="0 0 110 110" width="96" height="96">
+            <circle cx="55" cy="55" r="40" fill="none" stroke="#1a1a1a" stroke-width="13"/>
+            <circle cx="55" cy="55" r="40" fill="none" stroke="#3ecf8e" stroke-width="13" stroke-dasharray="222 29" stroke-dashoffset="63"/>
+            <circle cx="55" cy="55" r="40" fill="none" stroke="#4d9de0" stroke-width="13" stroke-dasharray="15 236" stroke-dashoffset="-159"/>
+            <circle cx="55" cy="55" r="40" fill="none" stroke="#e05c5c" stroke-width="13" stroke-dasharray="14 237" stroke-dashoffset="-174"/>
+            <circle cx="55" cy="55" r="40" fill="none" stroke="#9b7fe8" stroke-width="13" stroke-dasharray="3 248" stroke-dashoffset="-188"/>
+            <text x="55" y="51" text-anchor="middle" fill="#f5f5f5" font-size="17" font-weight="300" font-family="Plus Jakarta Sans" letter-spacing="-1">148</text>
+            <text x="55" y="63" text-anchor="middle" fill="#5a5a5a" font-size="7" font-family="DM Mono" letter-spacing=".06em">JOBS</text>
+          </svg>
+          <div class="legend" style="width:100%;padding:0 4px;">
+            <div class="legend-row"><div class="ldot" style="background:var(--ok)"></div>Concluídos<span class="lval">131<span class="lpct"> 88%</span></span></div>
+            <div class="legend-row"><div class="ldot" style="background:var(--info)"></div>Em Processo<span class="lval">9<span class="lpct"> 6%</span></span></div>
+            <div class="legend-row"><div class="ldot" style="background:var(--err)"></div>Falhos<span class="lval">8<span class="lpct"> 5%</span></span></div>
+            <div class="legend-row"><div class="ldot" style="background:var(--c-purple)"></div>Quarentena<span class="lval">7<span class="lpct"> 5%</span></span></div>
+            <div class="legend-row"><div class="ldot" style="background:var(--t3)"></div>Pendentes<span class="lval">3<span class="lpct"> 2%</span></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RANKING POR TIPO (print 121 inline bars) -->
+      <div class="panel">
+        <div class="ph"><div class="ph-title">Por Formato</div><div class="ph-right"><span class="ph-tag">semana</span></div></div>
+        <div style="padding:4px 0;flex:1;">
+          <table>
+            <thead><tr><th>Formato</th><th>Jobs</th><th style="min-width:90px">Volume</th><th>%</th></tr></thead>
+            <tbody>
+              <tr><td class="td-name">CSV</td><td class="td-dim">84</td><td><div class="rank-bar-wrap"><div class="rank-bar-track"><div class="rank-bar-fill" style="width:72%"></div></div></div></td><td class="td-dim">56.8%</td></tr>
+              <tr><td class="td-name">JSON</td><td class="td-dim">38</td><td><div class="rank-bar-wrap"><div class="rank-bar-track"><div class="rank-bar-fill" style="width:40%;background:var(--c-teal)"></div></div></div></td><td class="td-dim">25.7%</td></tr>
+              <tr><td class="td-name">Parquet</td><td class="td-dim">18</td><td><div class="rank-bar-wrap"><div class="rank-bar-track"><div class="rank-bar-fill" style="width:20%;background:var(--c-purple)"></div></div></div></td><td class="td-dim">12.2%</td></tr>
+              <tr><td class="td-name">NDJSON</td><td class="td-dim">5</td><td><div class="rank-bar-wrap"><div class="rank-bar-track"><div class="rank-bar-fill" style="width:7%;background:var(--c-yellow)"></div></div></div></td><td class="td-dim">3.4%</td></tr>
+              <tr><td class="td-name">XLSX</td><td class="td-dim">3</td><td><div class="rank-bar-wrap"><div class="rank-bar-track"><div class="rank-bar-fill" style="width:4%;background:var(--c-orange)"></div></div></div></td><td class="td-dim">2.0%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="padding:8px 16px 12px;border-top:1px solid var(--b0);">
+          <div style="font-family:var(--fm);font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:7px;">Jobs/dia · semana atual</div>
+          <svg viewBox="0 0 240 36" style="width:100%;display:block;">
+            <rect x="0"   y="22" width="28" height="14" fill="var(--c-blue)" rx="2" opacity=".35"/>
+            <rect x="34"  y="16" width="28" height="20" fill="var(--c-blue)" rx="2" opacity=".45"/>
+            <rect x="68"  y="10" width="28" height="26" fill="var(--c-blue)" rx="2" opacity=".55"/>
+            <rect x="102" y="4"  width="28" height="32" fill="var(--c-blue)" rx="2" opacity=".7"/>
+            <rect x="136" y="8"  width="28" height="28" fill="var(--c-blue)" rx="2" opacity=".6"/>
+            <rect x="170" y="18" width="28" height="18" fill="var(--c-blue)" rx="2" opacity=".4"/>
+            <rect x="204" y="0"  width="28" height="36" fill="var(--c-blue)" rx="2" opacity=".88"/>
+            <text x="14"  y="50" text-anchor="middle" fill="#5a5a5a" font-size="7" font-family="DM Mono">Seg</text>
+            <text x="48"  y="50" text-anchor="middle" fill="#5a5a5a" font-size="7" font-family="DM Mono">Ter</text>
+            <text x="82"  y="50" text-anchor="middle" fill="#5a5a5a" font-size="7" font-family="DM Mono">Qua</text>
+            <text x="116" y="50" text-anchor="middle" fill="#5a5a5a" font-size="7" font-family="DM Mono">Qui</text>
+            <text x="150" y="50" text-anchor="middle" fill="#5a5a5a" font-size="7" font-family="DM Mono">Sex</text>
+            <text x="184" y="50" text-anchor="middle" fill="#5a5a5a" font-size="7" font-family="DM Mono">Sáb</text>
+            <text x="218" y="50" text-anchor="middle" fill="#4d9de0" font-size="7" font-family="DM Mono">Hj</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- HEATMAP -->
+      <div class="panel">
+        <div class="ph"><div class="ph-title">Throughput · Heatmap</div><div class="ph-right"><span class="ph-tag">7 dias</span></div></div>
+        <div class="hm-wrap">
+          <div style="font-family:var(--fm);font-size:8px;color:var(--t3);margin-bottom:9px;">Registros/hora por bloco e dia</div>
+          <div class="hm-grid">
+            <div class="hm-row"><span class="hm-rl">00–03</span><div class="hm-c" style="background:rgba(77,157,224,.07)"></div><div class="hm-c" style="background:rgba(77,157,224,.10)"></div><div class="hm-c" style="background:rgba(77,157,224,.06)"></div><div class="hm-c" style="background:rgba(77,157,224,.13)"></div><div class="hm-c" style="background:rgba(77,157,224,.08)"></div><div class="hm-c" style="background:rgba(77,157,224,.03)"></div><div class="hm-c" style="background:rgba(77,157,224,.02)"></div></div>
+            <div class="hm-row"><span class="hm-rl">03–06</span><div class="hm-c" style="background:rgba(77,157,224,.05)"></div><div class="hm-c" style="background:rgba(77,157,224,.08)"></div><div class="hm-c" style="background:rgba(77,157,224,.04)"></div><div class="hm-c" style="background:rgba(77,157,224,.06)"></div><div class="hm-c" style="background:rgba(77,157,224,.09)"></div><div class="hm-c" style="background:rgba(77,157,224,.02)"></div><div class="hm-c" style="background:rgba(77,157,224,.01)"></div></div>
+            <div class="hm-row"><span class="hm-rl">06–09</span><div class="hm-c" style="background:rgba(77,157,224,.22)"></div><div class="hm-c" style="background:rgba(77,157,224,.28)"></div><div class="hm-c" style="background:rgba(77,157,224,.19)"></div><div class="hm-c" style="background:rgba(77,157,224,.26)"></div><div class="hm-c" style="background:rgba(77,157,224,.32)"></div><div class="hm-c" style="background:rgba(77,157,224,.09)"></div><div class="hm-c" style="background:rgba(77,157,224,.04)"></div></div>
+            <div class="hm-row"><span class="hm-rl">09–12</span><div class="hm-c" style="background:rgba(77,157,224,.52)"></div><div class="hm-c" style="background:rgba(77,157,224,.58)"></div><div class="hm-c" style="background:rgba(77,157,224,.47)"></div><div class="hm-c" style="background:rgba(60,207,207,.50)"></div><div class="hm-c" style="background:rgba(60,207,207,.65)"></div><div class="hm-c" style="background:rgba(77,157,224,.18)"></div><div class="hm-c" style="background:rgba(77,157,224,.06)"></div></div>
+            <div class="hm-row"><span class="hm-rl">12–15</span><div class="hm-c" style="background:rgba(77,157,224,.42)"></div><div class="hm-c" style="background:rgba(77,157,224,.47)"></div><div class="hm-c" style="background:rgba(77,157,224,.38)"></div><div class="hm-c" style="background:rgba(60,207,207,.44)"></div><div class="hm-c" style="background:rgba(60,207,207,.78)"></div><div class="hm-c" style="background:rgba(77,157,224,.14)"></div><div class="hm-c" style="background:rgba(77,157,224,.05)"></div></div>
+            <div class="hm-row"><span class="hm-rl">15–18</span><div class="hm-c" style="background:rgba(77,157,224,.32)"></div><div class="hm-c" style="background:rgba(77,157,224,.36)"></div><div class="hm-c" style="background:rgba(77,157,224,.28)"></div><div class="hm-c" style="background:rgba(77,157,224,.40)"></div><div class="hm-c" style="background:rgba(60,207,207,.48)"></div><div class="hm-c" style="background:rgba(77,157,224,.11)"></div><div class="hm-c" style="background:rgba(77,157,224,.03)"></div></div>
+            <div class="hm-row"><span class="hm-rl">18–21</span><div class="hm-c" style="background:rgba(77,157,224,.18)"></div><div class="hm-c" style="background:rgba(77,157,224,.20)"></div><div class="hm-c" style="background:rgba(77,157,224,.15)"></div><div class="hm-c" style="background:rgba(77,157,224,.22)"></div><div class="hm-c" style="background:rgba(77,157,224,.25)"></div><div class="hm-c" style="background:rgba(77,157,224,.08)"></div><div class="hm-c" style="background:rgba(77,157,224,.03)"></div></div>
+            <div class="hm-row"><span class="hm-rl">21–24</span><div class="hm-c" style="background:rgba(77,157,224,.09)"></div><div class="hm-c" style="background:rgba(77,157,224,.12)"></div><div class="hm-c" style="background:rgba(77,157,224,.07)"></div><div class="hm-c" style="background:rgba(77,157,224,.10)"></div><div class="hm-c" style="background:rgba(77,157,224,.09)"></div><div class="hm-c" style="background:rgba(77,157,224,.03)"></div><div class="hm-c" style="background:rgba(77,157,224,.01)"></div></div>
+          </div>
+          <div class="hm-days"><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span></div>
+          <div class="hm-legend-row"><span>Baixo</span><div class="hm-grad"></div><span>Alto</span></div>
+        </div>
+      </div>
+
+      <!-- UPLOAD + QUEUE -->
+      <div class="col">
+        <div class="panel">
+          <div class="ph"><div class="ph-title">Ingestão</div><div class="ph-right"><span class="ph-tag">MinIO</span></div></div>
+          <div style="padding:10px 12px;">
+            <div class="upload-zone">
+              <div class="uz-icon">↑</div>
+              <div class="uz-title">Arrastar arquivo</div>
+              <div class="uz-sub">URL assinada · até 10 GB</div>
+              <div class="uz-fmts"><span class="uf">CSV</span><span class="uf">JSON</span><span class="uf">Parquet</span><span class="uf">NDJSON</span></div>
+            </div>
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:7px;">
+              <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.09em;color:var(--t3);">Em progresso</div>
+              <div class="up-item"><div class="up-top"><span class="up-name">vendas_q4_2024_full.csv</span><span class="up-pct">67%</span></div><div class="up-track"><div class="pbar pb-anim" style="width:67%"></div></div></div>
+              <div class="up-item"><div class="up-top"><span class="up-name">clientes_export_março.json</span><span class="up-pct">100%</span></div><div class="up-track"><div class="pbar pb-green" style="width:100%"></div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel" style="flex:1;">
+          <div class="ph"><div class="ph-title">Fila</div><div class="ph-right"><span style="font-family:var(--fm);font-size:8.5px;color:var(--t3);">3 msgs</span></div></div>
+          <div class="q-list">
+            <div class="q-item"><div class="q-pos">1</div><div class="q-name">transacoes_raw.parquet</div><div class="q-sz">812 MB</div><div class="q-eta">~4m</div></div>
+            <div class="q-item"><div class="q-pos">2</div><div class="q-name">relatorio_anual.csv</div><div class="q-sz">234 MB</div><div class="q-eta">~2m</div></div>
+            <div class="q-item"><div class="q-pos">3</div><div class="q-name">estoque_atual.json</div><div class="q-sz">56 MB</div><div class="q-eta">~30s</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 4: Event Log + Workers -->
+    <div class="g3b">
+      <div class="panel">
+        <div class="ph"><div class="ph-title">Event Log</div><div class="ph-right"><span class="ph-tag">ao vivo</span></div></div>
+        <div class="ev-log">
+          <div class="ev"><span class="ev-t">14:32:07</span><span class="ev-tag et-up">upload.received</span><span class="ev-msg">JB-0441 · vendas_q4_2024_full.csv · 234 MB · MinIO OK</span></div>
+          <div class="ev"><span class="ev-t">14:31:52</span><span class="ev-tag et-ok">etl.batch.loaded</span><span class="ev-msg">JB-0438 · 18,432 records → ClickHouse · batch 4/4</span></div>
+          <div class="ev"><span class="ev-t">14:31:40</span><span class="ev-tag et-ok">etl.job.completed</span><span class="ev-msg">JB-0438 · financeiro_q3.xlsx · 0 erros · 6m 11s</span></div>
+          <div class="ev"><span class="ev-t">14:30:11</span><span class="ev-tag et-wn">etl.validation.failed</span><span class="ev-msg">JB-0437 · 7 records → quarentena · schema col[3]</span></div>
+          <div class="ev"><span class="ev-t">14:29:55</span><span class="ev-tag et-up">upload.received</span><span class="ev-msg">JB-0440 · logs_app_mar.json · 88 MB · MinIO OK</span></div>
+          <div class="ev"><span class="ev-t">14:28:03</span><span class="ev-tag et-er">etl.job.failed</span><span class="ev-msg">JB-0436 · network timeout · retry 3/3 exhausted</span></div>
+          <div class="ev"><span class="ev-t">14:26:44</span><span class="ev-tag et-et">etl.batch.loaded</span><span class="ev-msg">JB-0435 · 44,100 records → ClickHouse · batch 2/3</span></div>
+          <div class="ev"><span class="ev-t">14:25:30</span><span class="ev-tag et-ok">etl.job.completed</span><span class="ev-msg">JB-0434 · catalog_sku_v2.csv · 3m 12s · idempotente</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ph"><div class="ph-title">Workers</div><div class="ph-right"><span class="ph-tag">4 ativos</span></div></div>
+        <div class="worker-list">
+          <div class="worker"><div class="w-top"><div class="w-dot wd-on"></div><span class="w-name">worker-01</span><span class="pill pp" style="margin-left:auto;">ativo</span></div><div class="w-job">JB-0441 · vendas_q4.csv · batch 3/7</div><div class="w-prog"><div class="pbar pb-anim" style="width:43%"></div></div></div>
+          <div class="worker"><div class="w-top"><div class="w-dot wd-on" style="animation-delay:.4s"></div><span class="w-name">worker-02</span><span class="pill pp" style="margin-left:auto;">ativo</span></div><div class="w-job">JB-0440 · logs_app.json · batch 1/3</div><div class="w-prog"><div class="pbar pb-anim" style="width:28%"></div></div></div>
+          <div class="worker"><div class="w-top"><div class="w-dot wd-on" style="animation-delay:.8s"></div><span class="w-name">worker-03</span><span class="pill pp" style="margin-left:auto;">ativo</span></div><div class="w-job">JB-0435 · dados_raw.parquet · batch 2/3</div><div class="w-prog"><div class="pbar pb-anim" style="width:67%"></div></div></div>
+          <div class="worker" style="opacity:.45;"><div class="w-top"><div class="w-dot wd-off"></div><span class="w-name">worker-04</span><span class="pill pn" style="margin-left:auto;">idle</span></div><div class="w-job">Aguardando próximo job da fila</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

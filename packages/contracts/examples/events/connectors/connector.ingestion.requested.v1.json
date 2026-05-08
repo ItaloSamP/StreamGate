@@ -10,7 +10,6 @@
   "upload_id": "upload_connector_1",
   "job_id": "job_connector_1",
   "payload": {
-    "lease_id": "lease_8784519f188842dd97fd59597311d000",
-    "lease_token": "short-lived-token"
+    "lease_id": "lease_8784519f188842dd97fd59597311d000"
   }
 }

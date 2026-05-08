@@ -11,7 +11,7 @@
       "properties": {
         "id": { "type": "string" },
         "organization_id": { "type": "string" },
-        "kind": { "type": "string", "enum": ["s3", "http"] },
+        "kind": { "type": "string", "enum": ["s3", "http", "google_drive"] },
         "name": { "type": "string" },
         "status": { "type": "string", "enum": ["active", "disabled"] },
         "settings": { "type": "object", "additionalProperties": true },

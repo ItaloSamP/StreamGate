@@ -1,0 +1,12 @@
+{
+  "data": {
+    "id": "oidc_google_1",
+    "organization_id": "org_fixture_alpha",
+    "provider": "google_workspace",
+    "issuer": "https://accounts.google.com",
+    "client_id": "google-client-id.apps.googleusercontent.com",
+    "hosted_domain": "example.com",
+    "status": "active",
+    "scopes": ["openid", "email", "profile"]
+  }
+}

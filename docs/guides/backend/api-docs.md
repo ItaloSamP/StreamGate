@@ -23,7 +23,7 @@ A API Rails do StreamGate usa OpenAPI como contrato publico versionado da v1.
 
 ## Estado apos command center operacional Back + Worker
 
-O contrato oficial cobre auth, runtime operacional, dashboard expandida, realtime, exports, alert actions e conectores base S3/HTTP:
+O contrato oficial cobre auth, runtime operacional, dashboard expandida, realtime, exports, alert actions, conectores base S3/HTTP e readiness SaaS admin:
 
 - auth: `register`, `login`, `logout`, `me`, `session/refresh`, reset de senha
 - upload/job:
@@ -54,10 +54,29 @@ O contrato oficial cobre auth, runtime operacional, dashboard expandida, realtim
   - `POST /api/v1/connectors/profiles/:id/test`
   - `POST /api/v1/connectors/profiles/:profile_id/ingestions`
   - `POST /api/v1/internal/connectors/leases/:id/claim`
+- SaaS/release:
+  - `GET /api/v1/saas/readiness` (admin-only)
 
 Fonte unica do contrato:
 
 - `apps/api/openapi/v1/openapi.yaml`
+
+### `GET /api/v1/saas/readiness`
+
+Superficie admin-only para consolidar readiness de release SaaS sem vazar segredos.
+
+Response `200`:
+
+- organizacao e contagem de membros por status;
+- identidade: MFA TOTP, OIDC Google Workspace validado e SAML fora de escopo;
+- billing como `out_of_scope`;
+- quotas internas esperadas;
+- conectores suportados: `s3`, `http`, `google_drive`, `oauth_delegated`;
+- `clear_lease_credentials_circulate=false`;
+- runtime AWS EKS, observabilidade open-source e alvo SOC 2 Type I;
+- bloqueios externos formais para AWS, OAuth, ClickHouse Cloud, auditor SOC 2 e DNS/TLS.
+
+Operadores recebem `403 access_denied`; a UI de `/settings` nao chama esse endpoint para role operator.
 
 ## Como acessar localmente
 
@@ -233,7 +252,26 @@ Fluxo:
 4. o worker reivindica `POST /api/v1/internal/connectors/leases/:id/claim` usando `X-Worker-Token`;
 5. o worker baixa S3/HTTP, grava no storage padrao e publica `upload.received.v1`.
 
-HTTP aplica anti-SSRF, bloqueio de localhost/private/link-local/metadata hosts, validacao de redirects e masking de URL/header. S3 nao expoe bucket, key ou credenciais em API, evento ou log.
+HTTP aplica anti-SSRF, bloqueio de localhost/private/link-local/metadata hosts, validacao de redirects e masking de URL/header. S3 nao expoe bucket, key ou credenciais em API, evento ou log. O evento `connector.ingestion.requested.v1` carrega apenas `lease_id`; credencial de lease em claro nao circula por broker, resposta publica ou claim do worker.
+
+### Organizacao, MFA, OIDC E Google Drive
+
+Superficies SaaS novas ficam no mesmo contrato OpenAPI/`packages/contracts`:
+
+- `GET/PATCH /api/v1/organization`: organizacao atual, quotas, retencao, compliance, membros e convites; `PATCH` e admin-only.
+- `GET /api/v1/organization/members`, `PATCH/DELETE /api/v1/organization/members/:id`: membership por `organization_id`, roles publicas `admin` e `operator`.
+- `POST /api/v1/organization/invites`, `POST /api/v1/organization/invites/:token/accept`: convite auditavel; token bruto so pode aparecer em ambiente nao-producao para debug controlado.
+- `POST /api/v1/auth/mfa/setup`, `POST /api/v1/auth/mfa/verify`, `POST /api/v1/auth/mfa/recovery-codes/regenerate`: TOTP com recovery codes e login em dois passos.
+- `PATCH /api/v1/auth/oidc/config`, `GET /api/v1/auth/oidc/google/start`, `GET /api/v1/auth/oidc/google/callback`: OIDC Google Workspace com `issuer`, `aud`, `exp`, `nonce`, `email_verified` e `hd` validados.
+- `GET /api/v1/connectors/google-drive/authorize`, `GET /api/v1/connectors/google-drive/callback`, `GET /api/v1/connectors/google-drive/items`, `DELETE /api/v1/connectors/google-drive/revoke`: OAuth delegated para Google Drive com refresh token criptografado somente no backend.
+
+O campo publico de configuracao OIDC para a credencial opaca e `client_credential`; respostas, exemplos, eventos, UI e reports nao retornam credenciais OAuth/OIDC. O escopo Drive solicitado e `https://www.googleapis.com/auth/drive` mais `openid email profile`, sujeito a verificacao Google antes de ativacao publica.
+
+### Scan-First E Quotas
+
+Upload direto agora publica `upload.scan.requested.v1`; somente arquivo limpo publica `upload.received.v1`. Conectores S3, HTTP e Google Drive tambem passam por scan antes de persistencia operacional final. Arquivo infectado ou scan indisponivel deve gerar quarentena, auditoria e realtime warning sanitizado, sem seguir para parser/ClickHouse.
+
+Quotas por organizacao sao aplicadas antes de URL assinada, public link e ingestao de conector: bytes mensais, tamanho maximo de arquivo, runs de conector por dia e retencao. Falha de quota retorna erro operacional seguro, auditavel e sem detalhe de credencial.
 
 ### `GET /api/v1/analytics/warehouse`
 
@@ -301,6 +339,7 @@ Envelope de erro:
 ## Eventos e outbox
 
 - evento oficial de ingestao: `upload.received.v1`
+- evento oficial de scan pre-parser: `upload.scan.requested.v1`
 - evento oficial de aquisicao por public link: `upload.public_link.requested.v1`
 - evento oficial de requisicao de conector: `connector.ingestion.requested.v1`
 - topologia:
@@ -324,7 +363,10 @@ Os schemas/examples HTTP ficam organizados por dominio em:
 - `packages/contracts/schemas/http/artifacts`
 - `packages/contracts/schemas/http/notifications`
 - `packages/contracts/schemas/http/connectors`
+- `packages/contracts/schemas/http/identity`
+- `packages/contracts/schemas/http/saas`
 - `packages/contracts/schemas/events/connectors`
+- `packages/contracts/schemas/events/uploads`
 - `packages/contracts/schemas/http/shared`
 - `packages/contracts/examples/http/<dominio-correspondente>`
 

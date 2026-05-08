@@ -22,7 +22,6 @@
     },
     "lease": {
       "id": "lease_8784519f188842dd97fd59597311d000",
-      "token": "short-lived-token",
       "expires_at": "2026-04-26T12:05:00Z"
     }
   }

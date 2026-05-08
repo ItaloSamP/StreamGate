@@ -11,6 +11,7 @@ Este guia descreve a operacao local e remota oficial do StreamGate: scripts, gat
 - GitHub Actions e o CI remoto oficial.
 - CircleCI nao possui configuracao versionada no repositorio; qualquer check externo deve ser diagnosticado como integracao externa.
 - O caminho pesado recomendado continua `WSL/Compose-first`, com PowerShell suportado para operacao local e fallback.
+- O perfil de producao da release usa AWS EKS via `infra/helm/streamgate` e GitOps ArgoCD em `infra/gitops/argocd`.
 
 ## Perfis De Gate
 
@@ -69,6 +70,8 @@ Workflows oficiais:
 - `backend-ci.yml`: API Rails, worker Ruby, RuboCop e checks de seguranca Ruby.
 - `docker-ci.yml`: Compose, imagens e smoke de Docker.
 - `e2e-auth-ci.yml`: stack de app, integracao auth e Playwright Chromium.
+- `release-readiness-ci.yml`: contratos, OpenAPI, browser sweep, Helm/GitOps, security scanners e pacote SOC 2 Type I.
+- CircleCI permanece diagnostico externo; nao criar `.circleci/config.yml` sem mudanca explicita de decisao.
 
 Politica:
 
@@ -95,6 +98,7 @@ Regras:
 
 - nao promover release com smoke operacional vermelho;
 - nao ignorar drift entre OpenAPI, contracts e implementacao;
+- nao promover AWS EKS sem Helm template/lint, External Secrets, IRSA, NetworkPolicy, probes, HPA, ClamAV/clamd, ServiceMonitor e alert rules revisados;
 - classificar falha antes de seguir;
 - decidir rollback antes de executar mudanca sensivel;
 - merge para `dev` so com checks verdes ou excecao explicitamente documentada.

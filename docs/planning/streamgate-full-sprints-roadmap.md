@@ -1739,7 +1739,7 @@ Evidencia final de fechamento da Sprint 6 (2026-04-28):
 
 **Resultado esperado**
 
-- Dashboard operacional com paridade funcional forte em relacao ao prototipo `streamgate-v3.html`, preservando visual, densidade e interacoes principais sem manter fixtures invisiveis.
+- Dashboard operacional com paridade funcional forte em relacao ao prototipo `docs/product/prototypes/streamgate-v3.html`, preservando visual, densidade e interacoes principais sem manter fixtures invisiveis.
 - `GET /api/v1/analytics/dashboard` expandido para sustentar graficos, heatmap, distribuicao, formatos, fila, ingestao, workers, alertas e event log com dados reais, derivados honestos ou empty/degraded states explicitos.
 - ClickHouse como fonte principal para historico/agregados, WebSocket como transporte de atualizacoes ao vivo e Postgres/polling como fallback honesto.
 - Quick upload real no card de ingestao da dashboard, reaproveitando Upload Center para arquivo local e link publico.
@@ -1748,7 +1748,7 @@ Evidencia final de fechamento da Sprint 6 (2026-04-28):
 
 **Contexto e intencao**
 
-A Sprint 6 fechou a v1 funcional, mas a reavaliacao contra o prototipo final mostrou que a dashboard real ainda esta mais conservadora do que o alvo visual e interativo do produto. O repositorio ja contem componentes estaticos que reproduzem boa parte do `streamgate-v3.html`, especialmente `WorkspaceOverview`, `dashboard-data` e `dashboard-graphics`; a Sprint 7 existe para transformar esses componentes em superficie viva, sem reintroduzir cards cenograficos.
+A Sprint 6 fechou a v1 funcional, mas a reavaliacao contra o prototipo final mostrou que a dashboard real ainda esta mais conservadora do que o alvo visual e interativo do produto. O repositorio versiona `docs/product/prototypes/streamgate-v3.html` como referencia visual aprovada e ja contem componentes estaticos que reproduzem boa parte desse prototipo, especialmente `WorkspaceOverview`, `dashboard-data` e `dashboard-graphics`; a Sprint 7 existe para transformar esses componentes em superficie viva, sem reintroduzir cards cenograficos.
 
 O objetivo nao e trocar honestidade operacional por maquiagem visual. O objetivo e fazer o command center parecer e agir como o prototipo final, com cada card sustentado por REST, WebSocket, ClickHouse ou estado vazio/degradado claramente declarado.
 
@@ -1772,7 +1772,7 @@ O objetivo nao e trocar honestidade operacional por maquiagem visual. O objetivo
 ### P0 - Dashboard prototype parity
 
 - Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `build-web-apps:frontend-app-builder`, `tailwind-design-system`, `web-design-guidelines`, `vercel-react-best-practices`, `vitest`, `playwright`, `test-driven-development`.
-- [x] Refatorar `WorkspaceOverview`, `dashboard-data` e `dashboard-graphics` para componentes data-driven, mantendo fidelidade visual forte ao `streamgate-v3.html`.
+- [x] Refatorar `WorkspaceOverview`, `dashboard-data` e `dashboard-graphics` para componentes data-driven, mantendo fidelidade visual forte ao `docs/product/prototypes/streamgate-v3.html`.
 - [x] Preservar o shell real, responsividade e acessibilidade; permitir ajuste visual apenas quando necessario para caber no produto atual.
 - [x] Garantir que preview/demo so exista com marcacao explicita de demo.
 - [x] Implementar cards reais para KPIs, grafico 24h, pipeline de jobs, distribuicao, formatos, heatmap, ingestao, fila, event log e workers.
@@ -1826,7 +1826,7 @@ O objetivo nao e trocar honestidade operacional por maquiagem visual. O objetivo
 ### Front planning
 
 - Skills obrigatorias para todas as tasks desta trilha: `brainstorming`, `frontend-skill`, `build-web-apps:frontend-app-builder`, `build-web-apps:react-best-practices`, `build-web-apps:shadcn`, `tailwind-design-system`, `web-design-guidelines`.
-- [x] Tratar o `streamgate-v3.html` como referencia visual aprovada, nao como contrato de DOM literal.
+- [x] Tratar o `docs/product/prototypes/streamgate-v3.html` como referencia visual aprovada, nao como contrato de DOM literal.
 - [x] Definir adapters TypeScript para dashboard expandida, realtime events, exports, alert actions, permissoes e quick upload.
 - [x] Definir fallback visual quando WebSocket cair: aviso discreto, polling curto e SLO/stale explicito.
 - [x] Definir UX de drawers contextuais com deep links para `/jobs`, `/etl-explorer`, `/quarantine`, `/events` e `/upload`.

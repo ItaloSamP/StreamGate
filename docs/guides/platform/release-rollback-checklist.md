@@ -23,7 +23,7 @@ Checklist operacional para fechar uma release do StreamGate em ambiente local/Co
 
 - OpenAPI atualizado para endpoints novos ou alterados.
 - `packages/contracts` atualizado com schemas e exemplos.
-- README, runbook, threat model, API docs e workspace map sincronizados quando afetados.
+- README, runbook, threat model, release threat model, SOC 2 matrix, API docs e workspace map sincronizados quando afetados.
 - Roadmap e closeout registram evidencia real, nao intencao.
 
 ### 3. Gates Locais
@@ -58,7 +58,15 @@ Validar rotas principais com Browser Use/IAB ou fallback documentado:
 - `/quarantine`
 - `/audit`
 
-Checar desktop e mobile para texto cortado, overlap, controles inertes, role gating e ausencia de dados demo escondidos.
+Checar desktop e mobile para texto cortado, overlap, controles inertes, role gating, empty/degraded states e ausencia de dados demo escondidos. `/settings` deve provar que operador nao ve SOC 2/readiness nem chama `/api/v1/saas/readiness`.
+`/upload` deve provar arquivo local, public link e conector admin-only; quando Google Drive estiver configurado, validar listagem de arquivo/pasta, scan-first e ausencia de credenciais OAuth/lease na tela.
+
+### 4.1 EKS/GitOps
+
+- `infra/helm/streamgate` renderiza web, API, worker, probes, services, HPA, NetworkPolicy, ExternalSecret, ServiceMonitor e PrometheusRule.
+- ClamAV/clamd deve estar presente no Compose/Helm ou aparecer como excecao formal com owner, risco e criterio de desbloqueio.
+- `infra/gitops/argocd/streamgate-application.yaml` aponta para a branch `release`.
+- Antes de producao real, validar AWS account, IRSA, Secrets Manager, DNS/TLS, ClickHouse Cloud e Google OAuth client.
 
 ### 5. PR E CI Remoto
 

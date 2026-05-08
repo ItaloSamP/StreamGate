@@ -19,6 +19,7 @@ packages/contracts/
 |   |   |-- operational-reads/
 |   |   |-- operations/
 |   |   |-- connectors/
+|   |   |-- saas/
 |   |   |-- artifacts/
 |   |   `-- notifications/
 |   `-- events/
@@ -34,7 +35,8 @@ packages/contracts/
 - Uploads: signed URL, registro idempotente, public link e listagem.
 - Operational reads: jobs, uploads, analytics, dashboard, warehouse, lineage, quarantine, audit, DLQ e realtime events.
 - Operations: retry, resolve, replay DLQ, exports e alert actions.
-- Connectors: profiles admin-only, ingestions e leases internos.
+- Connectors: profiles admin-only, ingestions e leases internos sem credencial de lease em claro nos eventos.
+- SaaS readiness: centro admin de release para identidade, quotas, conectores, AWS EKS, observabilidade open-source, SOC 2 Type I e bloqueios externos sem segredos.
 - Artifacts: listagem e signed download URL curta.
 - Notifications: inbox, bulk actions, settings e deliveries.
 - Events: upload received, public link requested e connector ingestion requested.

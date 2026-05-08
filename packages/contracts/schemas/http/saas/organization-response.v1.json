@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/http/organization-response.v1.json",
+  "title": "OrganizationResponseV1",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": ["organization", "members", "invites"],
+      "properties": {
+        "organization": {
+          "type": "object",
+          "required": ["id", "name", "status", "quotas", "retention_days", "compliance_profile"],
+          "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "status": { "type": "string", "enum": ["active", "suspended"] },
+            "quotas": {
+              "type": "object",
+              "required": ["max_file_bytes", "monthly_bytes", "connector_runs_per_day"],
+              "properties": {
+                "max_file_bytes": { "type": "integer", "minimum": 1 },
+                "monthly_bytes": { "type": "integer", "minimum": 1 },
+                "connector_runs_per_day": { "type": "integer", "minimum": 1 }
+              },
+              "additionalProperties": true
+            },
+            "retention_days": { "type": "integer", "minimum": 1 },
+            "compliance_profile": { "type": "object", "additionalProperties": true }
+          },
+          "additionalProperties": true
+        },
+        "members": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/member" }
+        },
+        "invites": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/invite" }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "member": {
+      "type": "object",
+      "required": ["id", "organization_id", "user_id", "email", "role", "status"],
+      "properties": {
+        "id": { "type": "string" },
+        "organization_id": { "type": "string" },
+        "user_id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "full_name": { "type": ["string", "null"] },
+        "role": { "type": "string", "enum": ["admin", "operator"] },
+        "status": { "type": "string", "enum": ["active", "suspended", "invited"] }
+      },
+      "additionalProperties": true
+    },
+    "invite": {
+      "type": "object",
+      "required": ["id", "organization_id", "email", "role", "status", "expires_at"],
+      "properties": {
+        "id": { "type": "string" },
+        "organization_id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["admin", "operator"] },
+        "status": { "type": "string", "enum": ["pending", "accepted", "expired", "revoked"] },
+        "expires_at": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

@@ -128,7 +128,7 @@ Regras de seguranca:
 
 Observacao de ambiente: no Windows host, Parquet pode exigir toolchain nativa/libclang. O runtime trata Parquet como suporte real quando a gem opcional estiver instalada no ambiente de worker; WSL/Linux e o caminho recomendado para validar esse parser em closeout pesado.
 
-### 6. Conectores S3/HTTP
+### 6. Conectores S3/HTTP/Google Drive
 
 Fluxo operacional:
 
@@ -136,13 +136,17 @@ Fluxo operacional:
 2. API cria `connector_ingestions` e `connector_leases`.
 3. Worker consome `connector.ingestion.requested.v1`.
 4. Worker reivindica o lease em `POST /api/v1/internal/connectors/leases/:id/claim` com `X-Worker-Token`.
-5. Worker baixa S3/HTTP, grava o arquivo no storage padrao e publica `upload.received.v1`.
+5. Worker baixa S3/HTTP/Google Drive, escaneia o conteudo e so entao grava o arquivo no storage padrao.
+6. Arquivo limpo publica `upload.received.v1`; arquivo infectado vira quarentena, auditoria e warning tecnico.
 
 Controles obrigatorios:
 
 - HTTP bloqueia localhost, private, link-local, metadata host e redirects inseguros;
 - DNS resolvido para IP privado deve ser rejeitado para reduzir risco de DNS rebind;
+- `connector.ingestion.requested.v1` deve carregar apenas `lease_id`; o claim interno usa `X-Worker-Token`, sem credencial de lease em broker, headers ou body;
 - S3 nunca deve aparecer com bucket/key/secret em resposta publica, evento, warning ou log;
+- Google Drive usa OAuth delegated via API; worker recebe somente IDs operacionais e busca access token por endpoint interno autenticado;
+- refresh tokens, credenciais OIDC/OAuth, URL assinada completa e payload bruto nao devem aparecer em logs, eventos, warnings ou reports;
 - falha de conector deve virar warning tecnico/auditoria e nao vazar credenciais.
 
 ## Validacao e evidencias

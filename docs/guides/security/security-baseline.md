@@ -84,7 +84,7 @@ Antes de merge relevante:
 
 - Hardening produtivo de cookies/CSRF/TLS depende do desenho de deploy.
 - Secret manager produtivo e egress policy entram no desenho de infraestrutura posterior.
-- Google Drive e OAuth delegado permanecem discovery-only.
+- Google Drive e OAuth delegado entram como superficie funcional de release, com tokens criptografados no backend e sem credenciais em UI, eventos, exemplos ou reports.
 - Malware scanning, quotas por org e fuzzing amplo de parsers devem ser avaliados apos o pente fino final.
 
 ## Referencias

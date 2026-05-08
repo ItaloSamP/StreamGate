@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/http/mfa-setup-response.v1.json",
+  "title": "MfaSetupResponseV1",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": ["factor_id", "secret", "provisioning_uri", "status"],
+      "properties": {
+        "factor_id": { "type": "string" },
+        "secret": { "type": "string" },
+        "provisioning_uri": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "enabled"] }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
