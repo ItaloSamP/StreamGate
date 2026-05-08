@@ -37,6 +37,11 @@ class User < ApplicationRecord
   has_many :dashboard_exports, foreign_key: :actor_id, inverse_of: :actor, dependent: :restrict_with_exception
   has_many :connector_profiles, foreign_key: :created_by_id, inverse_of: :created_by, dependent: :restrict_with_exception
   has_many :connector_ingestions, foreign_key: :requested_by_id, inverse_of: :requested_by, dependent: :restrict_with_exception
+  has_many :organization_memberships, dependent: :restrict_with_exception
+  has_many :organizations, through: :organization_memberships
+  has_many :mfa_factors, dependent: :destroy
+  has_many :mfa_challenges, dependent: :destroy
+  has_many :oauth_connections, dependent: :restrict_with_exception
 
   normalizes :email, with: ->(value) { value.to_s.strip.downcase }
 
@@ -54,6 +59,35 @@ class User < ApplicationRecord
 
   def active_for_auth?
     active?
+  end
+
+  def current_organization
+    Organization.find_by(id: organization_id)
+  end
+
+  def active_membership_for?(organization)
+    organization_id = organization.is_a?(Organization) ? organization.id : organization.to_s
+    organization_memberships.active.exists?(organization_id: organization_id)
+  end
+
+  def ensure_default_organization_membership!
+    organization = Organization.find_or_create_by!(id: organization_id) do |record|
+      record.name = organization_id
+      record.slug = organization_id.to_s.parameterize.presence || organization_id
+      record.quotas = Organization::DEFAULT_QUOTAS
+    end
+
+    organization_memberships.find_or_create_by!(organization: organization) do |membership|
+      membership.role = admin? ? "admin" : "operator"
+      membership.status = active? ? "active" : status
+      membership.joined_at = created_at || Time.current
+    end
+
+    organization
+  end
+
+  def mfa_enabled?
+    mfa_factors.enabled.exists?
   end
 
   private

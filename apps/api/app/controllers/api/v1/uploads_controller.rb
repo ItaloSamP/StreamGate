@@ -15,6 +15,7 @@ module Api
       def signed_url
         payload = signed_url_params
         return if invalid_upload_payload?(payload, require_storage_key: false)
+        return unless quota_allows_upload?(payload[:byte_size].to_i)
 
         result = ::Uploads::GenerateSignedUrlService.call(
           user: current_actor,
@@ -49,6 +50,7 @@ module Api
       def create
         payload = register_upload_params
         return if invalid_upload_payload?(payload, require_storage_key: true)
+        return unless quota_allows_upload?(payload[:byte_size].to_i)
 
         existing_upload = Upload.find_by(storage_key: payload[:storage_key])
         if existing_upload
@@ -84,6 +86,7 @@ module Api
         payload = public_link_params
         validation = validate_public_link_payload(payload)
         return if validation == false
+        return unless quota_allows_upload?(payload[:byte_size].to_i)
 
         with_idempotency!(scope: "uploads.public_link", payload: payload.to_h) do
           result = ::Uploads::RegisterPublicLinkService.call(
@@ -115,7 +118,7 @@ module Api
       end
 
       def index
-        scope = current_actor.admin? ? Upload.all : Upload.joins(:user).where(users: { organization_id: current_actor.organization_id })
+        scope = Upload.joins(:user).where(users: { organization_id: current_organization.id })
 
         status = params[:status].to_s.strip
         if status.present?
@@ -355,6 +358,19 @@ module Api
 
       def can_access_upload?(upload)
         UploadPolicy.new(current_actor, upload).show?
+      end
+
+      def quota_allows_upload?(byte_size)
+        result = Organizations::QuotaGuard.check_upload!(organization: current_organization, byte_size: byte_size)
+        return true if result.allowed?
+
+        render_api_error(
+          code: "quota_exceeded",
+          message: "Quota da organizacao excedida para esta ingestao.",
+          status: :too_many_requests,
+          details: [ { field: "byte_size", reason: result.reason, limit: result.limit, used: result.used } ]
+        )
+        false
       end
 
       def upload_job_payload(upload, job)

@@ -53,13 +53,26 @@ class ApplicationController < ActionController::API
     Current.actor = result.user
     Current.actor_id = result.user.id
     Current.auth_session_id = result.session.id
+    Current.organization = result.user.ensure_default_organization_membership!
 
     @current_actor = result.user
     @current_session = result.session
+    @current_organization = Current.organization
   end
 
   def current_actor
     @current_actor
+  end
+
+  def current_organization
+    @current_organization || Current.organization || current_actor&.current_organization
+  end
+
+  def require_admin!
+    return true if current_actor&.admin? && current_actor.active_membership_for?(current_organization)
+
+    render_api_error(code: "access_denied", message: "Acesso negado para este recurso.", status: :forbidden)
+    false
   end
 
   def current_session

@@ -4,7 +4,7 @@ class UploadPolicy < ApplicationPolicy
   end
 
   def show?
-    admin? || same_organization?
+    same_organization?
   end
 
   def create?

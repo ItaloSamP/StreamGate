@@ -26,7 +26,7 @@ module Api
 
       def render_clickhouse(window:, reader:)
         target = Rails.application.config.x.analytics_slo_target_seconds
-        result = reader.aggregates(window: window, organization_id: current_actor.admin? ? nil : current_actor.organization_id)
+        result = reader.aggregates(window: window, organization_id: current_organization.id)
         last_event_at = result[:last_event_at]
         lag_seconds = last_event_at ? (Time.current - last_event_at).round : nil
 
@@ -86,9 +86,7 @@ module Api
       end
 
       def scoped_snapshots
-        return AnalyticsJobSnapshot.all if current_actor.admin?
-
-        AnalyticsJobSnapshot.where(organization_id: current_actor.organization_id)
+        AnalyticsJobSnapshot.where(organization_id: current_organization.id)
       end
 
       def record_clickhouse_warning(error)

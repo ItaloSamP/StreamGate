@@ -15,6 +15,19 @@ module Api
             user_agent: request.user_agent
           )
 
+          if result.mfa_required?
+            return render_success(
+              data: {
+                mfa: {
+                  required: true,
+                  challenge_token: result.challenge_token,
+                  expires_at: result.challenge.expires_at&.iso8601
+                }
+              },
+              status: :accepted
+            )
+          end
+
           unless result.success?
             Rails.logger.info(
               "auth.login_failed request_id=#{Current.request_id} trace_id=#{Current.trace_id} reason=#{result.reason}"

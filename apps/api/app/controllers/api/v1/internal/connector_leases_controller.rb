@@ -6,9 +6,8 @@ module Api
 
         def claim
           lease = ConnectorLease.find(params[:id])
-          token = params.dig(:lease, :token).presence || request.headers["X-Connector-Lease-Token"].to_s
 
-          unless lease.claim!(token: token, claimed_by: "worker")
+          unless lease.claim_by_worker!(claimed_by: "worker")
             return render_api_error(code: "access_denied", message: "Lease invalido ou expirado.", status: :forbidden)
           end
 

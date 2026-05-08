@@ -20,6 +20,7 @@ module Auth
 
     def call
       user = User.create!(@attributes)
+      user.ensure_default_organization_membership!
       issued = IssueSessionService.call(
         user: user,
         request_id: @request_id,

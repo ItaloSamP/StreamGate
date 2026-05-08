@@ -5,7 +5,8 @@ class ConnectorProfile < ApplicationRecord
 
   KINDS = {
     s3: "s3",
-    http: "http"
+    http: "http",
+    google_drive: "google_drive"
   }.freeze
 
   STATUSES = {

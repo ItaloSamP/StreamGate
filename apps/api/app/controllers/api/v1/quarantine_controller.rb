@@ -76,10 +76,7 @@ module Api
       private
 
       def base_scope
-        scope = QuarantineRecord.joins(job: :requested_by)
-        return scope if current_actor.admin?
-
-        scope.where(users: { organization_id: current_actor.organization_id })
+        QuarantineRecord.joins(job: :requested_by).where(users: { organization_id: current_organization.id })
       end
     end
   end

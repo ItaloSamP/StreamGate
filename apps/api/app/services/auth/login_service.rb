@@ -1,8 +1,12 @@
 module Auth
   class LoginService < ApplicationService
-    Result = Struct.new(:user, :session, :token, :reason, keyword_init: true) do
+    Result = Struct.new(:user, :session, :token, :challenge, :challenge_token, :reason, keyword_init: true) do
       def success?
-        reason.nil?
+        reason.nil? || reason == :mfa_required
+      end
+
+      def mfa_required?
+        reason == :mfa_required
       end
     end
 
@@ -19,6 +23,11 @@ module Auth
       user = User.find_by(email: @email.to_s.strip.downcase)
       return Result.new(reason: :invalid_credentials) unless user&.authenticate(@password)
       return Result.new(reason: :access_denied) unless user.active_for_auth?
+
+      if user.mfa_enabled?
+        challenge, challenge_token = MfaChallenge.issue!(user: user)
+        return Result.new(user: user, challenge: challenge, challenge_token: challenge_token, reason: :mfa_required)
+      end
 
       issued = IssueSessionService.call(
         user: user,

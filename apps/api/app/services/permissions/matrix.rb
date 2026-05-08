@@ -34,7 +34,7 @@ module Permissions
 
     def allowed?
       return false if actor.blank?
-      return false if organization_id.present? && !actor.admin? && actor.organization_id != organization_id
+      return false if organization_id.present? && !actor.active_membership_for?(organization_id)
 
       rule = explicit_rule
       return rule.enabled? unless rule.nil?

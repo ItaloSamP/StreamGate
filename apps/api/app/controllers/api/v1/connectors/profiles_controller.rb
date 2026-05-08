@@ -9,7 +9,7 @@ module Api
         def index
           return forbidden unless allowed?
 
-          profiles = ConnectorProfile.where(organization_id: current_actor.organization_id).order(created_at: :desc)
+          profiles = ConnectorProfile.where(organization_id: current_organization.id).order(created_at: :desc)
           render_success(data: profiles.map { |profile| ConnectorProfileSerializer.new(profile).serializable_hash })
         end
 
@@ -19,7 +19,7 @@ module Api
           payload = profile_params.to_h
           with_idempotency!(scope: "connector.profile:create", payload: payload) do
             profile = ConnectorProfile.new(
-              organization_id: current_actor.organization_id,
+              organization_id: current_organization.id,
               name: payload.fetch("name"),
               kind: payload.fetch("kind"),
               settings: payload.fetch("settings", {}),
@@ -37,14 +37,14 @@ module Api
         def show
           return forbidden unless allowed?
 
-          profile = ConnectorProfile.where(organization_id: current_actor.organization_id).find(params[:id])
+          profile = ConnectorProfile.where(organization_id: current_organization.id).find(params[:id])
           render_success(data: ConnectorProfileSerializer.new(profile).serializable_hash)
         end
 
         def update
           return forbidden unless allowed?
 
-          profile = ConnectorProfile.where(organization_id: current_actor.organization_id).find(params[:id])
+          profile = ConnectorProfile.where(organization_id: current_organization.id).find(params[:id])
           payload = profile_params.to_h
           with_idempotency!(scope: "connector.profile:update:#{profile.id}", payload: payload) do
             profile.assign_attributes(payload.slice("name", "kind", "settings", "status"))
@@ -58,7 +58,7 @@ module Api
         def test
           return forbidden unless allowed?
 
-          profile = ConnectorProfile.where(organization_id: current_actor.organization_id).find(params[:id])
+          profile = ConnectorProfile.where(organization_id: current_organization.id).find(params[:id])
           render_success(data: { id: profile.id, status: "configured", kind: profile.kind })
         end
 

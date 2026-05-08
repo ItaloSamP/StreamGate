@@ -9,7 +9,7 @@ class CommandCenterBackWorkerTest < ActionDispatch::IntegrationTest
       end
 
       def dashboard(window:, organization_id:)
-        raise "unexpected org scope" unless organization_id.nil?
+        raise "unexpected org scope" unless organization_id == "org_fixture_alpha"
 
         {
           last_event_at: Time.zone.parse("2026-04-06 12:00:00"),
@@ -148,10 +148,23 @@ class CommandCenterBackWorkerTest < ActionDispatch::IntegrationTest
          as: :json
     assert_response :created
     assert_equal "connector", parsed_json.dig("data", "upload", "source_type")
-    assert parsed_json.dig("data", "lease", "id").present?
-    assert parsed_json.dig("data", "lease", "token").present?
+    lease_id = parsed_json.dig("data", "lease", "id")
+    assert lease_id.present?
+    assert_not parsed_json.dig("data", "lease").key?("token")
     refute_includes response.body, "top-secret"
     refute_includes response.body, "incoming/orders.ndjson"
+    refute_includes response.body, "short-lived-token"
+
+    connector_event = IntegrationOutboxEvent.where(event_name: "connector.ingestion.requested.v1").order(:created_at).last
+    assert connector_event.present?
+    refute connector_event.payload.fetch("payload").key?("lease_token")
+
+    post "/api/v1/internal/connectors/leases/#{lease_id}/claim",
+         headers: { "X-Worker-Token" => Rails.application.config.x.worker_internal_token },
+         as: :json
+    assert_response :ok
+    assert_equal "claimed", parsed_json.dig("data", "lease", "status")
+    assert_equal "fetching", ConnectorIngestion.find(parsed_json.dig("data", "ingestion", "id")).status
   end
 
   private

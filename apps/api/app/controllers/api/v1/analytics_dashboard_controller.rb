@@ -58,16 +58,14 @@ module Api
       private
 
       def scoped_snapshots
-        return AnalyticsJobSnapshot.all if current_actor.admin?
-
-        AnalyticsJobSnapshot.where(organization_id: current_actor.organization_id)
+        AnalyticsJobSnapshot.where(organization_id: current_organization.id)
       end
 
       def clickhouse_dashboard(window)
         reader = Analytics::ClickhouseWarehouseReader.new
         return nil unless reader.available? && reader.respond_to?(:dashboard)
 
-        reader.dashboard(window: window, organization_id: current_actor.admin? ? nil : current_actor.organization_id)
+        reader.dashboard(window: window, organization_id: current_organization.id)
       rescue Analytics::ClickhouseWarehouseReader::Unavailable, StandardError => e
         record_clickhouse_warning(e)
         nil
@@ -382,7 +380,7 @@ module Api
           expires_at: Rails.application.config.x.operational_warning_retention_days.days.from_now,
           trace_id: Current.trace_id,
           request_id: Current.request_id,
-          organization_id: current_actor.organization_id
+          organization_id: current_organization.id
         )
       rescue ActiveRecord::ActiveRecordError
         Rails.logger.warn("failed to persist clickhouse dashboard warning")

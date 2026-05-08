@@ -156,6 +156,22 @@ class OperationalActionsTest < ActionDispatch::IntegrationTest
     assert_response :created
     request_id = parsed_json.dig("data", "id")
 
+    external_admin = User.create!(
+      email: "external-admin@example.com",
+      full_name: "External Admin",
+      password: "StrongPass123!",
+      organization_id: "org_fixture_beta",
+      role: :admin,
+      status: :active
+    )
+    external_admin_token = login_as(external_admin.email, "StrongPass123!")
+
+    post "/api/v1/dlq-replay-requests/#{request_id}/approve",
+         params: { operation: { reason: "Tentativa de aprovacao cross-org." } },
+         headers: auth_header(external_admin_token).merge("Idempotency-Key" => "replay-approve-cross-org-1"),
+         as: :json
+    assert_response :forbidden
+
     post "/api/v1/dlq-replay-requests/#{request_id}/approve",
          params: { operation: { reason: "Tentativa de auto-aprovacao." } },
          headers: auth_header(creator_token).merge("Idempotency-Key" => "replay-approve-self-1"),

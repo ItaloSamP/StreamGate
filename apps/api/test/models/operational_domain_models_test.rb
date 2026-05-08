@@ -67,6 +67,17 @@ class OperationalDomainModelsTest < ActiveSupport::TestCase
       payload: { event_id: "event_2", event_name: "upload.received.v1" },
       trace_id: "trace_fixture_1"
     )
+    external_admin = User.create!(
+      email: "external-admin-policy@example.com",
+      full_name: "External Admin Policy",
+      password: "StrongPass123!",
+      organization_id: "org_fixture_beta",
+      role: :admin,
+      status: :active
+    )
+
     assert_not DlqReplayRequestPolicy.new(users(:admin), replay).approve_dlq_replay?
+    assert_not DlqReplayRequestPolicy.new(external_admin, replay).approve_dlq_replay?
+    assert_not DlqReplayRequestPolicy.new(external_admin, replay).execute_dlq_replay?
   end
 end

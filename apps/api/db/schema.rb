@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_26_000200) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_06_000100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -80,11 +80,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_26_000200) do
     t.string "connector_profile_id", null: false
     t.string "content_type", null: false
     t.datetime "created_at", null: false
+    t.string "drive_file_id"
+    t.string "drive_folder_id"
     t.string "filename", null: false
     t.string "job_id", null: false
     t.text "last_error"
     t.jsonb "metadata", default: {}, null: false
     t.string "object_key"
+    t.string "parent_ingestion_id"
     t.string "request_id"
     t.string "requested_by_id", null: false
     t.text "source_path"
@@ -94,6 +97,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_26_000200) do
     t.string "upload_id", null: false
     t.index ["connector_profile_id", "created_at"], name: "idx_on_connector_profile_id_created_at_39c8181692"
     t.index ["job_id"], name: "index_connector_ingestions_on_job_id", unique: true
+    t.index ["parent_ingestion_id"], name: "index_connector_ingestions_on_parent_ingestion_id"
     t.index ["status", "created_at"], name: "index_connector_ingestions_on_status_and_created_at"
     t.index ["upload_id"], name: "index_connector_ingestions_on_upload_id", unique: true
   end
@@ -259,6 +263,46 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_26_000200) do
     t.index ["upload_id"], name: "index_jobs_on_upload_id"
   end
 
+  create_table "malware_scans", id: :string, force: :cascade do |t|
+    t.string "connector_ingestion_id"
+    t.datetime "created_at", null: false
+    t.string "job_id", null: false
+    t.string "request_id"
+    t.datetime "scanned_at"
+    t.string "scanner", default: "clamav", null: false
+    t.string "signature"
+    t.string "status", default: "pending", null: false
+    t.string "trace_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "upload_id", null: false
+    t.index ["job_id", "status"], name: "index_malware_scans_on_job_id_and_status"
+    t.index ["upload_id", "status"], name: "index_malware_scans_on_upload_id_and_status"
+  end
+
+  create_table "mfa_challenges", id: :string, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.string "user_id", null: false
+    t.datetime "verified_at"
+    t.index ["token_digest"], name: "index_mfa_challenges_on_token_digest", unique: true
+    t.index ["user_id", "expires_at"], name: "index_mfa_challenges_on_user_id_and_expires_at"
+  end
+
+  create_table "mfa_factors", id: :string, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "enabled_at"
+    t.string "factor_type", default: "totp", null: false
+    t.datetime "last_verified_at"
+    t.jsonb "recovery_code_digests", default: [], null: false
+    t.text "secret_ciphertext", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.string "user_id", null: false
+    t.index ["user_id", "status"], name: "index_mfa_factors_on_user_id_and_status"
+  end
+
   create_table "notification_settings", id: :string, force: :cascade do |t|
     t.datetime "created_at", null: false
     t.boolean "email_enabled", default: false, null: false
@@ -288,6 +332,62 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_26_000200) do
     t.index ["recipient_id", "created_at"], name: "index_notifications_on_recipient_id_and_created_at"
     t.index ["recipient_id"], name: "index_notifications_on_recipient_id"
     t.index ["status", "expires_at"], name: "index_notifications_on_status_and_expires_at"
+  end
+
+  create_table "oauth_authorization_states", id: :string, force: :cascade do |t|
+    t.datetime "consumed_at"
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "organization_id", null: false
+    t.string "provider", null: false
+    t.jsonb "scopes", default: [], null: false
+    t.string "state_digest", null: false
+    t.datetime "updated_at", null: false
+    t.string "user_id", null: false
+    t.index ["state_digest"], name: "index_oauth_authorization_states_on_state_digest", unique: true
+  end
+
+  create_table "oauth_connections", id: :string, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "organization_id", null: false
+    t.string "provider", null: false
+    t.text "refresh_token_ciphertext"
+    t.datetime "revoked_at"
+    t.jsonb "scopes", default: [], null: false
+    t.string "status", default: "active", null: false
+    t.datetime "token_expires_at"
+    t.datetime "updated_at", null: false
+    t.string "user_id", null: false
+    t.index ["organization_id", "provider", "status"], name: "idx_oauth_connections_org_provider_status"
+    t.index ["organization_id", "user_id", "provider"], name: "idx_oauth_connections_org_user_provider", unique: true
+  end
+
+  create_table "oidc_login_states", id: :string, force: :cascade do |t|
+    t.datetime "consumed_at"
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "nonce", null: false
+    t.string "oidc_provider_id", null: false
+    t.string "organization_id", null: false
+    t.string "redirect_uri"
+    t.string "state_digest", null: false
+    t.datetime "updated_at", null: false
+    t.index ["organization_id", "expires_at"], name: "index_oidc_login_states_on_organization_id_and_expires_at"
+    t.index ["state_digest"], name: "index_oidc_login_states_on_state_digest", unique: true
+  end
+
+  create_table "oidc_providers", id: :string, force: :cascade do |t|
+    t.string "client_id", null: false
+    t.text "client_secret_ciphertext", null: false
+    t.datetime "created_at", null: false
+    t.string "hosted_domain", null: false
+    t.string "issuer", null: false
+    t.string "organization_id", null: false
+    t.string "provider", default: "google_workspace", null: false
+    t.jsonb "scopes", default: [], null: false
+    t.string "status", default: "active", null: false
+    t.datetime "updated_at", null: false
+    t.index ["organization_id", "provider"], name: "index_oidc_providers_on_organization_id_and_provider", unique: true
   end
 
   create_table "operational_action_idempotency_keys", id: :string, force: :cascade do |t|
@@ -339,6 +439,60 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_26_000200) do
     t.index ["trace_id"], name: "index_operational_warnings_on_trace_id"
     t.index ["upload_id", "created_at"], name: "index_operational_warnings_on_upload_id_and_created_at"
     t.check_constraint "retry_count >= 0", name: "operational_warnings_retry_count_non_negative"
+  end
+
+  create_table "organization_invites", id: :string, force: :cascade do |t|
+    t.datetime "accepted_at"
+    t.string "accepted_by_id"
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.datetime "expires_at", null: false
+    t.string "invited_by_id", null: false
+    t.string "organization_id", null: false
+    t.string "role", null: false
+    t.string "status", default: "pending", null: false
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.index ["organization_id", "email", "status"], name: "idx_org_invites_org_email_status"
+    t.index ["token_digest"], name: "index_organization_invites_on_token_digest", unique: true
+  end
+
+  create_table "organization_memberships", id: :string, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "invited_by_id"
+    t.datetime "joined_at"
+    t.string "organization_id", null: false
+    t.string "role", null: false
+    t.string "status", default: "active", null: false
+    t.datetime "updated_at", null: false
+    t.string "user_id", null: false
+    t.index ["organization_id", "role"], name: "index_organization_memberships_on_organization_id_and_role"
+    t.index ["organization_id", "user_id"], name: "idx_org_memberships_org_user", unique: true
+    t.index ["user_id", "status"], name: "index_organization_memberships_on_user_id_and_status"
+  end
+
+  create_table "organization_usage_counters", id: :string, force: :cascade do |t|
+    t.integer "connector_runs", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.string "organization_id", null: false
+    t.date "period_start", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "upload_bytes", default: 0, null: false
+    t.index ["organization_id", "period_start"], name: "idx_org_usage_counters_org_period", unique: true
+  end
+
+  create_table "organizations", id: :string, force: :cascade do |t|
+    t.jsonb "compliance_profile", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.jsonb "quotas", default: {}, null: false
+    t.integer "retention_days", default: 90, null: false
+    t.jsonb "settings", default: {}, null: false
+    t.string "slug", null: false
+    t.string "status", default: "active", null: false
+    t.datetime "updated_at", null: false
+    t.index ["slug"], name: "index_organizations_on_slug", unique: true
+    t.index ["status"], name: "index_organizations_on_status"
   end
 
   create_table "permission_rules", id: :string, force: :cascade do |t|
@@ -576,11 +730,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_26_000200) do
   add_foreign_key "job_batches", "jobs"
   add_foreign_key "jobs", "uploads"
   add_foreign_key "jobs", "users", column: "requested_by_id"
+  add_foreign_key "malware_scans", "connector_ingestions"
+  add_foreign_key "malware_scans", "jobs"
+  add_foreign_key "malware_scans", "uploads"
+  add_foreign_key "mfa_challenges", "users"
+  add_foreign_key "mfa_factors", "users"
   add_foreign_key "notification_settings", "users"
   add_foreign_key "notifications", "users", column: "recipient_id"
+  add_foreign_key "oauth_authorization_states", "organizations"
+  add_foreign_key "oauth_authorization_states", "users"
+  add_foreign_key "oauth_connections", "organizations"
+  add_foreign_key "oauth_connections", "users"
+  add_foreign_key "oidc_login_states", "oidc_providers"
+  add_foreign_key "oidc_login_states", "organizations"
+  add_foreign_key "oidc_providers", "organizations"
   add_foreign_key "operational_action_idempotency_keys", "users", column: "actor_id"
   add_foreign_key "operational_warnings", "jobs"
   add_foreign_key "operational_warnings", "uploads"
+  add_foreign_key "organization_invites", "organizations"
+  add_foreign_key "organization_invites", "users", column: "accepted_by_id"
+  add_foreign_key "organization_invites", "users", column: "invited_by_id"
+  add_foreign_key "organization_memberships", "organizations"
+  add_foreign_key "organization_memberships", "users"
+  add_foreign_key "organization_usage_counters", "organizations"
   add_foreign_key "processing_attempts", "jobs"
   add_foreign_key "processing_attempts", "processing_attempts", column: "source_attempt_id"
   add_foreign_key "processing_attempts", "users", column: "initiated_by_id"

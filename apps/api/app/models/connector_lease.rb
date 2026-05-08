@@ -21,7 +21,7 @@ class ConnectorLease < ApplicationRecord
 
   def self.create_with_token!(connector_profile:, connector_ingestion:, request_id:, trace_id:)
     token = SecureRandom.urlsafe_base64(32)
-    lease = create!(
+    create!(
       connector_profile: connector_profile,
       connector_ingestion: connector_ingestion,
       token_digest: digest(token),
@@ -29,7 +29,6 @@ class ConnectorLease < ApplicationRecord
       request_id: request_id,
       trace_id: trace_id
     )
-    [ lease, token ]
   end
 
   def self.digest(token)
@@ -41,6 +40,13 @@ class ConnectorLease < ApplicationRecord
     return false if expires_at <= Time.current
     candidate = self.class.digest(token)
     return false unless candidate.bytesize == token_digest.bytesize && ActiveSupport::SecurityUtils.secure_compare(token_digest, candidate)
+
+    update!(status: "claimed", claimed_at: Time.current, claimed_by: claimed_by)
+  end
+
+  def claim_by_worker!(claimed_by:)
+    return false unless pending?
+    return false if expires_at <= Time.current
 
     update!(status: "claimed", claimed_at: Time.current, claimed_by: claimed_by)
   end

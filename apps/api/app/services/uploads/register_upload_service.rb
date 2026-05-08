@@ -25,10 +25,19 @@ module Uploads
         upload = user.uploads.create!(upload_attributes)
         job = upload.jobs.create!(job_attributes)
 
-        event_payload = Messaging::UploadReceivedEventBuilder.call(upload: upload, job: job)
+        scan = MalwareScan.create!(
+          upload: upload,
+          job: job,
+          status: "pending",
+          scanner: "clamav",
+          request_id: upload.request_id || upload.trace_id,
+          trace_id: upload.trace_id
+        )
+
+        event_payload = Messaging::UploadScanRequestedEventBuilder.call(upload: upload, job: job, scan: scan)
         outbox_event = OutboxEnqueueEventService.call(
           event_name: event_payload[:event_name],
-          routing_key: Rails.application.config.x.broker_upload_received_routing_key,
+          routing_key: Rails.application.config.x.broker_upload_scan_requested_routing_key,
           payload: event_payload,
           headers: {
             "x-event-name" => event_payload[:event_name],
@@ -56,6 +65,7 @@ module Uploads
         )
 
         AnalyticsSyncJobSnapshotService.call(job: job)
+        Organizations::QuotaGuard.record_upload!(organization: user.ensure_default_organization_membership!, byte_size: upload.byte_size)
         Realtime::EventPublisher.call(
           event_type: "upload.registered",
           organization_id: user.organization_id,

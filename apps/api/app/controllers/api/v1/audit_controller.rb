@@ -14,6 +14,8 @@ module Api
         return if window.nil?
 
         scope = AuditEvent.where(occurred_at: window[:from]..window[:to])
+          .left_outer_joins(:actor)
+          .where("users.organization_id = :organization_id OR audit_events.actor_id IS NULL", organization_id: current_organization.id)
         scope = scope.where("occurred_at >= ?", retention_cutoff)
 
         event_action = request.query_parameters["action"].to_s.strip

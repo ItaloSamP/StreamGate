@@ -60,7 +60,7 @@ class BackendContractTest < ActionDispatch::IntegrationTest
       end
 
       def aggregates(window:, organization_id:)
-        raise "unexpected org scope" unless organization_id.nil?
+        raise "unexpected org scope" unless organization_id == "org_fixture_alpha"
 
         {
           last_event_at: Time.zone.parse("2026-04-06 12:00:00"),

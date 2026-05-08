@@ -76,9 +76,7 @@ module Api
       private
 
       def scoped_snapshots
-        return AnalyticsJobSnapshot.all if current_actor.admin?
-
-        AnalyticsJobSnapshot.where(organization_id: current_actor.organization_id)
+        AnalyticsJobSnapshot.where(organization_id: current_organization.id)
       end
 
       def sort_breakdown(rows, key:, order:, fallback_key:)

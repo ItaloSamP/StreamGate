@@ -2,17 +2,19 @@ require "digest"
 
 module Connectors
   class CreateIngestionService < ApplicationService
-    Result = Struct.new(:upload, :job, :ingestion, :lease, :lease_token, keyword_init: true)
+    Result = Struct.new(:upload, :job, :ingestion, :lease, keyword_init: true)
 
     ZERO_CHECKSUM = "0" * 64
 
-    def initialize(actor:, profile:, filename:, content_type:, object_key: nil, source_path: nil, request_id:, trace_id:)
+    def initialize(actor:, profile:, filename:, content_type:, object_key: nil, source_path: nil, drive_file_id: nil, drive_folder_id: nil, request_id:, trace_id:)
       @actor = actor
       @profile = profile
       @filename = filename.to_s.strip
       @content_type = content_type.to_s.strip.downcase
       @object_key = object_key.to_s.strip.presence
       @source_path = source_path.to_s.strip.presence
+      @drive_file_id = drive_file_id.to_s.strip.presence
+      @drive_folder_id = drive_folder_id.to_s.strip.presence
       @request_id = request_id
       @trace_id = trace_id
     end
@@ -23,7 +25,6 @@ module Connectors
       job = nil
       ingestion = nil
       lease = nil
-      lease_token = nil
       outbox = nil
 
       ApplicationRecord.transaction do
@@ -37,7 +38,7 @@ module Connectors
           metadata: {
             connector_profile_id: profile.id,
             connector_kind: profile.kind,
-            source_path_hash: Digest::SHA256.hexdigest((object_key || source_path).to_s)
+            source_path_hash: Digest::SHA256.hexdigest((object_key || source_path || drive_file_id || drive_folder_id).to_s)
           },
           request_id: request_id,
           trace_id: trace_id
@@ -55,20 +56,22 @@ module Connectors
           requested_by: actor,
           object_key: object_key,
           source_path: source_path,
+          drive_file_id: drive_file_id,
+          drive_folder_id: drive_folder_id,
           filename: filename,
           content_type: content_type,
           status: "pending",
           request_id: request_id,
           trace_id: trace_id
         )
-        lease, lease_token = ConnectorLease.create_with_token!(
+        lease = ConnectorLease.create_with_token!(
           connector_profile: profile,
           connector_ingestion: ingestion,
           request_id: request_id,
           trace_id: trace_id
         )
         ingestion.update!(status: "leased")
-        event_payload = connector_event(upload: upload, job: job, lease: lease, lease_token: lease_token)
+        event_payload = connector_event(upload: upload, job: job, lease: lease)
         outbox = OutboxEnqueueEventService.call(
           event_name: event_payload[:event_name],
           routing_key: Rails.application.config.x.broker_connector_requested_routing_key,
@@ -98,16 +101,20 @@ module Connectors
       end
 
       OutboxDispatchEventService.call(event_id: outbox.id) if outbox.present?
-      Result.new(upload: upload, job: job, ingestion: ingestion, lease: lease, lease_token: lease_token)
+      Result.new(upload: upload, job: job, ingestion: ingestion, lease: lease)
     end
 
     private
 
-    attr_reader :actor, :profile, :filename, :content_type, :object_key, :source_path, :request_id, :trace_id
+    attr_reader :actor, :profile, :filename, :content_type, :object_key, :source_path, :drive_file_id, :drive_folder_id, :request_id, :trace_id
 
     def validate_source!
       if profile.s3? && object_key.blank?
         raise ActiveRecord::RecordInvalid, ConnectorIngestion.new.tap { |record| record.errors.add(:object_key, :blank) }
+      end
+
+      if profile.google_drive? && drive_file_id.blank? && drive_folder_id.blank?
+        raise ActiveRecord::RecordInvalid, ConnectorIngestion.new.tap { |record| record.errors.add(:drive_file_id, :blank) }
       end
 
       return unless profile.http?
@@ -135,7 +142,7 @@ module Connectors
       filename.gsub(/[^a-zA-Z0-9._-]/, "_").presence || "connector-upload.dat"
     end
 
-    def connector_event(upload:, job:, lease:, lease_token:)
+    def connector_event(upload:, job:, lease:)
       {
         event_id: StreamGate::Id.generate("event"),
         event_name: "connector.ingestion.requested.v1",
@@ -148,8 +155,7 @@ module Connectors
         upload_id: upload.id,
         job_id: job.id,
         payload: {
-          lease_id: lease.id,
-          lease_token: lease_token
+          lease_id: lease.id
         }
       }
     end
