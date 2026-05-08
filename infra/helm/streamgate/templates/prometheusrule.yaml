@@ -1,0 +1,26 @@
+{{- if .Values.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "streamgate.fullname" . }}-slo
+  labels:
+    {{- include "streamgate.labels" . | nindent 4 }}
+spec:
+  groups:
+    - name: streamgate.release
+      rules:
+        - alert: StreamGateApiHighErrorRate
+          expr: sum(rate(http_requests_total{app_kubernetes_io_component="api",status=~"5.."}[5m])) / clamp_min(sum(rate(http_requests_total{app_kubernetes_io_component="api"}[5m])), 1) > 0.02
+          for: 10m
+          labels:
+            severity: page
+          annotations:
+            summary: StreamGate API 5xx acima de 2%
+        - alert: StreamGateWorkerNoProgress
+          expr: time() - max(streamgate_worker_last_processed_timestamp_seconds) > 900
+          for: 15m
+          labels:
+            severity: warn
+          annotations:
+            summary: Worker sem progresso por mais de 15 minutos
+{{- end }}

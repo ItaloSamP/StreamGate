@@ -1,0 +1,19 @@
+{{- if .Values.clamav.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "streamgate.fullname" . }}-clamav
+  labels:
+    {{- include "streamgate.labels" . | nindent 4 }}
+    app.kubernetes.io/component: clamav
+spec:
+  type: ClusterIP
+  ports:
+    - name: clamd
+      port: {{ .Values.clamav.port }}
+      targetPort: clamd
+  selector:
+    app.kubernetes.io/name: {{ include "streamgate.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: clamav
+{{- end }}

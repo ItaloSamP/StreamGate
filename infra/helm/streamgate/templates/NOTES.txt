@@ -1,0 +1,8 @@
+StreamGate release chart rendered.
+
+Required platform dependencies:
+- AWS EKS with IRSA enabled
+- External Secrets Operator configured with AWS Secrets Manager
+- cert-manager or ALB TLS integration
+- Prometheus Operator for ServiceMonitor and PrometheusRule
+- RDS Postgres, S3, ElastiCache Redis, Amazon MQ, and ClickHouse Cloud in the same AWS region

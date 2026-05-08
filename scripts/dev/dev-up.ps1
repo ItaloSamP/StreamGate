@@ -2,7 +2,7 @@
   [ValidateSet('infra', 'app', 'full')]
   [string]$Mode = 'infra',
   [ValidateRange(30, 3600)]
-  [int]$TimeoutSeconds = 180
+  [int]$TimeoutSeconds = 900
 )
 
 $ErrorActionPreference = "Stop"

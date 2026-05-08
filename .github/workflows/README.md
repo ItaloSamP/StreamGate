@@ -6,3 +6,4 @@ Workflows ativos:
 - `backend-ci.yml`: valida API e worker Ruby, incluindo auth flow e idempotencia de seeds
 - `docker-ci.yml`: valida Compose, helpers de health check e imagens Docker
 - `e2e-auth-ci.yml`: sobe stack de aplicacao, valida auth integration (`vitest`) e E2E (`playwright`) em Chromium
+- `release-readiness-ci.yml`: valida contratos/OpenAPI, sweep browser de release, security scanners e Helm/GitOps

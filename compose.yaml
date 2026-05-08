@@ -136,6 +136,26 @@ services:
     networks:
       - streamgate
 
+  clamav:
+    profiles: ["full", "worker"]
+    image: clamav/clamav:stable
+    container_name: streamgate-clamav
+    restart: unless-stopped
+    volumes:
+      - clamav_data:/var/lib/clamav
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "clamdscan --no-summary /etc/hosts >/dev/null 2>&1 || exit 1",
+        ]
+      start_period: 180s
+      interval: 30s
+      timeout: 15s
+      retries: 20
+    networks:
+      - streamgate
+
   api:
     profiles: ["app", "full"]
     build:
@@ -147,7 +167,7 @@ services:
     working_dir: /app
     command: >
       bash -lc "
-      bundle check || bundle install &&
+      (bundle check || bundle install) &&
       rm -f tmp/pids/server.pid &&
       bundle exec rails db:prepare &&
       exec bundle exec rails server -b 0.0.0.0 -p 3000
@@ -275,7 +295,7 @@ services:
     working_dir: /app
     command: >
       bash -lc "
-      bundle check || bundle install &&
+      (bundle check || bundle install) &&
       exec bundle exec ruby -e 'require \"worker\"; Worker.run!'
       "
     environment:
@@ -294,7 +314,14 @@ services:
       BROKER_UPLOAD_RECEIVED_QUEUE: ${BROKER_UPLOAD_RECEIVED_QUEUE:-streamgate.worker.upload.received.v1}
       BROKER_UPLOAD_RECEIVED_DLQ: ${BROKER_UPLOAD_RECEIVED_DLQ:-streamgate.worker.upload.received.v1.dlq}
       BROKER_UPLOAD_RECEIVED_DLQ_ROUTING_KEY: ${BROKER_UPLOAD_RECEIVED_DLQ_ROUTING_KEY:-upload.received.v1.dlq}
+      BROKER_UPLOAD_SCAN_REQUESTED_ROUTING_KEY: ${BROKER_UPLOAD_SCAN_REQUESTED_ROUTING_KEY:-upload.scan.requested.v1}
+      BROKER_UPLOAD_SCAN_REQUESTED_QUEUE: ${BROKER_UPLOAD_SCAN_REQUESTED_QUEUE:-streamgate.worker.upload.scan.requested.v1}
+      BROKER_UPLOAD_SCAN_REQUESTED_DLQ: ${BROKER_UPLOAD_SCAN_REQUESTED_DLQ:-streamgate.worker.upload.scan.requested.v1.dlq}
+      BROKER_UPLOAD_SCAN_REQUESTED_DLQ_ROUTING_KEY: ${BROKER_UPLOAD_SCAN_REQUESTED_DLQ_ROUTING_KEY:-upload.scan.requested.v1.dlq}
       WORKER_MAX_RETRIES: ${WORKER_MAX_RETRIES:-3}
+      CLAMAV_ENABLED: ${CLAMAV_ENABLED:-1}
+      CLAMAV_HOST: ${CLAMAV_HOST:-clamav}
+      CLAMAV_PORT: ${CLAMAV_PORT:-3310}
       CLICKHOUSE_HTTP_URL: ${CLICKHOUSE_HTTP_URL:-http://clickhouse:8123}
       CLICKHOUSE_DB: ${CLICKHOUSE_DB}
       CLICKHOUSE_USER: ${CLICKHOUSE_USER}
@@ -320,6 +347,8 @@ services:
         condition: service_completed_successfully
       clickhouse:
         condition: service_healthy
+      clamav:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", 'bundle exec ruby -e "require ''worker''"']
       interval: 30s
@@ -334,6 +363,7 @@ volumes:
   rabbitmq_data:
   minio_data:
   clickhouse_data:
+  clamav_data:
   api_bundle:
   worker_bundle:
   web_node_modules:

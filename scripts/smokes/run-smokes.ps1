@@ -1,6 +1,6 @@
 param(
   [ValidateRange(30, 3600)]
-  [int]$TimeoutSeconds = 480
+  [int]$TimeoutSeconds = 900
 )
 
 $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
@@ -201,7 +201,7 @@ try {
   Invoke-SmokeCommand -Name 'Start full stack' -Command "powershell -ExecutionPolicy Bypass -File scripts/dev/dev-up.ps1 -Mode full -TimeoutSeconds $TimeoutSeconds"
   Invoke-SmokeCommand -Name 'Worker operational smoke' -Command 'python scripts/smokes/worker-operational-smoke.py'
   Invoke-SmokeCommand -Name 'Public link smoke' -Command 'python scripts/smokes/public-link-smoke.py'
-  Invoke-SmokeCommand -Name 'Seed second admin fixture' -Command "docker compose exec -T -e SMOKE_SECOND_ADMIN_EMAIL -e SMOKE_SECOND_ADMIN_PASSWORD api bundle exec rails runner `"email = ENV.fetch('SMOKE_SECOND_ADMIN_EMAIL'); password = ENV.fetch('SMOKE_SECOND_ADMIN_PASSWORD'); user = User.find_or_initialize_by(email: email); user.full_name = 'Operational Approver'; user.organization_id ||= ENV.fetch('DEFAULT_ORGANIZATION_ID', 'org_default'); user.role = :admin; user.status = :active; user.password = password; user.save!`""
+  Invoke-SmokeCommand -Name 'Seed second admin fixture' -Command "docker compose exec -T -e SMOKE_ADMIN_EMAIL -e SMOKE_SECOND_ADMIN_EMAIL -e SMOKE_SECOND_ADMIN_PASSWORD api bundle exec rails runner `"admin = User.find_by!(email: ENV.fetch('SMOKE_ADMIN_EMAIL', 'admin@streamgate.local')); email = ENV.fetch('SMOKE_SECOND_ADMIN_EMAIL'); password = ENV.fetch('SMOKE_SECOND_ADMIN_PASSWORD'); user = User.find_or_initialize_by(email: email); user.full_name = 'Operational Approver'; user.organization_id = admin.organization_id; user.role = :admin; user.status = :active; user.password = password; user.save!; user.ensure_default_organization_membership!`""
   Invoke-SmokeCommand -Name 'Safe operations + artifacts + notifications smoke' -Command 'python scripts/smokes/safe-operations-smoke.py'
   Invoke-SmokeCommand -Name 'Persisted notifications + deliveries audit' -Command 'powershell -ExecutionPolicy Bypass -File scripts/smokes/verify-safe-operations-records.ps1'
 }

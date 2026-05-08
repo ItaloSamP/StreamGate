@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "streamgate.fullname" . }}-config
+  labels:
+    {{- include "streamgate.labels" . | nindent 4 }}
+data:
+  RAILS_ENV: {{ .Values.global.environment | quote }}
+  RAILS_LOG_TO_STDOUT: "true"
+  OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.global.otelExporterOtlpEndpoint | quote }}
+  OTEL_SERVICE_NAMESPACE: streamgate
+  STREAMGATE_RUNTIME: aws_eks
+  CLAMAV_ENABLED: {{ ternary "1" "0" .Values.clamav.enabled | quote }}
+  CLAMAV_HOST: {{ printf "%s-clamav" (include "streamgate.fullname" .) | quote }}
+  CLAMAV_PORT: {{ .Values.clamav.port | quote }}
