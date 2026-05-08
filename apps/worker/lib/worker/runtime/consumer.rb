@@ -14,7 +14,15 @@ module Worker
         @logger = logger
         @db_client = DbClient.new(config: config)
         @storage_client = StorageClient.new(config: config)
+        @malware_scanner = MalwareScanner.new(config: config)
         @parser = Processing::CsvZipParser.new
+        @scan_processor = UploadScanRequestedProcessor.new(
+          config: config,
+          db_client: db_client,
+          storage_client: storage_client,
+          scanner: malware_scanner,
+          logger: logger
+        )
         @processor = UploadReceivedProcessor.new(
           config: config,
           db_client: db_client,
@@ -46,6 +54,7 @@ module Worker
         logger.info("worker consumer started queue=#{config.queue_name} routing_key=#{config.routing_key}")
         subscribe_queue(queues.fetch(:connector), channel, exchange, block: false)
         subscribe_queue(queues.fetch(:public_link), channel, exchange, block: false)
+        subscribe_queue(queues.fetch(:scan), channel, exchange, block: false)
         subscribe_queue(queues.fetch(:upload), channel, exchange, block: true)
       ensure
         channel&.close if channel&.open?
@@ -54,7 +63,9 @@ module Worker
 
       private
 
-      attr_reader :config, :logger, :processor, :public_link_processor, :connector_processor, :db_client, :storage_client, :parser
+      attr_reader :config, :logger, :scan_processor, :processor, :public_link_processor,
+                  :connector_processor, :db_client, :storage_client, :malware_scanner,
+                  :parser
 
       def build_session
         Bunny.new(
@@ -69,10 +80,12 @@ module Worker
 
       def declare_topology(channel, exchange)
         bind_dlq(channel, exchange, config.dlq_queue_name, config.dlq_routing_key)
+        bind_dlq(channel, exchange, config.scan_requested_dlq_queue_name, config.scan_requested_dlq_routing_key)
         bind_dlq(channel, exchange, config.public_link_dlq_queue_name, config.public_link_dlq_routing_key)
         bind_dlq(channel, exchange, config.connector_requested_dlq_queue_name, config.connector_requested_dlq_routing_key)
 
         {
+          scan: bind_queue(channel, exchange, config.scan_requested_queue_name, config.scan_requested_routing_key, config.scan_requested_dlq_routing_key),
           upload: bind_queue(channel, exchange, config.queue_name, config.routing_key, config.dlq_routing_key),
           public_link: bind_queue(channel, exchange, config.public_link_queue_name, config.public_link_routing_key, config.public_link_dlq_routing_key),
           connector: bind_queue(
@@ -241,6 +254,7 @@ module Worker
       end
 
       def processor_for(event)
+        return scan_processor if event["event_name"] == config.scan_requested_routing_key
         return public_link_processor if event["event_name"] == config.public_link_routing_key
         return connector_processor if event["event_name"] == config.connector_requested_routing_key
 
@@ -264,6 +278,7 @@ module Worker
       end
 
       def retry_routing_key(event)
+        return config.scan_requested_routing_key if event && event["event_name"] == config.scan_requested_routing_key
         return config.public_link_routing_key if event && event["event_name"] == config.public_link_routing_key
         return config.connector_requested_routing_key if event && event["event_name"] == config.connector_requested_routing_key
 
@@ -271,6 +286,7 @@ module Worker
       end
 
       def dlq_routing_key(event)
+        return config.scan_requested_dlq_routing_key if event && event["event_name"] == config.scan_requested_routing_key
         return config.public_link_dlq_routing_key if event && event["event_name"] == config.public_link_routing_key
         return config.connector_requested_dlq_routing_key if event && event["event_name"] == config.connector_requested_routing_key
 

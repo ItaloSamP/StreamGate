@@ -19,8 +19,8 @@ RSpec.describe Worker::Runtime::ConnectorRequestedProcessor do
       end
     end.new
     lease_client = Class.new do
-      def claim(lease_id:, lease_token:)
-        raise "bad lease" unless lease_id == "lease_1" && lease_token == "lease-token"
+      def claim(lease_id:)
+        raise "bad lease" unless lease_id == "lease_1"
 
         {
           "connector" => { "kind" => "http", "settings" => { "url" => "https://data.example.test/orders.ndjson" }, "secrets" => {} },
@@ -40,11 +40,16 @@ RSpec.describe Worker::Runtime::ConnectorRequestedProcessor do
         )
       end
     end.new
+    scanner = instance_double(Worker::Runtime::MalwareScanner)
+    allow(scanner).to receive(:scan_io).and_return(
+      Worker::Runtime::MalwareScanner::Result.new(status: "clean", signature: nil)
+    )
     processor = described_class.new(
       config: config,
       storage_client: storage,
       lease_client: lease_client,
       fetcher: fetcher,
+      scanner: scanner,
       logger: Logger.new(nil)
     )
 
@@ -73,8 +78,7 @@ RSpec.describe Worker::Runtime::ConnectorRequestedProcessor do
       "upload_id" => "upload_connector_1",
       "job_id" => "job_connector_1",
       "payload" => {
-        "lease_id" => "lease_1",
-        "lease_token" => "lease-token"
+        "lease_id" => "lease_1"
       }
     }
   end

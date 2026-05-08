@@ -7,14 +7,16 @@ module Worker
     class PublicLinkRequestedProcessor
       OPERATION = "worker.public_link.requested.consume"
 
-      def initialize(config:, db_client:, storage_client:, logger:, fetcher: nil)
+      def initialize(config:, db_client:, storage_client:, logger:, fetcher: nil, scanner: nil)
         @config = config
         @db_client = db_client
         @storage_client = storage_client
         @logger = logger
+        @scanner = scanner || MalwareScanner.new(config: config)
         @fetcher = fetcher || PublicLinkFetcher.new(
           storage_client: storage_client,
-          max_bytes: config.public_link_max_bytes
+          max_bytes: config.public_link_max_bytes,
+          scanner: @scanner
         )
       end
 
@@ -25,6 +27,7 @@ module Worker
 
         update_acquisition_status(ids, "fetching")
         result = fetcher.call(url: payload.fetch("source_url"), storage_key: payload.fetch("storage_key"))
+
         mark_stored(ids, payload, result)
 
         {
@@ -44,7 +47,7 @@ module Worker
 
       private
 
-      attr_reader :config, :db_client, :storage_client, :logger, :fetcher
+      attr_reader :config, :db_client, :storage_client, :logger, :fetcher, :scanner
 
       def validate_event!(event)
         required = %w[event_id event_name payload upload_id job_id trace_id]

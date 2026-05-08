@@ -27,18 +27,27 @@ module Worker
 
       Result = Struct.new(:io, :content_type, :byte_size, :checksum_sha256, keyword_init: true)
 
+      def initialize(google_drive_access_provider: nil, google_drive_client: nil)
+        @google_drive_access_provider = google_drive_access_provider || GoogleDriveAccessProvider.new
+        @google_drive_client = google_drive_client || GoogleDriveClient.new
+      end
+
       def call(connector:, ingestion:)
         case connector.fetch("kind")
         when "s3"
           fetch_s3(connector, ingestion)
         when "http"
           fetch_http(connector, ingestion)
+        when "google_drive"
+          fetch_google_drive(connector, ingestion)
         else
           raise TerminalProcessingError, "unsupported_connector_kind=#{connector.fetch("kind")}"
         end
       end
 
       private
+
+      attr_reader :google_drive_access_provider, :google_drive_client
 
       def fetch_s3(connector, ingestion)
         settings = connector.fetch("settings")
@@ -81,6 +90,20 @@ module Worker
       rescue SocketError, Timeout::Error, Errno::ECONNREFUSED => e
         tempfile&.close!
         raise TransientProcessingError, "connector_http_fetch_failed: #{e.class.name}"
+      end
+
+      def fetch_google_drive(connector, ingestion)
+        settings = connector.fetch("settings")
+        file_id = ingestion.fetch("drive_file_id")
+        access_token = google_drive_access_provider.access_token_for(settings.fetch("oauth_connection_id"))
+        tempfile = google_drive_client.download_file(access_token: access_token, file_id: file_id)
+        build_result(tempfile, ingestion.fetch("content_type"))
+      rescue KeyError => e
+        tempfile&.close!
+        raise TerminalProcessingError, "connector_google_drive_missing_key: #{e.message}"
+      rescue StandardError => e
+        tempfile&.close!
+        raise TransientProcessingError, "connector_google_drive_fetch_failed: #{e.class.name}"
       end
 
       def validate_uri!(url)
