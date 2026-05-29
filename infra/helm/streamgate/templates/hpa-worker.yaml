@@ -1,4 +1,4 @@
-{{- if .Values.autoscaling.worker.enabled }}
+{{- if and .Values.autoscaling.worker.enabled (not .Values.autoscaling.worker.keda.enabled) }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:

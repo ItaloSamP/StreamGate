@@ -1,9 +1,9 @@
-﻿$utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+$utf8NoBom = [System.Text.UTF8Encoding]::new($false)
 [Console]::InputEncoding = $utf8NoBom
 [Console]::OutputEncoding = $utf8NoBom
 $OutputEncoding = $utf8NoBom
 $ErrorActionPreference = "Stop"
-$PSNativeCommandUseErrorActionPreference = $false
+$PSNativeCommandUseErrorActionPreference = $true
 
 $args = @('--profile', 'app', '--profile', 'full', '--profile', 'worker', 'down', '--remove-orphans')
 

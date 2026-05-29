@@ -103,6 +103,10 @@ autoscaling:
     minReplicas: 2
     maxReplicas: 12
     targetCPUUtilizationPercentage: 75
+    keda:
+      enabled: true
+      queueName: "upload.received.v1"
+      queueLength: "50"
 
 networkPolicy:
   enabled: true
