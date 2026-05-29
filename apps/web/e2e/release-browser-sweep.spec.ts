@@ -204,11 +204,40 @@ async function mockAuthEndpoints(page: Page, email: string) {
       return
     }
 
+    if (url.includes('/api/v1/organization/members')) {
+      await route.fulfill({
+        contentType: 'application/json',
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        body: JSON.stringify({ data: [] })
+      })
+      return
+    }
+
     if (url.includes('/organization')) {
       await route.fulfill({
         contentType: 'application/json',
         headers: { 'Access-Control-Allow-Origin': '*' },
-        body: JSON.stringify({ data: { id: 'org_1', name: 'Sweep Org', settings: {} } })
+        body: JSON.stringify({ data: { id: 'org_1', name: 'Sweep Org', settings: {}, quotas: {} } })
+      })
+      return
+    }
+
+    if (url.includes('/saas-readiness')) {
+      await route.fulfill({
+        contentType: 'application/json',
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        body: JSON.stringify({
+          data: {
+            compliance: { target: 'soc2_type_i', status: 'mock', evidence_sections: [] },
+            infrastructure: { runtime: 'aws_eks', ingress_tls: true },
+            observability: { stack: 'mock' },
+            identity: { sso: { validated_provider: 'google_workspace', protocol: 'saml' }, mfa: { mode: 'optional' }, saml: { status: 'mock' } },
+            billing: { reason: 'mock', status: 'mock' },
+            quotas: { status: 'mock' },
+            connectors: { configured_count: 0, supported: [] },
+            external_blockers: []
+          }
+        })
       })
       return
     }

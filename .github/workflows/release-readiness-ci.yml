@@ -50,7 +50,7 @@ jobs:
       - name: Install Playwright browser
         run: pnpm exec playwright install --with-deps chromium
       - name: Release browser sweep
-        run: pnpm exec playwright test e2e/release-browser-sweep.spec.ts --project=chromium
+        run: pnpm exec playwright test e2e/release-browser-sweep.spec.ts --project=chromium --max-failures=1
 
   backend-security:
     name: backend-worker-security
