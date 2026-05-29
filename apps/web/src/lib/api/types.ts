@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { type ApiSuccessEnvelope, type RequestOptions } from '@/lib/api-client'
+
 
 export type HealthResponse = {
   status: string

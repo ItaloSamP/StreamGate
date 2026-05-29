@@ -1,4 +1,4 @@
-import { formatTimestamp } from '@/lib/operational-utils'
+import { formatDateTime } from '@/lib/operational-utils'
 import type { JobSummary } from '@/lib/streamgate-api'
 import type { ListState } from '../types'
 
@@ -36,7 +36,7 @@ export function JobTable({ state }: { state: ListState<JobSummary> }) {
                 <span className={`dash-pill ${jobTone(job.status)}`}>{humanizeJobStatus(job.status)}</span>
               </td>
               <td className="dim">{job.source_type}</td>
-              <td className="dim">{formatTimestamp(job.created_at)}</td>
+              <td className="p-4 text-xs tabular-nums text-slate-400">{formatDateTime(job.created_at)}</td>
             </tr>
           ))}
         </tbody>

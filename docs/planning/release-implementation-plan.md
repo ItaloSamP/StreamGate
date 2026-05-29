@@ -41,9 +41,9 @@ O StreamGate é uma plataforma operacional para ingestão, processamento assínc
 ---
 
 ## FASE 6 — Infraestrutura, K8s e Workflows (CI/CD)
-- [ ] **Workflows:** Endurecer GitHub Actions com Caching, Fail-fast nos scripts PS1/Bash.
-- [ ] **K8s (Helm/GitOps):** Limits/Requests tunados, Autoscaling HPA por fila RabbitMQ, NetworkPolicies e ExternalSecrets no ArgoCD.
-- [ ] **Commit & Push:** Organizar alterações da Fase 6, realizar commit descritivo e push.
+- [x] **Workflows:** Endurecer GitHub Actions com Caching, Fail-fast nos scripts PS1/Bash.
+- [x] **K8s (Helm/GitOps):** Limits/Requests tunados, Autoscaling HPA por fila RabbitMQ, NetworkPolicies e ExternalSecrets no ArgoCD.
+- [x] **Commit & Push:** Organizar alterações da Fase 6, realizar commit descritivo e push.
 
 ---
 

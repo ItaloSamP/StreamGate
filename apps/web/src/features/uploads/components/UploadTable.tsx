@@ -1,4 +1,4 @@
-import { formatTimestamp } from '@/lib/operational-utils'
+import { formatDateTime } from '@/lib/operational-utils'
 import type { UploadSummary } from '@/lib/streamgate-api'
 import type { ListState } from '../types'
 
@@ -42,7 +42,7 @@ export function UploadTable({ state }: { state: ListState<UploadSummary> }) {
               </td>
               <td className="dim">{upload.source_type ?? 'upload'}</td>
               <td className="dim">{upload.content_type}</td>
-              <td className="dim">{formatTimestamp(upload.created_at)}</td>
+              <td className="p-4 text-xs tabular-nums text-slate-400">{formatDateTime(upload.created_at)}</td>
             </tr>
           ))}
         </tbody>
