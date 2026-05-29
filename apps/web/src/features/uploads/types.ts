@@ -1,5 +1,5 @@
 
-import type { JobSummary, UploadSummary } from '@/lib/streamgate-api'
+
 
 export type UploadMode = 'file' | 'public_link' | 'connector'
 export type UploadFlowState = 'idle' | 'signing' | 'uploading' | 'confirming' | 'requesting_link' | 'requesting_connector' | 'success' | 'error'

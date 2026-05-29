@@ -1,15 +1,5 @@
-import { apiClient, type ApiSuccessEnvelope, type RequestOptions } from '@/lib/api-client'
-
-type StreamgateHttpClient = {
-  get: <T>(path: string, options?: RequestOptions) => Promise<T>
-  post: <T>(path: string, options?: RequestOptions) => Promise<T>
-  patch?: <T>(path: string, options?: RequestOptions) => Promise<T>
-  delete?: <T>(path: string, options?: RequestOptions) => Promise<T>
-  getEnvelope?: <T>(path: string, options?: RequestOptions) => Promise<ApiSuccessEnvelope<T>>
-  postEnvelope?: <T>(path: string, options?: RequestOptions) => Promise<ApiSuccessEnvelope<T>>
-  patchEnvelope?: <T>(path: string, options?: RequestOptions) => Promise<ApiSuccessEnvelope<T>>
-  deleteEnvelope?: <T>(path: string, options?: RequestOptions) => Promise<ApiSuccessEnvelope<T>>
-}
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { type ApiSuccessEnvelope, type RequestOptions } from '@/lib/api-client'
 
 export type HealthResponse = {
   status: string

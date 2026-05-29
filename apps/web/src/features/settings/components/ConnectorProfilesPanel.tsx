@@ -70,8 +70,8 @@ export function ConnectorProfilesPanel() {
     const name = form.name.trim()
     if (!name) return
 
-    let settings: Record<string, any> = {}
-    let secrets: Record<string, any> = {}
+    let settings: Record<string, unknown> = {}
+    let secrets: Record<string, unknown> = {}
 
     if (form.kind === 's3') {
       settings = {

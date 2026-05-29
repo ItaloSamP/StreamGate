@@ -285,7 +285,7 @@ module Worker
         end
 
         ParseResult.new(
-          input_rows: records.size,
+          input_rows: valid_records.size + invalid_records.size,
           valid_rows: valid_records.size,
           invalid_rows: invalid_records.size,
           invalid_records: invalid_records,
