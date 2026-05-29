@@ -181,7 +181,7 @@ async function mockAuthEndpoints(page: Page, email: string) {
   await page.route('**/api/v1/**', async (route) => {
     const url = route.request().url()
     
-    if (url.includes('/auth/session') || url.includes('/auth/me')) {
+    if (url.includes('/auth/login') || url.includes('/auth/session') || url.includes('/auth/me')) {
       await route.fulfill({
         contentType: 'application/json',
         headers: { 'Access-Control-Allow-Origin': '*' },
