@@ -23,17 +23,9 @@ O StreamGate é uma plataforma operacional para ingestão, processamento assínc
 - [x] **Commit & Push:** Organizar alterações da Fase 2, realizar commit descritivo e push.
 
 ### FASE 3 — Verificação Estática e Segurança Base
-- [ ] Check de segurança no frontend e remoção de segredos do Git.
-- [ ] Varredura estática (`Brakeman` e `bundle-audit`).
-- [ ] **Commit & Push:** Organizar alterações da Fase 3, realizar commit descritivo e push.
-
----
-
-## FASE 4 — Reescrita Completa da Documentação (Zero-Base Documentation)
-- [ ] **Mapeamento Arquitetural (C4 Model)** refazendo a topologia do zero.
-- [ ] **API Specs & Contratos** (OpenAPI) enriquecidos com guias reais de falhas.
-- [ ] **Operational Runbooks** focados no Worker e **Onboarding Guides**.
-- [ ] **Commit & Push:** Organizar alterações da Fase 4, realizar commit descritivo e push.
+- [x] Check de segurança no frontend e remoção de segredos do Git.
+- [x] Varredura estática (`Brakeman` e `bundle-audit`).
+- [x] **Commit & Push:** Organizar alterações da Fase 3, realizar commit descritivo e push.
 
 ---
 
@@ -87,9 +79,25 @@ Um produto excelente não pode ter cara de template e não pode operar no escuro
 
 ---
 
+## 👑 O PENTE FINO FINAL
+
+### FASE 10 — Reescrita Completa da Documentação (Zero-Base Documentation)
+**Objetivo:** Ignorar totalmente a documentação existente (todos os `.md`, todos os `READMEs`). Reescrever tudo do zero de forma organizada, polida, explicativa e refinada, sem deixar lacunas.
+**🤖 Global Skills:** `documentation-writer`, `c4-architecture`, `api-documenter`.
+
+- [ ] **Aniquilar e recriar o README Raiz:** Explicar o que é o StreamGate, como ele funciona sob o capô, stack, e roteiros de dev locais.
+- [ ] **READMEs por Diretório:** Escrever um README detalhado dentro de `apps/api`, `apps/worker`, `apps/web` e `packages`, documentando as responsabilidades e design system local de cada serviço.
+- [ ] **Mapeamento Arquitetural (C4 Model):** Diagramas C4 via Mermaid atualizados, explicando a topologia de Ingestão -> RabbitMQ -> Worker -> ClickHouse/Postgres.
+- [ ] **API Specs & Contratos (OpenAPI):** Refazer toda a documentação da API baseada no estado final do código. Entregar payloads de sucesso, cenários reais de erro, limites operacionais e paginação.
+- [ ] **Operational Runbooks e Onboarding Guides:** Guias claros, polidos e exemplificativos focados no Worker e infraestrutura. Ex: "Como tratar DLQ", "Como subir o ClamAV localmente", etc.
+- [ ] **Commit & Push:** Organizar alterações da Fase 10, realizar commit descritivo e push.
+
+---
+
 ## Resumo e Ordem de Ação
 Com o plano selado:
 1. **Auditoria Padrão:** Descobrimos o que está quebrado (Fases 1 a 3).
 2. **Mega-Refactor (Engenharia & UX):** Executamos em lote a quebra de arquivos, finalização de features, refinamento E2E do Kubernetes e a aplicação da maquiagem agressiva de UI/UX (Fases 5, 6 e 8).
 3. **Robustez Produtiva:** Confirmamos limites e rate-limiting (Fase 9).
-4. **Zero-Base Docs & Validação:** Documentamos tudo perfeitamente (Fase 4) e carimbamos a Release no Teste Funcional (Fase 7).
+4. **Validação:** Carimbamos a Release no Teste Funcional (Fase 7).
+5. **Zero-Base Docs:** Documentamos tudo perfeitamente (Fase 10).

@@ -15,11 +15,11 @@ Utilize as marcações:
   - `[x]` Executar Request/Service/Model tests no backend e Worker runtime specs.
   - `[x]` Rodar Smokes Operacionais E2E no Docker (`scripts/smokes/run-smokes.ps1`).
   - `[x]` **Commit & Push:** Organizar alterações e commitar (Fase 2).
-- `[ ]` **FASE 3: Verificação Estática e Segurança Base**
-  - `[ ]` Navegar nas páginas (Garantir ausência de mock data e testar role-gating).
-  - `[ ]` Segurança no frontend e remoção de segredos do Git.
-  - `[ ]` Varredura estática (`Brakeman` e `bundle-audit`).
-  - `[ ]` **Commit & Push:** Organizar alterações e commitar (Fase 3).
+- `[x]` **FASE 3: Verificação Estática e Segurança Base**
+  - `[x]` Navegar nas páginas (Garantir ausência de mock data e testar role-gating).
+  - `[x]` Segurança no frontend e remoção de segredos do Git.
+  - `[x]` Varredura estática (`Brakeman` e `bundle-audit`).
+  - `[x]` **Commit & Push:** Organizar alterações e commitar (Fase 3).
 
 ## Execução Massiva (The Mega-Refactor)
 - `[ ]` **FASE 5: Deep Refactoring & Finalização de Pendências**
@@ -49,15 +49,20 @@ Utilize as marcações:
   - `[ ]` GitOps (ArgoCD) e fluxo de ExternalSecrets consolidado.
   - `[ ]` **Commit & Push:** Organizar alterações e commitar (Fase 6).
 
-## Fechamento & Validação
-- `[ ]` **FASE 4: Reescrita Completa da Documentação (Zero-Base Documentation)**
-  - `[ ]` Mapeamento Arquitetural (C4 Model).
-  - `[ ]` API Specs (OpenAPI) e Dicionário de Dados/Domínio.
-  - `[ ]` Operational Runbooks (Worker) e Onboarding Guides.
-  - `[ ]` **Commit & Push:** Organizar alterações e commitar (Fase 4).
+## Validação Total
 - `[ ]` **FASE 7: Validação E2E e Teste Funcional Total do Sistema**
   - `[ ]` Testar Ingestão ponta-a-ponta (Upload -> ClamAV -> Parsers -> Analytics Warehouse).
   - `[ ]` Verificar robustez de Quarentena, DLQ e Circuit Breakers.
   - `[ ]` Testar eventos Realtime (ActionCable/WebSockets).
   - `[ ]` Rodar `run-smokes.ps1` final sob o perfil "full-closeout" para gerar Hub de Release.
   - `[ ]` **Commit & Push:** Organizar alterações e commitar (Fase 7).
+
+## O PENTE FINO FINAL
+- `[ ]` **FASE 10: Reescrita Completa da Documentação (Zero-Base Documentation)**
+  - `[ ]` Ignorar tudo existente (todos .md e readmes antigos).
+  - `[ ]` Reescrever o README raiz com foco em clareza, refinamento e completude.
+  - `[ ]` Escrever READMEs hiper-explicativos e polidos para pastas (`apps/api`, `apps/web`, etc).
+  - `[ ]` Refazer Mapeamento Arquitetural (C4 Model).
+  - `[ ]` Construir novas API Specs (OpenAPI) e Dicionário de Dados do zero.
+  - `[ ]` Criar Operational Runbooks exemplificativos e guias de Onboarding impecáveis.
+  - `[ ]` **Commit & Push:** Organizar alterações e commitar (Fase 10).
