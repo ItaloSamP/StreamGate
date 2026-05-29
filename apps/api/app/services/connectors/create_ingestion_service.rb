@@ -117,7 +117,7 @@ module Connectors
         raise ActiveRecord::RecordInvalid, ConnectorIngestion.new.tap { |record| record.errors.add(:drive_file_id, :blank) }
       end
 
-      return unless profile.http?
+      return unless profile.http? || profile.oauth_delegated?
 
       candidate = source_path || profile.settings["url"]
       result = Uploads::PublicLinkUrlPolicy.validate(candidate)
