@@ -213,6 +213,27 @@ async function mockAuthEndpoints(page: Page, email: string) {
       return
     }
 
+    if (url.includes('/analytics/dashboard')) {
+      await route.fulfill({
+        contentType: 'application/json',
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        body: JSON.stringify({
+          data: {
+            generated_at: new Date().toISOString(),
+            source: 'mock',
+            window: { preset: 'last_24h' },
+            sections: {
+              throughput: { status: 'mock', data: { jobs_total: 0, uploads_total: 0, completed: 0, failed: 0, quarantined: 0 } },
+              queue: { status: 'mock', data: { processed: 0, retried: 0, moved_to_dlq: 0 } },
+              workers: { status: 'mock', data: { processed: 0, failed_terminal: 0, average_latency_ms: 0 } },
+              warnings: { status: 'mock', data: { open: 0, failed: 0, resolved: 0 } }
+            }
+          }
+        })
+      })
+      return
+    }
+
     if (route.request().method() === 'OPTIONS') {
       await route.fulfill({
         status: 204,
