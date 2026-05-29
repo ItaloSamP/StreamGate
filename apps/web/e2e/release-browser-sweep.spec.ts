@@ -178,34 +178,58 @@ async function login(page: Page, email: string, passwords: string[]) {
 async function mockAuthEndpoints(page: Page, email: string) {
   const role = email.includes('admin') ? 'admin' : 'operator'
   
-  await page.route('**/api/v1/auth/session**', async (route) => {
-    await route.fulfill({
-      contentType: 'application/json',
-      body: JSON.stringify({
-        data: {
-          user: { id: `user_${role}`, email, full_name: 'Sweep User', role, status: 'active' },
-          session: { id: 'sess_1', token_type: 'Bearer', access_token: 'fake-token' }
+  await page.route('**/api/v1/**', async (route) => {
+    const url = route.request().url()
+    
+    if (url.includes('/auth/session') || url.includes('/auth/me')) {
+      await route.fulfill({
+        contentType: 'application/json',
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        body: JSON.stringify({
+          data: {
+            user: { id: `user_${role}`, email, full_name: 'Sweep User', role, status: 'active' },
+            session: { id: 'sess_1', token_type: 'Bearer', access_token: 'fake-token' }
+          }
+        })
+      })
+      return
+    }
+    
+    if (url.includes('/saas/readiness')) {
+      await route.fulfill({
+        contentType: 'application/json',
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        body: JSON.stringify({ data: { compliance: { target: 'soc2_type_i' }, access: { admin: role === 'admin' } } })
+      })
+      return
+    }
+
+    if (url.includes('/organization')) {
+      await route.fulfill({
+        contentType: 'application/json',
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        body: JSON.stringify({ data: { id: 'org_1', name: 'Sweep Org', settings: {} } })
+      })
+      return
+    }
+
+    if (route.request().method() === 'OPTIONS') {
+      await route.fulfill({
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
         }
       })
-    })
-  })
-  
-  await page.route('**/api/v1/auth/me**', async (route) => {
+      return
+    }
+    
+    // Fallback for any other API calls to prevent ERR_CONNECTION_REFUSED
     await route.fulfill({
       contentType: 'application/json',
-      body: JSON.stringify({
-        data: {
-          user: { id: `user_${role}`, email, full_name: 'Sweep User', role, status: 'active' },
-          session: { id: 'sess_1', token_type: 'Bearer', access_token: 'fake-token' }
-        }
-      })
-    })
-  })
-  
-  await page.route('**/api/v1/saas/readiness**', async (route) => {
-    await route.fulfill({
-      contentType: 'application/json',
-      body: JSON.stringify({ data: { compliance: { target: 'soc2_type_i' }, access: { admin: role === 'admin' } } })
+      headers: { 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({ data: [] })
     })
   })
 }
