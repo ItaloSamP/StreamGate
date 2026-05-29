@@ -1,63 +1,54 @@
-# Scripts do StreamGate
+# StreamGate Scripts & DevOps
 
-A raiz de `scripts/` agora fica apenas com a documentacao e as subpastas organizadas.
+Pasta central contendo os comandos oficiais do repositório para inicialização, CI Local, deploy e testes de sanidade/E2E operacionais.
 
-## Estrutura
+Nossa regra de ouro: **Nenhuma ferramenta na máquina do desenvolvedor deve estar quebrando por depender de configurações mágicas**. O pipeline aqui é o mesmo do CI.
 
-- `bootstrap/`: verificacoes iniciais do ambiente
-- `dev/`: subida e parada do ambiente local
-- `ci/`: simulacao local dos workflows do GitHub Actions
-- `compose/`: helpers e testes de health check do Compose
-- `reports/`: runner unico e gerador do hub local de reports/coverage
-- `smokes/`: smokes operacionais e runner unico para `infra`, `app` e `full`
+## 📁 Estrutura de Diretórios
 
-## Comandos principais
+- `ci/`: Contém os scripts executados por pipelines como GitHub Actions, GitLab CI ou localmente para fechamento completo de pull request.
+  - Ex: `ci-local.ps1`, `validate-operational-contracts.rb`
+- `dev/`: Contém os bootstraps primários.
+  - Ex: `dev-up.sh` / `dev-up.ps1` (Para levantar toda a infra via Compose).
+  - Ex: `dev-down.sh` / `dev-down.ps1`
+- `reports/`: Ferramentas responsáveis por orquestrar execuções e consolidar os arquivos JUnit/Coverage gerados pela web, worker e api.
+  - Ex: `run-all-reports.ps1`
+- `smokes/`: Scripts dedicados para validar a aplicação End-to-End.
+  - Ex: `run-smokes.ps1`
 
-### WSL/Linux
+## 🚀 Uso Básico (Dia-a-Dia)
 
-- `./scripts/bootstrap/check-prereqs.sh`
-- `./scripts/dev/dev-up.sh`
-- `./scripts/dev/dev-up.sh full`
-- `./scripts/dev/dev-down.sh`
-- `./scripts/compose/compose-health-tests.sh`
-- `./scripts/reports/run-all-reports.sh`
-- `./scripts/smokes/run-smokes.sh`
-- `./scripts/ci/ci-local.sh`
-
-### PowerShell
-
-- `.\scripts\bootstrap\check-prereqs.ps1`
-- `.\scripts\dev\dev-up.ps1`
-- `.\scripts\dev\dev-up.ps1 -Mode full`
-- `.\scripts\dev\dev-down.ps1`
-- `.\scripts\compose\compose-health.tests.ps1`
-- `powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -Profile full-closeout`
-- `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1`
-- `.\scripts\ci\ci-local.ps1`
-
-## Perfis oficiais de gate
-
-- `fast`: validacao rapida por trilha com `scripts/ci/ci-local.(ps1|sh)` em um workflow por vez.
-- `operational`: validacao ponta a ponta de runtime com `scripts/smokes/run-smokes.(ps1|sh)`.
-- `full-closeout`: pacote final de evidencias com `scripts/reports/run-all-reports.(ps1|sh)`; use no fechamento de ciclo de entrega, PR grande ou mudanca critica de runtime/CI.
-
-O caminho pesado oficial e `WSL/Compose-first`. No host Windows, prefira checks rapidos no dia a dia e deixe o pacote pesado para fechamento relevante.
-
-## Reports locais
-
-O fluxo oficial para gerar as evidencias de fechamento e:
-
-```bash
-PROFILE=full-closeout bash scripts/reports/run-all-reports.sh
+### Para rodar a Stack:
+**No Windows:**
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\dev\dev-up.ps1 -Mode full
 ```
 
-No PowerShell:
+**No WSL/Linux:**
+```bash
+bash scripts/dev/dev-up.sh full
+```
+
+### Para Derrubar a Stack e limpar os Volumes Padrões:
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\dev\dev-down.ps1
+```
+
+---
+
+## 🔒 Gates de Qualidade
+
+Para passar no Pente Fino, recomendamos sempre usar o script de CI isolado por camada antes do commit:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -Profile full-closeout
+# Apenas Frontend (Lint + Test + Build)
+powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 frontend
+
+# Apenas Backend / API (Rspec)
+powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 backend
+
+# Tudo! (Pesado, demora, use antes do fechamento de PR)
+powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 all
 ```
 
-Esse runner atua como orquestrador das evidencias oficiais por perfil e atualiza o hub `docs/reports/index.html`.
-Os reports sao sobrescritos a cada execucao e ficam fora do Git; apenas `.gitkeep` mantem a estrutura de pastas.
-
-Antes de subir ambientes Docker, os scripts oficiais passam pelo `scripts/dev/dev-up`, que verifica imagens externas ausentes e fingerprints de build. Se voce apagou imagens/volumes do Docker, o fluxo oficial tenta puxar infra e rebuildar API/Web/Worker seletivamente antes do `compose up`.
+*Nota para Troubleshooting: Caso um gate falhe, use a flag `-ResumeFromStep` para retomar o passo com erro ao invés de perder tempo reinstalando o frontend.*

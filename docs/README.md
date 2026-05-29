@@ -1,63 +1,20 @@
-# Documentacao Do StreamGate
+# StreamGate Documentation
 
-Este diretorio concentra a documentacao viva do StreamGate. A leitura deve permitir que produto, engenharia e operacao entendam o que existe, como rodar, como validar e quais limites ainda precisam ser respeitados.
+Bem-vindo ao portal de documentação do StreamGate. O objetivo desta pasta é atuar como uma base de conhecimento persistente para novos desenvolvedores e mantenedores. 
 
-## Como Navegar
+## 🗺️ O que você encontra aqui
 
-Comece por estes documentos:
+- **`guides/`**: Manuais passo a passo para configuração de infraestrutura, runbooks operacionais, e procedimentos de disaster recovery. (Ex: *Como recuperar do zero caso o RabbitMQ perca todos os volumes*).
+- **`planning/`**: Artefatos, escopos, RFCs (Request for Comments) e arquivos do ciclo de vida de releases (ex: `release-implementation-plan.md`, `release-tasks.md`). É aqui onde as intenções de arquitetura futuras e o progresso da IA são registrados.
+- **`reports/`**: Logs estáticos, saídas HTML do vitest coverage, rspec coverage e relatórios consolidados das execuções do CI. É a base de rastreabilidade de saúde de código.
+- **`assets/`**: Imagens, diagramas Mermaid, e capturas de tela usadas para ilustrar a documentação nos Readmes e neste portal.
 
-1. [Visao de produto](product/vision.md)
-2. [Guia de fechamento do produto](guides/platform/final-delivery-guide.md)
-3. [Arquitetura](guides/platform/architecture.md)
-4. [Setup](guides/platform/setup.md)
-5. [API docs](guides/backend/api-docs.md)
-6. [Frontend foundations](guides/frontend/frontend-foundations.md)
-7. [Workspace map](guides/frontend/frontend-workspace-map.md)
-8. [Worker runbook](guides/operations/worker-runtime-runbook.md)
-9. [Testing baseline](guides/quality/testing-baseline.md)
-10. [Threat model](guides/security/streamgate-threat-model.md)
-11. [Release/rollback checklist](guides/platform/release-rollback-checklist.md)
-12. [Roadmap e closeouts](planning/)
+## ✍️ Princípios de Escrita
 
-## Mapa Por Area
+Quando adicionar um documento novo:
+1. **Evite Clichês:** Sem parágrafos enchendo linguiça. Seja direto.
+2. **Contexto Antes da Ação:** Se for um guia, explique o problema *antes* de jogar 10 scripts na tela.
+3. **Mantenha Versionado junto do Código:** Atualizou a lógica do DLQ na API? A doc do *Worker Runtime Runbook* também deve mudar na mesma Pull Request.
 
-| Area | Documentos principais |
-| --- | --- |
-| Produto | `product/vision.md`, `guides/platform/final-delivery-guide.md` |
-| Plataforma | `guides/platform/architecture.md`, `setup.md`, `devops-roadmap.md`, `release-rollback-checklist.md` |
-| Backend | `guides/backend/api-docs.md`, `backend-foundations.md`, `authentication-guide.md`, `domain-glossary.md` |
-| Frontend | `guides/frontend/frontend-foundations.md`, `frontend-workspace-map.md` |
-| Worker e operacao | `guides/operations/worker-runtime-runbook.md`, `documentation-governance.md` |
-| Qualidade | `guides/quality/definition-of-done.md`, `testing-baseline.md`, `delivery-reassessment-checklist.md` |
-| Seguranca | `guides/security/security-baseline.md`, `streamgate-threat-model.md` |
-| Evidencias | `reports/index.html`, `sprints/` |
-
-## Principios De Governanca
-
-- Documentos de produto descrevem comportamento atual e limites aprovados.
-- Guias tecnicos devem apontar para comandos reais e contratos versionados.
-- Mudancas de API exigem atualizacao coordenada de OpenAPI, contratos, exemplos e docs.
-- Mudancas em runtime, worker, seguranca ou UX operacional devem atualizar runbook, threat model ou workspace map quando houver impacto.
-- Referencias historicas de ciclos ficam no roadmap e closeouts; docs permanentes devem falar em produto, release, operacao e contrato.
-
-## Evidencias E Reports
-
-O hub `docs/reports/index.html` e gerado pelos scripts de reports e serve como indice local dos artefatos de validacao.
-
-Reports detalhados ficam em:
-
-- `apps/web/reports/`
-- `apps/web/e2e/reports/`
-- `apps/api/test/reports/`
-- `apps/worker/spec/reports/`
-- `scripts/ci/reports/`
-- `scripts/smokes/reports/`
-
-Esses artefatos sao sobrescritos pelos gates e, em geral, nao devem ser versionados.
-
-## Templates E Historico
-
-- Templates: `docs/templates/`
-- Closeouts historicos: consulte o indice de planejamento e os arquivos de fechamento historico.
-- Roadmap mestre: `docs/planning/`
-- ADRs: `docs/adr/`
+---
+*"Documentação obsoleta é pior que nenhuma documentação. O código muda; o texto acompanha."*

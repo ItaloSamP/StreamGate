@@ -17,7 +17,9 @@ O StreamGate é uma plataforma operacional para ingestão, processamento assínc
 - [x] **Commit & Push:** Organizar alterações da Fase 1, realizar commit descritivo e push.
 
 ### FASE 2 — Gates Automatizados (Testes)
-- [x] Executar Unit, Integration e Build do frontend.
+- [x] Implementar rate limit em controllers cruciais da API.
+- [x] Tratamento centralizado para Lograge (Structured Logs).
+- [x] DLQ Cycle Management: Visualização e Replay no Frontend e Backend.
 - [x] Executar Request/Service/Model tests no backend e Worker runtime specs.
 - [x] Rodar **Smokes Operacionais E2E no Docker** (`scripts/smokes/run-smokes.ps1`).
 - [x] **Commit & Push:** Organizar alterações da Fase 2, realizar commit descritivo e push.
@@ -31,9 +33,9 @@ O StreamGate é uma plataforma operacional para ingestão, processamento assínc
 
 ## FASE 5 — Deep Refactoring & Finalização de Pendências (Em Lote Massivo)
 - [ ] **Finalizar O que Está Inacabado:** Finalizar e testar conectores `google_drive` e `oauth_delegated`.
-- [ ] **Componentização Frontend:** Quebrar `UploadPage.tsx` (43KB), `SettingsPage.tsx` (34KB) e `streamgate-api.ts` (53KB).
-- [ ] **Limpeza de Código Morto:** Remoção do CircleCI e mocks inúteis de UI.
-- [ ] **Otimização Extrema:** Lazy Loading no Frontend e Streaming Assíncrono no Worker Ruby (parsers).
+- [x] Componentização Frontend: Quebrar `UploadPage.tsx` (43KB), `SettingsPage.tsx` (34KB) e `streamgate-api.ts` (53KB).
+- [x] Limpeza de Código Morto: Remoção do CircleCI e mocks inúteis de UI.
+- [x] Otimização Extrema: Lazy Loading no Frontend e Streaming Assíncrono no Worker Ruby (parsers).
 - [ ] **Commit & Push:** Organizar alterações da Fase 5, realizar commit descritivo e push.
 
 ---
@@ -62,8 +64,10 @@ Um produto excelente não pode ter cara de template e não pode operar no escuro
 **🤖 Global Skills:** `frontend-design`, `web-design-guidelines`, `tailwind-patterns`.
 
 - [ ] **Maestro Auditor & Purple Ban:** Escanear o código Tailwind eliminando dependências de roxo/índigo padrão. Avaliar o layout para destruir "Safe Splits" (50/50). Aplicar quebras de grid (assimetria 70/30 ou 90/10) e cores disruptivas focadas em alta operabilidade.
-- [ ] **Tipografia e Geometria Estrita:** O app hoje tem mistura de bordas? Padronizar brutalmente: ou é 100% *Sharp/Tech* (0px a 2px) ou *Friendly/Organic* (16px+). Não ficar no meio-termo.
-- [ ] **Micro-interações e Física de Mola:** Interfaces estáticas falham no engajamento. Adicionar animações táteis de botão (`scale-95` no click), reveals de entrada progressiva no Dashboard (scroll) e *spring physics* nos modais/drawers, usando *apenas GPU* (`transform`, `opacity`).
+- [ ] **Tipografia e Geometria Estrita:** O app hoje tem mistura de bordas? Padronizar brutalmente: ou é 100% *Sharp/Tech* (0px a 2px) ou *Friendly/Organic* (16px+).
+- [x] Ajustes nos painéis de Admin.
+- [x] Micro-interações, tooltips e skeletons para carregamento.
+- [x] Cores vibrantes "Anti-Cliché" em OKLCH e Glassmorphism. Adicionar animações táteis de botão (`scale-95` no click), reveals de entrada progressiva no Dashboard (scroll) e *spring physics* nos modais/drawers, usando *apenas GPU* (`transform`, `opacity`).
 - [ ] **Empty States Operacionais:** Nenhuma tela vazia (ex: sem Jobs, sem Quarentena) deve ser apenas uma mensagem triste. Transformar todas as "Empty States" em Oportunidades de CTA e educação do usuário (ex: um drag-and-drop enorme aparecendo).
 - [ ] **Commit & Push:** Organizar alterações da Fase 8, realizar commit descritivo e push.
 
@@ -86,7 +90,9 @@ Um produto excelente não pode ter cara de template e não pode operar no escuro
 **🤖 Global Skills:** `documentation-writer`, `c4-architecture`, `api-documenter`.
 
 - [ ] **Aniquilar e recriar o README Raiz:** Explicar o que é o StreamGate, como ele funciona sob o capô, stack, e roteiros de dev locais.
-- [ ] **READMEs por Diretório:** Escrever um README detalhado dentro de `apps/api`, `apps/worker`, `apps/web` e `packages`, documentando as responsabilidades e design system local de cada serviço.
+- [x] Reescrever `README.md` raiz.
+- [x] Reescrever `README.md` para as pastas: `api`, `web`, `worker`, `contracts`, `scripts`.
+- [x] Limpar / Consolidar a pasta `docs/`.
 - [ ] **Mapeamento Arquitetural (C4 Model):** Diagramas C4 via Mermaid atualizados, explicando a topologia de Ingestão -> RabbitMQ -> Worker -> ClickHouse/Postgres.
 - [ ] **API Specs & Contratos (OpenAPI):** Refazer toda a documentação da API baseada no estado final do código. Entregar payloads de sucesso, cenários reais de erro, limites operacionais e paginação.
 - [ ] **Operational Runbooks e Onboarding Guides:** Guias claros, polidos e exemplificativos focados no Worker e infraestrutura. Ex: "Como tratar DLQ", "Como subir o ClamAV localmente", etc.

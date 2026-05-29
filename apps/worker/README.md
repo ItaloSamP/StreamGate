@@ -1,72 +1,53 @@
-# StreamGate Worker
+# StreamGate Data Worker
 
-Runtime Ruby responsavel por consumir eventos, baixar entradas, processar arquivos, gerar artefatos, alimentar ClickHouse e publicar sinais operacionais para o command center.
+Motor assíncrono de consumo, processamento, e persistência final de dados em grande volume do StreamGate. O **Data Worker** é o aplicativo desenhado para processar cargas "sujas" antes que elas entrem no ecossistema relacional.
 
-## Responsabilidades
+## 🛠 Tecnologias Principais
 
-- Consumir `upload.received.v1`, `upload.public_link.requested.v1` e `connector.ingestion.requested.v1`.
-- Baixar objetos do MinIO, links publicos e conectores S3/HTTP por lease interno.
-- Processar CSV, JSON, NDJSON, ZIP seguro, XLSX e Parquet quando o runtime nativo estiver disponivel.
-- Manter idempotencia por evento, upload, job e tentativa.
-- Criar batches, attempts, quarantine records, warnings, audit events e artifacts.
-- Carregar agregados e metadados seguros no ClickHouse, sem payload bruto sensivel.
-- Emitir realtime events best-effort sem bloquear o fluxo principal.
+- **Ruby 3.3.0** (Em runtime puro de processo isolado, sem Rails!).
+- **RabbitMQ (Bunny)** (Cliente AMQP nativo).
+- **ClickHouse** (Destino final das cargas massivas processadas).
+- **Aws-sdk-s3** (Acesso de leitura para puxar CSVs, Zips, JSONs ou conectores).
+- **Parsers de Alta Performance** (Lazy enumerators, ndjson e CSV otimizados).
 
-## Pipeline
+## ⚙️ Anatomia do Processamento
 
-1. Recebe evento duravel via RabbitMQ.
-2. Valida idempotencia e contexto.
-3. Resolve entrada no storage ou em conector externo.
-4. Faz spool/streaming com limites e cleanup best effort.
-5. Parseia registros e separa validos de invalidos.
-6. Atualiza PostgreSQL com progresso, batches e warnings.
-7. Alimenta ClickHouse com agregados e fingerprints.
-8. Gera `processed_dataset`, `quality_report` e `audit_report`.
-9. Publica notificacoes, audit trail e eventos realtime.
+### O Padrão Consumidor
+O Worker utiliza um design modular orientado a eventos. Ele subscreve tópicos chave como:
+- `upload.received.v1`
+- `upload.public_link.requested.v1`
+- `connector.ingestion.requested.v1`
 
-## Conectores
+Quando a mensagem chega, as seguintes etapas ocorrem:
+1. **Reserva Idempotente:** Usa o PostgreSQL (tabela `worker_consumed_events`) pra ter certeza que a mensagem não foi e não será processada duas vezes se duplicada pelo Broker.
+2. **Download em Memória/Streaming:** Obtém o arquivo apontado pelo bucket S3 ou pela fonte Http / OAuth do Google Drive.
+3. **Parse em Fluxo (Lazy Streaming):** Graças aos nossos parsers assíncronos (`Enumerator::Lazy`), o app processa linha por linha evitando OOM (Out-of-memory) em arquivos de 50GB.
+4. **Tratamento de Exceções & Quarentena:** Linhas malformadas, schemas estourados e problemas semânticos vão ser anotados, processados e inseridos de forma assíncrona na Quarentena.
+5. **Carga Analítica (ClickHouse Warehouse):** Se tudo ocorreu bem, os blocos carregam de fato os dados pesados pro Data Warehouse via inserts maciços.
+6. **DLQ Cycle Management:** Se por um acaso o processamento ou conexão falhar de forma retentativa (Transient), a mensagem voltará pra fila um número de vezes. Caso a falha seja estrutural (Poison Pill), a mensagem será roteada via Dead-Letter Routing para o DLQ.
 
-- S3: usa perfil admin-only criptografado na API e lease interno reivindicado pelo worker.
-- HTTP: aplica anti-SSRF, bloqueio de localhost/private/link-local/metadata, validacao de redirect e masking.
-- Credenciais e secrets nunca devem aparecer em resposta, evento ou log.
+## 🚀 Como Executar
 
-## Desenvolvimento Local
+Por ser um Daemon independente do Rails, ele é bastante enxuto:
 
 ```bash
+cd apps/worker
+
+# Instalação de Gems
 bundle install
-bundle exec rspec
-bundle exec ruby -e 'require "worker"; Worker.run!'
+
+# Executar o processo daemon (geralmente gerenciado pelo Docker no ambiente completo)
+bin/worker
 ```
 
-Com stack completa:
+Você pode subir mais de uma réplica do Worker sem preocupação, a idempotência no DB e as filas do RabbitMQ garantem uma concorrência segura (Round-Robin nativo do RabbitMQ).
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\dev\dev-up.ps1 -Mode full
-```
+---
 
-## Qualidade
+## 🧪 Rodando os Testes
+
+Este projeto possui uma suíte extensa cobrindo os testes de comportamento (especialmente os parsers, tratamentos de filas DLQ, limitadores, falhas de conectores).
 
 ```bash
 bundle exec rspec
-bundle exec rubocop
 ```
-
-Gate coordenado na raiz:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 backend
-```
-
-## Operacao E Diagnostico
-
-- DLQ recebe mensagens que excedem retry ou falham de forma controlada.
-- Falhas de ClickHouse, realtime ou cleanup viram warnings tecnicos quando nao devem bloquear artefatos/auditoria.
-- Toda investigacao deve partir de `trace_id`, `request_id`, `upload_id`, `job_id` e `event_id`.
-- Runbook oficial: [worker-runtime-runbook.md](../../docs/guides/operations/worker-runtime-runbook.md).
-
-## Referencias
-
-- [API docs](../../docs/guides/backend/api-docs.md)
-- [Contracts](../../packages/contracts/README.md)
-- [Testing baseline](../../docs/guides/quality/testing-baseline.md)
-- [Threat model](../../docs/guides/security/streamgate-threat-model.md)

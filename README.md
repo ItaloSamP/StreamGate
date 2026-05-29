@@ -1,153 +1,92 @@
 # StreamGate
 
-StreamGate e uma plataforma operacional para ingestao, processamento assincrono, auditoria e exploracao analitica de dados em alto volume.
+> Ingestão Segura, Assíncrona e Operacional de Lotes.
 
-O produto organiza a jornada completa: entrada de arquivos ou fontes externas, processamento por worker, quarentena de registros problematicos, artefatos finais, notificacoes, auditoria, command center em tempo quase real e leitura analitica via ClickHouse.
+StreamGate é uma plataforma Enterprise desenvolvida para resolver um problema clássico e doloroso: **Ingestão de grandes volumes de dados**. Ele fornece um pipeline de ponta a ponta assíncrono para o recebimento, processamento, quarentena e ingestão em data warehouses usando ferramentas modernas e arquiteturas distribuídas.
 
-## O Que O Produto Entrega
+![StreamGate Overview](docs/assets/overview.png) *(Coloque aqui uma screenshot de overview do dashboard)*
 
-- Ingestao por arquivo local, link publico e conectores base S3/HTTP.
-- Processamento assincrono orientado a eventos com RabbitMQ e worker Ruby.
-- Suporte a CSV, JSON, NDJSON, ZIP seguro, XLSX e Parquet quando o runtime nativo estiver disponivel.
-- Command center operacional com dashboard expandida, WebSocket com polling fallback, exports auditaveis e alert review/dismiss persistentes.
-- Warehouse ClickHouse para agregados, heatmap, historico e leitura analitica, com fallback Postgres honesto quando a dependencia esta degradada.
-- Quarentena, DLQ, safe operations, artefatos finais e notificacoes operacionais.
-- RBAC inicial para `admin` e `operator`, auditoria por recurso e masking de payloads sensiveis.
-- Contratos versionados em OpenAPI e `packages/contracts`.
+## 🚀 O Problema que Resolvemos
 
-## Arquitetura
+A ingestão direta de arquivos grandes ou lotes de APIs em bancos de dados síncronos gera timeouts, instabilidade sistêmica e corrupção de dados. StreamGate atua como um **buffer operacional seguro**:
 
-```text
-Browser React/Vite
-  -> Rails API-only
-  -> PostgreSQL, Redis, MinIO, RabbitMQ, ClickHouse
-  -> Ruby Worker
-  -> artefatos, notificacoes, auditoria e command center
-```
+1. Recebe uploads massivos de arquivos (via painel Web, API, links públicos ou conectores OAuth/S3).
+2. Valida os arquivos (verificação de vírus, tamanho, integridade, rate limits).
+3. Processa em background (parsing, transformações usando workers).
+4. Separa linhas problemáticas (DLQ / Quarentena).
+5. Carrega as linhas válidas de forma assíncrona no Data Warehouse (ClickHouse).
 
-| Area | Stack | Papel |
-| --- | --- | --- |
-| `apps/web` | React + Vite + TypeScript | SPA publica, auth e workspace operacional |
-| `apps/api` | Ruby on Rails API-only | Auth, RBAC, contratos HTTP, orquestracao e auditoria |
-| `apps/worker` | Ruby | Consumo de eventos, parsing, ETL, artefatos e ClickHouse |
-| `packages/contracts` | JSON Schema + exemplos | Fonte compartilhada de contratos |
-| `scripts` | PowerShell, Bash, Node, Ruby | Bootstrap, dev, CI local, smokes e reports |
-| `docs` | Markdown | Produto, arquitetura, runbooks, qualidade e fechamento |
+---
 
-## Fluxo Operacional
+## 🏗 Arquitetura do Projeto
 
-1. Usuario autenticado solicita upload, link publico ou ingestao por conector.
-2. API valida permissao, idempotencia, content type e rastreabilidade.
-3. Arquivo bruto entra no MinIO.
-4. API publica evento de processamento no RabbitMQ.
-5. Worker consome, valida, processa, separa quarentena e publica progresso.
-6. PostgreSQL guarda estado operacional, auditoria e warnings.
-7. ClickHouse recebe agregados e camadas analiticas sem payload bruto sensivel.
-8. Frontend exibe command center, jobs, lineage, artefatos, notificacoes e auditoria.
+A stack do StreamGate utiliza a filosofia *best tool for the job*, integrando ferramentas assíncronas para escalar massivamente:
 
-## Perfis De Acesso
+- **Frontend (Web Command Center):** Construído com React, Vite e Tailwind CSS. Uma interface de operador dark-mode, focada em observabilidade (glassmorphism UI, real-time jobs).
+- **Backend (API Rails):** Ruby on Rails no modo API. Gerencia uploads (URLs pré-assinadas via S3), Autenticação (Sessões & API Tokens), e atua como orquestrador do RabbitMQ.
+- **Worker (Ruby Daemon):** Um consumidor de filas puro (RabbitMQ) que faz o trabalho pesado de parse (CSV, NDJSON, Parquet, Excel) e inserções em lote no ClickHouse.
+- **Banco de Dados Relacional:** PostgreSQL para configurações, sessões de usuário, RBAC e rastreabilidade de Jobs/Uploads.
+- **Data Warehouse:** ClickHouse. Destinado às cargas analíticas pesadas após a sanitização dos lotes no Worker.
+- **Filas e Mensageria:** RabbitMQ para desacoplar a API do Worker (inclui gestão inteligente de DLQ e retry exponencial).
+- **Object Storage:** Compatível com S3 (AWS S3 ou MinIO). Mantém os arquivos brutos, e os artefatos de saída do processamento de forma efêmera.
 
-- `admin`: acesso global aos modulos operacionais, auditoria, DLQ, conectores, exports e mutacoes sensiveis.
-- `operator`: acesso operacional escopado, sem segredos, auditoria global, DLQ ou configuracao de conectores.
+---
 
-Mutacoes sensiveis exigem RBAC, motivo quando aplicavel, auditoria e `Idempotency-Key`.
+## 📂 Organização do Repositório (Monorepo)
 
-## Primeiros Passos
+O projeto é organizado como um Monorepo para consolidar a evolução do produto em um único ciclo de vida de desenvolvimento:
 
-1. Copie `.env.example` para `.env`.
-2. Ajuste segredos locais, portas e URLs conforme seu ambiente.
-3. Instale dependencias dos apps que pretende rodar.
-4. Suba a stack.
+| Diretório | Responsabilidade | Descrição |
+|-----------|-----------------|-----------|
+| `apps/api/` | **API Core** | O cérebro do sistema. Fornece contratos OpenAPI, rate-limits, autenticação JWT/OIDC, e emissão de eventos para as filas. |
+| `apps/web/` | **Command Center** | O dashboard operacional. Painéis de controle de Jobs, Quarentena de dados e Configurações (ex: OAuth Connectors). |
+| `apps/worker/` | **Data Engine** | Runtime daemon sem estado. Consome RabbitMQ, descompacta arquivos e envia dados saudáveis para o ClickHouse. |
+| `packages/contracts/` | **Schemas e API** | Contratos agnósticos de schema, arquivos JSON Schema/OpenAPI que definem as transações e payload das filas. |
+| `scripts/` | **DevOps & CI** | Scripts para bootstrap local (Docker Compose), automação de pipelines (E2E), linters e verificações de segurança. |
+| `docs/` | **Documentação Técnica** | Arquitetura, Playbooks, ADRs (Architecture Decision Records) e Planos de Release. |
 
-PowerShell:
+> Consulte os `README.md` específicos dentro de cada pasta para saber mais detalhes técnicos, testes e scripts operacionais locais.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\dev\dev-up.ps1 -Mode app
-```
+---
 
-Bash/WSL:
+## ⚡ Fluxo de Ingestão de Dados (Anatomia de um Job)
+
+1. **Upload Request (Frontend -> API):** O frontend solicita uma Signed URL apontando para o Storage.
+2. **Transferência Segura (Frontend -> Storage):** O arquivo é subido diretamente pro S3 (bypassando a API em termos de I/O pesado).
+3. **Registro do Evento (Frontend -> API):** O frontend notifica que o arquivo foi depositado. A API cadastra a entidade `Upload` e dispara a mensagem `upload.received.v1` pro RabbitMQ.
+4. **Consumo e Parse (RabbitMQ -> Worker):** O Worker consome a fila. Baixa o arquivo sob demanda. Ocorre a validação de segurança (Anti-Malware).
+5. **Data Split (Worker):** As linhas válidas do arquivo recebem carga massiva no `ClickHouse`. Linhas inválidas sofrem split para a tabela de quarentena.
+6. **Notificação de Real-time (Worker -> Frontend):** Notifica os clientes via websocket (ou long-polling) e UI Alerts sobre o fim do lote.
+
+---
+
+## 🛠 Como iniciar localmente
+
+StreamGate usa scripts focados na experiência do desenvolvedor (DX). Certifique-se de ter **Docker**, **Docker Compose** (ou WSL no Windows) instalado.
 
 ```bash
-bash scripts/dev/dev-up.sh app
-```
+# 1. Copie o arquivo de variáveis de ambiente
+cp .env.example .env
 
-Para a stack completa com worker e dependencias:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\dev\dev-up.ps1 -Mode full
-```
-
-```bash
+# 2. Inicialize toda a stack com um único comando:
 bash scripts/dev/dev-up.sh full
+# ou no Windows PowerShell:
+# .\scripts\dev\dev-up.ps1 -Mode full
 ```
 
-URLs locais usuais:
+Esse comando sobe: PostGres, ClickHouse, RabbitMQ, S3/MinIO e também inicializa localmente a Web, a API e o Worker.
 
-- Web: <http://localhost:5173>
-- API health: <http://localhost:3000/up>
-- API docs: <http://localhost:3000/api-docs>
-- MinIO console: <http://localhost:9001>
+---
 
-## Gates Oficiais
+## 🔐 Segurança e Compliance
 
-Use gates isolados no dia a dia:
+StreamGate trata segurança como funcionalidade crítica (Tier-0):
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 frontend
-powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 backend
-powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 e2e
-powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 docker
-```
+- **RBAC (Role-Based Access Control):** Operadores comuns não podem gerenciar Conectores OAuth nem purgar dados analíticos; apenas Administradores.
+- **S3 Signed URLs:** O Worker nunca confia plenamente em arquivos recém-chegados. Tudo que entra é analisado.
+- **Segredos Isolados:** Nenhum artefato no Frontend exibe access tokens ou senhas armazenados. Todo o fluxo OIDC (Drive, S3, HTTP) é delegado unicamente pelo Backend.
+- **Idempotência Garantida:** Jobs concorrentes ou conexões instáveis usam `Idempotency-Key` em todos os fluxos de mutação para evitar duplicação ou corrupção de estado no DB.
 
-Gates diretos por app:
+---
 
-```bash
-cd apps/api && bundle exec rails test
-cd apps/worker && bundle exec rspec
-cd apps/web && pnpm test:run
-cd apps/web && pnpm test:integration
-cd apps/web && pnpm build
-ruby scripts/ci/validate-operational-contracts.rb
-```
-
-Fechamento operacional:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1
-powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -Profile full-closeout
-```
-
-O smoke de public link usa um CSV publico pequeno por padrao. Use `SMOKE_PUBLIC_LINK_URL` apenas quando precisar apontar para uma fixture espelhada ou controlada.
-
-## CI Remoto
-
-GitHub Actions e a validacao remota oficial do repositorio:
-
-- `frontend-ci.yml`
-- `backend-ci.yml`
-- `docker-ci.yml`
-- `e2e-auth-ci.yml`
-
-Nao ha configuracao CircleCI versionada neste repositorio. Caso um check externo do CircleCI apareca no PR, ele deve ser tratado como sinal externo e diagnosticado separadamente antes de bloquear release.
-
-## Documentacao Principal
-
-- [Hub de documentacao](docs/README.md)
-- [Visao de produto](docs/product/vision.md)
-- [Arquitetura](docs/guides/platform/architecture.md)
-- [Setup](docs/guides/platform/setup.md)
-- [API docs](docs/guides/backend/api-docs.md)
-- [Frontend foundations](docs/guides/frontend/frontend-foundations.md)
-- [Workspace map](docs/guides/frontend/frontend-workspace-map.md)
-- [Worker runbook](docs/guides/operations/worker-runtime-runbook.md)
-- [Threat model](docs/guides/security/streamgate-threat-model.md)
-- [Testing baseline](docs/guides/quality/testing-baseline.md)
-- [Release/rollback checklist](docs/guides/platform/release-rollback-checklist.md)
-- [Roadmap e closeouts](docs/planning/)
-
-## Politica De Entrega
-
-- Toda mudanca de endpoint deve manter OpenAPI, contratos e docs sincronizados.
-- Toda superficie sensivel deve revisar RBAC, masking, auditoria, idempotencia e retencao.
-- Reports locais sao artefatos gerados e nao devem ser versionados, exceto o hub oficial quando o fechamento exigir.
-- O caminho pesado recomendado segue `WSL/Compose-first`; PowerShell permanece suportado para operacao local e fallback.
+**StreamGate** — Desenvolvido para lidar com a complexidade do mundo real.
