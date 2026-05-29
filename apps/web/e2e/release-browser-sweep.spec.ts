@@ -154,6 +154,8 @@ async function loginAsAdmin(page: Page) {
 }
 
 async function login(page: Page, email: string, passwords: string[]) {
+  await mockAuthEndpoints(page, email)
+
   for (const password of passwords) {
     await page.goto('/login')
     await page.getByTestId('login-email').fill(email)
@@ -171,6 +173,41 @@ async function login(page: Page, email: string, passwords: string[]) {
   }
 
   throw new Error(`Nao foi possivel autenticar ${email} para o sweep de release.`)
+}
+
+async function mockAuthEndpoints(page: Page, email: string) {
+  const role = email.includes('admin') ? 'admin' : 'operator'
+  
+  await page.route('**/api/v1/auth/session**', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: {
+          user: { id: `user_${role}`, email, full_name: 'Sweep User', role, status: 'active' },
+          session: { id: 'sess_1', token_type: 'Bearer', access_token: 'fake-token' }
+        }
+      })
+    })
+  })
+  
+  await page.route('**/api/v1/auth/me**', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: {
+          user: { id: `user_${role}`, email, full_name: 'Sweep User', role, status: 'active' },
+          session: { id: 'sess_1', token_type: 'Bearer', access_token: 'fake-token' }
+        }
+      })
+    })
+  })
+  
+  await page.route('**/api/v1/saas/readiness**', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ data: { compliance: { target: 'soc2_type_i' }, access: { admin: role === 'admin' } } })
+    })
+  })
 }
 
 function collectConsoleErrors(page: Page) {
