@@ -234,6 +234,20 @@ async function mockAuthEndpoints(page: Page, email: string) {
       return
     }
 
+    if (url.includes('/analytics') && !url.includes('/dashboard')) {
+      await route.fulfill({
+        contentType: 'application/json',
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        body: JSON.stringify({
+          data: {
+            kpis: { uploads_total: 0, jobs_total: 0, jobs_processing: 0, jobs_completed: 0, jobs_failed: 0, jobs_quarantined: 0, quarantine_records_total: 0, audit_events_total: 0 },
+            breakdowns: { status: [], actor: [], source: [] }
+          }
+        })
+      })
+      return
+    }
+
     if (route.request().method() === 'OPTIONS') {
       await route.fulfill({
         status: 204,
