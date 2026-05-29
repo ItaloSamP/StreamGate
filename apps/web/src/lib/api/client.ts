@@ -14,6 +14,138 @@ type StreamgateHttpClientType = {
 }
 
 
+function normalizeListQuery(query?: ListQuery): Record<string, string | number | boolean | null | undefined> | undefined {
+  if (!query) return undefined
+
+  return {
+    status: query.status,
+    page: query.page,
+    per_page: query.per_page,
+    search: query.search,
+  }
+}
+
+function normalizeOperationalQuery(query?: OperationalQuery): Record<string, string | number | boolean | null | undefined> | undefined {
+  if (!query) return undefined
+
+  return {
+    preset: query.preset,
+    from: query.from,
+    to: query.to,
+    timezone: query.timezone,
+    sort_by: query.sort_by,
+    sort_order: query.sort_order,
+    page: query.page,
+    per_page: query.per_page,
+    search: query.search,
+  }
+}
+
+function normalizeQuarantineQuery(query?: QuarantineQuery) {
+  if (!query) return undefined
+
+  return {
+    ...normalizeOperationalQuery(query),
+    severity: query.severity,
+    job_id: query.job_id,
+    trace_id: query.trace_id,
+  }
+}
+
+function normalizeDlqQuery(query?: DlqQuery) {
+  if (!query) return undefined
+
+  return {
+    dead_letter_reason: query.dead_letter_reason,
+    event_name: query.event_name,
+    trace_id: query.trace_id,
+    job_id: query.job_id,
+    sort_by: query.sort_by,
+    sort_order: query.sort_order,
+    page: query.page,
+    per_page: query.per_page,
+    search: query.search,
+  }
+}
+
+function normalizeAuditQuery(query?: AuditQuery) {
+  if (!query) return undefined
+
+  return {
+    ...normalizeOperationalQuery(query),
+    action: query.action,
+    actor_id: query.actor_id,
+    auditable_type: query.auditable_type,
+    trace_id: query.trace_id,
+    request_id: query.request_id,
+  }
+}
+
+const endpoints = {
+  analytics: '/api/v1/analytics',
+  audit: '/api/v1/audit',
+  jobs: '/api/v1/jobs',
+  quarantine: '/api/v1/quarantine',
+  quarantineDlq: '/api/v1/quarantine/dlq',
+  dlqReplayRequests: '/api/v1/dlq-replay-requests',
+  notifications: '/api/v1/notifications',
+  notificationSettings: '/api/v1/notification-settings',
+  realtimeTickets: '/api/v1/realtime/tickets',
+  realtimeEvents: '/api/v1/realtime/events',
+  dashboardExports: '/api/v1/analytics/dashboard/exports',
+  saasReadiness: '/api/v1/saas/readiness',
+  organization: '/api/v1/organization',
+  organizationMembers: '/api/v1/organization/members',
+  organizationInvites: '/api/v1/organization/invites',
+  mfaSetup: '/api/v1/auth/mfa/setup',
+  mfaVerify: '/api/v1/auth/mfa/verify',
+  mfaRecoveryCodes: '/api/v1/auth/mfa/recovery-codes/regenerate',
+  oidcConfig: '/api/v1/auth/oidc/config',
+  oidcStart: '/api/v1/auth/oidc/google/start',
+  googleDriveAuthorize: '/api/v1/connectors/google-drive/authorize',
+  googleDriveItems: '/api/v1/connectors/google-drive/items',
+  googleDriveRevoke: '/api/v1/connectors/google-drive/revoke',
+  connectorProfiles: '/api/v1/connectors/profiles',
+  uploads: '/api/v1/uploads',
+  uploadPublicLink: '/api/v1/uploads/public-link',
+  uploadSignedUrl: '/api/v1/uploads/signed-url',
+} as const
+
+export function createIdempotencyKey(scope = 'operation') {
+  const randomId = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(16).slice(2)}`
+
+  return `streamgate:${scope}:${randomId}`
+}
+
+function operationBody(reason: string, payload?: Record<string, unknown>) {
+  return {
+    operation: {
+      reason,
+      ...(payload ? { payload } : {}),
+    },
+  }
+}
+
+function idempotencyHeaders(key?: string) {
+  return { 'Idempotency-Key': key ?? createIdempotencyKey() }
+}
+
+async function patchEnvelope<T>(client: StreamgateHttpClientType, path: string, options?: RequestOptions): Promise<ApiSuccessEnvelope<T>> {
+  if (client.patchEnvelope) return client.patchEnvelope<T>(path, options)
+  if (!client.patch) throw new Error('HTTP PATCH is not available in this client.')
+  const data = await client.patch<T>(path, options)
+  return { data }
+}
+
+async function deleteEnvelope<T>(client: StreamgateHttpClientType, path: string, options?: RequestOptions): Promise<ApiSuccessEnvelope<T>> {
+  if (client.deleteEnvelope) return client.deleteEnvelope<T>(path, options)
+  if (!client.delete) throw new Error('HTTP DELETE is not available in this client.')
+  const data = await client.delete<T>(path, options)
+  return { data }
+}
+
 export function createStreamgateApi(client: StreamgateHttpClientType = apiClient) {
   return {
     health: () => client.get<HealthResponse>('/up', undefined),

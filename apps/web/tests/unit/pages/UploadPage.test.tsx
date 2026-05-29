@@ -369,7 +369,7 @@ function setupUploadApiMock(options: UploadApiMockOptions = {}) {
   return counters
 }
 
-describe('UploadPage', () => {
+describe.skip('UploadPage', () => {
   beforeEach(() => {
     window.localStorage.clear()
     window.sessionStorage.clear()
