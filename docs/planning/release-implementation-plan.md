@@ -17,10 +17,10 @@ O StreamGate é uma plataforma operacional para ingestão, processamento assínc
 - [x] **Commit & Push:** Organizar alterações da Fase 1, realizar commit descritivo e push.
 
 ### FASE 2 — Gates Automatizados (Testes)
-- [ ] Executar Unit, Integration e Build do frontend.
-- [ ] Executar Request/Service/Model tests no backend e Worker runtime specs.
-- [ ] Rodar **Smokes Operacionais E2E no Docker** (`scripts/smokes/run-smokes.ps1`).
-- [ ] **Commit & Push:** Organizar alterações da Fase 2, realizar commit descritivo e push.
+- [x] Executar Unit, Integration e Build do frontend.
+- [x] Executar Request/Service/Model tests no backend e Worker runtime specs.
+- [x] Rodar **Smokes Operacionais E2E no Docker** (`scripts/smokes/run-smokes.ps1`).
+- [x] **Commit & Push:** Organizar alterações da Fase 2, realizar commit descritivo e push.
 
 ### FASE 3 — Verificação Estática e Segurança Base
 - [ ] Check de segurança no frontend e remoção de segredos do Git.
