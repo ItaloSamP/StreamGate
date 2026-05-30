@@ -449,7 +449,7 @@ describe('streamgateApi auth adapter', () => {
     const postEnvelope = vi.fn()
       .mockResolvedValueOnce({ data: { id: 'conn_1', kind: 's3', name: 'finance-s3', status: 'active', settings: { bucket: '[masked]' } } })
       .mockResolvedValueOnce({ data: { id: 'conn_1', kind: 's3', status: 'configured' } })
-      .mockResolvedValueOnce({ data: { upload: { id: 'upload_connector' }, job: { id: 'job_connector' }, ingestion: { id: 'ing_connector' }, lease: { id: 'lease_1', token: 'lease-token', expires_at: '2026-04-24T14:05:00Z' } } })
+      .mockResolvedValueOnce({ data: { upload: { id: 'upload_connector' }, job: { id: 'job_connector' }, ingestion: { id: 'ing_connector' }, lease: { id: 'lease_1', expires_at: '2026-04-24T14:05:00Z' } } })
     const patchEnvelope = vi.fn().mockResolvedValue({ data: { id: 'conn_1', status: 'disabled' } })
     const api = createStreamgateApi({ get: vi.fn(), post: vi.fn(), getEnvelope, postEnvelope, patchEnvelope })
 
@@ -497,6 +497,61 @@ describe('streamgateApi auth adapter', () => {
       },
       headers: { 'Idempotency-Key': 'idem-ingestion' },
     })
+  })
+
+  it('maps SaaS organization, MFA, OIDC and Google Drive endpoints without secret-bearing responses', async () => {
+    const getEnvelope = vi.fn()
+      .mockResolvedValueOnce({ data: { organization: { id: 'org_1', name: 'StreamGate' }, members: [], invites: [] } })
+      .mockResolvedValueOnce({ data: [{ id: 'mem_1', role: 'admin' }] })
+      .mockResolvedValueOnce({ data: { authorization_url: 'https://accounts.google.com/o/oauth2/v2/auth', state: 'state_1', expires_at: '2026-05-06T13:00:00Z', scopes: ['https://www.googleapis.com/auth/drive'] } })
+      .mockResolvedValueOnce({ data: [{ id: 'drive_file_1', name: 'orders.csv', kind: 'file', mime_type: 'text/csv' }] })
+    const postEnvelope = vi.fn()
+      .mockResolvedValueOnce({ data: { id: 'invite_1', email: 'ops@example.com', role: 'operator', status: 'pending' } })
+      .mockResolvedValueOnce({ data: { factor_id: 'mfa_1', secret: 'BASE32SECRET', provisioning_uri: 'otpauth://totp/StreamGate', status: 'pending' } })
+      .mockResolvedValueOnce({ data: { factor_id: 'mfa_1', status: 'enabled', recovery_codes: ['SG-RECOVERY-1'] } })
+    const patchEnvelope = vi.fn()
+      .mockResolvedValueOnce({ data: { organization: { id: 'org_1', name: 'StreamGate Labs' }, members: [], invites: [] } })
+      .mockResolvedValueOnce({ data: { id: 'mem_1', role: 'operator', status: 'active' } })
+      .mockResolvedValueOnce({ data: { id: 'oidc_1', provider: 'google_workspace', hosted_domain: 'example.com', status: 'active', scopes: ['openid', 'email', 'profile'] } })
+    const deleteEnvelope = vi.fn().mockResolvedValue({ data: { id: 'drive_conn_1', provider: 'google_drive', status: 'revoked', revoked_at: '2026-05-06T13:00:00Z' } })
+    const api = createStreamgateApi({ get: vi.fn(), post: vi.fn(), getEnvelope, postEnvelope, patchEnvelope, deleteEnvelope })
+
+    await api.getOrganization()
+    await api.updateOrganization({ name: 'StreamGate Labs', retentionDays: 180, quotas: { max_file_bytes: 1024 } })
+    await api.listOrganizationMembers()
+    await api.createOrganizationInvite({ email: 'ops@example.com', role: 'operator', idempotencyKey: 'idem-invite' })
+    await api.updateOrganizationMember('mem_1', { role: 'operator', status: 'active', idempotencyKey: 'idem-member' })
+    await api.auth.setupMfa()
+    await api.auth.verifyMfa({ code: '123456' })
+    await api.auth.updateGoogleOidcProvider({ issuer: 'https://accounts.google.com', clientId: 'client-id.apps.googleusercontent.com', clientSecret: 'super-secret', hostedDomain: 'example.com' })
+    await api.auth.startGoogleOidc({ organizationId: 'org_1' })
+    await api.authorizeGoogleDrive()
+    await api.listGoogleDriveItems()
+    await api.revokeGoogleDrive()
+
+    expect(getEnvelope).toHaveBeenNthCalledWith(1, '/api/v1/organization')
+    expect(patchEnvelope).toHaveBeenNthCalledWith(1, '/api/v1/organization', {
+      body: { organization: { name: 'StreamGate Labs', retention_days: 180, quotas: { max_file_bytes: 1024 } } },
+      headers: { 'Idempotency-Key': expect.stringMatching(/^streamgate:organization:/) },
+    })
+    expect(getEnvelope).toHaveBeenNthCalledWith(2, '/api/v1/organization/members')
+    expect(postEnvelope).toHaveBeenNthCalledWith(1, '/api/v1/organization/invites', {
+      body: { invite: { email: 'ops@example.com', role: 'operator' } },
+      headers: { 'Idempotency-Key': 'idem-invite' },
+    })
+    expect(patchEnvelope).toHaveBeenNthCalledWith(2, '/api/v1/organization/members/mem_1', {
+      body: { membership: { role: 'operator', status: 'active' } },
+      headers: { 'Idempotency-Key': 'idem-member' },
+    })
+    expect(postEnvelope).toHaveBeenNthCalledWith(2, '/api/v1/auth/mfa/setup')
+    expect(postEnvelope).toHaveBeenNthCalledWith(3, '/api/v1/auth/mfa/verify', { body: { mfa: { code: '123456' } } })
+    expect(patchEnvelope).toHaveBeenNthCalledWith(3, '/api/v1/auth/oidc/config', {
+      body: { oidc_provider: { issuer: 'https://accounts.google.com', client_id: 'client-id.apps.googleusercontent.com', client_credential: 'super-secret', hosted_domain: 'example.com' } },
+    })
+    expect(getEnvelope).toHaveBeenNthCalledWith(3, '/api/v1/auth/oidc/google/start', { query: { organization_id: 'org_1' } })
+    expect(getEnvelope).toHaveBeenNthCalledWith(4, '/api/v1/connectors/google-drive/authorize')
+    expect(getEnvelope).toHaveBeenNthCalledWith(5, '/api/v1/connectors/google-drive/items')
+    expect(deleteEnvelope).toHaveBeenCalledWith('/api/v1/connectors/google-drive/revoke', undefined)
   })
 
   it('maps operational mutations and artifacts with idempotency headers', async () => {

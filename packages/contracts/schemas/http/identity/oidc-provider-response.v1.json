@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/http/oidc-provider-response.v1.json",
+  "title": "OidcProviderResponseV1",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": ["id", "organization_id", "provider", "issuer", "client_id", "hosted_domain", "status", "scopes"],
+      "properties": {
+        "id": { "type": "string" },
+        "organization_id": { "type": "string" },
+        "provider": { "type": "string", "enum": ["google_workspace"] },
+        "issuer": { "type": "string", "format": "uri" },
+        "client_id": { "type": "string" },
+        "hosted_domain": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "disabled"] },
+        "scopes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

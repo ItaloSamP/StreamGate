@@ -66,5 +66,16 @@ scripts/smokes/reports/*
 
 infra/volumes/
 
+# AG Kit / Agents — version the shared structure
+!/.agents/
+/.agents/*
+!/.agents/agent/
+!/.agents/rules/
+!/.agents/scripts/
 !/.agents/skills/
-!/.agents/skills/**
+!/.agents/workflows/
+!/.agents/ARCHITECTURE.md
+
+# AG Kit — ignore local-only / runtime items
+/.agents/memory/
+/.agents/mcp_config.json

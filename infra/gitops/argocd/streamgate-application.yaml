@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: streamgate-prod
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: streamgate
+    streamgate.io/release-profile: aws-eks
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/streamgate/streamgate.git
+    targetRevision: release
+    path: infra/helm/streamgate
+    helm:
+      valueFiles:
+        - values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: streamgate
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  revisionHistoryLimit: 10

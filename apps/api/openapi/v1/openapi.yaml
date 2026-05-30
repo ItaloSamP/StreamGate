@@ -23,6 +23,7 @@ tags:
   - name: Realtime
   - name: Alerts
   - name: Connectors
+  - name: SaaS
 paths:
   /up:
     get:
@@ -774,6 +775,359 @@ paths:
               schema:
                 $ref: '#/components/schemas/AlertActionEnvelope'
 
+  /api/v1/saas/readiness:
+    get:
+      summary: Prontidao SaaS admin para release
+      operationId: showSaasReadiness
+      tags:
+        - SaaS
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Estado de prontidao sem segredos, URLs assinadas, payload bruto ou credenciais.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaasReadinessEnvelope'
+        '403':
+          description: Superficie restrita a administradores.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/organization:
+    get:
+      summary: Mostra organizacao atual com membros, convites, quotas e compliance
+      operationId: showOrganization
+      tags:
+        - SaaS
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Organizacao atual escopada ao membership ativo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationEnvelope'
+    patch:
+      summary: Atualiza organizacao atual admin-only
+      operationId: updateOrganization
+      tags:
+        - SaaS
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationUpdateRequest'
+      responses:
+        '200':
+          description: Organizacao atualizada sem segredos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationEnvelope'
+        '403':
+          description: Operador sem permissao de administracao SaaS
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/organization/members:
+    get:
+      summary: Lista membros da organizacao atual
+      operationId: listOrganizationMembers
+      tags:
+        - SaaS
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Membros visiveis ao membership atual
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationMemberListEnvelope'
+
+  /api/v1/organization/members/{id}:
+    patch:
+      summary: Atualiza role ou status de membro admin-only
+      operationId: updateOrganizationMember
+      tags:
+        - SaaS
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationMemberUpdateRequest'
+      responses:
+        '200':
+          description: Membro atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationMemberEnvelope'
+    delete:
+      summary: Suspende membro da organizacao admin-only
+      operationId: deleteOrganizationMember
+      tags:
+        - SaaS
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Membro suspenso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationMemberEnvelope'
+
+  /api/v1/organization/invites:
+    post:
+      summary: Cria convite de organizacao admin-only
+      operationId: createOrganizationInvite
+      tags:
+        - SaaS
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationInviteRequest'
+      responses:
+        '201':
+          description: Convite criado; token bruto nunca aparece em producao
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationInviteEnvelope'
+
+  /api/v1/organization/invites/{token}/accept:
+    post:
+      summary: Aceita convite de organizacao
+      operationId: acceptOrganizationInvite
+      tags:
+        - SaaS
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationInviteAcceptanceRequest'
+      responses:
+        '201':
+          description: Usuario e membership criados ou vinculados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationInviteAcceptanceEnvelope'
+
+  /api/v1/auth/mfa/setup:
+    post:
+      summary: Inicia setup MFA TOTP para usuario autenticado
+      operationId: setupMfa
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Fator pendente e URI de provisionamento de uso unico
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MfaSetupEnvelope'
+
+  /api/v1/auth/mfa/verify:
+    post:
+      summary: Verifica MFA de setup ou desafio de login
+      operationId: verifyMfa
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MfaVerifyRequest'
+      responses:
+        '200':
+          description: MFA verificado ou sessao emitida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MfaVerifyEnvelope'
+
+  /api/v1/auth/mfa/recovery-codes/regenerate:
+    post:
+      summary: Regenera recovery codes MFA
+      operationId: regenerateMfaRecoveryCodes
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Recovery codes novos; nao devem ser logados ou persistidos em UI
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MfaRecoveryCodesEnvelope'
+
+  /api/v1/auth/oidc/config:
+    patch:
+      summary: Configura OIDC Google Workspace admin-only
+      operationId: updateGoogleOidcProvider
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OidcProviderRequest'
+      responses:
+        '200':
+          description: Provider salvo com credencial criptografada e resposta sanitizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OidcProviderEnvelope'
+
+  /api/v1/auth/oidc/google/start:
+    get:
+      summary: Inicia authorization-code flow OIDC Google Workspace
+      operationId: startGoogleOidc
+      tags:
+        - Auth
+      parameters:
+        - name: organization_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: URL de autorizacao de curta duracao com state e nonce
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OidcStartEnvelope'
+
+  /api/v1/connectors/google-drive/authorize:
+    get:
+      summary: Inicia OAuth delegated do Google Drive admin-only
+      operationId: authorizeGoogleDrive
+      tags:
+        - Connectors
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: URL de consentimento e scopes solicitados sem tokens OAuth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoogleDriveAuthorizeEnvelope'
+
+  /api/v1/connectors/google-drive/callback:
+    get:
+      summary: Finaliza OAuth delegated do Google Drive
+      operationId: callbackGoogleDrive
+      tags:
+        - Connectors
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Conexao OAuth persistida com tokens criptografados e resposta sanitizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoogleDriveConnectionEnvelope'
+
+  /api/v1/connectors/google-drive/items:
+    get:
+      summary: Lista arquivos e pastas Google Drive disponiveis para ingestao
+      operationId: listGoogleDriveItems
+      tags:
+        - Connectors
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Itens Drive por ID operacional; nenhum token OAuth retorna
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoogleDriveItemListEnvelope'
+
+  /api/v1/connectors/google-drive/revoke:
+    delete:
+      summary: Revoga conexao Google Drive atual admin-only
+      operationId: revokeGoogleDrive
+      tags:
+        - Connectors
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      responses:
+        '200':
+          description: Conexao revogada sem expor credenciais
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoogleDriveConnectionEnvelope'
+
   /api/v1/connectors/profiles:
     get:
       summary: Lista perfis de conectores da organizacao atual
@@ -924,28 +1278,11 @@ paths:
           required: true
           schema:
             type: string
-        - name: X-Connector-Lease-Token
-          in: header
-          required: false
-          schema:
-            type: string
         - name: id
           in: path
           required: true
           schema:
             type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                lease:
-                  type: object
-                  properties:
-                    token:
-                      type: string
       responses:
         '200':
           description: Material minimo para o worker baixar e armazenar o objeto
@@ -3000,6 +3337,318 @@ components:
         data:
           $ref: '#/components/schemas/OperationalWarning'
 
+    OrganizationEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/OrganizationPayload'
+
+    OrganizationPayload:
+      type: object
+      required: [organization, members, invites]
+      properties:
+        organization:
+          $ref: '#/components/schemas/Organization'
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationMember'
+        invites:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationInvite'
+
+    Organization:
+      type: object
+      required: [id, name, status, quotas, retention_days, compliance_profile]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        status: { type: string, enum: [active, suspended] }
+        quotas:
+          type: object
+          additionalProperties: true
+          description: Limites por organizacao, sem billing.
+        retention_days: { type: integer, minimum: 1 }
+        compliance_profile:
+          type: object
+          additionalProperties: true
+        created_at: { type: string, format: date-time, nullable: true }
+        updated_at: { type: string, format: date-time, nullable: true }
+
+    OrganizationUpdateRequest:
+      type: object
+      required: [organization]
+      properties:
+        organization:
+          type: object
+          properties:
+            name: { type: string }
+            retention_days: { type: integer, minimum: 1 }
+            quotas:
+              type: object
+              additionalProperties: true
+            compliance_profile:
+              type: object
+              additionalProperties: true
+
+    OrganizationMemberListEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationMember'
+
+    OrganizationMemberEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/OrganizationMember'
+
+    OrganizationMember:
+      type: object
+      required: [id, organization_id, user_id, email, role, status]
+      properties:
+        id: { type: string }
+        organization_id: { type: string }
+        user_id: { type: string }
+        email: { type: string, format: email }
+        full_name: { type: string, nullable: true }
+        role: { type: string, enum: [admin, operator] }
+        status: { type: string, enum: [active, suspended, invited] }
+        created_at: { type: string, format: date-time, nullable: true }
+        updated_at: { type: string, format: date-time, nullable: true }
+
+    OrganizationMemberUpdateRequest:
+      type: object
+      required: [membership]
+      properties:
+        membership:
+          type: object
+          properties:
+            role: { type: string, enum: [admin, operator] }
+            status: { type: string, enum: [active, suspended] }
+
+    OrganizationInviteEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/OrganizationInvite'
+
+    OrganizationInvite:
+      type: object
+      required: [id, organization_id, email, role, status, expires_at]
+      properties:
+        id: { type: string }
+        organization_id: { type: string }
+        email: { type: string, format: email }
+        role: { type: string, enum: [admin, operator] }
+        status: { type: string, enum: [pending, accepted, expired, revoked] }
+        expires_at: { type: string, format: date-time }
+        accepted_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time, nullable: true }
+
+    OrganizationInviteRequest:
+      type: object
+      required: [invite]
+      properties:
+        invite:
+          type: object
+          required: [email, role]
+          properties:
+            email: { type: string, format: email }
+            role: { type: string, enum: [admin, operator] }
+
+    OrganizationInviteAcceptanceRequest:
+      type: object
+      required: [acceptance]
+      properties:
+        acceptance:
+          type: object
+          required: [full_name, password, password_confirmation]
+          properties:
+            full_name: { type: string }
+            password: { type: string, format: password }
+            password_confirmation: { type: string, format: password }
+
+    OrganizationInviteAcceptanceEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [user, membership]
+          properties:
+            user:
+              $ref: '#/components/schemas/User'
+            membership:
+              $ref: '#/components/schemas/OrganizationMember'
+
+    MfaSetupEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [factor_id, secret, provisioning_uri, status]
+          properties:
+            factor_id: { type: string }
+            secret: { type: string, description: TOTP bootstrap secret returned only during setup. }
+            provisioning_uri: { type: string }
+            status: { type: string, enum: [pending, enabled] }
+
+    MfaVerifyRequest:
+      type: object
+      required: [mfa]
+      properties:
+        mfa:
+          type: object
+          required: [code]
+          properties:
+            challenge_token: { type: string }
+            code: { type: string }
+
+    MfaVerifyEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          additionalProperties: true
+          description: Setup retorna fator/recovery codes; desafio de login retorna user/session.
+
+    MfaRecoveryCodesEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [recovery_codes]
+          properties:
+            recovery_codes:
+              type: array
+              items:
+                type: string
+
+    OidcProviderRequest:
+      type: object
+      required: [oidc_provider]
+      properties:
+        oidc_provider:
+          type: object
+          required: [issuer, client_id, client_credential, hosted_domain]
+          properties:
+            issuer: { type: string, format: uri, example: https://accounts.google.com }
+            client_id: { type: string, example: google-client-id.apps.googleusercontent.com }
+            client_credential:
+              type: string
+              format: password
+              description: Credencial opaca recebida pela API e criptografada antes de persistir.
+            hosted_domain: { type: string, example: example.com }
+
+    OidcProviderEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/OidcProvider'
+
+    OidcProvider:
+      type: object
+      required: [id, organization_id, provider, issuer, client_id, hosted_domain, status, scopes]
+      properties:
+        id: { type: string }
+        organization_id: { type: string }
+        provider: { type: string, enum: [google_workspace] }
+        issuer: { type: string, format: uri }
+        client_id: { type: string }
+        hosted_domain: { type: string }
+        status: { type: string, enum: [active, disabled] }
+        scopes:
+          type: array
+          items: { type: string }
+
+    OidcStartEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [authorization_url, state, nonce, expires_at]
+          properties:
+            authorization_url:
+              type: string
+              format: uri
+              description: URL de consentimento; nao deve ser gravada em logs ou reports.
+            state: { type: string }
+            nonce: { type: string }
+            expires_at: { type: string, format: date-time, nullable: true }
+
+    GoogleDriveAuthorizeEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [authorization_url, state, expires_at, scopes]
+          properties:
+            authorization_url:
+              type: string
+              format: uri
+              description: URL de consentimento; sem tokens OAuth.
+            state: { type: string }
+            expires_at: { type: string, format: date-time, nullable: true }
+            scopes:
+              type: array
+              items:
+                type: string
+              example: [https://www.googleapis.com/auth/drive, openid, email, profile]
+
+    GoogleDriveConnectionEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/GoogleDriveConnection'
+
+    GoogleDriveConnection:
+      type: object
+      required: [id, organization_id, user_id, provider, status, scopes]
+      properties:
+        id: { type: string }
+        organization_id: { type: string }
+        user_id: { type: string }
+        provider: { type: string, enum: [google_drive] }
+        status: { type: string, enum: [active, revoked, expired] }
+        scopes:
+          type: array
+          items: { type: string }
+        token_expires_at: { type: string, format: date-time, nullable: true }
+        revoked_at: { type: string, format: date-time, nullable: true }
+
+    GoogleDriveItemListEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/GoogleDriveItem'
+
+    GoogleDriveItem:
+      type: object
+      required: [id, name, mime_type, kind]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        mime_type: { type: string }
+        kind: { type: string, enum: [file, folder] }
+
     ConnectorProfileRequest:
       type: object
       required: [connector_profile]
@@ -3009,7 +3658,7 @@ components:
           required: [name, kind]
           properties:
             name: { type: string }
-            kind: { type: string, enum: [s3, http] }
+            kind: { type: string, enum: [s3, http, google_drive] }
             status: { type: string, enum: [active, disabled] }
             settings:
               type: object
@@ -3017,6 +3666,172 @@ components:
             secrets:
               type: object
               additionalProperties: true
+
+    SaasReadinessEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/SaasReadiness'
+
+    SaasReadiness:
+      type: object
+      required:
+        - generated_at
+        - organization
+        - access
+        - identity
+        - billing
+        - quotas
+        - connectors
+        - security
+        - infrastructure
+        - observability
+        - compliance
+        - external_blockers
+      properties:
+        generated_at: { type: string, format: date-time }
+        organization:
+          type: object
+          required: [id, members]
+          properties:
+            id: { type: string, example: org_fixture_alpha }
+            members:
+              type: object
+              required: [active, invited, suspended]
+              properties:
+                active: { type: integer, minimum: 0, example: 2 }
+                invited: { type: integer, minimum: 0, example: 0 }
+                suspended: { type: integer, minimum: 0, example: 0 }
+        access:
+          type: object
+          required: [role, admin]
+          properties:
+            role: { type: string, enum: [admin] }
+            admin: { type: boolean, example: true }
+        identity:
+          type: object
+          required: [mfa, sso, saml]
+          properties:
+            mfa:
+              type: object
+              required: [mode, status, recovery_codes]
+              properties:
+                mode: { type: string, enum: [totp] }
+                status: { type: string, example: required_for_release }
+                recovery_codes: { type: string, example: required_for_rollout }
+            sso:
+              type: object
+              required: [protocol, validated_provider, status]
+              properties:
+                protocol: { type: string, enum: [oidc] }
+                validated_provider: { type: string, enum: [google_workspace] }
+                status: { type: string, example: external_credentials_required }
+            saml:
+              type: object
+              required: [enabled, status]
+              properties:
+                enabled: { type: boolean, example: false }
+                status: { type: string, enum: [out_of_scope] }
+        billing:
+          type: object
+          required: [status, reason]
+          properties:
+            status: { type: string, enum: [out_of_scope] }
+            reason: { type: string, example: Sem billing nesta release }
+        quotas:
+          type: object
+          required: [status, defaults]
+          properties:
+            status: { type: string, example: required_for_release }
+            defaults:
+              type: object
+              required: [upload_gb_per_month, connector_runs_per_day, retention_days]
+              properties:
+                upload_gb_per_month: { type: integer, minimum: 1, example: 500 }
+                connector_runs_per_day: { type: integer, minimum: 1, example: 1000 }
+                retention_days: { type: integer, minimum: 1, example: 180 }
+        connectors:
+          type: object
+          required: [configured_count, active_profiles, supported, google_drive, oauth_delegated, clear_lease_credentials_circulate]
+          properties:
+            configured_count: { type: integer, minimum: 0 }
+            active_profiles: { type: integer, minimum: 0 }
+            supported:
+              type: array
+              items:
+                type: string
+                enum: [s3, http, google_drive, oauth_delegated]
+              example: [s3, http, google_drive, oauth_delegated]
+            google_drive:
+              type: object
+              required: [status, acquisition_modes]
+              properties:
+                status: { type: string, example: external_credentials_required }
+                acquisition_modes:
+                  type: array
+                  items:
+                    type: string
+                    enum: [file, folder]
+            oauth_delegated:
+              type: object
+              required: [status, provider]
+              properties:
+                status: { type: string, example: external_credentials_required }
+                provider: { type: string, enum: [google_workspace] }
+            clear_lease_credentials_circulate:
+              type: boolean
+              example: false
+        security:
+          type: object
+          required: [controls, sensitive_surface]
+          properties:
+            controls:
+              type: array
+              items: { type: string }
+              example: [malware_scanning, parser_fuzzing, ssrf_egress_policy, organization_quotas]
+            sensitive_surface:
+              type: object
+              required: [signed_urls_in_ui, raw_payloads_in_events, connector_credentials_in_events]
+              properties:
+                signed_urls_in_ui: { type: boolean, example: false }
+                raw_payloads_in_events: { type: boolean, example: false }
+                connector_credentials_in_events: { type: boolean, example: false }
+        infrastructure:
+          type: object
+          required: [runtime, ingress_tls, credential_store, data_services]
+          properties:
+            runtime: { type: string, enum: [aws_eks] }
+            ingress_tls: { type: boolean, example: true }
+            credential_store: { type: string, example: aws_secrets_manager_external_secrets_irsa }
+            data_services:
+              type: array
+              items: { type: string }
+              example: [rds_postgres, s3, elasticache_redis, amazon_mq, clickhouse_cloud]
+        observability:
+          type: object
+          required: [stack, telemetry, metrics, logs, dashboards, alerts]
+          properties:
+            stack: { type: string, enum: [open_source] }
+            telemetry: { type: string, enum: [opentelemetry] }
+            metrics: { type: string, enum: [prometheus] }
+            logs: { type: string, enum: [loki] }
+            dashboards: { type: string, enum: [grafana] }
+            alerts: { type: string, enum: [alertmanager] }
+        compliance:
+          type: object
+          required: [target, status, evidence_sections]
+          properties:
+            target: { type: string, enum: [soc2_type_i] }
+            status: { type: string, example: design_evidence_ready }
+            evidence_sections:
+              type: array
+              items: { type: string }
+              example: [access_control, change_management, vulnerability_management, incident_response]
+        external_blockers:
+          type: array
+          items: { type: string }
+          example: [aws_account, google_oauth_client, clickhouse_cloud_workspace, soc2_auditor, production_dns_tls]
 
     ConnectorProfileListEnvelope:
       type: object
@@ -3040,7 +3855,7 @@ components:
       properties:
         id: { type: string }
         organization_id: { type: string }
-        kind: { type: string, enum: [s3, http] }
+        kind: { type: string, enum: [s3, http, google_drive] }
         name: { type: string }
         status: { type: string, enum: [active, disabled] }
         settings:
@@ -3062,7 +3877,7 @@ components:
           properties:
             id: { type: string }
             status: { type: string }
-            kind: { type: string, enum: [s3, http] }
+            kind: { type: string, enum: [s3, http, google_drive] }
 
     ConnectorIngestionRequest:
       type: object
@@ -3074,6 +3889,8 @@ components:
           properties:
             object_key: { type: string }
             source_path: { type: string, format: uri }
+            drive_file_id: { type: string }
+            drive_folder_id: { type: string }
             filename: { type: string }
             content_type:
               type: string
@@ -3096,10 +3913,9 @@ components:
               $ref: '#/components/schemas/ConnectorIngestion'
             lease:
               type: object
-              required: [id, token, expires_at]
+              required: [id, expires_at]
               properties:
                 id: { type: string }
-                token: { type: string }
                 expires_at: { type: string, format: date-time, nullable: true }
 
     ConnectorIngestion:
@@ -3114,6 +3930,8 @@ components:
         status: { type: string, enum: [pending, leased, fetching, stored, failed] }
         object_key: { type: string, nullable: true, description: Valor mascarado quando presente. }
         source_path: { type: string, nullable: true, description: Valor mascarado quando presente. }
+        drive_file_id: { type: string, nullable: true, description: ID operacional do arquivo Google Drive. }
+        drive_folder_id: { type: string, nullable: true, description: ID operacional da pasta Google Drive. }
         filename: { type: string }
         content_type: { type: string }
         byte_size: { type: integer, nullable: true }

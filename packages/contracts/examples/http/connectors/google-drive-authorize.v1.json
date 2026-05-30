@@ -1,0 +1,8 @@
+{
+  "data": {
+    "authorization_url": "https://accounts.google.com/o/oauth2/v2/auth?client_id=google-client-id.apps.googleusercontent.com&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive%20openid%20email%20profile&state=%5Bstate%5D",
+    "state": "[oauth-state]",
+    "expires_at": "2026-05-06T12:10:00Z",
+    "scopes": ["https://www.googleapis.com/auth/drive", "openid", "email", "profile"]
+  }
+}

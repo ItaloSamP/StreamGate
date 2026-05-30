@@ -27,18 +27,29 @@ module Worker
 
       Result = Struct.new(:io, :content_type, :byte_size, :checksum_sha256, keyword_init: true)
 
+      def initialize(google_drive_access_provider: nil, google_drive_client: nil)
+        @google_drive_access_provider = google_drive_access_provider || GoogleDriveAccessProvider.new
+        @google_drive_client = google_drive_client || GoogleDriveClient.new
+      end
+
       def call(connector:, ingestion:)
         case connector.fetch("kind")
         when "s3"
           fetch_s3(connector, ingestion)
         when "http"
           fetch_http(connector, ingestion)
+        when "google_drive"
+          fetch_google_drive(connector, ingestion)
+        when "oauth_delegated"
+          fetch_oauth_delegated(connector, ingestion)
         else
           raise TerminalProcessingError, "unsupported_connector_kind=#{connector.fetch("kind")}"
         end
       end
 
       private
+
+      attr_reader :google_drive_access_provider, :google_drive_client
 
       def fetch_s3(connector, ingestion)
         settings = connector.fetch("settings")
@@ -81,6 +92,48 @@ module Worker
       rescue SocketError, Timeout::Error, Errno::ECONNREFUSED => e
         tempfile&.close!
         raise TransientProcessingError, "connector_http_fetch_failed: #{e.class.name}"
+      end
+
+      def fetch_google_drive(connector, ingestion)
+        settings = connector.fetch("settings")
+        file_id = ingestion.fetch("drive_file_id")
+        access_token = google_drive_access_provider.access_token_for(settings.fetch("oauth_connection_id"))
+        tempfile = google_drive_client.download_file(access_token: access_token, file_id: file_id)
+        build_result(tempfile, ingestion.fetch("content_type"))
+      rescue KeyError => e
+        tempfile&.close!
+        raise TerminalProcessingError, "connector_google_drive_missing_key: #{e.message}"
+      rescue StandardError => e
+        tempfile&.close!
+        raise TransientProcessingError, "connector_google_drive_fetch_failed: #{e.class.name}"
+      end
+
+      def fetch_oauth_delegated(connector, ingestion)
+        settings = connector.fetch("settings")
+        url = ingestion["source_path"].to_s.empty? ? settings.fetch("url") : ingestion.fetch("source_path")
+        uri = validate_uri!(url)
+        tempfile = Tempfile.new(["streamgate-connector-oauth-", ".bin"], binmode: true)
+        access_token = google_drive_access_provider.access_token_for(settings.fetch("oauth_connection_id"))
+
+        Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https", open_timeout: 5, read_timeout: 30) do |http|
+          request = Net::HTTP::Get.new(uri)
+          request["Authorization"] = "Bearer #{access_token}"
+          connector.fetch("secrets", {}).fetch("headers", {}).each do |key, value|
+            request[key.to_s] = value.to_s
+          end
+          http.request(request) do |res|
+            raise TerminalProcessingError, "connector_oauth_status=#{res.code}" unless res.is_a?(Net::HTTPSuccess)
+
+            res.read_body { |chunk| tempfile.write(chunk) }
+          end
+        end
+        build_result(tempfile, ingestion.fetch("content_type"))
+      rescue SocketError, Timeout::Error, Errno::ECONNREFUSED => e
+        tempfile&.close!
+        raise TransientProcessingError, "connector_oauth_fetch_failed: #{e.class.name}"
+      rescue KeyError => e
+        tempfile&.close!
+        raise TerminalProcessingError, "connector_oauth_missing_key: #{e.message}"
       end
 
       def validate_uri!(url)

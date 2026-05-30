@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
+  get "health", to: "health#show"
 
   namespace :api do
     namespace :v1 do
@@ -9,9 +10,22 @@ Rails.application.routes.draw do
         post "logout", to: "sessions#destroy"
         post "session/refresh", to: "sessions#refresh"
         get "me", to: "me#show"
+        post "mfa/setup", to: "mfa#setup"
+        post "mfa/verify", to: "mfa#verify"
+        post "mfa/recovery-codes/regenerate", to: "mfa#regenerate_recovery_codes"
+        patch "oidc/config", to: "oidc#update"
+        get "oidc/google/start", to: "oidc#start"
+        get "oidc/google/callback", to: "oidc#callback"
         post "password/reset/request", to: "password_resets#create"
         post "password/reset/confirm", to: "password_resets#update"
       end
+
+      resource :organization, only: [ :show, :update ], controller: "organization"
+      get "organization/members", to: "organization_members#index"
+      patch "organization/members/:id", to: "organization_members#update"
+      delete "organization/members/:id", to: "organization_members#destroy"
+      post "organization/invites", to: "organization_invites#create"
+      post "organization/invites/:token/accept", to: "organization_invites#accept"
 
       resources :uploads, only: [ :create, :index ] do
         collection do
@@ -34,7 +48,12 @@ Rails.application.routes.draw do
       get "realtime/events", to: "realtime_events#index"
       post "alerts/:id/review", to: "alerts#review"
       post "alerts/:id/dismiss", to: "alerts#dismiss"
+      get "saas/readiness", to: "saas_readiness#show"
       namespace :connectors do
+        get "google-drive/authorize", to: "google_drive#authorize"
+        get "google-drive/callback", to: "google_drive#callback"
+        delete "google-drive/revoke", to: "google_drive#revoke"
+        get "google-drive/items", to: "google_drive#items"
         resources :profiles, only: [ :index, :show, :create, :update ] do
           post "test", on: :member
           post "ingestions", to: "ingestions#create"
@@ -42,6 +61,7 @@ Rails.application.routes.draw do
       end
       namespace :internal do
         post "connectors/leases/:id/claim", to: "connector_leases#claim"
+        post "connectors/google-drive/oauth-connections/:id/access-token", to: "google_drive_oauth_connections#access_token"
       end
       get "quarantine", to: "quarantine#index"
       post "quarantine/:id/resolve", to: "quarantine_resolutions#create"

@@ -10,7 +10,7 @@ $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
 [Console]::OutputEncoding = $utf8NoBom
 $OutputEncoding = $utf8NoBom
 $ErrorActionPreference = "Stop"
-$PSNativeCommandUseErrorActionPreference = $false
+$PSNativeCommandUseErrorActionPreference = $true
 
 $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 . (Join-Path $root 'scripts/compose/compose-health.ps1')

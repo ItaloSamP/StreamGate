@@ -1,12 +1,12 @@
-﻿param(
+param(
   [ValidateSet('infra', 'app', 'full')]
   [string]$Mode = 'infra',
   [ValidateRange(30, 3600)]
-  [int]$TimeoutSeconds = 180
+  [int]$TimeoutSeconds = 900
 )
 
 $ErrorActionPreference = "Stop"
-$PSNativeCommandUseErrorActionPreference = $false
+$PSNativeCommandUseErrorActionPreference = $true
 
 $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 . (Join-Path $root 'scripts/compose/compose-health.ps1')

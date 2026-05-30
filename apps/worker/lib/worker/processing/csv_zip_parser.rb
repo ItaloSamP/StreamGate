@@ -142,13 +142,21 @@ module Worker
       end
 
       def parse_ndjson(raw_content)
-        records = raw_content.to_s.each_line.filter_map do |line|
-          stripped = line.strip
-          next if stripped.empty?
-
-          JSON.parse(stripped)
+        records = Enumerator.new do |yielder|
+          if raw_content.respond_to?(:each_line)
+            raw_content.each_line do |line|
+              stripped = line.strip
+              yielder << JSON.parse(stripped) unless stripped.empty?
+            end
+          else
+            raw_content.to_s.each_line do |line|
+              stripped = line.strip
+              yielder << JSON.parse(stripped) unless stripped.empty?
+            end
+          end
         end
-        parse_records(records)
+
+        parse_records(records.lazy)
       rescue JSON::ParserError => e
         raise Worker::TerminalProcessingError, "invalid_ndjson: #{e.message}"
       end
@@ -277,7 +285,7 @@ module Worker
         end
 
         ParseResult.new(
-          input_rows: records.size,
+          input_rows: valid_records.size + invalid_records.size,
           valid_rows: valid_records.size,
           invalid_rows: invalid_records.size,
           invalid_records: invalid_records,
@@ -285,16 +293,21 @@ module Worker
         )
       end
 
+      # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
       def parse_csv(raw_content)
         normalized_content = raw_content.to_s.sub(/\A\xEF\xBB\xBF/, "")
-        rows = CSV.parse(normalized_content, headers: true, col_sep: detect_delimiter(normalized_content), encoding: Encoding::UTF_8)
-        headers = rows.headers&.map { |header| header.to_s.strip }
-        raise Worker::TerminalProcessingError, "csv_header_required" if headers.empty? || headers.any?(&:empty?)
+        io = StringIO.new(normalized_content)
+        csv = CSV.new(io, headers: true, col_sep: detect_delimiter(normalized_content), encoding: Encoding::UTF_8)
+
+        # Le a primeira linha para carregar os headers
+        first_row = csv.shift
+        headers = csv.headers&.map { |header| header.to_s.strip }
+        raise Worker::TerminalProcessingError, "csv_header_required" if headers.nil? || headers.empty? || headers.any?(&:empty?)
 
         invalid_records = []
         valid_records = []
 
-        rows.each_with_index do |row, index|
+        process_csv_row = lambda do |row, index|
           normalized = row.to_h.transform_values { |value| value.to_s.strip }
           if normalized.values.all?(&:empty?)
             invalid_records << {
@@ -303,14 +316,19 @@ module Worker
               message: "Linha vazia no arquivo.",
               payload: normalized
             }
-            next
+          else
+            valid_records << { row_number: index + 2, payload: normalized }
           end
+        end
 
-          valid_records << { row_number: index + 2, payload: normalized }
+        process_csv_row.call(first_row, 0) if first_row
+
+        csv.each.with_index(1) do |row, index|
+          process_csv_row.call(row, index)
         end
 
         ParseResult.new(
-          input_rows: rows.size,
+          input_rows: valid_records.size + invalid_records.size,
           valid_rows: valid_records.size,
           invalid_rows: invalid_records.size,
           invalid_records: invalid_records,
@@ -319,6 +337,7 @@ module Worker
       rescue CSV::MalformedCSVError => e
         raise Worker::TerminalProcessingError, "invalid_csv: #{e.message}"
       end
+      # rubocop:enable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 
       def detect_delimiter(raw_content)
         first_line = raw_content.to_s.each_line.first.to_s

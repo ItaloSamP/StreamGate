@@ -83,6 +83,59 @@ RSpec.describe Worker::Runtime::PublicLinkFetcher do
     end.to raise_error(Worker::TerminalProcessingError, /public_link_url_not_public/)
   end
 
+  it "scans the downloaded tempfile before writing it to storage" do
+    response = Worker::Runtime::PublicLinkFetcher::HttpResponse.new(
+      status: 200,
+      headers: { "content-type" => "text/csv", "content-length" => "18" },
+      body: StringIO.new("name,cpf\nAlice,123\n"),
+      final_url: "https://data.example.com/export.csv"
+    )
+    fake_http_client = Class.new do
+      define_method(:head) { |_| response }
+      define_method(:get) { |_| response }
+    end.new
+    scanner = instance_double(Worker::Runtime::MalwareScanner)
+    allow(scanner).to receive(:scan_io).and_return(Worker::Runtime::MalwareScanner::Result.new(status: "clean", signature: nil))
+
+    described_class.new(
+      storage_client: storage_client,
+      max_bytes: 10 * 1024,
+      resolver: ->(_) { ["93.184.216.34"] },
+      http_client: fake_http_client,
+      scanner: scanner
+    ).call(url: "https://data.example.com/export.csv", storage_key: "uploads/external/export.csv")
+
+    expect(scanner).to have_received(:scan_io)
+    expect(storage_client.written[:body]).to include("Alice")
+  end
+
+  it "does not write infected public links to storage" do
+    response = Worker::Runtime::PublicLinkFetcher::HttpResponse.new(
+      status: 200,
+      headers: { "content-type" => "text/csv", "content-length" => "68" },
+      body: StringIO.new('X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*'),
+      final_url: "https://data.example.com/eicar.csv"
+    )
+    fake_http_client = Class.new do
+      define_method(:head) { |_| response }
+      define_method(:get) { |_| response }
+    end.new
+    scanner = instance_double(Worker::Runtime::MalwareScanner)
+    allow(scanner).to receive(:scan_io).and_return(Worker::Runtime::MalwareScanner::Result.new(status: "infected", signature: "Eicar-Test-Signature"))
+
+    expect do
+      described_class.new(
+        storage_client: storage_client,
+        max_bytes: 10 * 1024,
+        resolver: ->(_) { ["93.184.216.34"] },
+        http_client: fake_http_client,
+        scanner: scanner
+      ).call(url: "https://data.example.com/eicar.csv", storage_key: "uploads/external/eicar.csv")
+    end.to raise_error(Worker::TerminalProcessingError, /public_link_malware_detected/)
+
+    expect(storage_client.written).to be_nil
+  end
+
   def fake_http_client
     Class.new do
       def head(_url)

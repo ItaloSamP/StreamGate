@@ -36,6 +36,8 @@ gem "image_processing", "~> 1.2"
 gem "rack-cors", "~> 2.0"
 gem "bunny", "~> 2.24"
 gem "csv", "~> 3.3"
+gem "rack-attack", "~> 6.7"
+gem "lograge", "~> 0.14.0"
 
 group :development do
   gem "rswag-api"

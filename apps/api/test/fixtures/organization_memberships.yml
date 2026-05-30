@@ -1,0 +1,31 @@
+admin_alpha:
+  id: omem_fixture_admin_alpha
+  organization_id: org_fixture_alpha
+  user_id: user_fixture_admin
+  role: admin
+  status: active
+  joined_at: 2026-04-01 00:00:00
+
+operator_alpha:
+  id: omem_fixture_operator_alpha
+  organization_id: org_fixture_alpha
+  user_id: user_fixture_operator
+  role: operator
+  status: active
+  joined_at: 2026-04-01 00:00:00
+
+peer_operator_alpha:
+  id: omem_fixture_peer_operator_alpha
+  organization_id: org_fixture_alpha
+  user_id: user_fixture_peer_operator
+  role: operator
+  status: active
+  joined_at: 2026-04-01 00:00:00
+
+external_operator_beta:
+  id: omem_fixture_external_operator_beta
+  organization_id: org_fixture_beta
+  user_id: user_fixture_external_operator
+  role: operator
+  status: active
+  joined_at: 2026-04-01 00:00:00

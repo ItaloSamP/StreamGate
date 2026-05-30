@@ -1,35 +1,49 @@
-import type { ReactNode } from 'react'
+import { lazy, Suspense, type ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Toaster } from 'sonner'
 
 import { ProtectedRoute } from '@/features/auth/protected-route'
-import { AnalyticsPage } from '@/pages/AnalyticsPage'
-import { AuditPage } from '@/pages/AuditPage'
-import { DashboardPage } from '@/pages/DashboardPage'
-import { EventLogPage } from '@/pages/EventLogPage'
-import { ClickHousePage, EtlExplorerPage } from '@/pages/ExplorationPages'
-import { JobsPage } from '@/pages/JobsPage'
-import { LandingPage } from '@/pages/LandingPage'
-import { AuditDetailPage, DlqDetailPage, JobDetailPage, QuarantineDetailPage } from '@/pages/OperationalDetailPages'
-import { LoginPage } from '@/pages/LoginPage'
-import { NotificationsPage } from '@/pages/NotificationsPage'
-import { OperationsPage } from '@/pages/OperationsPage'
-import { QuarantinePage } from '@/pages/QuarantinePage'
-import { RegisterPage } from '@/pages/RegisterPage'
-import { ResetPasswordPage } from '@/pages/ResetPasswordPage'
-import { SettingsPage } from '@/pages/SettingsPage'
-import { UploadPage } from '@/pages/UploadPage'
+
+const AnalyticsPage = lazy(() => import('@/features/analytics/pages/AnalyticsPage').then(module => ({ default: module.AnalyticsPage })))
+const AuditPage = lazy(() => import('@/features/operations/pages/AuditPage').then(module => ({ default: module.AuditPage })))
+const DashboardPage = lazy(() => import('@/features/dashboard/pages/DashboardPage').then(module => ({ default: module.DashboardPage })))
+const EventLogPage = lazy(() => import('@/features/operations/pages/EventLogPage').then(module => ({ default: module.EventLogPage })))
+const ClickHousePage = lazy(() => import('@/features/analytics/pages/ExplorationPages').then(module => ({ default: module.ClickHousePage })))
+const EtlExplorerPage = lazy(() => import('@/features/analytics/pages/ExplorationPages').then(module => ({ default: module.EtlExplorerPage })))
+const JobsPage = lazy(() => import('@/features/uploads/pages/JobsPage').then(module => ({ default: module.JobsPage })))
+const LandingPage = lazy(() => import('@/features/public/pages/LandingPage').then(module => ({ default: module.LandingPage })))
+const AuditDetailPage = lazy(() => import('@/features/operations/pages/OperationalDetailPages').then(module => ({ default: module.AuditDetailPage })))
+const DlqDetailPage = lazy(() => import('@/features/operations/pages/OperationalDetailPages').then(module => ({ default: module.DlqDetailPage })))
+const JobDetailPage = lazy(() => import('@/features/operations/pages/OperationalDetailPages').then(module => ({ default: module.JobDetailPage })))
+const QuarantineDetailPage = lazy(() => import('@/features/operations/pages/OperationalDetailPages').then(module => ({ default: module.QuarantineDetailPage })))
+const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage').then(module => ({ default: module.LoginPage })))
+const NotificationsPage = lazy(() => import('@/features/operations/pages/NotificationsPage').then(module => ({ default: module.NotificationsPage })))
+const OperationsPage = lazy(() => import('@/features/operations/pages/OperationsPage').then(module => ({ default: module.OperationsPage })))
+const QuarantinePage = lazy(() => import('@/features/operations/pages/QuarantinePage').then(module => ({ default: module.QuarantinePage })))
+const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage').then(module => ({ default: module.RegisterPage })))
+const ResetPasswordPage = lazy(() => import('@/features/auth/pages/ResetPasswordPage').then(module => ({ default: module.ResetPasswordPage })))
+const SettingsPage = lazy(() => import('@/features/settings/pages/SettingsPage').then(module => ({ default: module.SettingsPage })))
+const UploadPage = lazy(() => import('@/features/uploads/pages/UploadPage').then(module => ({ default: module.UploadPage })))
+
+function SuspenseFallback() {
+  return (
+    <div className="flex h-screen w-full items-center justify-center">
+      <div className="text-mono text-sm text-[var(--text-dim)]">Carregando...</div>
+    </div>
+  )
+}
 
 function App() {
-  const protectedPage = (element: ReactNode) => <ProtectedRoute>{element}</ProtectedRoute>
+  const protectedPage = (element: ReactNode) => <ProtectedRoute><Suspense fallback={<SuspenseFallback />}>{element}</Suspense></ProtectedRoute>
+  const publicPage = (element: ReactNode) => <Suspense fallback={<SuspenseFallback />}>{element}</Suspense>
 
   return (
     <>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/" element={publicPage(<LandingPage />)} />
+        <Route path="/login" element={publicPage(<LoginPage />)} />
+        <Route path="/register" element={publicPage(<RegisterPage />)} />
+        <Route path="/reset-password" element={publicPage(<ResetPasswordPage />)} />
         <Route path="/dashboard" element={protectedPage(<DashboardPage />)} />
         <Route path="/upload" element={protectedPage(<UploadPage />)} />
         <Route path="/jobs" element={protectedPage(<JobsPage />)} />

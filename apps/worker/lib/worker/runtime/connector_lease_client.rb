@@ -11,13 +11,11 @@ module Worker
         @config = config
       end
 
-      def claim(lease_id:, lease_token:)
+      def claim(lease_id:)
         uri = URI.join(config.worker_internal_api_url, "/api/v1/internal/connectors/leases/#{lease_id}/claim")
         request = Net::HTTP::Post.new(uri)
-        request["Content-Type"] = "application/json"
+        request["Accept"] = "application/json"
         request["X-Worker-Token"] = config.worker_internal_token
-        request["X-Connector-Lease-Token"] = lease_token
-        request.body = { lease: { token: lease_token } }.to_json
 
         response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https", open_timeout: 5, read_timeout: 15) do |http|
           http.request(request)

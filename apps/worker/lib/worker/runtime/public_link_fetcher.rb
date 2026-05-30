@@ -30,11 +30,12 @@ module Worker
         IPAddr.new("fe80::/10")
       ].freeze
 
-      def initialize(storage_client:, max_bytes:, resolver: nil, http_client: nil)
+      def initialize(storage_client:, max_bytes:, resolver: nil, http_client: nil, scanner: nil)
         @storage_client = storage_client
         @max_bytes = max_bytes
         @resolver = resolver || method(:resolve_host)
         @http_client = http_client || NetHttpClient.new
+        @scanner = scanner
       end
 
       def call(url:, storage_key:)
@@ -51,6 +52,7 @@ module Worker
         digest = Digest::SHA256.new
         byte_size = stream_body(response.body, tempfile, digest)
 
+        scan_download!(tempfile)
         tempfile.rewind
         storage_client.write_object_stream(storage_key: storage_key, io: tempfile, content_type: content_type)
 
@@ -66,7 +68,17 @@ module Worker
 
       private
 
-      attr_reader :storage_client, :max_bytes, :resolver, :http_client
+      attr_reader :storage_client, :max_bytes, :resolver, :http_client, :scanner
+
+      def scan_download!(tempfile)
+        return if scanner.nil?
+
+        tempfile.rewind
+        result = scanner.scan_io(tempfile)
+        raise TerminalProcessingError, "public_link_malware_detected" if result.infected?
+      ensure
+        tempfile.rewind
+      end
 
       def request_with_redirects(method, url)
         current_url = url

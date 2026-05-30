@@ -1,63 +1,36 @@
-# Scripts do StreamGate
+# 💻 Automações e Scripts (DevOps Local)
 
-A raiz de `scripts/` agora fica apenas com a documentacao e as subpastas organizadas.
+A pasta `scripts/` é o coração das operações de desenvolvimento e CI/CD local do StreamGate. O uso de automações garante que todo desenvolvedor rode o projeto exatamente do mesmo jeito, eliminando a frase "na minha máquina funciona".
 
-## Estrutura
+## 🚀 Como Usar os Scripts
 
-- `bootstrap/`: verificacoes iniciais do ambiente
-- `dev/`: subida e parada do ambiente local
-- `ci/`: simulacao local dos workflows do GitHub Actions
-- `compose/`: helpers e testes de health check do Compose
-- `reports/`: runner unico e gerador do hub local de reports/coverage
-- `smokes/`: smokes operacionais e runner unico para `infra`, `app` e `full`
+Temos subpastas especializadas por ciclo de desenvolvimento:
 
-## Comandos principais
+### 1. Ambiente Local (`dev/` e `compose/`)
 
-### WSL/Linux
+Para subir toda a infraestrutura ou partes isoladas.
 
-- `./scripts/bootstrap/check-prereqs.sh`
-- `./scripts/dev/dev-up.sh`
-- `./scripts/dev/dev-up.sh full`
-- `./scripts/dev/dev-down.sh`
-- `./scripts/compose/compose-health-tests.sh`
-- `./scripts/reports/run-all-reports.sh`
-- `./scripts/smokes/run-smokes.sh`
-- `./scripts/ci/ci-local.sh`
+- `dev-up.ps1 -Mode full`: Sobe Docker, API, Frontend e Worker.
+- `dev-up.ps1 -Mode app`: Sobe infraestrutura e API (ideal para focar no Web).
+- `dev-down.ps1`: Derruba todos os containers, limpando networks e dados efêmeros.
 
-### PowerShell
+### 2. Integração Contínua Local (`ci/`)
 
-- `.\scripts\bootstrap\check-prereqs.ps1`
-- `.\scripts\dev\dev-up.ps1`
-- `.\scripts\dev\dev-up.ps1 -Mode full`
-- `.\scripts\dev\dev-down.ps1`
-- `.\scripts\compose\compose-health.tests.ps1`
-- `powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -Profile full-closeout`
-- `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1`
-- `.\scripts\ci\ci-local.ps1`
+Scripts para validações idênticas ao GitHub Actions.
 
-## Perfis oficiais de gate
+- `ci-local.ps1 frontend`: Lint, type-check e testes unitários do web.
+- `ci-local.ps1 backend`: Rubocop e RSpec/Minitest do rails e worker.
+- `ci-local.ps1 e2e`: Execução do Playwright contra o ambiente local.
+- `validate-operational-contracts.rb`: Garante que OpenAPI não tem quebras.
 
-- `fast`: validacao rapida por trilha com `scripts/ci/ci-local.(ps1|sh)` em um workflow por vez.
-- `operational`: validacao ponta a ponta de runtime com `scripts/smokes/run-smokes.(ps1|sh)`.
-- `full-closeout`: pacote final de evidencias com `scripts/reports/run-all-reports.(ps1|sh)`; use no fechamento de ciclo de entrega, PR grande ou mudanca critica de runtime/CI.
+### 3. Operação e Smokes (`smokes/`)
 
-O caminho pesado oficial e `WSL/Compose-first`. No host Windows, prefira checks rapidos no dia a dia e deixe o pacote pesado para fechamento relevante.
+- `run-smokes.ps1`: Executa testes *Ponta-a-Ponta* agressivos (Smokes) no runtime em andamento para validar conectividade com RabbitMQ, S3 e banco de dados em tempo real.
 
-## Reports locais
+### 4. Relatórios de Qualidade (`reports/`)
 
-O fluxo oficial para gerar as evidencias de fechamento e:
+- `run-all-reports.ps1`: Orquestra todas as camadas do `ci-local` gerando evidências tangíveis (`html`, `xml`) gravadas em `docs/reports` ao finalizar uma release. Usado para o *Closeout Gate*.
 
-```bash
-PROFILE=full-closeout bash scripts/reports/run-all-reports.sh
-```
+## ⚖️ Regras de Criação de Scripts
 
-No PowerShell:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -Profile full-closeout
-```
-
-Esse runner atua como orquestrador das evidencias oficiais por perfil e atualiza o hub `docs/reports/index.html`.
-Os reports sao sobrescritos a cada execucao e ficam fora do Git; apenas `.gitkeep` mantem a estrutura de pastas.
-
-Antes de subir ambientes Docker, os scripts oficiais passam pelo `scripts/dev/dev-up`, que verifica imagens externas ausentes e fingerprints de build. Se voce apagou imagens/volumes do Docker, o fluxo oficial tenta puxar infra e rebuildar API/Web/Worker seletivamente antes do `compose up`.
+Qualquer novo script deve ser idôneo: se for abortado no meio, pode ser rodado de novo sem duplicar estados errados no banco ou na infraestrutura. Preferência estrita por `Powershell` (`.ps1`) para o ecossistema Windows primário, com fallback em `Bash` (`.sh`) para CI em Linux/macOS.

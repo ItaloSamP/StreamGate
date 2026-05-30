@@ -1,0 +1,176 @@
+name: release-readiness-ci
+
+on:
+  pull_request:
+    branches:
+      - release
+      - dev
+  push:
+    branches:
+      - release
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  contracts:
+    name: contracts-openapi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+      - name: Validate operational contracts
+        run: ruby scripts/ci/validate-operational-contracts.rb
+
+  frontend-browser-sweep:
+    name: frontend-browser-sweep
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Unit tests
+        run: pnpm test:run
+      - name: Build web
+        run: pnpm build
+      - name: Install Playwright browser
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Release browser sweep
+        run: pnpm exec playwright test e2e/release-browser-sweep.spec.ts --project=chromium --max-failures=1
+
+  backend-security:
+    name: backend-worker-security
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: streamgate_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d streamgate_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      RAILS_ENV: test
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: streamgate_test
+      POSTGRES_TEST_DB: streamgate_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      AUTH_SESSION_TTL_HOURS: 24
+      AUTH_PASSWORD_RESET_TTL_MINUTES: 30
+      AUTH_TOKEN_PEPPER: streamgate-ci-pepper
+      AUTH_SESSION_TRANSPORT: bearer
+      AUTH_COOKIE_ENABLED: false
+      AUTH_CSRF_MODE: token
+      API_CORS_ALLOWED_ORIGINS: http://localhost:5173
+      API_CORS_ALLOW_CREDENTIALS: false
+      BROKER_HOST: localhost
+      BROKER_PORT: 5672
+      BROKER_USERNAME: streamgate
+      BROKER_PASSWORD: streamgate123
+      BROKER_MANAGEMENT_URL: http://localhost:15672/api
+      UPLOAD_STORAGE_ENDPOINT: http://localhost:9000
+      UPLOAD_STORAGE_BUCKET: streamgate-uploads
+      UPLOAD_STORAGE_REGION: us-east-1
+      UPLOAD_SIGNED_URL_TTL_SECONDS: 900
+      UPLOAD_SIGNED_URL_MODE: presigned_put
+      UPLOAD_STORAGE_ACCESS_KEY: streamgate
+      UPLOAD_STORAGE_SECRET_KEY: streamgate123
+      UPLOAD_ALLOWED_CONTENT_TYPES: application/zip,text/csv,application/json,application/x-ndjson,application/ndjson,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.apache.parquet
+      UPLOAD_SIGNED_URL_LIMIT_PER_IP: 30
+      UPLOAD_REGISTER_LIMIT_PER_IP: 30
+      UPLOAD_THROTTLE_WINDOW_SECONDS: 60
+      UPLOAD_VERIFY_OBJECT_BEFORE_REGISTER: false
+      SEED_OPERATOR_PASSWORD: StrongPass123!
+      SEED_ADMIN_PASSWORD: StrongPass123!
+      PARALLEL_WORKERS: 1
+      BUNDLE_WITHOUT: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4.4"
+      - name: Install API dependencies
+        working-directory: apps/api
+        run: bundle install --jobs 4 --retry 3
+      - name: Prepare API database
+        working-directory: apps/api
+        run: bundle exec rails db:prepare
+      - name: Rails request tests
+        working-directory: apps/api
+        run: bundle exec rails test
+      - name: Brakeman
+        working-directory: apps/api
+        run: bundle exec brakeman --no-pager --quiet
+      - name: Bundle audit
+        working-directory: apps/api
+        run: |
+          gem install bundle-audit
+          bundle-audit check --update
+      - name: Install worker dependencies
+        working-directory: apps/worker
+        run: bundle install --jobs 4 --retry 3
+      - name: Worker specs
+        working-directory: apps/worker
+        run: bundle exec rspec
+
+  helm-k8s:
+    name: helm-k8s-iac
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.14.4
+      - name: Helm lint
+        run: helm lint infra/helm/streamgate
+      - name: Helm template
+        run: helm template streamgate infra/helm/streamgate --namespace streamgate > /tmp/streamgate-rendered.yaml
+      - name: Install kubeconform
+        run: |
+          curl -sSL https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz | tar xz
+          sudo mv kubeconform /usr/local/bin/kubeconform
+      - name: Kubeconform
+        run: kubeconform -strict -ignore-missing-schemas /tmp/streamgate-rendered.yaml
+
+  dependency-security:
+    name: dependency-and-secret-scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: npm audit web
+        working-directory: apps/web
+        run: pnpm audit --audit-level high
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

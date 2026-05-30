@@ -30,7 +30,9 @@ module Uploads
       assert_equal "trace_service_test", result.upload.trace_id
       assert_equal "trace_service_test", result.job.trace_id
       assert_equal "upload.registered", result.upload.audit_events.last.action
-      assert_equal 1, IntegrationOutboxEvent.where(trace_id: "trace_service_test", event_name: "upload.received.v1").count
+      assert_equal 1, MalwareScan.where(upload_id: result.upload.id, status: "pending").count
+      assert_equal 1, IntegrationOutboxEvent.where(trace_id: "trace_service_test", event_name: "upload.scan.requested.v1").count
+      assert_equal 0, IntegrationOutboxEvent.where(trace_id: "trace_service_test", event_name: "upload.received.v1").count
       assert_equal 1, AnalyticsJobSnapshot.where(job_id: result.job.id, organization_id: users(:operator).organization_id).count
     end
 
@@ -42,7 +44,7 @@ module Uploads
       )
 
       with_singleton_stub(OutboxDispatchEventService, :call, outbox_result) do
-        assert_difference [ "Upload.count", "Job.count", "AuditEvent.count", "IntegrationOutboxEvent.count", "AnalyticsJobSnapshot.count" ], +1 do
+        assert_difference [ "Upload.count", "Job.count", "MalwareScan.count", "AuditEvent.count", "IntegrationOutboxEvent.count", "AnalyticsJobSnapshot.count" ], +1 do
           result = RegisterUploadService.call(
             user: users(:operator),
             filename: "rollback-file.csv",
@@ -54,7 +56,7 @@ module Uploads
             trace_id: "trace_service_test"
           )
 
-          outbox = IntegrationOutboxEvent.find_by!(event_name: "upload.received.v1", trace_id: result.job.trace_id)
+          outbox = IntegrationOutboxEvent.find_by!(event_name: "upload.scan.requested.v1", trace_id: result.job.trace_id)
           assert_equal "pending", outbox.status
         end
       end

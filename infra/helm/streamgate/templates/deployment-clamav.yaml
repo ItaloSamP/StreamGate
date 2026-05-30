@@ -1,0 +1,43 @@
+{{- if .Values.clamav.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "streamgate.fullname" . }}-clamav
+  labels:
+    {{- include "streamgate.labels" . | nindent 4 }}
+    app.kubernetes.io/component: clamav
+spec:
+  replicas: {{ .Values.clamav.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "streamgate.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: clamav
+  template:
+    metadata:
+      labels:
+        {{- include "streamgate.labels" . | nindent 8 }}
+        app.kubernetes.io/component: clamav
+    spec:
+      serviceAccountName: {{ include "streamgate.serviceAccountName" . }}
+      containers:
+        - name: clamd
+          image: "{{ .Values.clamav.image.repository }}:{{ .Values.clamav.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: clamd
+              containerPort: {{ .Values.clamav.port }}
+              protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: clamd
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          livenessProbe:
+            tcpSocket:
+              port: clamd
+            initialDelaySeconds: 60
+            periodSeconds: 60
+          resources:
+            {{- toYaml .Values.clamav.resources | nindent 12 }}
+{{- end }}

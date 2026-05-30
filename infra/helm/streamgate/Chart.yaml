@@ -1,0 +1,14 @@
+apiVersion: v2
+name: streamgate
+description: StreamGate SaaS release chart for AWS EKS
+type: application
+version: 0.1.0
+appVersion: "1.0.0-release"
+keywords:
+  - streamgate
+  - saas
+  - eks
+  - rails
+  - vite
+maintainers:
+  - name: StreamGate Platform

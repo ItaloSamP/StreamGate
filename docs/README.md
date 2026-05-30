@@ -1,63 +1,26 @@
-# Documentacao Do StreamGate
+# 📚 StreamGate Documentation Hub
 
-Este diretorio concentra a documentacao viva do StreamGate. A leitura deve permitir que produto, engenharia e operacao entendam o que existe, como rodar, como validar e quais limites ainda precisam ser respeitados.
+Bem-vindo ao centro de documentação oficial do StreamGate. O projeto foi estruturado utilizando princípios de Bounded Contexts e Domains, tanto no backend quanto no frontend, garantindo alta manutenibilidade e separação de conceitos.
 
-## Como Navegar
+## 🧭 Navegação Rápida
 
-Comece por estes documentos:
+Explore as diferentes áreas do sistema através dos links abaixo:
 
-1. [Visao de produto](product/vision.md)
-2. [Guia de fechamento do produto](guides/platform/final-delivery-guide.md)
-3. [Arquitetura](guides/platform/architecture.md)
-4. [Setup](guides/platform/setup.md)
-5. [API docs](guides/backend/api-docs.md)
-6. [Frontend foundations](guides/frontend/frontend-foundations.md)
-7. [Workspace map](guides/frontend/frontend-workspace-map.md)
-8. [Worker runbook](guides/operations/worker-runtime-runbook.md)
-9. [Testing baseline](guides/quality/testing-baseline.md)
-10. [Threat model](guides/security/streamgate-threat-model.md)
-11. [Release/rollback checklist](guides/platform/release-rollback-checklist.md)
-12. [Roadmap e closeouts](planning/)
+- 🏠 **[Visão Geral do Projeto (Root)](../README.md)**: Propósito do sistema, arquitetura macro e guia de inicialização.
+- 🎨 **[Frontend Web (Command Center)](../apps/web/README.md)**: Aplicação React/Vite, estrutura de features e componentes de UI.
+- ⚙️ **[Backend API (Rails)](../apps/api/README.md)**: API Ruby on Rails, estrutura de domínios e regras de negócio.
+- 👷 **[Worker (Background Jobs)](../apps/worker/README.md)**: Processamento assíncrono, integração com RabbitMQ e rotinas pesadas.
+- 📜 **[Contratos (OpenAPI)](../packages/contracts/README.md)**: Definições de API, schemas compartilhados e tipagens.
+- 🚀 **[Infraestrutura e CI/CD](../.github/README.md)**: Workflows do GitHub Actions, pipelines de deploy e configuração docker.
 
-## Mapa Por Area
+## 🏗️ Estrutura de Domínios (Bounded Contexts)
 
-| Area | Documentos principais |
-| --- | --- |
-| Produto | `product/vision.md`, `guides/platform/final-delivery-guide.md` |
-| Plataforma | `guides/platform/architecture.md`, `setup.md`, `devops-roadmap.md`, `release-rollback-checklist.md` |
-| Backend | `guides/backend/api-docs.md`, `backend-foundations.md`, `authentication-guide.md`, `domain-glossary.md` |
-| Frontend | `guides/frontend/frontend-foundations.md`, `frontend-workspace-map.md` |
-| Worker e operacao | `guides/operations/worker-runtime-runbook.md`, `documentation-governance.md` |
-| Qualidade | `guides/quality/definition-of-done.md`, `testing-baseline.md`, `delivery-reassessment-checklist.md` |
-| Seguranca | `guides/security/security-baseline.md`, `streamgate-threat-model.md` |
-| Evidencias | `reports/index.html`, `sprints/` |
+O StreamGate organiza suas funcionalidades em domínios coesos (tanto na API quanto no Frontend):
 
-## Principios De Governanca
+- **Auth**: Autenticação, registro, tokens, SSO (Google Workspace) e MFA.
+- **Uploads**: Gestão de arquivos, links públicos e conectores de armazenamento externo.
+- **Analytics**: Dashboards, exportações, integração com ClickHouse e auditoria.
+- **Operations**: DLQ, integrações via Webhook, notificações, quarentena e RBAC de organizações.
+- **Core**: Filtros, ID prefixados, policies e lógicas transacionais base.
 
-- Documentos de produto descrevem comportamento atual e limites aprovados.
-- Guias tecnicos devem apontar para comandos reais e contratos versionados.
-- Mudancas de API exigem atualizacao coordenada de OpenAPI, contratos, exemplos e docs.
-- Mudancas em runtime, worker, seguranca ou UX operacional devem atualizar runbook, threat model ou workspace map quando houver impacto.
-- Referencias historicas de ciclos ficam no roadmap e closeouts; docs permanentes devem falar em produto, release, operacao e contrato.
-
-## Evidencias E Reports
-
-O hub `docs/reports/index.html` e gerado pelos scripts de reports e serve como indice local dos artefatos de validacao.
-
-Reports detalhados ficam em:
-
-- `apps/web/reports/`
-- `apps/web/e2e/reports/`
-- `apps/api/test/reports/`
-- `apps/worker/spec/reports/`
-- `scripts/ci/reports/`
-- `scripts/smokes/reports/`
-
-Esses artefatos sao sobrescritos pelos gates e, em geral, nao devem ser versionados.
-
-## Templates E Historico
-
-- Templates: `docs/templates/`
-- Closeouts historicos: consulte o indice de planejamento e os arquivos de fechamento historico.
-- Roadmap mestre: `docs/planning/`
-- ADRs: `docs/adr/`
+> *Para mais detalhes sobre as implementações, verifique os READMEs de cada aplicação listada acima.*

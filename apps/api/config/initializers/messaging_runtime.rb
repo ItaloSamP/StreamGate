@@ -35,6 +35,18 @@ module MessagingRuntime
     ENV.fetch("BROKER_UPLOAD_RECEIVED_ROUTING_KEY", "upload.received.v1")
   end
 
+  def upload_scan_requested_routing_key
+    ENV.fetch("BROKER_UPLOAD_SCAN_REQUESTED_ROUTING_KEY", "upload.scan.requested.v1")
+  end
+
+  def upload_scan_requested_queue
+    ENV.fetch("BROKER_UPLOAD_SCAN_REQUESTED_QUEUE", "streamgate.worker.upload.scan.requested.v1")
+  end
+
+  def upload_scan_requested_dlq
+    ENV.fetch("BROKER_UPLOAD_SCAN_REQUESTED_DLQ", "streamgate.worker.upload.scan.requested.v1.dlq")
+  end
+
   def upload_received_queue
     ENV.fetch("BROKER_UPLOAD_RECEIVED_QUEUE", "streamgate.worker.upload.received.v1")
   end
@@ -71,6 +83,9 @@ Rails.application.config.x.broker_exchange = MessagingRuntime.exchange_name
 Rails.application.config.x.broker_upload_received_routing_key = MessagingRuntime.upload_received_routing_key
 Rails.application.config.x.broker_upload_received_queue = MessagingRuntime.upload_received_queue
 Rails.application.config.x.broker_upload_received_dlq = MessagingRuntime.upload_received_dlq
+Rails.application.config.x.broker_upload_scan_requested_routing_key = MessagingRuntime.upload_scan_requested_routing_key
+Rails.application.config.x.broker_upload_scan_requested_queue = MessagingRuntime.upload_scan_requested_queue
+Rails.application.config.x.broker_upload_scan_requested_dlq = MessagingRuntime.upload_scan_requested_dlq
 Rails.application.config.x.broker_public_link_requested_routing_key = MessagingRuntime.public_link_requested_routing_key
 Rails.application.config.x.broker_public_link_requested_queue = MessagingRuntime.public_link_requested_queue
 Rails.application.config.x.broker_public_link_requested_dlq = MessagingRuntime.public_link_requested_dlq

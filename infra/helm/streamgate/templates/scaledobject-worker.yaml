@@ -1,0 +1,35 @@
+{{- if and .Values.autoscaling.worker.enabled .Values.autoscaling.worker.keda.enabled }}
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ include "streamgate.fullname" . }}-worker-scaler
+  labels:
+    {{- include "streamgate.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    name: {{ include "streamgate.fullname" . }}-worker
+  minReplicaCount: {{ .Values.autoscaling.worker.minReplicas }}
+  maxReplicaCount: {{ .Values.autoscaling.worker.maxReplicas }}
+  pollingInterval: 15
+  cooldownPeriod:  30
+  triggers:
+    - type: rabbitmq
+      metadata:
+        queueName: {{ .Values.autoscaling.worker.keda.queueName | quote }}
+        mode: QueueLength
+        value: {{ .Values.autoscaling.worker.keda.queueLength | quote }}
+      authenticationRef:
+        name: {{ include "streamgate.fullname" . }}-rabbitmq-trigger-auth
+---
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: {{ include "streamgate.fullname" . }}-rabbitmq-trigger-auth
+  labels:
+    {{- include "streamgate.labels" . | nindent 4 }}
+spec:
+  secretTargetRef:
+    - parameter: host
+      name: {{ include "streamgate.fullname" . }}-secrets
+      key: rabbitmqUrl
+{{- end }}

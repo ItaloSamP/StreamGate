@@ -5,12 +5,13 @@ require "time"
 module Worker
   module Runtime
     class ConnectorRequestedProcessor
-      def initialize(config:, storage_client:, logger:, lease_client: nil, fetcher: nil)
+      def initialize(config:, storage_client:, logger:, lease_client: nil, fetcher: nil, scanner: nil)
         @config = config
         @storage_client = storage_client
         @logger = logger
         @lease_client = lease_client || ConnectorLeaseClient.new(config: config)
         @fetcher = fetcher || ConnectorFetcher.new
+        @scanner = scanner || MalwareScanner.new(config: config)
       end
 
       def process(event, retry_count:)
@@ -18,8 +19,11 @@ module Worker
         validate_event!(event)
         ids = event_identifiers(event)
         payload = event.fetch("payload")
-        lease_data = lease_client.claim(lease_id: payload.fetch("lease_id"), lease_token: payload.fetch("lease_token"))
+        lease_data = lease_client.claim(lease_id: payload.fetch("lease_id"))
         result = fetcher.call(connector: lease_data.fetch("connector"), ingestion: lease_data.fetch("ingestion"))
+        scan_result = scanner.scan_io(result.io)
+        raise TerminalProcessingError, "connector_malware_detected" if scan_result.infected?
+
         storage_key = lease_data.fetch("ingestion").fetch("storage_key")
         storage_client.write_object_stream(storage_key: storage_key, io: result.io, content_type: result.content_type)
 
@@ -41,7 +45,7 @@ module Worker
 
       private
 
-      attr_reader :config, :storage_client, :logger, :lease_client, :fetcher
+      attr_reader :config, :storage_client, :logger, :lease_client, :fetcher, :scanner
 
       def validate_event!(event)
         required = %w[event_id event_name payload upload_id job_id trace_id]
