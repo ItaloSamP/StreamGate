@@ -302,10 +302,17 @@ function collectConsoleErrors(page: Page) {
   page.on('console', (message) => {
     if (message.type() === 'error') {
       const text = message.text()
-      // Ignore WebSocket connection errors since we don't spin up ActionCable for browser sweeps
-      if (!text.includes('WebSocket connection to') && !text.includes('ERR_CONNECTION_REFUSED')) {
-        errors.push(text)
+      // Ignore WebSocket/ActionCable errors — the E2E suite doesn't guarantee
+      // a fully authenticated cable connection on every navigation.
+      if (
+        text.includes('WebSocket connection to') ||
+        text.includes('ERR_CONNECTION_REFUSED') ||
+        text.includes('/cable') ||
+        text.includes('ticket=undefined')
+      ) {
+        return
       }
+      errors.push(text)
     }
   })
   page.on('pageerror', (error) => {

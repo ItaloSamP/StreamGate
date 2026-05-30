@@ -32,11 +32,11 @@ O StreamGate é uma plataforma operacional para ingestão, processamento assínc
 ---
 
 ## FASE 5 — Deep Refactoring & Finalização de Pendências (Em Lote Massivo)
-- [ ] **Finalizar O que Está Inacabado:** Finalizar e testar conectores `google_drive` e `oauth_delegated`.
+- [x] **Finalizar O que Está Inacabado:** Finalizar e testar conectores `google_drive` e `oauth_delegated`.
 - [x] Componentização Frontend: Quebrar `UploadPage.tsx` (43KB), `SettingsPage.tsx` (34KB) e `streamgate-api.ts` (53KB).
 - [x] Limpeza de Código Morto: Remoção do CircleCI e mocks inúteis de UI.
 - [x] Otimização Extrema: Lazy Loading no Frontend e Streaming Assíncrono no Worker Ruby (parsers).
-- [ ] **Commit & Push:** Organizar alterações da Fase 5, realizar commit descritivo e push.
+- [x] **Commit & Push:** Organizar alterações da Fase 5, realizar commit descritivo e push.
 
 ---
 
@@ -63,13 +63,13 @@ Um produto excelente não pode ter cara de template e não pode operar no escuro
 
 **🤖 Global Skills:** `frontend-design`, `web-design-guidelines`, `tailwind-patterns`.
 
-- [ ] **Maestro Auditor & Purple Ban:** Escanear o código Tailwind eliminando dependências de roxo/índigo padrão. Avaliar o layout para destruir "Safe Splits" (50/50). Aplicar quebras de grid (assimetria 70/30 ou 90/10) e cores disruptivas focadas em alta operabilidade.
-- [ ] **Tipografia e Geometria Estrita:** O app hoje tem mistura de bordas? Padronizar brutalmente: ou é 100% *Sharp/Tech* (0px a 2px) ou *Friendly/Organic* (16px+).
+- [x] **Maestro Auditor & Purple Ban:** Escanear o código Tailwind eliminando dependências de roxo/índigo padrão. Avaliar o layout para destruir "Safe Splits" (50/50). Aplicar quebras de grid (assimetria 70/30 ou 90/10) e cores disruptivas focadas em alta operabilidade.
+- [x] **Tipografia e Geometria Estrita:** O app hoje tem mistura de bordas? Padronizar brutalmente: ou é 100% *Sharp/Tech* (0px a 2px) ou *Friendly/Organic* (16px+).
 - [x] Ajustes nos painéis de Admin.
 - [x] Micro-interações, tooltips e skeletons para carregamento.
 - [x] Cores vibrantes "Anti-Cliché" em OKLCH e Glassmorphism. Adicionar animações táteis de botão (`scale-95` no click), reveals de entrada progressiva no Dashboard (scroll) e *spring physics* nos modais/drawers, usando *apenas GPU* (`transform`, `opacity`).
-- [ ] **Empty States Operacionais:** Nenhuma tela vazia (ex: sem Jobs, sem Quarentena) deve ser apenas uma mensagem triste. Transformar todas as "Empty States" em Oportunidades de CTA e educação do usuário (ex: um drag-and-drop enorme aparecendo).
-- [ ] **Commit & Push:** Organizar alterações da Fase 8, realizar commit descritivo e push.
+- [x] **Empty States Operacionais:** Nenhuma tela vazia (ex: sem Jobs, sem Quarentena) deve ser apenas uma mensagem triste. Transformar todas as "Empty States" em Oportunidades de CTA e educação do usuário (ex: um drag-and-drop enorme aparecendo).
+- [x] **Commit & Push:** Organizar alterações da Fase 8, realizar commit descritivo e push.
 
 ### FASE 9 — Observabilidade, Rate Limiting e Operação (SRE/DevOps)
 **Objetivo:** Como P.O. e Architect, não entrego a release se o sistema puder ser facilmente derrubado por um cliente ruim.

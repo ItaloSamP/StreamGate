@@ -1,0 +1,13 @@
+﻿
+> web@0.0.0 test:e2e C:\Estudos\StreamGate\apps\web
+> node ../../scripts/reports/run-command.mjs --name "Frontend E2E tests" --out apps/web/e2e/reports --cwd apps/web --html-report apps/web/e2e/reports/playwright-report/index.html -- playwright test
+
+
+Running 16 tests using 6 workers
+
+  ok  3 [chromium] › e2e\release-browser-sweep.spec.ts:33:3 › release browser sweep › admin can navigate every release-critical browser route without inert controls (39.5s)
+  x   1 [chromium] › e2e\operational-flow.spec.ts:13:3 › operational e2e flow › lets an admin manage notification channels and access the safe operations wizard (53.7s)
+  x   7 [chromium] › e2e\release-browser-sweep.spec.ts:48:3 › release browser sweep › operator role keeps critical operational routes but is denied from audit-only surfaces (17.4s)
+  x   2 [chromium] › e2e\auth-flow.spec.ts:15:3 › auth e2e flow › registers a new user, reaches dashboard, logs out, and blocks protected route access (57.9s)
+  ok  8 [chromium] › e2e\release-browser-sweep.spec.ts:82:3 › release browser sweep › empty and degraded release states are visible and honest (22.0s)
+  x   9 [chromium] › e2e\auth-flow.spec.ts:36:3 › auth e2e flow › logs in with seeded operator and unlocks protected dashboard (49.4s)
