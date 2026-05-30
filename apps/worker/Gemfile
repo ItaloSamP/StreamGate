@@ -6,7 +6,7 @@ source "https://rubygems.org"
 gemspec
 
 gem "aws-sdk-s3", "~> 1.169"
-gem "bunny", "~> 2.24"
+gem "bunny", "~> 3.1"
 gem "csv", "~> 3.3"
 gem "irb"
 gem "pg", "~> 1.5"

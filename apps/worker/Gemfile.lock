@@ -6,7 +6,7 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    amq-protocol (2.7.0)
+    amq-protocol (2.8.0)
     ast (2.4.3)
     aws-eventstream (1.4.0)
     aws-partitions (1.1238.0)
@@ -29,8 +29,9 @@ GEM
       aws-eventstream (~> 1, >= 1.0.2)
     base64 (0.3.0)
     bigdecimal (4.1.1)
-    bunny (2.24.0)
-      amq-protocol (~> 2.3)
+    bunny (3.1.0)
+      amq-protocol (~> 2.7)
+      logger (~> 1, >= 1.7)
       sorted_set (~> 1, >= 1.0.2)
     csv (3.3.5)
     date (3.5.1)
@@ -138,7 +139,7 @@ PLATFORMS
 
 DEPENDENCIES
   aws-sdk-s3 (~> 1.169)
-  bunny (~> 2.24)
+  bunny (~> 3.1)
   csv (~> 3.3)
   irb
   parquet (~> 0.7)
