@@ -197,6 +197,7 @@ if [[ "$FAILED" -eq 0 ]]; then run_step "Public link smoke" python scripts/smoke
 if [[ "$FAILED" -eq 0 ]]; then run_step "Seed second admin fixture" docker compose exec -T -e SMOKE_ADMIN_EMAIL -e SMOKE_SECOND_ADMIN_EMAIL -e SMOKE_SECOND_ADMIN_PASSWORD api bundle exec rails runner "admin = User.find_by!(email: ENV.fetch('SMOKE_ADMIN_EMAIL', 'admin@streamgate.local')); email = ENV.fetch('SMOKE_SECOND_ADMIN_EMAIL'); password = ENV.fetch('SMOKE_SECOND_ADMIN_PASSWORD'); user = User.find_or_initialize_by(email: email); user.full_name = 'Operational Approver'; user.organization_id = admin.organization_id; user.role = :admin; user.status = :active; user.password = password; user.save!; user.ensure_default_organization_membership!" || FAILED=1; fi
 if [[ "$FAILED" -eq 0 ]]; then run_step "Safe operations + artifacts + notifications smoke" python scripts/smokes/safe-operations-smoke.py || FAILED=1; fi
 if [[ "$FAILED" -eq 0 ]]; then run_step "Persisted notifications + deliveries audit" bash scripts/smokes/verify-safe-operations-records.sh || FAILED=1; fi
+if [[ "$FAILED" -eq 0 ]]; then run_step "System validation (Phase 7)" python scripts/smokes/system-validation-smoke.py || FAILED=1; fi
 
 if [[ "$FAILED" -ne 0 ]]; then
   docker compose ps || true

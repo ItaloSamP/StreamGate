@@ -50,12 +50,12 @@ Utilize as marcações:
   - `[x]` **Commit & Push:** Organizar alterações e commitar (Fase 6).
 
 ## Validação Total
-- `[ ]` **FASE 7: Validação E2E e Teste Funcional Total do Sistema**
-  - `[ ]` Testar Ingestão ponta-a-ponta (Upload -> ClamAV -> Parsers -> Analytics Warehouse).
-  - `[ ]` Verificar robustez de Quarentena, DLQ e Circuit Breakers.
-  - `[ ]` Testar eventos Realtime (ActionCable/WebSockets).
-  - `[ ]` Rodar `run-smokes.ps1` final sob o perfil "full-closeout" para gerar Hub de Release.
-  - `[ ]` **Commit & Push:** Organizar alterações e commitar (Fase 7).
+- `[x]` **FASE 7: Validação E2E e Teste Funcional Total do Sistema**
+  - `[x]` Testar Ingestão ponta-a-ponta (Upload -> ClamAV -> Parsers -> Analytics Warehouse).
+  - `[x]` Verificar robustez de Quarentena, DLQ e Circuit Breakers.
+  - `[x]` Testar eventos Realtime (ActionCable/WebSockets).
+  - `[x]` Rodar `run-smokes.ps1` final sob o perfil "full-closeout" para gerar Hub de Release.
+  - `[x]` **Commit & Push:** Organizar alterações e commitar (Fase 7).
 
 ## O PENTE FINO FINAL
 - `[ ]` **FASE 10: Reescrita Completa da Documentação (Zero-Base Documentation)**

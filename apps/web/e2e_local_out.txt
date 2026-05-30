@@ -15,3 +15,8 @@ Running 16 tests using 6 workers
   x   4 [firefox] › e2e\release-browser-sweep.spec.ts:33:3 › release browser sweep › admin can navigate every release-critical browser route without inert controls (2.0m)
   x   6 [firefox] › e2e\operational-flow.spec.ts:13:3 › operational e2e flow › lets an admin manage notification channels and access the safe operations wizard (2.0m)
   x  10 [chromium] › e2e\auth-flow.spec.ts:45:3 › auth e2e flow › resets password for an ephemeral account and signs in with the new password (48.0s)
+  ok 13 [chromium] › e2e\auth-flow.spec.ts:79:3 › auth e2e flow › redirects to login when local storage contains an expired session (1.8s)
+  x  11 [firefox] › e2e\auth-flow.spec.ts:36:3 › auth e2e flow › logs in with seeded operator and unlocks protected dashboard (2.0m)
+  x  12 [firefox] › e2e\release-browser-sweep.spec.ts:48:3 › release browser sweep › operator role keeps critical operational routes but is denied from audit-only surfaces (2.0m)
+  x  14 [firefox] › e2e\auth-flow.spec.ts:45:3 › auth e2e flow › resets password for an ephemeral account and signs in with the new password (2.0m)
+  x  15 [firefox] › e2e\release-browser-sweep.spec.ts:82:3 › release browser sweep › empty and degraded release states are visible and honest (2.0m)
