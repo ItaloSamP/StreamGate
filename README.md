@@ -8,6 +8,8 @@
 
 O **StreamGate** é uma plataforma robusta projetada para ingestão massiva, segurança em tempo real, e análise de dados em ambientes operacionais distribuídos. Com foco na resiliência e entrega segura (zero-trust), ele atua como o principal portão de entrada para uploads institucionais garantindo que todo arquivo passe por varreduras de malware e fluxos granulares de conformidade.
 
+> 🌟 **[Acesse o Novo Hub de Documentação (Visual)](docs/index.html)** - Explore a nossa documentação através de uma página interativa com design limpo e navegação facilitada.
+
 ## 🌟 O Valor de Negócio (Visão do Produto)
 
 Na era digital, aceitar arquivos do mundo exterior é um risco constante. O **StreamGate** elimina esta fricção oferecendo:
