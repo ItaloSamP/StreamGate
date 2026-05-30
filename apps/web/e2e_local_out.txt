@@ -11,3 +11,7 @@ Running 16 tests using 6 workers
   x   2 [chromium] › e2e\auth-flow.spec.ts:15:3 › auth e2e flow › registers a new user, reaches dashboard, logs out, and blocks protected route access (57.9s)
   ok  8 [chromium] › e2e\release-browser-sweep.spec.ts:82:3 › release browser sweep › empty and degraded release states are visible and honest (22.0s)
   x   9 [chromium] › e2e\auth-flow.spec.ts:36:3 › auth e2e flow › logs in with seeded operator and unlocks protected dashboard (49.4s)
+  x   5 [firefox] › e2e\auth-flow.spec.ts:15:3 › auth e2e flow › registers a new user, reaches dashboard, logs out, and blocks protected route access (2.0m)
+  x   4 [firefox] › e2e\release-browser-sweep.spec.ts:33:3 › release browser sweep › admin can navigate every release-critical browser route without inert controls (2.0m)
+  x   6 [firefox] › e2e\operational-flow.spec.ts:13:3 › operational e2e flow › lets an admin manage notification channels and access the safe operations wizard (2.0m)
+  x  10 [chromium] › e2e\auth-flow.spec.ts:45:3 › auth e2e flow › resets password for an ephemeral account and signs in with the new password (48.0s)
