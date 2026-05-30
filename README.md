@@ -19,17 +19,27 @@ Na era digital, aceitar arquivos do mundo exterior é um risco constante. O **St
 
 Construído sob os preceitos do **Domain-Driven Design (DDD)** e arquitetura de microsserviços, com separação brutal de responsabilidades e Segurança desde o Código (Security-by-Design):
 
-- 🎨 **[Command Center (`apps/web`)](docs/README.md)**: Aplicação frontend imersiva usando React, Vite, Tailwind CSS e TypeScript (Feature-Sliced Design). Focada em painéis de telemetria, exploração analítica e controle de acesso seguro.
-- ⚙️ **[API Server (`apps/api`)](docs/README.md)**: O cérebro transacional. Feito em Ruby on Rails em modo estrito de API. Gerencia Autenticação, Operações baseadas em RBAC, Conectores OIDC e garante idempotência (`Idempotency-Key`).
-- 👷 **[Data Worker (`apps/worker`)](docs/README.md)**: Motor escalável (Ruby puro) que consome massas de eventos do RabbitMQ e as integra com o ecossistema externo (ClamAV para antivírus) gravando resultados agressivamente em bancos OLAP (ClickHouse) ou S3.
-- 📜 **[Contracts (`packages/contracts`)](docs/README.md)**: A fonte da verdade para comunicação HTTP. Esqueça ambiguidades: o OpenAPI v3 rege todas as interações do ecossistema.
+- 🎨 **[Command Center (`apps/web`)](apps/web/README.md)**: Aplicação frontend imersiva usando React, Vite, Tailwind CSS e TypeScript (Feature-Sliced Design). Focada em painéis de telemetria, exploração analítica e controle de acesso seguro.
+- ⚙️ **[API Server (`apps/api`)](apps/api/README.md)**: O cérebro transacional. Feito em Ruby on Rails em modo estrito de API. Gerencia Autenticação, Operações baseadas em RBAC, Conectores OIDC e garante idempotência (`Idempotency-Key`).
+- 👷 **[Data Worker (`apps/worker`)](apps/worker/README.md)**: Motor escalável (Ruby puro) que consome massas de eventos do RabbitMQ e as integra com o ecossistema externo (ClamAV para antivírus) gravando resultados agressivamente em bancos OLAP (ClickHouse) ou S3.
+- 📜 **[Contracts (`packages/contracts`)](packages/contracts/README.md)**: A fonte da verdade para comunicação HTTP. Esqueça ambiguidades: o OpenAPI v3 rege todas as interações do ecossistema.
+- 🚀 **[Infraestrutura GitOps/Helm (`infra`)](infra/README.md)**: Configurações do ArgoCD, Helm, Kubernetes e esteiras de CI/CD contínuas.
 
-> 👉 **Mergulhe fundo na nossa infraestrutura no [Hub Central de Documentação](docs/README.md).**
+## 📚 Guias e Referências Oficiais do Projeto
 
-Ou acesse os guias fundamentais da plataforma:
-- 📖 **[Manual do Usuário Final](docs/guides/user-manual.md)** (Operações do Command Center)
-- 🏗️ **[Arquitetura do Sistema](docs/guides/architecture.md)** (Topologia dos Microsserviços e Eventos)
-- 🛠️ **[DevOps Runbook](docs/guides/devops-runbook.md)** (Troubleshooting, ArgoCD, e Helm)
+Este `README.md` atua como o **Hub de Documentação Principal** (Main README). Acesse os guias fundamentais da plataforma abaixo:
+
+- 📖 **[Manual do Usuário Final](docs/guides/user-manual.md)** (Fluxos e Operações do Command Center)
+- 🏗️ **[Arquitetura do Sistema](docs/guides/architecture.md)** (Topologia em Nuvem, Microsserviços e Mensageria)
+- 🛠️ **[DevOps Runbook](docs/guides/devops-runbook.md)** (Troubleshooting, ArgoCD, Helm e Mitigação de Falhas)
+
+### Estrutura de Domínios (Bounded Contexts)
+O StreamGate organiza suas funcionalidades em domínios coesos (em toda a stack):
+- **Auth**: Autenticação, registro, SSO e MFA.
+- **Uploads**: Gestão de arquivos, links públicos e conectores de armazenamento.
+- **Analytics**: Dashboards, integração ClickHouse e auditoria.
+- **Operations**: Quarentena, DLQ, webhooks e RBAC.
+- **Core**: Filtros, policies e lógicas transacionais transversais.
 
 ## 🚀 Como Iniciar o Desenvolvimento
 

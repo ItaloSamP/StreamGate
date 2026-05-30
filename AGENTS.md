@@ -35,7 +35,7 @@ Antes de sugerir um merge para a `main`, o Agente deve validar seu próprio trab
 
 ## 📚 Referências Essenciais
 
-- 🏠 **[Hub de Documentação Principal](docs/README.md)**
+- 🏠 **[Hub de Documentação Principal](README.md)**
 - 📖 **[Manual do Usuário Final](docs/guides/user-manual.md)**
 - 🏗️ **[Arquitetura do Sistema](docs/guides/architecture.md)**
 - 🛠️ **[DevOps Runbook](docs/guides/devops-runbook.md)**
