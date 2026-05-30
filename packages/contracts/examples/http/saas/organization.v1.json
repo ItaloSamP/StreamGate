@@ -1,0 +1,49 @@
+{
+  "data": {
+    "organization": {
+      "id": "org_fixture_alpha",
+      "name": "StreamGate Alpha",
+      "status": "active",
+      "quotas": {
+        "max_file_bytes": 52428800,
+        "monthly_bytes": 536870912000,
+        "connector_runs_per_day": 1000
+      },
+      "retention_days": 180,
+      "compliance_profile": {
+        "target": "soc2_type_i",
+        "evidence_status": "design_ready"
+      }
+    },
+    "members": [
+      {
+        "id": "mem_admin_1",
+        "organization_id": "org_fixture_alpha",
+        "user_id": "user_admin_1",
+        "email": "admin@example.com",
+        "full_name": "Admin StreamGate",
+        "role": "admin",
+        "status": "active"
+      },
+      {
+        "id": "mem_operator_1",
+        "organization_id": "org_fixture_alpha",
+        "user_id": "user_operator_1",
+        "email": "operator@example.com",
+        "full_name": "Operator StreamGate",
+        "role": "operator",
+        "status": "active"
+      }
+    ],
+    "invites": [
+      {
+        "id": "invite_ops_1",
+        "organization_id": "org_fixture_alpha",
+        "email": "ops@example.com",
+        "role": "operator",
+        "status": "pending",
+        "expires_at": "2026-05-13T12:00:00Z"
+      }
+    ]
+  }
+}

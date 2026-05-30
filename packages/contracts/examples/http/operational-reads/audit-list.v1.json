@@ -1,0 +1,33 @@
+{
+  "data": [
+    {
+      "id": "audit_fixture_registered",
+      "action": "upload.registered",
+      "actor_id": "user_fixture_operator",
+      "auditable_type": "Upload",
+      "auditable_id": "upload_fixture_registered",
+      "request_id": "req_fixture_1",
+      "trace_id": "trace_fixture_1",
+      "occurred_at": "2026-04-05T10:00:00Z",
+      "metadata": {
+        "upload_id": "upload_fixture_registered",
+        "token": "[REDACTED]"
+      },
+      "created_at": "2026-04-13T12:00:00Z",
+      "updated_at": "2026-04-13T12:00:00Z"
+    }
+  ],
+  "meta": {
+    "pagination": {
+      "page": 1,
+      "per_page": 20,
+      "total_count": 1,
+      "total_pages": 1
+    },
+    "filters": {
+      "preset": "last_7d",
+      "sort_by": "occurred_at",
+      "sort_order": "desc"
+    }
+  }
+}

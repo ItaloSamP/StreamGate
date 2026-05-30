@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/http/dlq-list-response.v1.json",
+  "title": "DlqListResponseV1",
+  "type": "object",
+  "required": ["data", "meta"],
+  "properties": {
+    "data": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["payload", "routing_key", "retry_count", "headers"],
+        "properties": {
+          "payload": {
+            "description": "Snapshot sanitizado do payload presente na DLQ; chaves sensiveis sao mascaradas como [REDACTED].",
+            "type": ["object", "string"]
+          },
+          "exchange": { "type": "string" },
+          "routing_key": { "type": "string" },
+          "redelivered": { "type": "boolean" },
+          "retry_count": { "type": "integer", "minimum": 0 },
+          "dead_letter_reason": { "type": ["string", "null"] },
+          "headers": {
+            "description": "Headers sanitizados antes da exposicao pela API.",
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "meta": {
+      "type": "object",
+      "required": ["pagination", "queue", "filters"],
+      "properties": {
+        "pagination": {
+          "type": "object",
+          "required": ["page", "per_page", "total_count", "total_pages"],
+          "properties": {
+            "page": { "type": "integer", "minimum": 1 },
+            "per_page": { "type": "integer", "minimum": 1 },
+            "total_count": { "type": "integer", "minimum": 0 },
+            "total_pages": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        },
+        "queue": {
+          "type": "object",
+          "required": ["name", "queue_depth"],
+          "properties": {
+            "name": { "type": "string" },
+            "queue_depth": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        },
+        "filters": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

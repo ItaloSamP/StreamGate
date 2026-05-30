@@ -1,0 +1,12 @@
+# Ownership minimo do repositorio.
+
+* @ItaloSamP
+
+/apps/api/ @ItaloSamP
+/apps/web/ @ItaloSamP
+/apps/worker/ @ItaloSamP
+/packages/contracts/ @ItaloSamP
+/docs/ @ItaloSamP
+/infra/ @ItaloSamP
+/scripts/ @ItaloSamP
+/.github/ @ItaloSamP

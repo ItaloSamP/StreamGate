@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/http/public-link-response.v1.json",
+  "title": "PublicLinkResponseV1",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": ["upload", "job", "acquisition"],
+      "properties": {
+        "upload": { "$ref": "../shared/resources/upload.v1.json" },
+        "job": { "$ref": "../shared/resources/job.v1.json" },
+        "acquisition": { "$ref": "../shared/resources/upload-acquisition.v1.json" }
+      },
+      "additionalProperties": false
+    },
+    "meta": {
+      "type": "object",
+      "properties": {
+        "idempotent": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

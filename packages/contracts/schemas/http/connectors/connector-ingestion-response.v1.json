@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/http/connector-ingestion-response.v1.json",
+  "title": "ConnectorIngestionResponseV1",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": ["upload", "job", "ingestion", "lease"],
+      "properties": {
+        "upload": { "type": "object", "additionalProperties": true },
+        "job": { "type": "object", "additionalProperties": true },
+        "ingestion": { "type": "object", "additionalProperties": true },
+        "lease": {
+          "type": "object",
+          "required": ["id", "expires_at"],
+          "properties": {
+            "id": { "type": "string" },
+            "expires_at": { "type": ["string", "null"], "format": "date-time" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

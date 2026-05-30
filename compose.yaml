@@ -1,4 +1,4 @@
-name: streamgate
+﻿name: streamgate
 
 services:
   postgres:
@@ -18,6 +18,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    networks:
+      - streamgate
 
   redis:
     image: redis:7-alpine
@@ -32,6 +34,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    networks:
+      - streamgate
 
   rabbitmq:
     image: rabbitmq:3.13-management
@@ -50,6 +54,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    networks:
+      - streamgate
 
   minio:
     image: minio/minio:RELEASE.2025-02-18T16-25-55Z
@@ -69,6 +75,8 @@ services:
       interval: 20s
       timeout: 10s
       retries: 5
+    networks:
+      - streamgate
 
   minio-init:
     image: minio/mc:RELEASE.2025-03-12T17-29-24Z
@@ -76,13 +84,35 @@ services:
     depends_on:
       minio:
         condition: service_healthy
-    entrypoint: >
-      /bin/sh -c "
-      mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
-      mc mb --ignore-existing local/${MINIO_BUCKET_RAW};
-      mc anonymous set private local/${MINIO_BUCKET_RAW};
-      exit 0;
-      "
+    environment:
+      MINIO_BUCKET_RAW: ${MINIO_BUCKET_RAW:-streamgate-uploads}
+      UPLOAD_STORAGE_BUCKET: ${UPLOAD_STORAGE_BUCKET:-streamgate-uploads}
+      MINIO_CORS_ALLOWED_ORIGIN: ${MINIO_CORS_ALLOWED_ORIGIN:-http://localhost:5173}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    entrypoint:
+      - /bin/sh
+      - -eu
+      - -c
+      - |
+        bucket="${UPLOAD_STORAGE_BUCKET}"
+        mc alias set local http://minio:9000 "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}"
+        mc mb --ignore-existing "local/$${bucket}"
+        mc anonymous set private "local/$${bucket}"
+        cat >/tmp/minio-cors.xml <<EOF
+        <CORSConfiguration>
+          <CORSRule>
+            <AllowedOrigin>${MINIO_CORS_ALLOWED_ORIGIN}</AllowedOrigin>
+            <AllowedMethod>PUT</AllowedMethod>
+            <AllowedMethod>GET</AllowedMethod>
+            <AllowedMethod>HEAD</AllowedMethod>
+            <AllowedHeader>*</AllowedHeader>            <MaxAgeSeconds>300</MaxAgeSeconds>
+          </CORSRule>
+        </CORSConfiguration>
+        EOF
+        mc cors set "local/$${bucket}" /tmp/minio-cors.xml || echo "[minio-init] warning: cors set not supported by current MinIO build; continuing"
+    networks:
+      - streamgate
 
   clickhouse:
     image: clickhouse/clickhouse-server:25.3
@@ -103,6 +133,229 @@ services:
       interval: 20s
       timeout: 10s
       retries: 10
+    networks:
+      - streamgate
+
+  clamav:
+    profiles: ["full", "worker"]
+    image: clamav/clamav:stable
+    container_name: streamgate-clamav
+    restart: unless-stopped
+    volumes:
+      - clamav_data:/var/lib/clamav
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "clamdscan --no-summary /etc/hosts >/dev/null 2>&1 || exit 1",
+        ]
+      start_period: 180s
+      interval: 30s
+      timeout: 15s
+      retries: 20
+    networks:
+      - streamgate
+
+  api:
+    profiles: ["app", "full"]
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile.dev
+    container_name: streamgate-api
+    restart: unless-stopped
+    init: true
+    working_dir: /app
+    command: >
+      bash -lc "
+      (bundle check || bundle install) &&
+      rm -f tmp/pids/server.pid &&
+      bundle exec rails db:prepare &&
+      exec bundle exec rails server -b 0.0.0.0 -p 3000
+      "
+    environment:
+      RAILS_ENV: development
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      AUTH_SESSION_TTL_HOURS: ${AUTH_SESSION_TTL_HOURS:-24}
+      AUTH_PASSWORD_RESET_TTL_MINUTES: ${AUTH_PASSWORD_RESET_TTL_MINUTES:-30}
+      AUTH_TOKEN_PEPPER: ${AUTH_TOKEN_PEPPER}
+      AUTH_SESSION_TRANSPORT: ${AUTH_SESSION_TRANSPORT:-bearer}
+      AUTH_COOKIE_ENABLED: ${AUTH_COOKIE_ENABLED:-false}
+      AUTH_CSRF_MODE: ${AUTH_CSRF_MODE:-token}
+      API_CORS_ALLOWED_ORIGINS: ${API_CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+      API_CORS_ALLOW_CREDENTIALS: ${API_CORS_ALLOW_CREDENTIALS:-false}
+      UPLOAD_STORAGE_ENDPOINT: ${UPLOAD_STORAGE_ENDPOINT:-http://minio:9000}
+      UPLOAD_STORAGE_BUCKET: ${UPLOAD_STORAGE_BUCKET:-streamgate-uploads}
+      UPLOAD_STORAGE_REGION: ${UPLOAD_STORAGE_REGION:-us-east-1}
+      UPLOAD_STORAGE_ACCESS_KEY: ${UPLOAD_STORAGE_ACCESS_KEY}
+      UPLOAD_STORAGE_SECRET_KEY: ${UPLOAD_STORAGE_SECRET_KEY}
+      UPLOAD_ALLOWED_CONTENT_TYPES: ${UPLOAD_ALLOWED_CONTENT_TYPES}
+      UPLOAD_SIGNED_URL_TTL_SECONDS: ${UPLOAD_SIGNED_URL_TTL_SECONDS:-900}
+      UPLOAD_SIGNED_URL_MODE: ${UPLOAD_SIGNED_URL_MODE:-presigned_put}
+      UPLOAD_SIGNED_URL_LIMIT_PER_IP: ${UPLOAD_SIGNED_URL_LIMIT_PER_IP}
+      UPLOAD_REGISTER_LIMIT_PER_IP: ${UPLOAD_REGISTER_LIMIT_PER_IP}
+      UPLOAD_THROTTLE_WINDOW_SECONDS: ${UPLOAD_THROTTLE_WINDOW_SECONDS}
+      UPLOAD_VERIFY_OBJECT_BEFORE_REGISTER: ${UPLOAD_VERIFY_OBJECT_BEFORE_REGISTER}
+      BROKER_HOST: rabbitmq
+      BROKER_PORT: 5672
+      BROKER_USERNAME: ${RABBITMQ_DEFAULT_USER}
+      BROKER_PASSWORD: ${RABBITMQ_DEFAULT_PASS}
+      BROKER_VHOST: /
+      BROKER_MANAGEMENT_URL: ${BROKER_MANAGEMENT_URL:-http://rabbitmq:15672/api}
+      BROKER_EXCHANGE: ${BROKER_EXCHANGE:-streamgate.events}
+      BROKER_UPLOAD_RECEIVED_ROUTING_KEY: ${BROKER_UPLOAD_RECEIVED_ROUTING_KEY:-upload.received.v1}
+      BROKER_UPLOAD_RECEIVED_QUEUE: ${BROKER_UPLOAD_RECEIVED_QUEUE:-streamgate.worker.upload.received.v1}
+      BROKER_UPLOAD_RECEIVED_DLQ: ${BROKER_UPLOAD_RECEIVED_DLQ:-streamgate.worker.upload.received.v1.dlq}
+      CLICKHOUSE_HTTP_URL: ${CLICKHOUSE_HTTP_URL:-http://clickhouse:8123}
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB}
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+      AUDIT_RETENTION_DAYS: ${AUDIT_RETENTION_DAYS:-180}
+      OPERATIONAL_READS_SLO_P95_MS: ${OPERATIONAL_READS_SLO_P95_MS:-500}
+      OPERATIONAL_READS_ERROR_BUDGET_PERCENT: ${OPERATIONAL_READS_ERROR_BUDGET_PERCENT:-1}
+      DEFAULT_ORGANIZATION_ID: ${DEFAULT_ORGANIZATION_ID:-org_default}
+    ports:
+      - "${API_PORT:-3000}:3000"
+    volumes:
+      - ./apps/api:/app
+      - api_bundle:/usr/local/bundle
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      clickhouse:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'ruby -rsocket -e "socket = TCPSocket.new(''127.0.0.1'', 3000); socket.close"',
+        ]
+      start_period: 180s
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks:
+      - streamgate
+
+  web:
+    profiles: ["app", "full"]
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile.dev
+    container_name: streamgate-web
+    restart: unless-stopped
+    init: true
+    working_dir: /app
+    command: >
+      sh -lc "
+      exec pnpm dev --host 0.0.0.0 --port 5173
+      "
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3000}
+    ports:
+      - "${WEB_PORT:-5173}:5173"
+    volumes:
+      - ./apps/web:/app
+      - web_node_modules:/app/node_modules
+    depends_on:
+      api:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://127.0.0.1:5173 >/dev/null 2>&1 || exit 1",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks:
+      - streamgate
+
+  worker:
+    profiles: ["full", "worker"]
+    build:
+      context: ./apps/worker
+      dockerfile: Dockerfile.dev
+    container_name: streamgate-worker
+    restart: unless-stopped
+    init: true
+    working_dir: /app
+    command: >
+      bash -lc "
+      (bundle check || bundle install) &&
+      exec bundle exec ruby -e 'require \"worker\"; Worker.run!'
+      "
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      BROKER_HOST: rabbitmq
+      BROKER_PORT: 5672
+      BROKER_USERNAME: ${RABBITMQ_DEFAULT_USER}
+      BROKER_PASSWORD: ${RABBITMQ_DEFAULT_PASS}
+      BROKER_VHOST: /
+      BROKER_EXCHANGE: ${BROKER_EXCHANGE:-streamgate.events}
+      BROKER_UPLOAD_RECEIVED_ROUTING_KEY: ${BROKER_UPLOAD_RECEIVED_ROUTING_KEY:-upload.received.v1}
+      BROKER_UPLOAD_RECEIVED_QUEUE: ${BROKER_UPLOAD_RECEIVED_QUEUE:-streamgate.worker.upload.received.v1}
+      BROKER_UPLOAD_RECEIVED_DLQ: ${BROKER_UPLOAD_RECEIVED_DLQ:-streamgate.worker.upload.received.v1.dlq}
+      BROKER_UPLOAD_RECEIVED_DLQ_ROUTING_KEY: ${BROKER_UPLOAD_RECEIVED_DLQ_ROUTING_KEY:-upload.received.v1.dlq}
+      BROKER_UPLOAD_SCAN_REQUESTED_ROUTING_KEY: ${BROKER_UPLOAD_SCAN_REQUESTED_ROUTING_KEY:-upload.scan.requested.v1}
+      BROKER_UPLOAD_SCAN_REQUESTED_QUEUE: ${BROKER_UPLOAD_SCAN_REQUESTED_QUEUE:-streamgate.worker.upload.scan.requested.v1}
+      BROKER_UPLOAD_SCAN_REQUESTED_DLQ: ${BROKER_UPLOAD_SCAN_REQUESTED_DLQ:-streamgate.worker.upload.scan.requested.v1.dlq}
+      BROKER_UPLOAD_SCAN_REQUESTED_DLQ_ROUTING_KEY: ${BROKER_UPLOAD_SCAN_REQUESTED_DLQ_ROUTING_KEY:-upload.scan.requested.v1.dlq}
+      WORKER_MAX_RETRIES: ${WORKER_MAX_RETRIES:-3}
+      CLAMAV_ENABLED: ${CLAMAV_ENABLED:-1}
+      CLAMAV_HOST: ${CLAMAV_HOST:-clamav}
+      CLAMAV_PORT: ${CLAMAV_PORT:-3310}
+      CLICKHOUSE_HTTP_URL: ${CLICKHOUSE_HTTP_URL:-http://clickhouse:8123}
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB}
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+      CLICKHOUSE_HMAC_SECRET: ${CLICKHOUSE_HMAC_SECRET:-streamgate-dev-clickhouse-hmac-secret}
+      CLICKHOUSE_TTL_DAYS: ${CLICKHOUSE_TTL_DAYS:-30}
+      UPLOAD_STORAGE_ENDPOINT: ${UPLOAD_STORAGE_ENDPOINT:-http://minio:9000}
+      UPLOAD_STORAGE_BUCKET: ${UPLOAD_STORAGE_BUCKET:-streamgate-uploads}
+      UPLOAD_STORAGE_REGION: ${UPLOAD_STORAGE_REGION:-us-east-1}
+      UPLOAD_STORAGE_ACCESS_KEY: ${UPLOAD_STORAGE_ACCESS_KEY}
+      UPLOAD_STORAGE_SECRET_KEY: ${UPLOAD_STORAGE_SECRET_KEY}
+    volumes:
+      - ./apps/worker:/app
+      - worker_bundle:/usr/local/bundle
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      clickhouse:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", 'bundle exec ruby -e "require ''worker''"']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - streamgate
 
 volumes:
   postgres_data:
@@ -110,3 +363,11 @@ volumes:
   rabbitmq_data:
   minio_data:
   clickhouse_data:
+  clamav_data:
+  api_bundle:
+  worker_bundle:
+  web_node_modules:
+
+networks:
+  streamgate:
+    driver: bridge

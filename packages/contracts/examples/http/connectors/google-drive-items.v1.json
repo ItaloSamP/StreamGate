@@ -1,0 +1,16 @@
+{
+  "data": [
+    {
+      "id": "drive_file_1",
+      "name": "forecast.csv",
+      "mime_type": "text/csv",
+      "kind": "file"
+    },
+    {
+      "id": "drive_folder_1",
+      "name": "Quarterly Pipeline Folder",
+      "mime_type": "application/vnd.google-apps.folder",
+      "kind": "folder"
+    }
+  ]
+}

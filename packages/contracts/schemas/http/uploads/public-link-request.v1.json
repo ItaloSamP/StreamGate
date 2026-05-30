@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/http/public-link-request.v1.json",
+  "title": "PublicLinkRequestV1",
+  "type": "object",
+  "required": ["public_link"],
+  "properties": {
+    "public_link": {
+      "type": "object",
+      "required": ["url", "filename", "content_type"],
+      "properties": {
+        "url": { "type": "string", "format": "uri" },
+        "filename": { "type": "string", "minLength": 1 },
+        "content_type": { "type": "string", "enum": ["application/json", "application/zip", "application/x-ndjson", "application/ndjson", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.apache.parquet", "text/csv"] },
+        "byte_size": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

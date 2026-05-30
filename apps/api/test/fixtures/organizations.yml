@@ -1,0 +1,27 @@
+alpha:
+  id: org_fixture_alpha
+  slug: fixture-alpha
+  name: Fixture Alpha
+  status: active
+  quotas:
+    max_file_bytes: 10737418240
+    monthly_upload_bytes: 1099511627776
+    connector_runs_daily: 1000
+    retention_days: 90
+  settings: {}
+  retention_days: 90
+  compliance_profile: {}
+
+beta:
+  id: org_fixture_beta
+  slug: fixture-beta
+  name: Fixture Beta
+  status: active
+  quotas:
+    max_file_bytes: 10737418240
+    monthly_upload_bytes: 1099511627776
+    connector_runs_daily: 1000
+    retention_days: 90
+  settings: {}
+  retention_days: 90
+  compliance_profile: {}

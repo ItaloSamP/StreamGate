@@ -1,0 +1,27 @@
+{
+  "$id": "https://streamgate.local/contracts/http/webhook-delivery-response.v1.json",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": ["id", "channel", "event_name", "status", "attempts_count"],
+      "properties": {
+        "id": { "type": "string" },
+        "notification_id": { "type": ["string", "null"] },
+        "channel": { "type": "string", "enum": ["email", "webhook"] },
+        "event_name": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "delivered", "failed"] },
+        "attempts_count": { "type": "integer", "minimum": 0 },
+        "next_attempt_at": { "type": ["string", "null"], "format": "date-time" },
+        "delivered_at": { "type": ["string", "null"], "format": "date-time" },
+        "response_status": { "type": ["integer", "null"] },
+        "trace_id": { "type": "string" },
+        "created_at": { "type": ["string", "null"], "format": "date-time" },
+        "webhook_secret": { "type": "null" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

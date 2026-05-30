@@ -1,0 +1,120 @@
+name: e2e-auth
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+      - main
+  workflow_dispatch:
+
+jobs:
+  e2e-auth:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+
+      - name: Install web dependencies
+        working-directory: apps/web
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        working-directory: apps/web
+        run: pnpm exec playwright install --with-deps chromium firefox
+
+      - name: Prepare env file
+        run: |
+          cp .env.example .env
+          echo UPLOAD_STORAGE_ENDPOINT=http://minio:9000 >> .env
+          echo UPLOAD_STORAGE_BUCKET=streamgate-uploads >> .env
+          echo UPLOAD_STORAGE_REGION=us-east-1 >> .env
+          echo UPLOAD_SIGNED_URL_TTL_SECONDS=900 >> .env
+          echo UPLOAD_SIGNED_URL_MODE=presigned_put >> .env
+          echo MINIO_CORS_ALLOWED_ORIGIN=http://localhost:5173 >> .env
+
+      - name: Start full auth stack
+        run: docker compose --profile app up -d --build
+
+      - name: Validate infra smoke
+        run: python scripts/smokes/compose-smoke.py
+
+      - name: Wait for API and Web
+        run: |
+          for i in {1..60}; do
+            if curl -fsS http://localhost:3000/up >/dev/null; then
+              echo "API ready"
+              break
+            fi
+            if [ "$i" -eq 60 ]; then
+              echo "API did not become ready in time" >&2
+              exit 1
+            fi
+            sleep 2
+          done
+
+          for i in {1..60}; do
+            if curl -fsS http://localhost:5173 >/dev/null; then
+              echo "Web ready"
+              break
+            fi
+            if [ "$i" -eq 60 ]; then
+              echo "Web did not become ready in time" >&2
+              exit 1
+            fi
+            sleep 2
+          done
+
+      - name: Seed auth fixtures
+        run: |
+          docker compose exec -T api bundle exec rails db:seed
+          docker compose exec -T api bundle exec rails runner "abort('operator seed missing') unless User.exists?(email: 'operator@streamgate.local')"
+
+      - name: Run signed upload operational smoke
+        env:
+          SMOKE_API_BASE_URL: http://localhost:3000
+          SMOKE_OPERATOR_EMAIL: operator@streamgate.local
+          SEED_OPERATOR_PASSWORD: ChangeMe123!
+        run: python scripts/smokes/upload-signed-smoke.py
+
+      - name: Run web integration auth tests
+        working-directory: apps/web
+        env:
+          AUTH_INTEGRATION_BASE_URL: http://localhost:3000
+          SEED_OPERATOR_PASSWORD: ChangeMe123!
+        run: pnpm test:integration
+
+      - name: Run auth e2e tests
+        working-directory: apps/web
+        env:
+          E2E_BASE_URL: http://localhost:5173
+          SEED_OPERATOR_PASSWORD: ChangeMe123!
+          SEED_ADMIN_PASSWORD: ChangeMe123!
+        run: pnpm test:e2e
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          if-no-files-found: ignore
+
+      - name: Stop compose stack
+        if: always()
+        run: docker compose down -v

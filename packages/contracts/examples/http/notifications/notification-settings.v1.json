@@ -1,0 +1,13 @@
+{
+  "data": {
+    "id": "notifset_fixture_operator",
+    "user_id": "user_fixture_operator",
+    "in_app_enabled": true,
+    "email_enabled": true,
+    "webhook_enabled": true,
+    "webhook_url": "https://hooks.example.test/streamgate",
+    "webhook_secret": null,
+    "created_at": "2026-04-20T00:00:00Z",
+    "updated_at": "2026-04-20T00:00:00Z"
+  }
+}

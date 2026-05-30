@@ -1,0 +1,20 @@
+{
+  "data": [
+    {
+      "id": "artifact_fixture_quality",
+      "job_id": "job_fixture_pending",
+      "artifact_type": "quality_report",
+      "status": "available",
+      "filename": "quality-report.json",
+      "content_type": "application/json",
+      "byte_size": 512,
+      "checksum_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "generated_at": "2026-04-20T00:00:00Z",
+      "expires_at": "2026-05-20T00:00:00Z",
+      "metadata": {},
+      "trace_id": "trace_fixture_1",
+      "created_at": "2026-04-20T00:00:00Z",
+      "updated_at": "2026-04-20T00:00:00Z"
+    }
+  ]
+}

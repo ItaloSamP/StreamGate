@@ -2,15 +2,13 @@ name: backend-ci
 
 on:
   push:
-    paths:
-      - "apps/api/**"
-      - "apps/worker/**"
-      - ".github/workflows/backend-ci.yml"
+    branches:
+      - dev
   pull_request:
-    paths:
-      - "apps/api/**"
-      - "apps/worker/**"
-      - ".github/workflows/backend-ci.yml"
+    branches:
+      - dev
+      - main
+  workflow_dispatch:
 
 jobs:
   api:
@@ -32,7 +30,40 @@ jobs:
 
     env:
       RAILS_ENV: test
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432/streamgate_test
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: streamgate_test
+      POSTGRES_TEST_DB: streamgate_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      AUTH_SESSION_TTL_HOURS: 24
+      AUTH_PASSWORD_RESET_TTL_MINUTES: 30
+      AUTH_TOKEN_PEPPER: streamgate-ci-pepper
+      AUTH_SESSION_TRANSPORT: bearer
+      AUTH_COOKIE_ENABLED: false
+      AUTH_CSRF_MODE: token
+      API_CORS_ALLOWED_ORIGINS: http://localhost:5173
+      API_CORS_ALLOW_CREDENTIALS: false
+      BROKER_HOST: localhost
+      BROKER_PORT: 5672
+      BROKER_USERNAME: streamgate
+      BROKER_PASSWORD: streamgate123
+      BROKER_MANAGEMENT_URL: http://localhost:15672/api
+      UPLOAD_STORAGE_ENDPOINT: http://localhost:9000
+      UPLOAD_STORAGE_BUCKET: streamgate-uploads
+      UPLOAD_STORAGE_REGION: us-east-1
+      UPLOAD_SIGNED_URL_TTL_SECONDS: 900
+      UPLOAD_SIGNED_URL_MODE: presigned_put
+      UPLOAD_STORAGE_ACCESS_KEY: streamgate
+      UPLOAD_STORAGE_SECRET_KEY: streamgate123
+      UPLOAD_ALLOWED_CONTENT_TYPES: application/zip,text/csv
+      UPLOAD_SIGNED_URL_LIMIT_PER_IP: 30
+      UPLOAD_REGISTER_LIMIT_PER_IP: 30
+      UPLOAD_THROTTLE_WINDOW_SECONDS: 60
+      UPLOAD_VERIFY_OBJECT_BEFORE_REGISTER: false
+      SEED_OPERATOR_PASSWORD: StrongPass123!
+      SEED_ADMIN_PASSWORD: StrongPass123!
+      PARALLEL_WORKERS: 1
       BUNDLE_WITHOUT: production
 
     defaults:
@@ -47,12 +78,26 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: 3.4.4
+          bundler-cache: true
 
       - name: Install dependencies
         run: bundle install --jobs 4 --retry 3
 
       - name: Prepare database
         run: bundle exec rails db:prepare
+
+      - name: Validate auth seeds idempotency
+        run: |
+          bundle exec rails db:seed
+          bundle exec rails db:seed
+          bundle exec rails runner "abort('operator seed missing') unless User.exists?(email: 'operator@streamgate.local')"
+          bundle exec rails runner "abort('admin seed missing') unless User.exists?(email: 'admin@streamgate.local')"
+
+      - name: Run auth flow tests
+        run: bundle exec rails test test/requests/auth_flow_test.rb
+
+      - name: Run upload/job flow tests
+        run: bundle exec rails test test/requests/uploads_jobs_flow_test.rb
 
       - name: Run tests
         run: bundle exec rails test
@@ -77,6 +122,7 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: 3.4.4
+          bundler-cache: true
 
       - name: Install dependencies
         run: bundle install --jobs 4 --retry 3

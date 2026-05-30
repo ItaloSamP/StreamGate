@@ -1,0 +1,28 @@
+{
+  "$id": "https://streamgate.local/contracts/http/notification-list-response.v1.json",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "event_name", "title", "body", "status", "trace_id"],
+        "properties": {
+          "id": { "type": "string" },
+          "event_name": { "type": "string" },
+          "title": { "type": "string" },
+          "body": { "type": "string" },
+          "status": { "type": "string", "enum": ["unread", "read", "archived"] },
+          "read_at": { "type": ["string", "null"], "format": "date-time" },
+          "expires_at": { "type": ["string", "null"], "format": "date-time" },
+          "metadata": { "type": "object" },
+          "trace_id": { "type": "string" },
+          "created_at": { "type": ["string", "null"], "format": "date-time" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

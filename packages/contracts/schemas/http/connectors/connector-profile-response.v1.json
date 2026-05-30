@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/http/connector-profile-response.v1.json",
+  "title": "ConnectorProfileResponseV1",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": ["id", "organization_id", "kind", "name", "status", "settings", "created_by_id", "trace_id"],
+      "properties": {
+        "id": { "type": "string" },
+        "organization_id": { "type": "string" },
+        "kind": { "type": "string", "enum": ["s3", "http", "google_drive"] },
+        "name": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "disabled"] },
+        "settings": { "type": "object", "additionalProperties": true },
+        "created_by_id": { "type": "string" },
+        "trace_id": { "type": "string" },
+        "created_at": { "type": ["string", "null"], "format": "date-time" },
+        "updated_at": { "type": ["string", "null"], "format": "date-time" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

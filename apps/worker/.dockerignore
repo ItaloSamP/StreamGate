@@ -1,0 +1,17 @@
+.git
+.gitignore
+.bundle
+.env
+.env.*
+.DS_Store
+Thumbs.db
+
+coverage
+doc
+pkg
+spec/reports
+tmp
+.rspec_status
+
+log
+*.log

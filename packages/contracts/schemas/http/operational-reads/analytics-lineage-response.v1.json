@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/http/analytics-lineage-response.v1.json",
+  "title": "AnalyticsLineageResponseV1",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": ["job", "upload", "batches", "attempts", "quarantine", "artifacts", "warnings", "audit_refs"],
+      "properties": {
+        "job": { "$ref": "../shared/resources/job.v1.json" },
+        "upload": { "$ref": "../shared/resources/upload.v1.json" },
+        "acquisition": {
+          "anyOf": [
+            { "$ref": "../shared/resources/upload-acquisition.v1.json" },
+            { "type": "null" }
+          ]
+        },
+        "batches": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "attempts": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "quarantine": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "artifacts": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "warnings": { "type": "array", "items": { "$ref": "../shared/resources/operational-warning.v1.json" } },
+        "audit_refs": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

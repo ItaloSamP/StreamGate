@@ -1,0 +1,26 @@
+{
+  "data": {
+    "source": "clickhouse",
+    "generated_at": "2026-04-24T14:00:00Z",
+    "last_event_at": "2026-04-24T13:59:40Z",
+    "lag_seconds": 20,
+    "stale": false,
+    "slo_target_seconds": 300,
+    "p95_ms": 240,
+    "error_budget_percent": 99.9,
+    "dependency_status": {
+      "clickhouse": "healthy",
+      "postgres": "healthy"
+    },
+    "fallback_reason": null,
+    "aggregates": {
+      "jobs_total": 12,
+      "uploads_total": 12,
+      "records_total": 1200,
+      "valid_records": 1188,
+      "invalid_records": 12,
+      "by_status": { "completed": 11, "quarantined_with_warnings": 1 },
+      "by_source": { "upload": 10, "external_link": 2 }
+    }
+  }
+}

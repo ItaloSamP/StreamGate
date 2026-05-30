@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/http/upload-register-request.v1.json",
+  "title": "UploadRegisterRequestV1",
+  "type": "object",
+  "required": ["upload"],
+  "properties": {
+    "upload": {
+      "type": "object",
+      "required": ["filename", "content_type", "byte_size", "checksum_sha256", "storage_key"],
+      "properties": {
+        "filename": { "type": "string", "minLength": 1 },
+        "content_type": { "type": "string", "enum": ["application/json", "application/zip", "application/x-ndjson", "application/ndjson", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.apache.parquet", "text/csv"] },
+        "byte_size": { "type": "integer", "minimum": 1 },
+        "checksum_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "storage_key": { "type": "string", "pattern": "^uploads/[a-zA-Z0-9_./-]+$" },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

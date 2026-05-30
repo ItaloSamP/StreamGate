@@ -1,0 +1,24 @@
+{
+  "$id": "https://streamgate.local/contracts/http/notification-settings-response.v1.json",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": ["id", "user_id", "in_app_enabled", "email_enabled", "webhook_enabled"],
+      "properties": {
+        "id": { "type": "string" },
+        "user_id": { "type": "string" },
+        "in_app_enabled": { "type": "boolean" },
+        "email_enabled": { "type": "boolean" },
+        "webhook_enabled": { "type": "boolean" },
+        "webhook_url": { "type": ["string", "null"], "format": "uri" },
+        "webhook_secret": { "type": "null" },
+        "created_at": { "type": ["string", "null"], "format": "date-time" },
+        "updated_at": { "type": ["string", "null"], "format": "date-time" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

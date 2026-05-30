@@ -1,0 +1,119 @@
+global:
+  environment: production
+  imagePullPolicy: IfNotPresent
+  otelExporterOtlpEndpoint: http://otel-collector.observability.svc.cluster.local:4318
+
+serviceAccount:
+  create: true
+  name: streamgate
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/streamgate-prod-irsa
+
+web:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/streamgate/web
+    tag: v1.0.0
+  port: 8080
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+api:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/streamgate/api
+    tag: v1.0.0
+  port: 3000
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+worker:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/streamgate/worker
+    tag: v1.0.0
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+clamav:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: clamav/clamav
+    tag: stable
+  port: 3310
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+
+externalSecrets:
+  enabled: true
+  refreshInterval: 1h
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: ClusterSecretStore
+  remoteKeys:
+    databaseUrl: /streamgate/prod/database-url
+    redisUrl: /streamgate/prod/redis-url
+    rabbitmqUrl: /streamgate/prod/rabbitmq-url
+    railsMasterKey: /streamgate/prod/rails-master-key
+    workerToken: /streamgate/prod/worker-token
+    s3Bucket: /streamgate/prod/s3-bucket
+    clickhouseUrl: /streamgate/prod/clickhouse-url
+    googleOAuthClientId: /streamgate/prod/google-oauth-client-id
+
+ingress:
+  enabled: true
+  className: alb
+  host: app.streamgate.example.com
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  tls:
+    secretName: streamgate-tls
+
+autoscaling:
+  api:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 70
+  worker:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 12
+    targetCPUUtilizationPercentage: 75
+    keda:
+      enabled: true
+      queueName: "upload.received.v1"
+      queueLength: "50"
+
+networkPolicy:
+  enabled: true
+
+serviceMonitor:
+  enabled: true
+  interval: 30s
+
+prometheusRule:
+  enabled: true

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/events/uploads/upload.scan.requested.v1.json",
+  "title": "UploadScanRequestedV1",
+  "type": "object",
+  "required": ["event_id", "event_name", "payload_version", "occurred_at", "correlation_id", "payload"],
+  "properties": {
+    "event_id": { "type": "string" },
+    "event_name": { "const": "upload.scan.requested.v1" },
+    "payload_version": { "const": 1 },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "correlation_id": { "type": "string" },
+    "payload": {
+      "type": "object",
+      "required": ["upload_id", "job_id", "organization_id", "storage_key", "filename", "content_type"],
+      "properties": {
+        "upload_id": { "type": "string" },
+        "job_id": { "type": "string" },
+        "organization_id": { "type": "string" },
+        "storage_key": { "type": "string" },
+        "filename": { "type": "string" },
+        "content_type": { "type": "string" },
+        "byte_size": { "type": ["integer", "null"], "minimum": 1 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

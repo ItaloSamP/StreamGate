@@ -1,0 +1,16 @@
+{
+  "event_id": "evt_upload_scan_1",
+  "event_name": "upload.scan.requested.v1",
+  "payload_version": 1,
+  "occurred_at": "2026-05-06T12:00:00Z",
+  "correlation_id": "trace_scan_1",
+  "payload": {
+    "upload_id": "upload_1",
+    "job_id": "job_1",
+    "organization_id": "org_fixture_alpha",
+    "storage_key": "uploads/org_fixture_alpha/2026/05/06/input.csv",
+    "filename": "input.csv",
+    "content_type": "text/csv",
+    "byte_size": 128
+  }
+}

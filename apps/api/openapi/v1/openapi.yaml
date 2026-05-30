@@ -1,0 +1,4230 @@
+openapi: 3.0.3
+info:
+  title: StreamGate API
+  version: v1
+  description: |
+    Base inicial da documentacao OpenAPI do StreamGate.
+    O runtime operacional consolida runtime real de worker com RabbitMQ, camada materializada de analytics
+    e leituras operacionais de quarantine/audit/DLQ.
+servers:
+  - url: http://localhost:3000
+    description: Desenvolvimento local
+tags:
+  - name: Health
+  - name: Auth
+  - name: Uploads
+  - name: Jobs
+  - name: Analytics
+  - name: Quarantine
+  - name: Audit
+  - name: Operations
+  - name: Artifacts
+  - name: Notifications
+  - name: Realtime
+  - name: Alerts
+  - name: Connectors
+  - name: SaaS
+paths:
+  /up:
+    get:
+      summary: Health check da API
+      operationId: healthCheck
+      tags:
+        - Health
+      responses:
+        '200':
+          description: API disponivel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
+
+  /api/v1/auth/register:
+    post:
+      summary: Cadastro de usuario com sessao inicial
+      operationId: registerUser
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequest'
+      responses:
+        '201':
+          description: Usuario criado e sessao iniciada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponseEnvelope'
+        '422':
+          description: Dados invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          description: Limite de tentativas excedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/auth/login:
+    post:
+      summary: Login com email e senha
+      operationId: loginUser
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login bem-sucedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponseEnvelope'
+        '401':
+          description: Credencial invalida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          description: Limite de tentativas excedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/auth/logout:
+    post:
+      summary: Revoga a sessao atual
+      operationId: logoutUser
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sessao revogada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/auth/session/refresh:
+    post:
+      summary: Renova sessao com rotacao de token
+      operationId: refreshSession
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sessao renovada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionRefreshEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/auth/me:
+    get:
+      summary: Retorna sessao e usuario atuais
+      operationId: currentSession
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sessao atual
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeResponseEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/auth/password/reset/request:
+    post:
+      summary: Solicita redefinicao de senha
+      operationId: requestPasswordReset
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+      responses:
+        '200':
+          description: Requisicao processada sem enumeracao de usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageEnvelope'
+        '429':
+          description: Limite de tentativas excedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/auth/password/reset/confirm:
+    post:
+      summary: Confirma redefinicao de senha com token
+      operationId: confirmPasswordReset
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRequest'
+      responses:
+        '200':
+          description: Senha redefinida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageEnvelope'
+        '401':
+          description: Token invalido ou expirado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          description: Limite de tentativas excedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/uploads/signed-url:
+    post:
+      summary: Gera URL assinada para upload no storage
+      operationId: generateSignedUploadUrl
+      tags:
+        - Uploads
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadSignedUrlRequest'
+      responses:
+        '201':
+          description: URL assinada gerada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadSignedUrlEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Dados invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          description: Limite de tentativas excedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '503':
+          description: Dependencia de storage indisponivel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/uploads:
+    post:
+      summary: Registra upload e cria job inicial
+      operationId: registerUploadAndCreateJob
+      tags:
+        - Uploads
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadRegisterRequest'
+      responses:
+        '201':
+          description: Upload registrado e job criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadRegisterEnvelope'
+        '200':
+          description: Registro idempotente reaproveitado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadRegisterEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Conflito de storage_key/checksum
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Dados invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          description: Limite de tentativas excedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '503':
+          description: Dependencia de storage indisponivel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+    get:
+      summary: Lista uploads com filtros e paginacao
+      operationId: listUploads
+      tags:
+        - Uploads
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - in: query
+          name: search
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de uploads
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadListEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Filtros invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/uploads/public-link:
+    post:
+      summary: Registra ingestao por link publico seguro
+      operationId: createPublicLinkUpload
+      tags:
+        - Uploads
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicLinkRequest'
+      responses:
+        '201':
+          description: Link publico registrado e evento de aquisicao enfileirado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicLinkEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Idempotency-Key usada com outro payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: URL bloqueada ou payload invalido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/jobs:
+    get:
+      summary: Lista jobs com filtros e paginacao
+      operationId: listJobs
+      tags:
+        - Jobs
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - in: query
+          name: search
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de jobs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobListEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Filtros invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/analytics:
+    get:
+      summary: Leitura analitica operacional com KPIs e breakdowns
+      operationId: listAnalytics
+      tags:
+        - Analytics
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: preset
+          schema:
+            type: string
+            enum: [last_24h, last_7d, last_30d]
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: timezone
+          schema:
+            type: string
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+            enum: [count, actor_id, status, source]
+        - in: query
+          name: sort_order
+          schema:
+            type: string
+            enum: [asc, desc]
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Snapshot analitico operacional
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Filtros invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/analytics/dashboard:
+    get:
+      summary: Snapshot agregado da dashboard operacional
+      operationId: showAnalyticsDashboard
+      tags:
+        - Analytics
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dashboard com secoes live, derived, empty ou degraded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsDashboardEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/analytics/dashboard/exports:
+    post:
+      summary: Gera export auditavel da dashboard
+      operationId: createAnalyticsDashboardExport
+      tags:
+        - Analytics
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DashboardExportRequest'
+      responses:
+        '201':
+          description: Export gerado com conteudo inline e metadados persistidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardExportEnvelope'
+        '403':
+          description: Sem permissao para exportar dashboard
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Payload invalido ou Idempotency-Key ausente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/realtime/tickets:
+    post:
+      summary: Emite ticket curto para canal realtime
+      operationId: createRealtimeTicket
+      tags:
+        - Realtime
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Ticket assinado por usuario, organizacao e role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RealtimeTicketEnvelope'
+        '403':
+          description: Sem permissao para realtime
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/realtime/events:
+    get:
+      summary: Fallback polling para eventos realtime duraveis
+      operationId: listRealtimeEvents
+      tags:
+        - Realtime
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: since
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 250
+      responses:
+        '200':
+          description: Eventos visiveis ao usuario atual
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RealtimeEventListEnvelope'
+        '403':
+          description: Sem permissao para realtime
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/alerts/{id}/review:
+    post:
+      summary: Marca alerta operacional como revisado
+      operationId: reviewAlert
+      tags:
+        - Alerts
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationActionRequest'
+      responses:
+        '200':
+          description: Alerta revisado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertActionEnvelope'
+
+  /api/v1/alerts/{id}/dismiss:
+    post:
+      summary: Fecha alerta operacional com motivo auditavel
+      operationId: dismissAlert
+      tags:
+        - Alerts
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationActionRequest'
+      responses:
+        '200':
+          description: Alerta fechado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertActionEnvelope'
+
+  /api/v1/saas/readiness:
+    get:
+      summary: Prontidao SaaS admin para release
+      operationId: showSaasReadiness
+      tags:
+        - SaaS
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Estado de prontidao sem segredos, URLs assinadas, payload bruto ou credenciais.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaasReadinessEnvelope'
+        '403':
+          description: Superficie restrita a administradores.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/organization:
+    get:
+      summary: Mostra organizacao atual com membros, convites, quotas e compliance
+      operationId: showOrganization
+      tags:
+        - SaaS
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Organizacao atual escopada ao membership ativo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationEnvelope'
+    patch:
+      summary: Atualiza organizacao atual admin-only
+      operationId: updateOrganization
+      tags:
+        - SaaS
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationUpdateRequest'
+      responses:
+        '200':
+          description: Organizacao atualizada sem segredos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationEnvelope'
+        '403':
+          description: Operador sem permissao de administracao SaaS
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/organization/members:
+    get:
+      summary: Lista membros da organizacao atual
+      operationId: listOrganizationMembers
+      tags:
+        - SaaS
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Membros visiveis ao membership atual
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationMemberListEnvelope'
+
+  /api/v1/organization/members/{id}:
+    patch:
+      summary: Atualiza role ou status de membro admin-only
+      operationId: updateOrganizationMember
+      tags:
+        - SaaS
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationMemberUpdateRequest'
+      responses:
+        '200':
+          description: Membro atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationMemberEnvelope'
+    delete:
+      summary: Suspende membro da organizacao admin-only
+      operationId: deleteOrganizationMember
+      tags:
+        - SaaS
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Membro suspenso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationMemberEnvelope'
+
+  /api/v1/organization/invites:
+    post:
+      summary: Cria convite de organizacao admin-only
+      operationId: createOrganizationInvite
+      tags:
+        - SaaS
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationInviteRequest'
+      responses:
+        '201':
+          description: Convite criado; token bruto nunca aparece em producao
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationInviteEnvelope'
+
+  /api/v1/organization/invites/{token}/accept:
+    post:
+      summary: Aceita convite de organizacao
+      operationId: acceptOrganizationInvite
+      tags:
+        - SaaS
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationInviteAcceptanceRequest'
+      responses:
+        '201':
+          description: Usuario e membership criados ou vinculados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationInviteAcceptanceEnvelope'
+
+  /api/v1/auth/mfa/setup:
+    post:
+      summary: Inicia setup MFA TOTP para usuario autenticado
+      operationId: setupMfa
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Fator pendente e URI de provisionamento de uso unico
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MfaSetupEnvelope'
+
+  /api/v1/auth/mfa/verify:
+    post:
+      summary: Verifica MFA de setup ou desafio de login
+      operationId: verifyMfa
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MfaVerifyRequest'
+      responses:
+        '200':
+          description: MFA verificado ou sessao emitida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MfaVerifyEnvelope'
+
+  /api/v1/auth/mfa/recovery-codes/regenerate:
+    post:
+      summary: Regenera recovery codes MFA
+      operationId: regenerateMfaRecoveryCodes
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Recovery codes novos; nao devem ser logados ou persistidos em UI
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MfaRecoveryCodesEnvelope'
+
+  /api/v1/auth/oidc/config:
+    patch:
+      summary: Configura OIDC Google Workspace admin-only
+      operationId: updateGoogleOidcProvider
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OidcProviderRequest'
+      responses:
+        '200':
+          description: Provider salvo com credencial criptografada e resposta sanitizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OidcProviderEnvelope'
+
+  /api/v1/auth/oidc/google/start:
+    get:
+      summary: Inicia authorization-code flow OIDC Google Workspace
+      operationId: startGoogleOidc
+      tags:
+        - Auth
+      parameters:
+        - name: organization_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: URL de autorizacao de curta duracao com state e nonce
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OidcStartEnvelope'
+
+  /api/v1/connectors/google-drive/authorize:
+    get:
+      summary: Inicia OAuth delegated do Google Drive admin-only
+      operationId: authorizeGoogleDrive
+      tags:
+        - Connectors
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: URL de consentimento e scopes solicitados sem tokens OAuth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoogleDriveAuthorizeEnvelope'
+
+  /api/v1/connectors/google-drive/callback:
+    get:
+      summary: Finaliza OAuth delegated do Google Drive
+      operationId: callbackGoogleDrive
+      tags:
+        - Connectors
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Conexao OAuth persistida com tokens criptografados e resposta sanitizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoogleDriveConnectionEnvelope'
+
+  /api/v1/connectors/google-drive/items:
+    get:
+      summary: Lista arquivos e pastas Google Drive disponiveis para ingestao
+      operationId: listGoogleDriveItems
+      tags:
+        - Connectors
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Itens Drive por ID operacional; nenhum token OAuth retorna
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoogleDriveItemListEnvelope'
+
+  /api/v1/connectors/google-drive/revoke:
+    delete:
+      summary: Revoga conexao Google Drive atual admin-only
+      operationId: revokeGoogleDrive
+      tags:
+        - Connectors
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      responses:
+        '200':
+          description: Conexao revogada sem expor credenciais
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoogleDriveConnectionEnvelope'
+
+  /api/v1/connectors/profiles:
+    get:
+      summary: Lista perfis de conectores da organizacao atual
+      operationId: listConnectorProfiles
+      tags:
+        - Connectors
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Perfis sem segredos nem bucket/key expostos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorProfileListEnvelope'
+    post:
+      summary: Cria perfil de conector admin-only
+      operationId: createConnectorProfile
+      tags:
+        - Connectors
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectorProfileRequest'
+      responses:
+        '201':
+          description: Perfil criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorProfileEnvelope'
+
+  /api/v1/connectors/profiles/{id}:
+    get:
+      summary: Mostra um perfil de conector sem segredos
+      operationId: showConnectorProfile
+      tags:
+        - Connectors
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Perfil mascarado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorProfileEnvelope'
+    patch:
+      summary: Atualiza um perfil de conector admin-only
+      operationId: updateConnectorProfile
+      tags:
+        - Connectors
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectorProfileRequest'
+      responses:
+        '200':
+          description: Perfil atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorProfileEnvelope'
+
+  /api/v1/connectors/profiles/{id}/test:
+    post:
+      summary: Valida configuracao persistida de um conector
+      operationId: testConnectorProfile
+      tags:
+        - Connectors
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Resultado de teste de configuracao
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorProfileTestEnvelope'
+
+  /api/v1/connectors/profiles/{profile_id}/ingestions:
+    post:
+      summary: Solicita ingestao via conector e emite lease interno
+      operationId: createConnectorIngestion
+      tags:
+        - Connectors
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - name: profile_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectorIngestionRequest'
+      responses:
+        '201':
+          description: Upload/job/ingestion criados e lease curto retornado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorIngestionEnvelope'
+
+  /api/v1/internal/connectors/leases/{id}/claim:
+    post:
+      summary: Claim interno de lease de conector pelo worker
+      operationId: claimConnectorLease
+      tags:
+        - Connectors
+      parameters:
+        - name: X-Worker-Token
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Material minimo para o worker baixar e armazenar o objeto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorLeaseClaimEnvelope'
+
+  /api/v1/analytics/warehouse:
+    get:
+      summary: Leitura analitica por warehouse com fallback honesto
+      operationId: showAnalyticsWarehouse
+      tags:
+        - Analytics
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Leitura ClickHouse ou fallback postgres_derived com metadados de SLO
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsWarehouseEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/analytics/lineage:
+    get:
+      summary: Drilldown de lineage tecnico por job
+      operationId: showAnalyticsLineage
+      tags:
+        - Analytics
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: job_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lineage com batches, attempts, quarentena, artefatos, warnings e auditoria
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsLineageEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: job_id ausente ou invalido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/quarantine:
+    get:
+      summary: Lista registros de quarentena com filtros operacionais
+      operationId: listQuarantine
+      tags:
+        - Quarantine
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: preset
+          schema:
+            type: string
+            enum: [last_24h, last_7d, last_30d]
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: timezone
+          schema:
+            type: string
+        - in: query
+          name: severity
+          schema:
+            type: string
+            enum: [warning, error]
+        - in: query
+          name: job_id
+          schema:
+            type: string
+        - in: query
+          name: trace_id
+          schema:
+            type: string
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+            enum: [created_at, severity, row_number, code]
+        - in: query
+          name: sort_order
+          schema:
+            type: string
+            enum: [asc, desc]
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Lista de quarentena
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuarantineListEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Filtros invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/quarantine/dlq:
+    get:
+      summary: Inspecao read-only da DLQ de upload.received.v1
+      operationId: inspectUploadDlq
+      tags:
+        - Quarantine
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: dead_letter_reason
+          schema:
+            type: string
+        - in: query
+          name: event_name
+          schema:
+            type: string
+        - in: query
+          name: trace_id
+          schema:
+            type: string
+        - in: query
+          name: job_id
+          schema:
+            type: string
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+            enum: [retry_count, dead_letter_reason, event_id, occurred_at]
+        - in: query
+          name: sort_order
+          schema:
+            type: string
+            enum: [asc, desc]
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Snapshot de mensagens presentes na DLQ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DlqListEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Filtros invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '503':
+          description: Dependencia indisponivel no broker
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/audit:
+    get:
+      summary: Lista trilha de auditoria operacional
+      operationId: listAuditEvents
+      tags:
+        - Audit
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: preset
+          schema:
+            type: string
+            enum: [last_24h, last_7d, last_30d]
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: timezone
+          schema:
+            type: string
+        - in: query
+          name: action
+          schema:
+            type: string
+        - in: query
+          name: actor_id
+          schema:
+            type: string
+        - in: query
+          name: auditable_type
+          schema:
+            type: string
+        - in: query
+          name: trace_id
+          schema:
+            type: string
+        - in: query
+          name: request_id
+          schema:
+            type: string
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+            enum: [occurred_at, action, actor_id, auditable_type]
+        - in: query
+          name: sort_order
+          schema:
+            type: string
+            enum: [asc, desc]
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Lista de eventos de auditoria
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditListEnvelope'
+        '401':
+          description: Sessao expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Filtros invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/jobs/{job_id}/retry:
+    post:
+      summary: Solicita retry operacional de um job
+      operationId: retryJob
+      tags: [Operations]
+      parameters:
+        - $ref: '#/components/parameters/JobIdPath'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationActionRequest'
+      responses:
+        '202':
+          description: Retry solicitado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationActionResponseEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Estado invalido ou idempotency key ausente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Idempotency key reutilizada com payload divergente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/quarantine/{quarantine_id}/resolve:
+    post:
+      summary: Resolve um registro de quarentena
+      operationId: resolveQuarantine
+      tags: [Operations]
+      parameters:
+        - $ref: '#/components/parameters/QuarantineIdPath'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationActionRequest'
+      responses:
+        '200':
+          description: Registro resolvido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuarantineResolveResponseEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Estado invalido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/quarantine/dlq/{message_id}/replay-requests:
+    post:
+      summary: Cria solicitacao de replay de mensagem da DLQ
+      operationId: createDlqReplayRequest
+      tags: [Operations]
+      parameters:
+        - name: message_id
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DlqReplayRequestCreateRequest'
+      responses:
+        '201':
+          description: Solicitacao criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DlqReplayRequestResponseEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/dlq-replay-requests/{id}/approve:
+    post:
+      summary: Aprova solicitacao de replay de DLQ
+      operationId: approveDlqReplayRequest
+      tags: [Operations]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationActionRequest'
+      responses:
+        '200':
+          description: Solicitacao aprovada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DlqReplayRequestResponseEnvelope'
+        '403':
+          description: Acesso negado ou self-approval bloqueado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/dlq-replay-requests/{id}/execute:
+    post:
+      summary: Executa replay aprovado de DLQ
+      operationId: executeDlqReplayRequest
+      tags: [Operations]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationActionRequest'
+      responses:
+        '202':
+          description: Replay executado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DlqReplayRequestResponseEnvelope'
+        '422':
+          description: Solicitacao nao aprovada ou payload invalido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/jobs/{job_id}/artifacts:
+    get:
+      summary: Lista artefatos finais de um job
+      operationId: listJobArtifacts
+      tags: [Artifacts]
+      parameters:
+        - $ref: '#/components/parameters/JobIdPath'
+      responses:
+        '200':
+          description: Artefatos do job
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactListResponseEnvelope'
+        '403':
+          description: Acesso negado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/jobs/{job_id}/artifacts/{artifact_id}/download-url:
+    post:
+      summary: Gera URL assinada curta para download de artefato
+      operationId: createArtifactDownloadUrl
+      tags: [Artifacts]
+      parameters:
+        - $ref: '#/components/parameters/JobIdPath'
+        - name: artifact_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: URL assinada gerada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactDownloadUrlResponseEnvelope'
+
+  /api/v1/notifications:
+    get:
+      summary: Lista notificacoes in-app do usuario atual
+      operationId: listNotifications
+      tags: [Notifications]
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [active, unread, read, archived]
+      responses:
+        '200':
+          description: Notificacoes do usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationListResponseEnvelope'
+
+  /api/v1/notifications/mark-all-read:
+    patch:
+      summary: Marca notificacoes visiveis como lidas
+      operationId: markAllNotificationsRead
+      tags: [Notifications]
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [active, unread, read, archived]
+      responses:
+        '200':
+          description: Notificacoes atualizadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationBulkActionResponseEnvelope'
+
+  /api/v1/notifications/bulk-archive:
+    patch:
+      summary: Arquiva notificacoes selecionadas
+      operationId: bulkArchiveNotifications
+      tags: [Notifications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationBulkArchiveRequest'
+      responses:
+        '200':
+          description: Notificacoes arquivadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationBulkActionResponseEnvelope'
+
+  /api/v1/notifications/{notification_id}/read:
+    patch:
+      summary: Marca notificacao como lida
+      operationId: markNotificationRead
+      tags: [Notifications]
+      parameters:
+        - $ref: '#/components/parameters/NotificationIdPath'
+      responses:
+        '200':
+          description: Notificacao atualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationResponseEnvelope'
+
+  /api/v1/notifications/{notification_id}/archive:
+    patch:
+      summary: Arquiva notificacao
+      operationId: archiveNotification
+      tags: [Notifications]
+      parameters:
+        - $ref: '#/components/parameters/NotificationIdPath'
+      responses:
+        '200':
+          description: Notificacao arquivada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationResponseEnvelope'
+
+  /api/v1/notifications/{notification_id}/unarchive:
+    patch:
+      summary: Restaura notificacao arquivada
+      operationId: unarchiveNotification
+      tags: [Notifications]
+      parameters:
+        - $ref: '#/components/parameters/NotificationIdPath'
+      responses:
+        '200':
+          description: Notificacao restaurada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationResponseEnvelope'
+
+  /api/v1/notifications/{notification_id}:
+    delete:
+      summary: Deleta notificacao propria
+      operationId: deleteNotification
+      tags: [Notifications]
+      parameters:
+        - $ref: '#/components/parameters/NotificationIdPath'
+      responses:
+        '200':
+          description: Notificacao deletada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationDeleteResponseEnvelope'
+
+  /api/v1/notification-settings:
+    get:
+      summary: Consulta configuracoes de notificacao
+      operationId: getNotificationSettings
+      tags: [Notifications]
+      responses:
+        '200':
+          description: Configuracoes atuais
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationSettingsResponseEnvelope'
+    patch:
+      summary: Atualiza configuracoes de notificacao
+      operationId: updateNotificationSettings
+      tags: [Notifications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationSettingsUpdateRequest'
+      responses:
+        '200':
+          description: Configuracoes atualizadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationSettingsResponseEnvelope'
+
+  /api/v1/notification-settings/webhook/test:
+    post:
+      summary: Cria delivery de teste para webhook
+      operationId: testWebhookNotification
+      tags: [Notifications]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationActionRequest'
+      responses:
+        '202':
+          description: Delivery de teste criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookDeliveryResponseEnvelope'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Token
+
+  parameters:
+
+    IdempotencyKeyHeader:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+      description: Chave obrigatoria para deduplicar mutacoes sensiveis.
+    JobIdPath:
+      name: job_id
+      in: path
+      required: true
+      schema:
+        type: string
+    QuarantineIdPath:
+      name: quarantine_id
+      in: path
+      required: true
+      schema:
+        type: string
+    NotificationIdPath:
+      name: notification_id
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    HealthCheckResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          example: ok
+
+    SuccessEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          description: Payload principal do recurso ou colecao.
+        meta:
+          $ref: '#/components/schemas/EnvelopeMeta'
+
+    MessageEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+              example: Operacao concluida com sucesso.
+            revoked:
+              type: boolean
+
+    ErrorEnvelope:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+            - request_id
+            - trace_id
+            - correlation_id
+          properties:
+            code:
+              type: string
+              description: Codigo estavel de erro para contrato com cliente.
+              enum:
+                - validation_failed
+                - invalid_credentials
+                - access_denied
+                - session_expired
+                - rate_limited
+                - resource_conflict
+                - dependency_unavailable
+                - not_found
+              example: validation_failed
+            message:
+              type: string
+              example: Nao foi possivel concluir a operacao solicitada.
+            details:
+              type: array
+              items:
+                $ref: '#/components/schemas/ErrorDetail'
+            request_id:
+              type: string
+              example: req_12cbaf4c14bb49cf8f6497a38e8d673b
+            trace_id:
+              type: string
+              example: trace_3c3b72fe95be45e48dcc9f944d5fb6d8
+            correlation_id:
+              type: string
+              example: req_12cbaf4c14bb49cf8f6497a38e8d673b
+
+    ErrorDetail:
+      type: object
+      required:
+        - reason
+      properties:
+        field:
+          type: string
+          example: email
+        reason:
+          type: string
+          example: invalid
+
+    EnvelopeMeta:
+      type: object
+      properties:
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'
+        filters:
+          $ref: '#/components/schemas/FilterMeta'
+
+    PaginationMeta:
+      type: object
+      required:
+        - page
+        - per_page
+        - total_count
+        - total_pages
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          example: 1
+        per_page:
+          type: integer
+          minimum: 1
+          example: 20
+        total_count:
+          type: integer
+          minimum: 0
+          example: 48
+        total_pages:
+          type: integer
+          minimum: 0
+          example: 3
+
+    FilterMeta:
+      type: object
+      additionalProperties:
+        oneOf:
+          - type: string
+          - type: number
+          - type: boolean
+          - type: array
+            items:
+              type: string
+          - type: 'null'
+
+    RegistrationRequest:
+      type: object
+      required:
+        - registration
+      properties:
+        registration:
+          type: object
+          required:
+            - full_name
+            - email
+            - password
+            - password_confirmation
+          properties:
+            full_name:
+              type: string
+              example: StreamGate Operator
+            email:
+              type: string
+              format: email
+              example: operator@streamgate.local
+            password:
+              type: string
+              format: password
+              example: StrongPass123!
+            password_confirmation:
+              type: string
+              format: password
+              example: StrongPass123!
+
+    LoginRequest:
+      type: object
+      required:
+        - session
+      properties:
+        session:
+          type: object
+          required:
+            - email
+            - password
+          properties:
+            email:
+              type: string
+              format: email
+              example: operator@streamgate.local
+            password:
+              type: string
+              format: password
+              example: StrongPass123!
+
+    PasswordResetRequest:
+      type: object
+      required:
+        - password_reset
+      properties:
+        password_reset:
+          type: object
+          required:
+            - email
+          properties:
+            email:
+              type: string
+              format: email
+
+    PasswordResetConfirmRequest:
+      type: object
+      required:
+        - password_reset_confirmation
+      properties:
+        password_reset_confirmation:
+          type: object
+          required:
+            - token
+            - password
+            - password_confirmation
+          properties:
+            token:
+              type: string
+            password:
+              type: string
+              format: password
+            password_confirmation:
+              type: string
+              format: password
+
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - full_name
+        - organization_id
+        - role
+        - status
+      properties:
+        id:
+          type: string
+          example: user_6c561be0f4f24b2db15c0ddfd4e0d3c2
+        email:
+          type: string
+          format: email
+          example: operator@streamgate.local
+        full_name:
+          type: string
+          example: StreamGate Operator
+        organization_id:
+          type: string
+          example: org_streamgate
+        role:
+          type: string
+          enum:
+            - operator
+            - admin
+            - service_account
+        status:
+          type: string
+          enum:
+            - invited
+            - active
+            - suspended
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    AuthSession:
+      type: object
+      required:
+        - id
+        - user_id
+        - expires_at
+        - trace_id
+      properties:
+        id:
+          type: string
+          example: sess_7fdbe4f4c8ce4020a18dc89f23d641fe
+        user_id:
+          type: string
+          example: user_6c561be0f4f24b2db15c0ddfd4e0d3c2
+        expires_at:
+          type: string
+          format: date-time
+        revoked_at:
+          type: string
+          format: date-time
+          nullable: true
+        last_seen_at:
+          type: string
+          format: date-time
+          nullable: true
+        trace_id:
+          type: string
+          example: trace_3c3b72fe95be45e48dcc9f944d5fb6d8
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    AuthToken:
+      type: object
+      required:
+        - id
+        - token_type
+        - access_token
+        - expires_at
+      properties:
+        id:
+          type: string
+          example: sess_7fdbe4f4c8ce4020a18dc89f23d641fe
+        token_type:
+          type: string
+          example: Bearer
+        access_token:
+          type: string
+          example: 6ZnqYYAS8X9YQhY9VmcP2rGquk3xvyy6zIP6ZjfrEqw
+        expires_at:
+          type: string
+          format: date-time
+
+    AuthPayload:
+      type: object
+      required:
+        - user
+        - session
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        session:
+          $ref: '#/components/schemas/AuthToken'
+
+    AuthResponseEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/AuthPayload'
+
+    MePayload:
+      type: object
+      required:
+        - user
+        - session
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        session:
+          $ref: '#/components/schemas/AuthSession'
+
+    MeResponseEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/MePayload'
+
+    SessionRefreshPayload:
+      type: object
+      required:
+        - session
+      properties:
+        session:
+          $ref: '#/components/schemas/AuthToken'
+
+    SessionRefreshEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/SessionRefreshPayload'
+
+
+    UploadSignedUrlRequest:
+      type: object
+      required:
+        - upload
+      properties:
+        upload:
+          type: object
+          required:
+            - filename
+            - content_type
+            - byte_size
+            - checksum_sha256
+          properties:
+            filename:
+              type: string
+            content_type:
+              type: string
+              enum:
+                - application/json
+                - application/zip
+                - application/x-ndjson
+                - application/ndjson
+                - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+                - application/vnd.apache.parquet
+                - text/csv
+            byte_size:
+              type: integer
+              minimum: 1
+            checksum_sha256:
+              type: string
+              pattern: '^[a-f0-9]{64}$'
+
+    UploadSignedUrlPayload:
+      type: object
+      required:
+        - storage_key
+        - method
+        - upload_url
+        - required_headers
+        - expires_at
+      properties:
+        storage_key:
+          type: string
+          example: uploads/user_abc/2026/04/07/token-orders.csv
+        method:
+          type: string
+          example: PUT
+        upload_url:
+          type: string
+          format: uri
+        required_headers:
+          type: object
+          additionalProperties:
+            type: string
+        expires_at:
+          type: string
+          format: date-time
+
+    UploadSignedUrlEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/UploadSignedUrlPayload'
+
+    UploadRegisterRequest:
+      type: object
+      required:
+        - upload
+      properties:
+        upload:
+          type: object
+          required:
+            - filename
+            - content_type
+            - byte_size
+            - checksum_sha256
+            - storage_key
+          properties:
+            filename:
+              type: string
+            content_type:
+              type: string
+              enum:
+                - application/json
+                - application/zip
+                - application/x-ndjson
+                - application/ndjson
+                - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+                - application/vnd.apache.parquet
+                - text/csv
+            byte_size:
+              type: integer
+              minimum: 1
+            checksum_sha256:
+              type: string
+              pattern: '^[a-f0-9]{64}$'
+            storage_key:
+              type: string
+              example: uploads/user_abc/2026/04/07/token-orders.csv
+            metadata:
+              type: object
+              additionalProperties: true
+
+    UploadRegisterPayload:
+      type: object
+      required:
+        - upload
+        - job
+      properties:
+        upload:
+          $ref: '#/components/schemas/Upload'
+        job:
+          $ref: '#/components/schemas/Job'
+
+    UploadRegisterMeta:
+      type: object
+      properties:
+        idempotent:
+          type: boolean
+
+    UploadRegisterEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/UploadRegisterPayload'
+        meta:
+          $ref: '#/components/schemas/UploadRegisterMeta'
+
+    PublicLinkRequest:
+      type: object
+      required: [public_link]
+      properties:
+        public_link:
+          type: object
+          required: [url, filename, content_type]
+          properties:
+            url:
+              type: string
+              format: uri
+            filename:
+              type: string
+            content_type:
+              type: string
+              enum: [application/json, application/zip, application/x-ndjson, application/ndjson, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.apache.parquet, text/csv]
+            byte_size:
+              type: integer
+              minimum: 1
+
+    PublicLinkPayload:
+      type: object
+      required: [upload, job, acquisition]
+      properties:
+        upload:
+          $ref: '#/components/schemas/Upload'
+        job:
+          $ref: '#/components/schemas/Job'
+        acquisition:
+          $ref: '#/components/schemas/UploadAcquisition'
+
+    PublicLinkEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/PublicLinkPayload'
+        meta:
+          $ref: '#/components/schemas/UploadRegisterMeta'
+
+    UploadListEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Upload'
+        meta:
+          $ref: '#/components/schemas/EnvelopeMeta'
+
+    JobListEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Job'
+        meta:
+          $ref: '#/components/schemas/EnvelopeMeta'
+    QuarantineListEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuarantineRecord'
+        meta:
+          $ref: '#/components/schemas/EnvelopeMeta'
+
+    AuditListEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditEvent'
+        meta:
+          $ref: '#/components/schemas/EnvelopeMeta'
+
+    DlqListEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/DlqMessage'
+        meta:
+          type: object
+          properties:
+            pagination:
+              $ref: '#/components/schemas/PaginationMeta'
+            queue:
+              type: object
+              properties:
+                name:
+                  type: string
+                queue_depth:
+                  type: integer
+            filters:
+              $ref: '#/components/schemas/FilterMeta'
+
+    AnalyticsEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/AnalyticsPayload'
+        meta:
+          $ref: '#/components/schemas/EnvelopeMeta'
+
+    AnalyticsDashboardEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/AnalyticsDashboardPayload'
+
+    AnalyticsWarehouseEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/AnalyticsWarehousePayload'
+
+    AnalyticsLineageEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/AnalyticsLineagePayload'
+
+    Upload:
+      type: object
+      required:
+        - id
+        - filename
+        - content_type
+        - byte_size
+        - checksum_sha256
+        - storage_key
+        - source_type
+        - status
+        - sensitivity_level
+        - user_id
+        - trace_id
+      properties:
+        id:
+          type: string
+          example: upload_52dc1cd9d40c472ebd63408d8d7b866f
+        filename:
+          type: string
+          example: sample-import.csv
+        content_type:
+          type: string
+          example: text/csv
+        byte_size:
+          type: integer
+          minimum: 1
+          example: 2048
+        checksum_sha256:
+          type: string
+          example: 4f16e1f2e91c3b6b8fdd8d4ac6b6ac1ac3d6f68b0c4d9843791d7c7f7c6b5a3a
+        storage_key:
+          type: string
+          example: uploads/sample-import.csv
+        source_type:
+          type: string
+          enum:
+            - upload
+            - external_link
+            - connector
+        status:
+          type: string
+          enum:
+            - registered
+            - stored
+            - processing
+            - completed
+            - failed
+            - quarantined
+        sensitivity_level:
+          type: string
+          enum:
+            - internal
+            - restricted
+        user_id:
+          type: string
+          example: user_6c561be0f4f24b2db15c0ddfd4e0d3c2
+        trace_id:
+          type: string
+          example: trace_3c3b72fe95be45e48dcc9f944d5fb6d8
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    UploadAcquisition:
+      type: object
+      required:
+        - id
+        - upload_id
+        - job_id
+        - source_type
+        - link_mode
+        - status
+        - url_masked
+        - url_hash
+        - source_host
+        - requested_at
+        - trace_id
+      properties:
+        id:
+          type: string
+        upload_id:
+          type: string
+        job_id:
+          type: string
+        source_type:
+          type: string
+          enum: [external_link]
+        link_mode:
+          type: string
+          enum: [public_link]
+        status:
+          type: string
+          enum: [pending, fetching, stored, failed]
+        url_masked:
+          type: string
+          description: URL sem query string, fragmento ou credenciais.
+        url_hash:
+          type: string
+        source_host:
+          type: string
+        content_type:
+          type: string
+          nullable: true
+        byte_size:
+          type: integer
+          nullable: true
+        requested_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          nullable: true
+          format: date-time
+        trace_id:
+          type: string
+
+    Job:
+      type: object
+      required:
+        - id
+        - upload_id
+        - requested_by_id
+        - source_type
+        - status
+        - quarantined_records_count
+        - trace_id
+      properties:
+        id:
+          type: string
+          example: job_6f51b476d7274d6d94c7943ee6d88515
+        upload_id:
+          type: string
+          example: upload_52dc1cd9d40c472ebd63408d8d7b866f
+        requested_by_id:
+          type: string
+          example: user_6c561be0f4f24b2db15c0ddfd4e0d3c2
+        source_type:
+          type: string
+          example: upload
+        status:
+          type: string
+          enum:
+            - pending
+            - processing
+            - completed
+            - failed
+            - quarantined_with_warnings
+        error_code:
+          type: string
+          nullable: true
+        error_category:
+          type: string
+          nullable: true
+        quarantined_records_count:
+          type: integer
+          minimum: 0
+        trace_id:
+          type: string
+          example: trace_3c3b72fe95be45e48dcc9f944d5fb6d8
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    QuarantineRecord:
+      type: object
+      required:
+        - id
+        - job_id
+        - severity
+        - code
+        - message
+        - trace_id
+      properties:
+        id:
+          type: string
+        job_id:
+          type: string
+        job_batch_id:
+          type: string
+          nullable: true
+        severity:
+          type: string
+          enum: [warning, error]
+        code:
+          type: string
+        message:
+          type: string
+        row_number:
+          type: integer
+          nullable: true
+        payload:
+          description: Payload operacional com chaves sensiveis mascaradas como `[REDACTED]`.
+          type: object
+          additionalProperties: true
+        trace_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    AuditEvent:
+      type: object
+      required:
+        - id
+        - action
+        - auditable_type
+        - auditable_id
+        - request_id
+        - trace_id
+        - occurred_at
+      properties:
+        id:
+          type: string
+        action:
+          type: string
+        actor_id:
+          type: string
+          nullable: true
+        auditable_type:
+          type: string
+        auditable_id:
+          type: string
+        request_id:
+          type: string
+        trace_id:
+          type: string
+        occurred_at:
+          type: string
+          format: date-time
+        metadata:
+          description: Metadata de auditoria sanitizada por allowlist; chaves fora do contrato sao mascaradas.
+          type: object
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    DlqMessage:
+      type: object
+      required:
+        - payload
+        - routing_key
+        - retry_count
+        - headers
+      properties:
+        payload:
+          description: Snapshot do payload na DLQ com chaves sensiveis mascaradas como `[REDACTED]`.
+          oneOf:
+            - type: object
+              additionalProperties: true
+            - type: string
+        exchange:
+          type: string
+        routing_key:
+          type: string
+        redelivered:
+          type: boolean
+        retry_count:
+          type: integer
+          minimum: 0
+        dead_letter_reason:
+          type: string
+          nullable: true
+        headers:
+          description: Headers da mensagem sanitizados antes da exposicao pela API.
+          type: object
+          additionalProperties: true
+
+    AnalyticsPayload:
+      type: object
+      required:
+        - window
+        - kpis
+        - breakdowns
+      properties:
+        window:
+          type: object
+          properties:
+            from:
+              type: string
+              format: date-time
+            to:
+              type: string
+              format: date-time
+            preset:
+              type: string
+              nullable: true
+            timezone:
+              type: string
+        kpis:
+          type: object
+          required:
+            - uploads_total
+            - jobs_total
+            - jobs_processing
+            - jobs_completed
+            - jobs_failed
+            - jobs_quarantined
+            - quarantine_records_total
+            - audit_events_total
+          properties:
+            uploads_total:
+              type: integer
+            jobs_total:
+              type: integer
+            jobs_processing:
+              type: integer
+            jobs_completed:
+              type: integer
+            jobs_failed:
+              type: integer
+            jobs_quarantined:
+              type: integer
+            quarantine_records_total:
+              type: integer
+            audit_events_total:
+              type: integer
+        breakdowns:
+          type: object
+          properties:
+            status:
+              type: array
+              items:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  count:
+                    type: integer
+            actor:
+              type: array
+              items:
+                type: object
+                properties:
+                  actor_id:
+                    type: string
+                  count:
+                    type: integer
+            source:
+              type: array
+              items:
+                type: object
+                properties:
+                  source:
+                    type: string
+                  count:
+                    type: integer
+
+    AnalyticsDashboardPayload:
+      type: object
+      required: [generated_at, source, window, sections, dependencies, slo]
+      properties:
+        generated_at:
+          type: string
+          format: date-time
+        source:
+          type: string
+          enum: [clickhouse, postgres_derived, empty]
+        window:
+          type: object
+          additionalProperties: true
+        sections:
+          type: object
+          required: [queue, workers, throughput, formats, warnings, event_log, timeseries_24h, status_distribution, heatmap_7d, jobs_board, queue_items, ingestion, workers_live, alerts]
+          additionalProperties:
+            type: object
+            required: [status, generated_at, data]
+            properties:
+              status:
+                type: string
+                enum: [live, derived, empty, degraded, backend-pending]
+              generated_at:
+                type: string
+                format: date-time
+              data:
+                oneOf:
+                  - type: object
+                    additionalProperties: true
+                  - type: array
+                    items: {}
+              empty_state:
+                type: string
+                nullable: true
+          properties:
+            event_log:
+              type: object
+              required: [status, generated_at, data]
+              properties:
+                status:
+                  type: string
+                  enum: [live, derived, empty, degraded, backend-pending]
+                generated_at:
+                  type: string
+                  format: date-time
+                data:
+                  type: array
+                  items:
+                    type: object
+                    required: [timestamp, type, severity, job_id, status, message]
+                    properties:
+                      timestamp:
+                        type: string
+                        nullable: true
+                        format: date-time
+                      type:
+                        type: string
+                        enum: [worker_metric, operational_warning, audit, realtime_event]
+                      severity:
+                        type: string
+                      job_id:
+                        type: string
+                        nullable: true
+                      upload_id:
+                        type: string
+                        nullable: true
+                      status:
+                        type: string
+                      message:
+                        type: string
+                empty_state:
+                  type: string
+                  nullable: true
+        dependencies:
+          type: object
+          additionalProperties: true
+        slo:
+          $ref: '#/components/schemas/AnalyticsSlo'
+
+    AnalyticsWarehousePayload:
+      type: object
+      required: [source, generated_at, lag_seconds, stale, slo_target_seconds, p95_ms, error_budget_percent, dependency_status, fallback_reason]
+      properties:
+        source:
+          type: string
+          enum: [clickhouse, postgres_derived]
+        generated_at:
+          type: string
+          format: date-time
+        last_event_at:
+          type: string
+          nullable: true
+          format: date-time
+        lag_seconds:
+          type: integer
+          nullable: true
+        stale:
+          type: boolean
+        slo_target_seconds:
+          type: integer
+        p95_ms:
+          type: integer
+        error_budget_percent:
+          type: number
+        dependency_status:
+          type: object
+          additionalProperties: true
+        fallback_reason:
+          type: string
+          nullable: true
+        aggregates:
+          type: object
+          required: [jobs_total, uploads_total, records_total, valid_records, invalid_records]
+          properties:
+            jobs_total:
+              type: integer
+            uploads_total:
+              type: integer
+            records_total:
+              type: integer
+            valid_records:
+              type: integer
+            invalid_records:
+              type: integer
+            by_status:
+              type: object
+              additionalProperties:
+                type: integer
+            by_source:
+              type: object
+              additionalProperties:
+                type: integer
+          additionalProperties: true
+
+    AnalyticsLineagePayload:
+      type: object
+      required: [job, upload, batches, attempts, quarantine, artifacts, warnings, audit_refs]
+      properties:
+        job:
+          $ref: '#/components/schemas/Job'
+        upload:
+          $ref: '#/components/schemas/Upload'
+        acquisition:
+          nullable: true
+          $ref: '#/components/schemas/UploadAcquisition'
+        batches:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        attempts:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        quarantine:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        artifacts:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperationalWarning'
+        audit_refs:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+
+    AnalyticsSlo:
+      type: object
+      required: [slo_target_seconds, lag_seconds, stale, p95_ms, error_budget_percent]
+      properties:
+        slo_target_seconds:
+          type: integer
+        last_event_at:
+          type: string
+          nullable: true
+          format: date-time
+        lag_seconds:
+          type: integer
+          nullable: true
+        stale:
+          type: boolean
+        p95_ms:
+          type: integer
+        error_budget_percent:
+          type: number
+
+    DashboardExportRequest:
+      type: object
+      required: [export]
+      properties:
+        export:
+          type: object
+          required: [kind, format]
+          properties:
+            kind:
+              type: string
+              enum: [snapshot, series, heatmap, event_log]
+            format:
+              type: string
+              enum: [csv, json]
+            preset:
+              type: string
+              enum: [last_24h, last_7d, last_30d]
+            from:
+              type: string
+              format: date-time
+            to:
+              type: string
+              format: date-time
+            timezone:
+              type: string
+
+    DashboardExportEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          allOf:
+            - $ref: '#/components/schemas/DashboardExport'
+            - type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+
+    DashboardExport:
+      type: object
+      required: [id, organization_id, actor_id, kind, format, filename, content_type, byte_size, checksum_sha256, generated_at, expires_at, trace_id]
+      properties:
+        id: { type: string }
+        organization_id: { type: string }
+        actor_id: { type: string }
+        kind: { type: string, enum: [snapshot, series, heatmap, event_log] }
+        format: { type: string, enum: [csv, json] }
+        filename: { type: string }
+        content_type: { type: string, enum: [text/csv, application/json] }
+        byte_size: { type: integer, minimum: 0 }
+        checksum_sha256: { type: string }
+        metadata:
+          type: object
+          additionalProperties: true
+        generated_at: { type: string, format: date-time }
+        expires_at: { type: string, format: date-time }
+        trace_id: { type: string }
+
+    RealtimeTicketEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [ticket, organization_id, role, expires_at]
+          properties:
+            ticket: { type: string }
+            organization_id: { type: string }
+            role: { type: string, enum: [admin, operator, service_account] }
+            expires_at: { type: string, format: date-time }
+
+    RealtimeEventListEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/RealtimeEvent'
+
+    RealtimeEvent:
+      type: object
+      required: [id, event_type, organization_id, severity, payload, occurred_at, expires_at, trace_id]
+      properties:
+        id: { type: string }
+        event_type: { type: string }
+        organization_id: { type: string }
+        actor_id: { type: string, nullable: true }
+        resource_type: { type: string, nullable: true }
+        resource_id: { type: string, nullable: true }
+        severity: { type: string, enum: [info, warning, error] }
+        payload:
+          type: object
+          additionalProperties: true
+        occurred_at: { type: string, format: date-time }
+        expires_at: { type: string, format: date-time }
+        trace_id: { type: string }
+        request_id: { type: string, nullable: true }
+
+    AlertActionEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/OperationalWarning'
+
+    OrganizationEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/OrganizationPayload'
+
+    OrganizationPayload:
+      type: object
+      required: [organization, members, invites]
+      properties:
+        organization:
+          $ref: '#/components/schemas/Organization'
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationMember'
+        invites:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationInvite'
+
+    Organization:
+      type: object
+      required: [id, name, status, quotas, retention_days, compliance_profile]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        status: { type: string, enum: [active, suspended] }
+        quotas:
+          type: object
+          additionalProperties: true
+          description: Limites por organizacao, sem billing.
+        retention_days: { type: integer, minimum: 1 }
+        compliance_profile:
+          type: object
+          additionalProperties: true
+        created_at: { type: string, format: date-time, nullable: true }
+        updated_at: { type: string, format: date-time, nullable: true }
+
+    OrganizationUpdateRequest:
+      type: object
+      required: [organization]
+      properties:
+        organization:
+          type: object
+          properties:
+            name: { type: string }
+            retention_days: { type: integer, minimum: 1 }
+            quotas:
+              type: object
+              additionalProperties: true
+            compliance_profile:
+              type: object
+              additionalProperties: true
+
+    OrganizationMemberListEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationMember'
+
+    OrganizationMemberEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/OrganizationMember'
+
+    OrganizationMember:
+      type: object
+      required: [id, organization_id, user_id, email, role, status]
+      properties:
+        id: { type: string }
+        organization_id: { type: string }
+        user_id: { type: string }
+        email: { type: string, format: email }
+        full_name: { type: string, nullable: true }
+        role: { type: string, enum: [admin, operator] }
+        status: { type: string, enum: [active, suspended, invited] }
+        created_at: { type: string, format: date-time, nullable: true }
+        updated_at: { type: string, format: date-time, nullable: true }
+
+    OrganizationMemberUpdateRequest:
+      type: object
+      required: [membership]
+      properties:
+        membership:
+          type: object
+          properties:
+            role: { type: string, enum: [admin, operator] }
+            status: { type: string, enum: [active, suspended] }
+
+    OrganizationInviteEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/OrganizationInvite'
+
+    OrganizationInvite:
+      type: object
+      required: [id, organization_id, email, role, status, expires_at]
+      properties:
+        id: { type: string }
+        organization_id: { type: string }
+        email: { type: string, format: email }
+        role: { type: string, enum: [admin, operator] }
+        status: { type: string, enum: [pending, accepted, expired, revoked] }
+        expires_at: { type: string, format: date-time }
+        accepted_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time, nullable: true }
+
+    OrganizationInviteRequest:
+      type: object
+      required: [invite]
+      properties:
+        invite:
+          type: object
+          required: [email, role]
+          properties:
+            email: { type: string, format: email }
+            role: { type: string, enum: [admin, operator] }
+
+    OrganizationInviteAcceptanceRequest:
+      type: object
+      required: [acceptance]
+      properties:
+        acceptance:
+          type: object
+          required: [full_name, password, password_confirmation]
+          properties:
+            full_name: { type: string }
+            password: { type: string, format: password }
+            password_confirmation: { type: string, format: password }
+
+    OrganizationInviteAcceptanceEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [user, membership]
+          properties:
+            user:
+              $ref: '#/components/schemas/User'
+            membership:
+              $ref: '#/components/schemas/OrganizationMember'
+
+    MfaSetupEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [factor_id, secret, provisioning_uri, status]
+          properties:
+            factor_id: { type: string }
+            secret: { type: string, description: TOTP bootstrap secret returned only during setup. }
+            provisioning_uri: { type: string }
+            status: { type: string, enum: [pending, enabled] }
+
+    MfaVerifyRequest:
+      type: object
+      required: [mfa]
+      properties:
+        mfa:
+          type: object
+          required: [code]
+          properties:
+            challenge_token: { type: string }
+            code: { type: string }
+
+    MfaVerifyEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          additionalProperties: true
+          description: Setup retorna fator/recovery codes; desafio de login retorna user/session.
+
+    MfaRecoveryCodesEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [recovery_codes]
+          properties:
+            recovery_codes:
+              type: array
+              items:
+                type: string
+
+    OidcProviderRequest:
+      type: object
+      required: [oidc_provider]
+      properties:
+        oidc_provider:
+          type: object
+          required: [issuer, client_id, client_credential, hosted_domain]
+          properties:
+            issuer: { type: string, format: uri, example: https://accounts.google.com }
+            client_id: { type: string, example: google-client-id.apps.googleusercontent.com }
+            client_credential:
+              type: string
+              format: password
+              description: Credencial opaca recebida pela API e criptografada antes de persistir.
+            hosted_domain: { type: string, example: example.com }
+
+    OidcProviderEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/OidcProvider'
+
+    OidcProvider:
+      type: object
+      required: [id, organization_id, provider, issuer, client_id, hosted_domain, status, scopes]
+      properties:
+        id: { type: string }
+        organization_id: { type: string }
+        provider: { type: string, enum: [google_workspace] }
+        issuer: { type: string, format: uri }
+        client_id: { type: string }
+        hosted_domain: { type: string }
+        status: { type: string, enum: [active, disabled] }
+        scopes:
+          type: array
+          items: { type: string }
+
+    OidcStartEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [authorization_url, state, nonce, expires_at]
+          properties:
+            authorization_url:
+              type: string
+              format: uri
+              description: URL de consentimento; nao deve ser gravada em logs ou reports.
+            state: { type: string }
+            nonce: { type: string }
+            expires_at: { type: string, format: date-time, nullable: true }
+
+    GoogleDriveAuthorizeEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [authorization_url, state, expires_at, scopes]
+          properties:
+            authorization_url:
+              type: string
+              format: uri
+              description: URL de consentimento; sem tokens OAuth.
+            state: { type: string }
+            expires_at: { type: string, format: date-time, nullable: true }
+            scopes:
+              type: array
+              items:
+                type: string
+              example: [https://www.googleapis.com/auth/drive, openid, email, profile]
+
+    GoogleDriveConnectionEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/GoogleDriveConnection'
+
+    GoogleDriveConnection:
+      type: object
+      required: [id, organization_id, user_id, provider, status, scopes]
+      properties:
+        id: { type: string }
+        organization_id: { type: string }
+        user_id: { type: string }
+        provider: { type: string, enum: [google_drive] }
+        status: { type: string, enum: [active, revoked, expired] }
+        scopes:
+          type: array
+          items: { type: string }
+        token_expires_at: { type: string, format: date-time, nullable: true }
+        revoked_at: { type: string, format: date-time, nullable: true }
+
+    GoogleDriveItemListEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/GoogleDriveItem'
+
+    GoogleDriveItem:
+      type: object
+      required: [id, name, mime_type, kind]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        mime_type: { type: string }
+        kind: { type: string, enum: [file, folder] }
+
+    ConnectorProfileRequest:
+      type: object
+      required: [connector_profile]
+      properties:
+        connector_profile:
+          type: object
+          required: [name, kind]
+          properties:
+            name: { type: string }
+            kind: { type: string, enum: [s3, http, google_drive] }
+            status: { type: string, enum: [active, disabled] }
+            settings:
+              type: object
+              additionalProperties: true
+            secrets:
+              type: object
+              additionalProperties: true
+
+    SaasReadinessEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/SaasReadiness'
+
+    SaasReadiness:
+      type: object
+      required:
+        - generated_at
+        - organization
+        - access
+        - identity
+        - billing
+        - quotas
+        - connectors
+        - security
+        - infrastructure
+        - observability
+        - compliance
+        - external_blockers
+      properties:
+        generated_at: { type: string, format: date-time }
+        organization:
+          type: object
+          required: [id, members]
+          properties:
+            id: { type: string, example: org_fixture_alpha }
+            members:
+              type: object
+              required: [active, invited, suspended]
+              properties:
+                active: { type: integer, minimum: 0, example: 2 }
+                invited: { type: integer, minimum: 0, example: 0 }
+                suspended: { type: integer, minimum: 0, example: 0 }
+        access:
+          type: object
+          required: [role, admin]
+          properties:
+            role: { type: string, enum: [admin] }
+            admin: { type: boolean, example: true }
+        identity:
+          type: object
+          required: [mfa, sso, saml]
+          properties:
+            mfa:
+              type: object
+              required: [mode, status, recovery_codes]
+              properties:
+                mode: { type: string, enum: [totp] }
+                status: { type: string, example: required_for_release }
+                recovery_codes: { type: string, example: required_for_rollout }
+            sso:
+              type: object
+              required: [protocol, validated_provider, status]
+              properties:
+                protocol: { type: string, enum: [oidc] }
+                validated_provider: { type: string, enum: [google_workspace] }
+                status: { type: string, example: external_credentials_required }
+            saml:
+              type: object
+              required: [enabled, status]
+              properties:
+                enabled: { type: boolean, example: false }
+                status: { type: string, enum: [out_of_scope] }
+        billing:
+          type: object
+          required: [status, reason]
+          properties:
+            status: { type: string, enum: [out_of_scope] }
+            reason: { type: string, example: Sem billing nesta release }
+        quotas:
+          type: object
+          required: [status, defaults]
+          properties:
+            status: { type: string, example: required_for_release }
+            defaults:
+              type: object
+              required: [upload_gb_per_month, connector_runs_per_day, retention_days]
+              properties:
+                upload_gb_per_month: { type: integer, minimum: 1, example: 500 }
+                connector_runs_per_day: { type: integer, minimum: 1, example: 1000 }
+                retention_days: { type: integer, minimum: 1, example: 180 }
+        connectors:
+          type: object
+          required: [configured_count, active_profiles, supported, google_drive, oauth_delegated, clear_lease_credentials_circulate]
+          properties:
+            configured_count: { type: integer, minimum: 0 }
+            active_profiles: { type: integer, minimum: 0 }
+            supported:
+              type: array
+              items:
+                type: string
+                enum: [s3, http, google_drive, oauth_delegated]
+              example: [s3, http, google_drive, oauth_delegated]
+            google_drive:
+              type: object
+              required: [status, acquisition_modes]
+              properties:
+                status: { type: string, example: external_credentials_required }
+                acquisition_modes:
+                  type: array
+                  items:
+                    type: string
+                    enum: [file, folder]
+            oauth_delegated:
+              type: object
+              required: [status, provider]
+              properties:
+                status: { type: string, example: external_credentials_required }
+                provider: { type: string, enum: [google_workspace] }
+            clear_lease_credentials_circulate:
+              type: boolean
+              example: false
+        security:
+          type: object
+          required: [controls, sensitive_surface]
+          properties:
+            controls:
+              type: array
+              items: { type: string }
+              example: [malware_scanning, parser_fuzzing, ssrf_egress_policy, organization_quotas]
+            sensitive_surface:
+              type: object
+              required: [signed_urls_in_ui, raw_payloads_in_events, connector_credentials_in_events]
+              properties:
+                signed_urls_in_ui: { type: boolean, example: false }
+                raw_payloads_in_events: { type: boolean, example: false }
+                connector_credentials_in_events: { type: boolean, example: false }
+        infrastructure:
+          type: object
+          required: [runtime, ingress_tls, credential_store, data_services]
+          properties:
+            runtime: { type: string, enum: [aws_eks] }
+            ingress_tls: { type: boolean, example: true }
+            credential_store: { type: string, example: aws_secrets_manager_external_secrets_irsa }
+            data_services:
+              type: array
+              items: { type: string }
+              example: [rds_postgres, s3, elasticache_redis, amazon_mq, clickhouse_cloud]
+        observability:
+          type: object
+          required: [stack, telemetry, metrics, logs, dashboards, alerts]
+          properties:
+            stack: { type: string, enum: [open_source] }
+            telemetry: { type: string, enum: [opentelemetry] }
+            metrics: { type: string, enum: [prometheus] }
+            logs: { type: string, enum: [loki] }
+            dashboards: { type: string, enum: [grafana] }
+            alerts: { type: string, enum: [alertmanager] }
+        compliance:
+          type: object
+          required: [target, status, evidence_sections]
+          properties:
+            target: { type: string, enum: [soc2_type_i] }
+            status: { type: string, example: design_evidence_ready }
+            evidence_sections:
+              type: array
+              items: { type: string }
+              example: [access_control, change_management, vulnerability_management, incident_response]
+        external_blockers:
+          type: array
+          items: { type: string }
+          example: [aws_account, google_oauth_client, clickhouse_cloud_workspace, soc2_auditor, production_dns_tls]
+
+    ConnectorProfileListEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConnectorProfile'
+
+    ConnectorProfileEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/ConnectorProfile'
+
+    ConnectorProfile:
+      type: object
+      required: [id, organization_id, kind, name, status, settings, created_by_id, trace_id]
+      properties:
+        id: { type: string }
+        organization_id: { type: string }
+        kind: { type: string, enum: [s3, http, google_drive] }
+        name: { type: string }
+        status: { type: string, enum: [active, disabled] }
+        settings:
+          type: object
+          description: Configuracao mascarada; bucket, key, url e headers sensiveis nao sao expostos.
+          additionalProperties: true
+        created_by_id: { type: string }
+        trace_id: { type: string }
+        created_at: { type: string, format: date-time, nullable: true }
+        updated_at: { type: string, format: date-time, nullable: true }
+
+    ConnectorProfileTestEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [id, status, kind]
+          properties:
+            id: { type: string }
+            status: { type: string }
+            kind: { type: string, enum: [s3, http, google_drive] }
+
+    ConnectorIngestionRequest:
+      type: object
+      required: [ingestion]
+      properties:
+        ingestion:
+          type: object
+          required: [filename, content_type]
+          properties:
+            object_key: { type: string }
+            source_path: { type: string, format: uri }
+            drive_file_id: { type: string }
+            drive_folder_id: { type: string }
+            filename: { type: string }
+            content_type:
+              type: string
+              enum: [application/json, application/zip, application/x-ndjson, application/ndjson, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.apache.parquet, text/csv]
+            byte_size: { type: integer, minimum: 1 }
+
+    ConnectorIngestionEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [upload, job, ingestion, lease]
+          properties:
+            upload:
+              $ref: '#/components/schemas/Upload'
+            job:
+              $ref: '#/components/schemas/Job'
+            ingestion:
+              $ref: '#/components/schemas/ConnectorIngestion'
+            lease:
+              type: object
+              required: [id, expires_at]
+              properties:
+                id: { type: string }
+                expires_at: { type: string, format: date-time, nullable: true }
+
+    ConnectorIngestion:
+      type: object
+      required: [id, connector_profile_id, upload_id, job_id, requested_by_id, status, filename, content_type, trace_id]
+      properties:
+        id: { type: string }
+        connector_profile_id: { type: string }
+        upload_id: { type: string }
+        job_id: { type: string }
+        requested_by_id: { type: string }
+        status: { type: string, enum: [pending, leased, fetching, stored, failed] }
+        object_key: { type: string, nullable: true, description: Valor mascarado quando presente. }
+        source_path: { type: string, nullable: true, description: Valor mascarado quando presente. }
+        drive_file_id: { type: string, nullable: true, description: ID operacional do arquivo Google Drive. }
+        drive_folder_id: { type: string, nullable: true, description: ID operacional da pasta Google Drive. }
+        filename: { type: string }
+        content_type: { type: string }
+        byte_size: { type: integer, nullable: true }
+        trace_id: { type: string }
+        created_at: { type: string, format: date-time, nullable: true }
+        updated_at: { type: string, format: date-time, nullable: true }
+
+    ConnectorLeaseClaimEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [lease, connector, ingestion]
+          properties:
+            lease:
+              type: object
+              additionalProperties: true
+            connector:
+              type: object
+              description: Payload interno para worker; nunca retornado a usuarios finais.
+              additionalProperties: true
+            ingestion:
+              type: object
+              additionalProperties: true
+
+    OperationalWarning:
+      type: object
+      required: [id, code, message, status, severity, retry_count, expires_at, trace_id]
+      properties:
+        id:
+          type: string
+        job_id:
+          type: string
+          nullable: true
+        upload_id:
+          type: string
+          nullable: true
+        code:
+          type: string
+        message:
+          type: string
+        status:
+          type: string
+          enum: [open, retrying, resolved, failed]
+        severity:
+          type: string
+          enum: [info, warning, error]
+        retry_count:
+          type: integer
+        organization_id:
+          type: string
+          nullable: true
+        reviewed_by_id:
+          type: string
+          nullable: true
+        reviewed_at:
+          type: string
+          nullable: true
+          format: date-time
+        review_reason:
+          type: string
+          nullable: true
+        dismissed_by_id:
+          type: string
+          nullable: true
+        dismissed_at:
+          type: string
+          nullable: true
+          format: date-time
+        dismiss_reason:
+          type: string
+          nullable: true
+        resolved_at:
+          type: string
+          nullable: true
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        trace_id:
+          type: string
+
+    OperationActionRequest:
+      type: object
+      required: [operation]
+      properties:
+        operation:
+          type: object
+          required: [reason]
+          properties:
+            reason:
+              type: string
+              minLength: 1
+              maxLength: 500
+
+    OperationActionResponseEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          properties:
+            job_id: { type: string }
+            status: { type: string }
+            attempt_id: { type: string }
+            outbox_id: { type: string }
+
+    QuarantineResolveResponseEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          properties:
+            id: { type: string }
+            job_id: { type: string }
+            resolution_status: { type: string, enum: [open, resolved] }
+            resolution_reason: { type: string }
+            resolved_by_id: { type: string }
+            resolved_at: { type: string, format: date-time }
+
+    DlqReplayRequestCreateRequest:
+      type: object
+      required: [operation]
+      properties:
+        operation:
+          type: object
+          required: [reason, payload]
+          properties:
+            reason: { type: string, minLength: 1, maxLength: 500 }
+            payload:
+              type: object
+
+    DlqReplayRequestResponseEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/DlqReplayRequest'
+
+    DlqReplayRequest:
+      type: object
+      properties:
+        id: { type: string }
+        message_id: { type: string }
+        status: { type: string, enum: [requested, approved, executing, executed, rejected, failed] }
+        requested_by_id: { type: string }
+        approved_by_id: { type: string, nullable: true }
+        executed_by_id: { type: string, nullable: true }
+        reason: { type: string }
+        approved_at: { type: string, format: date-time, nullable: true }
+        executed_at: { type: string, format: date-time, nullable: true }
+        outbox_event_id: { type: string, nullable: true }
+        trace_id: { type: string }
+
+    ArtifactListResponseEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobArtifact'
+
+    JobArtifact:
+      type: object
+      properties:
+        id: { type: string }
+        job_id: { type: string }
+        artifact_type: { type: string, enum: [processed_dataset, quality_report, audit_report] }
+        status: { type: string, enum: [pending, generating, available, failed, expired] }
+        filename: { type: string }
+        content_type: { type: string }
+        byte_size: { type: integer, minimum: 0 }
+        checksum_sha256: { type: string, nullable: true }
+        generated_at: { type: string, format: date-time, nullable: true }
+        expires_at: { type: string, format: date-time, nullable: true }
+        trace_id: { type: string }
+
+    ArtifactDownloadUrlResponseEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          properties:
+            artifact_id: { type: string }
+            download_url: { type: string, format: uri }
+            expires_at: { type: string, format: date-time }
+
+    NotificationListResponseEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+
+    NotificationResponseEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/Notification'
+
+    NotificationBulkArchiveRequest:
+      type: object
+      required: [notifications]
+      properties:
+        notifications:
+          type: object
+          required: [ids]
+          properties:
+            ids:
+              type: array
+              items:
+                type: string
+
+    NotificationBulkActionResponseEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          properties:
+            updated_count: { type: integer, minimum: 0 }
+            archived_count: { type: integer, minimum: 0 }
+            ids:
+              type: array
+              items:
+                type: string
+
+    NotificationDeleteResponseEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          properties:
+            deleted: { type: boolean }
+            id: { type: string }
+
+    Notification:
+      type: object
+      properties:
+        id: { type: string }
+        event_name: { type: string }
+        title: { type: string }
+        body: { type: string }
+        status: { type: string, enum: [unread, read, archived] }
+        read_at: { type: string, format: date-time, nullable: true }
+        expires_at: { type: string, format: date-time, nullable: true }
+        trace_id: { type: string }
+
+    NotificationSettingsUpdateRequest:
+      type: object
+      required: [notification_setting]
+      properties:
+        notification_setting:
+          type: object
+          properties:
+            in_app_enabled: { type: boolean }
+            email_enabled: { type: boolean }
+            webhook_enabled: { type: boolean }
+            webhook_url: { type: string, format: uri }
+
+    NotificationSettingsResponseEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          properties:
+            id: { type: string }
+            user_id: { type: string }
+            in_app_enabled: { type: boolean }
+            email_enabled: { type: boolean }
+            webhook_enabled: { type: boolean }
+            webhook_url: { type: string, nullable: true }
+            webhook_secret: { nullable: true }
+
+    WebhookDeliveryResponseEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          properties:
+            id: { type: string }
+            channel: { type: string, enum: [email, webhook] }
+            event_name: { type: string }
+            status: { type: string, enum: [pending, delivered, failed] }
+            attempts_count: { type: integer, minimum: 0 }
+            webhook_secret: { nullable: true }

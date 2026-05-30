@@ -1,0 +1,8 @@
+{
+  "data": {
+    "factor_id": "mfa_pending_1",
+    "secret": "[totp-secret-returned-once]",
+    "provisioning_uri": "otpauth://totp/StreamGate:admin@example.com?secret=%5Bredacted%5D&issuer=StreamGate",
+    "status": "pending"
+  }
+}

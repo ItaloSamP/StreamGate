@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/http/resources/upload.v1.json",
+  "title": "UploadResourceV1",
+  "type": "object",
+  "required": ["id", "filename", "content_type", "byte_size", "checksum_sha256", "storage_key", "source_type", "status", "sensitivity_level", "user_id", "trace_id"],
+  "properties": {
+    "id": { "type": "string" },
+    "filename": { "type": "string" },
+    "content_type": { "type": "string" },
+    "byte_size": { "type": "integer", "minimum": 1 },
+    "checksum_sha256": { "type": "string" },
+    "storage_key": { "type": "string" },
+    "source_type": { "type": "string", "enum": ["upload", "external_link", "connector"] },
+    "status": { "type": "string" },
+    "sensitivity_level": { "type": "string" },
+    "user_id": { "type": "string" },
+    "trace_id": { "type": "string" },
+    "created_at": { "type": ["string", "null"], "format": "date-time" },
+    "updated_at": { "type": ["string", "null"], "format": "date-time" }
+  },
+  "additionalProperties": false
+}

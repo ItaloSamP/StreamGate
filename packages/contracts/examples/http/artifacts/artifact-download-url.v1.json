@@ -1,0 +1,7 @@
+{
+  "data": {
+    "artifact_id": "artifact_fixture_quality",
+    "download_url": "http://minio:9000/streamgate-uploads/artifacts/job_fixture_pending/quality-report.json?X-Amz-Signature=example",
+    "expires_at": "2026-04-20T00:05:00Z"
+  }
+}

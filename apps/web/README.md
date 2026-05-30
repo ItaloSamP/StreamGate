@@ -1,73 +1,36 @@
-# React + TypeScript + Vite
+# 🎨 Command Center (Frontend Web)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+O Command Center é a interface de administração e de usuário do StreamGate. É uma SPA moderna que interage com a API Rails via contratos OpenAPI restritos.
 
-Currently, two official plugins are available:
+## 🏗️ Arquitetura Orientada a Features (Domains)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Para garantir escalabilidade no frontend, evitamos pastas gigantes e monóliticas como `src/components` ou `src/pages`. Ao invés disso, seguimos uma abordagem de Features (semelhante ao Bounded Contexts do Backend).
 
-## React Compiler
+A estrutura principal reside em `src/features/`:
+- `auth`: Telas de Login, Setup MFA, Callbacks OIDC.
+- `uploads`: Submissão de arquivos, gestão de links públicos, perfis de conectores.
+- `analytics`: Dashboards de KPI, relatórios operacionais.
+- `operations`: Controle da DLQ, logs de auditoria (Eventos), permissões, quarentena e webhooks.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠️ Stack Tecnológico
 
-## Expanding the ESLint configuration
+- **React 18** + **Vite**
+- **Tailwind CSS** para design system.
+- **Lucide React** para iconografia.
+- **Vitest** + **Testing Library** para unit/integration tests.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🚀 Como Executar
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+O ambiente completo cuida disso. Caso queira rodar isolado:
+```bash
+pnpm install
+pnpm dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🧪 Qualidade e Testes
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+O frontend garante sua robustez mantendo cobertura de testes:
+```bash
+pnpm test:run
+pnpm build
 ```

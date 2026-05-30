@@ -1,0 +1,234 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/http/saas-readiness-response.v1.json",
+  "title": "SaasReadinessResponseV1",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": [
+        "generated_at",
+        "organization",
+        "access",
+        "identity",
+        "billing",
+        "quotas",
+        "connectors",
+        "security",
+        "infrastructure",
+        "observability",
+        "compliance",
+        "external_blockers"
+      ],
+      "properties": {
+        "generated_at": { "type": "string", "format": "date-time" },
+        "organization": {
+          "type": "object",
+          "required": ["id", "members"],
+          "properties": {
+            "id": { "type": "string" },
+            "members": {
+              "type": "object",
+              "required": ["active", "invited", "suspended"],
+              "properties": {
+                "active": { "type": "integer", "minimum": 0 },
+                "invited": { "type": "integer", "minimum": 0 },
+                "suspended": { "type": "integer", "minimum": 0 }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "access": {
+          "type": "object",
+          "required": ["role", "admin"],
+          "properties": {
+            "role": { "type": "string", "enum": ["admin"] },
+            "admin": { "type": "boolean", "const": true }
+          },
+          "additionalProperties": false
+        },
+        "identity": {
+          "type": "object",
+          "required": ["mfa", "sso", "saml"],
+          "properties": {
+            "mfa": {
+              "type": "object",
+              "required": ["mode", "status", "recovery_codes"],
+              "properties": {
+                "mode": { "type": "string", "enum": ["totp"] },
+                "status": { "type": "string" },
+                "recovery_codes": { "type": "string" }
+              },
+              "additionalProperties": false
+            },
+            "sso": {
+              "type": "object",
+              "required": ["protocol", "validated_provider", "status"],
+              "properties": {
+                "protocol": { "type": "string", "enum": ["oidc"] },
+                "validated_provider": { "type": "string", "enum": ["google_workspace"] },
+                "status": { "type": "string" }
+              },
+              "additionalProperties": false
+            },
+            "saml": {
+              "type": "object",
+              "required": ["enabled", "status"],
+              "properties": {
+                "enabled": { "type": "boolean", "const": false },
+                "status": { "type": "string", "enum": ["out_of_scope"] }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "billing": {
+          "type": "object",
+          "required": ["status", "reason"],
+          "properties": {
+            "status": { "type": "string", "enum": ["out_of_scope"] },
+            "reason": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "quotas": {
+          "type": "object",
+          "required": ["status", "defaults"],
+          "properties": {
+            "status": { "type": "string" },
+            "defaults": {
+              "type": "object",
+              "required": ["upload_gb_per_month", "connector_runs_per_day", "retention_days"],
+              "properties": {
+                "upload_gb_per_month": { "type": "integer", "minimum": 1 },
+                "connector_runs_per_day": { "type": "integer", "minimum": 1 },
+                "retention_days": { "type": "integer", "minimum": 1 }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "connectors": {
+          "type": "object",
+          "required": [
+            "configured_count",
+            "active_profiles",
+            "supported",
+            "google_drive",
+            "oauth_delegated",
+            "clear_lease_credentials_circulate"
+          ],
+          "properties": {
+            "configured_count": { "type": "integer", "minimum": 0 },
+            "active_profiles": { "type": "integer", "minimum": 0 },
+            "supported": {
+              "type": "array",
+              "items": { "type": "string", "enum": ["s3", "http", "google_drive", "oauth_delegated"] },
+              "minItems": 4
+            },
+            "google_drive": {
+              "type": "object",
+              "required": ["status", "acquisition_modes"],
+              "properties": {
+                "status": { "type": "string" },
+                "acquisition_modes": {
+                  "type": "array",
+                  "items": { "type": "string", "enum": ["file", "folder"] },
+                  "minItems": 1
+                }
+              },
+              "additionalProperties": false
+            },
+            "oauth_delegated": {
+              "type": "object",
+              "required": ["status", "provider"],
+              "properties": {
+                "status": { "type": "string" },
+                "provider": { "type": "string", "enum": ["google_workspace"] }
+              },
+              "additionalProperties": false
+            },
+            "clear_lease_credentials_circulate": { "type": "boolean", "const": false }
+          },
+          "additionalProperties": false
+        },
+        "security": {
+          "type": "object",
+          "required": ["controls", "sensitive_surface"],
+          "properties": {
+            "controls": {
+              "type": "array",
+              "items": { "type": "string" },
+              "minItems": 1
+            },
+            "sensitive_surface": {
+              "type": "object",
+              "required": ["signed_urls_in_ui", "raw_payloads_in_events", "connector_credentials_in_events"],
+              "properties": {
+                "signed_urls_in_ui": { "type": "boolean", "const": false },
+                "raw_payloads_in_events": { "type": "boolean", "const": false },
+                "connector_credentials_in_events": { "type": "boolean", "const": false }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "infrastructure": {
+          "type": "object",
+          "required": ["runtime", "ingress_tls", "credential_store", "data_services"],
+          "properties": {
+            "runtime": { "type": "string", "enum": ["aws_eks"] },
+            "ingress_tls": { "type": "boolean", "const": true },
+            "credential_store": { "type": "string" },
+            "data_services": {
+              "type": "array",
+              "items": { "type": "string" },
+              "minItems": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "observability": {
+          "type": "object",
+          "required": ["stack", "telemetry", "metrics", "logs", "dashboards", "alerts"],
+          "properties": {
+            "stack": { "type": "string", "enum": ["open_source"] },
+            "telemetry": { "type": "string", "enum": ["opentelemetry"] },
+            "metrics": { "type": "string", "enum": ["prometheus"] },
+            "logs": { "type": "string", "enum": ["loki"] },
+            "dashboards": { "type": "string", "enum": ["grafana"] },
+            "alerts": { "type": "string", "enum": ["alertmanager"] }
+          },
+          "additionalProperties": false
+        },
+        "compliance": {
+          "type": "object",
+          "required": ["target", "status", "evidence_sections"],
+          "properties": {
+            "target": { "type": "string", "enum": ["soc2_type_i"] },
+            "status": { "type": "string" },
+            "evidence_sections": {
+              "type": "array",
+              "items": { "type": "string" },
+              "minItems": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "external_blockers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

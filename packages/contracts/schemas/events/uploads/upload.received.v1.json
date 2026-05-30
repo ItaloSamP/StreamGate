@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/events/upload.received.v1.json",
+  "title": "UploadReceivedEventV1",
+  "type": "object",
+  "required": ["event_id", "event_name", "occurred_at", "producer", "payload_version", "correlation_id", "trace_id", "upload_id", "job_id", "payload"],
+  "properties": {
+    "event_id": { "type": "string" },
+    "event_name": { "const": "upload.received.v1" },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "producer": { "type": "string" },
+    "payload_version": { "const": 1 },
+    "correlation_id": { "type": "string" },
+    "trace_id": { "type": "string" },
+    "request_id": { "type": ["string", "null"] },
+    "upload_id": { "type": "string" },
+    "job_id": { "type": "string" },
+    "payload": {
+      "type": "object",
+      "required": ["storage_key", "checksum_sha256", "content_type", "byte_size"],
+      "properties": {
+        "storage_key": { "type": "string" },
+        "checksum_sha256": { "type": "string" },
+        "content_type": { "type": "string" },
+        "byte_size": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

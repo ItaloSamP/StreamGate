@@ -1,0 +1,127 @@
+{
+  "data": {
+    "generated_at": "2026-04-24T14:00:00Z",
+    "source": "postgres_derived",
+    "window": {
+      "from": "2026-04-23T14:00:00Z",
+      "to": "2026-04-24T14:00:00Z",
+      "preset": "last_24h",
+      "timezone": "UTC"
+    },
+    "sections": {
+      "queue": {
+        "status": "derived",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": { "processed": 12, "retried": 1, "moved_to_dlq": 0 },
+        "empty_state": null
+      },
+      "workers": {
+        "status": "derived",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": { "processed": 11, "failed_terminal": 0, "average_latency_ms": 120 },
+        "empty_state": null
+      },
+      "throughput": {
+        "status": "derived",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": { "jobs_total": 12, "uploads_total": 12, "completed": 11, "failed": 0, "quarantined": 1 },
+        "empty_state": null
+      },
+      "formats": {
+        "status": "derived",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": [{ "content_type": "text/csv", "count": 12 }],
+        "empty_state": null
+      },
+      "warnings": {
+        "status": "empty",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": { "open": 0, "failed": 0, "resolved": 0 },
+        "empty_state": "no_data_in_window"
+      },
+      "event_log": {
+        "status": "derived",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": [
+          {
+            "timestamp": "2026-04-24T13:59:40Z",
+            "type": "worker_metric",
+            "severity": "info",
+            "job_id": "job_public_link",
+            "upload_id": "upload_public_link",
+            "status": "processed",
+            "message": "Worker processed event_public_link with status processed."
+          }
+        ],
+        "empty_state": null
+      },
+      "timeseries_24h": {
+        "status": "backend-pending",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": [{ "label": "janela", "records": 1200, "jobs": 12, "failed": 0, "volume_gb": 0 }],
+        "empty_state": null
+      },
+      "status_distribution": {
+        "status": "derived",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": [{ "status": "completed", "count": 11 }, { "status": "quarantined_with_warnings", "count": 1 }],
+        "empty_state": null
+      },
+      "heatmap_7d": {
+        "status": "backend-pending",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": {
+          "days": ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"],
+          "rows": [{ "range": "00-03", "values": [0, 0, 0, 0, 0, 0, 0] }]
+        },
+        "empty_state": null
+      },
+      "jobs_board": {
+        "status": "derived",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": [{ "id": "job_public_link", "upload_id": "upload_public_link", "status": "completed", "trace_id": "trace_public_link" }],
+        "empty_state": null
+      },
+      "queue_items": {
+        "status": "derived",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": [],
+        "empty_state": null
+      },
+      "ingestion": {
+        "status": "derived",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": {
+          "supported_formats": ["CSV", "JSON", "NDJSON", "ZIP", "XLSX", "Parquet"],
+          "enabled_formats": ["CSV", "JSON", "NDJSON", "ZIP", "XLSX", "Parquet"],
+          "pending_formats": []
+        },
+        "empty_state": null
+      },
+      "workers_live": {
+        "status": "backend-pending",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": [],
+        "empty_state": null
+      },
+      "alerts": {
+        "status": "empty",
+        "generated_at": "2026-04-24T14:00:00Z",
+        "data": [],
+        "empty_state": "no_data_in_window"
+      }
+    },
+    "dependencies": {
+      "broker": { "status": "healthy" },
+      "warehouse": { "status": "degraded", "source": "postgres_derived", "fallback_reason": "clickhouse_unavailable" }
+    },
+    "slo": {
+      "slo_target_seconds": 300,
+      "last_event_at": "2026-04-24T13:59:40Z",
+      "lag_seconds": 20,
+      "stale": false,
+      "p95_ms": 240,
+      "error_budget_percent": 99.9
+    }
+  }
+}

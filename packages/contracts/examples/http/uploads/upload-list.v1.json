@@ -1,0 +1,31 @@
+{
+  "data": [
+    {
+      "id": "upload_52dc1cd9d40c472ebd63408d8d7b866f",
+      "filename": "orders.csv",
+      "content_type": "text/csv",
+      "byte_size": 2048,
+      "checksum_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "storage_key": "uploads/user_fixture_operator/2026/04/07/token-orders.csv",
+      "source_type": "upload",
+      "status": "registered",
+      "sensitivity_level": "internal",
+      "user_id": "user_fixture_operator",
+      "trace_id": "trace_3c3b72fe95be45e48dcc9f944d5fb6d8",
+      "created_at": "2026-04-07T18:00:05Z",
+      "updated_at": "2026-04-07T18:00:05Z"
+    }
+  ],
+  "meta": {
+    "pagination": {
+      "page": 1,
+      "per_page": 20,
+      "total_count": 1,
+      "total_pages": 1
+    },
+    "filters": {
+      "status": "registered",
+      "search": null
+    }
+  }
+}

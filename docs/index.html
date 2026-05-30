@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamGate - Documentação do Projeto</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
+        .font-montserrat { font-family: 'Montserrat', sans-serif; }
+
+        /* Smooth scrolling */
+        html { scroll-behavior: smooth; }
+
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Code blocks */
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            white-space: pre;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-montserrat">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-300 fixed top-0 left-0 right-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center">
+                <i class="fas fa-water text-cyan-600 text-3xl mr-3"></i>
+                <h1 class="text-3xl font-bold text-black font-rajdhani">StreamGate</h1>
+                <span class="ml-2 text-sm text-gray-500 font-montserrat">Documentação Central</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="https://github.com/ItaloSamP/StreamGate" target="_blank"
+                   class="text-gray-600 hover:text-black transition-colors">
+                    <i class="fab fa-github text-xl"></i>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex min-h-screen pt-20">
+
+        <!-- Sidebar -->
+        <aside class="w-80 bg-white border-r border-gray-200 fixed left-0 top-20 bottom-0 overflow-y-auto custom-scrollbar">
+            <nav class="p-6">
+                <div class="space-y-6">
+
+                    <!-- Home -->
+                    <div>
+                        <a href="#home" class="flex items-center text-gray-700 hover:text-black font-medium transition-colors">
+                            <i class="fas fa-home w-5 mr-3"></i>
+                            Página Inicial
+                        </a>
+                    </div>
+
+                    <!-- Sobre o Projeto -->
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">Sobre o Projeto</h3>
+                        <div class="space-y-2">
+                            <a href="#visao" class="block text-gray-600 hover:text-black transition-colors ml-3">
+                                <i class="fas fa-eye w-4 mr-2"></i>Visão do Produto
+                            </a>
+                            <a href="#problema" class="block text-gray-600 hover:text-black transition-colors ml-3">
+                                <i class="fas fa-exclamation-triangle w-4 mr-2"></i>O Problema
+                            </a>
+                            <a href="#solucao" class="block text-gray-600 hover:text-black transition-colors ml-3">
+                                <i class="fas fa-lightbulb w-4 mr-2"></i>A Solução
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Arquitetura e Engenharia -->
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">Engenharia</h3>
+                        <div class="space-y-2">
+                            <a href="#arquitetura" class="block text-gray-600 hover:text-black transition-colors ml-3">
+                                <i class="fas fa-sitemap w-4 mr-2"></i>Arquitetura da Stack
+                            </a>
+                            <a href="#dominios" class="block text-gray-600 hover:text-black transition-colors ml-3">
+                                <i class="fas fa-layer-group w-4 mr-2"></i>Domínios (DDD)
+                            </a>
+                            <a href="#deploy" class="block text-gray-600 hover:text-black transition-colors ml-3">
+                                <i class="fas fa-cloud w-4 mr-2"></i>Deploy & Infraestrutura
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Guias -->
+                    <div>
+                        <a href="#guias" class="flex items-center text-gray-700 hover:text-black font-medium transition-colors">
+                            <i class="fas fa-book w-5 mr-3"></i>
+                            Guias e Manuais
+                        </a>
+                    </div>
+
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 ml-80 p-8 max-w-4xl">
+
+            <!-- Página Inicial -->
+            <section id="home" class="mb-16">
+                <div class="text-center mb-12">
+                    <h1 class="text-6xl font-bold text-black font-rajdhani mb-4">StreamGate</h1>
+                    <p class="text-xl text-gray-600 font-montserrat mb-8" id="descricao">
+                        Plataforma Definitiva de Ingestão e Segurança de Ativos em Larga Escala
+                    </p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">
+                    <h2 class="text-2xl font-bold font-rajdhani mb-4">📖 Descrição</h2>
+                    <p class="text-gray-700 mb-4">
+                        O <strong>StreamGate</strong> é uma plataforma robusta projetada para ingestão massiva, segurança em tempo real, e análise de dados em ambientes operacionais distribuídos.
+                    </p>
+                    <p class="text-gray-700">
+                        Com foco na resiliência e entrega segura (Zero-Trust), ele atua como o principal portão de entrada para uploads institucionais, garantindo que todo arquivo passe por varreduras avançadas de malware e fluxos granulares de conformidade antes de tocar na rede interna.
+                    </p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                    <h2 class="text-2xl font-bold font-rajdhani mb-6">👥 Autor e Especialistas</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-8">
+                        <div class="text-center">
+                            <img src="https://github.com/ItaloSamP.png" alt="Ítalo Alves" class="w-24 h-24 rounded-full mx-auto mb-3">
+                            <p class="font-medium"><b>Ítalo Alves</b></p>
+                            <p class="text-sm text-gray-500 mb-2">Engenheiro & Arquiteto</p>
+                            <a href="https://github.com/ItaloSamP" target="_blank" class="text-blue-500 hover:text-blue-700">
+                                <i class="fab fa-github"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- About -->
+            <section id="sobre" class="mb-16">
+                <h1 class="text-4xl font-bold font-rajdhani mb-8 text-black">Visão e Problema</h1>
+
+                <div id="visao" class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8 border-l-4 border-l-green-500">
+                    <h2 class="text-2xl font-bold font-rajdhani mb-4 text-green-600">Visão do Produto</h2>
+                    <p class="text-gray-700 text-lg">
+                        Transformar o tráfego de arquivos e uploads em uma experiência 100% visível, rastreável e invulnerável, protegendo infraestruturas corporativas contra malwares distribuídos e vazamento de dados.
+                    </p>
+                </div>
+
+                <div id="problema" class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">
+                    <h2 class="text-2xl font-bold font-rajdhani mb-4 text-red-600">O Problema</h2>
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-biohazard text-red-500 mt-1 mr-3 text-xl"></i>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">Superfície de Ataque Exposta</h3>
+                                <p class="text-gray-600">Na era digital, aceitar arquivos do mundo exterior (clientes, fornecedores, anônimos) é o maior risco para redes privadas.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-network-wired text-orange-500 mt-1 mr-3 text-xl"></i>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">Canais de Ingestão Descentralizados</h3>
+                                <p class="text-gray-600">Empresas recebem arquivos via email, drive, FTP e links avulsos. Não há padronização, nem análise de segurança unificada.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-eye-slash text-gray-500 mt-1 mr-3 text-xl"></i>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">Falta de Telemetria e Auditoria</h3>
+                                <p class="text-gray-600">Operadores não têm visibilidade do volume de ameaças retidas em tempo real ou da volumetria que transita pelos serviços de cloud.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="solucao" class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">
+                    <h2 class="text-2xl font-bold font-rajdhani mb-4 text-blue-600">A Solução: A Porta Definitiva</h2>
+                    <p class="text-gray-700 mb-6">
+                        O <strong>StreamGate</strong> resolve isso criando um fosso (quarentena) isolado entre o mundo exterior e a rede interna da corporação.
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-4 bg-blue-50 rounded-lg">
+                            <i class="fas fa-shield-virus text-blue-600 text-xl mb-2"></i>
+                            <h3 class="font-semibold text-gray-800 mb-2">Ambiente Isolado (Quarentena)</h3>
+                            <p class="text-gray-600 text-sm">Uploads suspeitos ficam retidos. Zero chance de infecção para a rede da corporação graças ao pipeline de ClamAV atômico.</p>
+                        </div>
+                        <div class="p-4 bg-cyan-50 rounded-lg">
+                            <i class="fas fa-cloud-upload-alt text-cyan-600 text-xl mb-2"></i>
+                            <h3 class="font-semibold text-gray-800 mb-2">Ingestão Multi-Canal</h3>
+                            <p class="text-gray-600 text-sm">Via Web UI (drag-and-drop), links públicos, webhooks anônimos ou conectores nativos diretos para Google Drive e S3 Bucket.</p>
+                        </div>
+                        <div class="p-4 bg-green-50 rounded-lg">
+                            <i class="fas fa-chart-line text-green-600 text-xl mb-2"></i>
+                            <h3 class="font-semibold text-gray-800 mb-2">Analytics em Tempo Real</h3>
+                            <p class="text-gray-600 text-sm">Telemetria imediata sobre ameaças mitigadas e volumes ingeridos, apoiada por bancos analíticos (ClickHouse) de altíssima performance.</p>
+                        </div>
+                        <div class="p-4 bg-slate-100 rounded-lg">
+                            <i class="fas fa-key text-slate-600 text-xl mb-2"></i>
+                            <h3 class="font-semibold text-gray-800 mb-2">Segurança por RBAC</h3>
+                            <p class="text-gray-600 text-sm">Controles granulares de quarentena. Somente administradores autorizados com chaves Idempotentes podem forçar liberações.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Arquitetura -->
+            <section id="arquitetura-sec" class="mb-16">
+                <h1 class="text-4xl font-bold font-rajdhani mb-8 text-black">Engenharia e Arquitetura</h1>
+
+                <div id="arquitetura" class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">
+                    <h2 class="text-2xl font-bold font-rajdhani mb-6">Visão Geral dos Componentes</h2>
+                    <p class="text-gray-700 mb-6">Construído sob uma arquitetura de microsserviços orientada a eventos, visando separação de responsabilidades total.</p>
+                    
+                    <div class="space-y-4">
+                        <div class="border border-gray-100 rounded-md p-4 bg-gray-50 flex items-start">
+                            <div class="bg-blue-100 p-3 rounded-md mr-4 text-blue-600">
+                                <i class="fab fa-react text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800 text-lg">Command Center <span class="text-sm font-normal text-gray-500">(apps/web)</span></h3>
+                                <p class="text-gray-600 mt-1">Aplicação frontend imersiva utilizando <strong>React, Vite, Tailwind CSS e TypeScript</strong>. Estruturada em <em>Feature-Sliced Design</em>. Focada em painéis analíticos ricos e interface administrativa veloz.</p>
+                            </div>
+                        </div>
+
+                        <div class="border border-gray-100 rounded-md p-4 bg-gray-50 flex items-start">
+                            <div class="bg-red-100 p-3 rounded-md mr-4 text-red-600">
+                                <i class="fas fa-server text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800 text-lg">API Server <span class="text-sm font-normal text-gray-500">(apps/api)</span></h3>
+                                <p class="text-gray-600 mt-1">O cérebro transacional. API Restful estrita escrita em <strong>Ruby on Rails</strong>. Controla Autenticação, mutações de recursos e valida Idempotência das chamadas para garantir consistência perfeita.</p>
+                            </div>
+                        </div>
+
+                        <div class="border border-gray-100 rounded-md p-4 bg-gray-50 flex items-start">
+                            <div class="bg-orange-100 p-3 rounded-md mr-4 text-orange-600">
+                                <i class="fas fa-cogs text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800 text-lg">Data Worker <span class="text-sm font-normal text-gray-500">(apps/worker)</span></h3>
+                                <p class="text-gray-600 mt-1">Processador em background escalável (Ruby puro). Escuta as filas de eventos no <strong>RabbitMQ</strong>, coordena varreduras antivírus (ClamAV) de forma assíncrona e grava logs no <strong>ClickHouse</strong>.</p>
+                            </div>
+                        </div>
+
+                        <div class="border border-gray-100 rounded-md p-4 bg-gray-50 flex items-start">
+                            <div class="bg-teal-100 p-3 rounded-md mr-4 text-teal-600">
+                                <i class="fas fa-file-contract text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800 text-lg">Contracts <span class="text-sm font-normal text-gray-500">(packages/contracts)</span></h3>
+                                <p class="text-gray-600 mt-1">A fonte primária de verdade (OpenAPI v3) estabelecida pelo <strong>Design-First Approach</strong>. Sem ele, a Web e a API não conversam.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="dominios" class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">
+                    <h2 class="text-2xl font-bold font-rajdhani mb-4">Domínios (Bounded Contexts)</h2>
+                    <p class="text-gray-700 mb-6">Tanto o Frontend quanto o Backend seguem os preceitos de Domain-Driven Design para isolamento de funcionalidades:</p>
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                        <li><strong>Auth:</strong> Autenticação, registro, tokens, SSO e MFA.</li>
+                        <li><strong>Uploads:</strong> Gestão de arquivos, links públicos e storage.</li>
+                        <li><strong>Analytics:</strong> Dashboards, exportações, métricas e auditoria ClickHouse.</li>
+                        <li><strong>Operations:</strong> Quarentena, DLQ (Dead Letter Queue), Webhooks, RBAC.</li>
+                    </ul>
+                </div>
+
+                <div id="deploy" class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                    <h2 class="text-2xl font-bold font-rajdhani mb-4">Deploy e Inicialização Local</h2>
+                    <p class="text-gray-700 mb-4">
+                        O projeto é inteiramente baseado em contêineres Docker. Possui scripts avançados tanto para Windows (PowerShell) quanto Mac/Linux (Bash).
+                    </p>
+                    <div class="bg-slate-800 text-white p-4 rounded-md font-mono text-sm mb-4">
+                        # Exemplo de subida completa (Cluster Postgres, Redis, Clickhouse, RabbitMQ + Apps)<br>
+                        powershell -ExecutionPolicy Bypass -File .\scripts\dev\dev-up.ps1 -Mode full
+                    </div>
+                    <p class="text-gray-700">Para pipelines de CI e testes locais:</p>
+                    <div class="bg-slate-800 text-white p-4 rounded-md font-mono text-sm">
+                        # Run all compliance, E2E, UX Audit and Security Scanners<br>
+                        python .agents/scripts/checklist.py .
+                    </div>
+                </div>
+            </section>
+
+            <!-- Guias e Manuais -->
+            <section id="guias" class="mb-16">
+                <h1 class="text-4xl font-bold font-rajdhani mb-8 text-black">Acesso Rápido aos Documentos</h1>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <a href="../docs/guides/user-manual.md" class="block bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md hover:border-cyan-500 transition-all group">
+                        <i class="fas fa-book-reader text-3xl text-cyan-500 mb-4 group-hover:scale-110 transition-transform"></i>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Manual do Usuário Final</h3>
+                        <p class="text-gray-600 text-sm">Um guia descritivo de todas as telas, processos operacionais do Command Center e liberação de quarentenas.</p>
+                    </a>
+
+                    <a href="../docs/guides/architecture.md" class="block bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md hover:border-blue-500 transition-all group">
+                        <i class="fas fa-project-diagram text-3xl text-blue-500 mb-4 group-hover:scale-110 transition-transform"></i>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Desenho de Arquitetura</h3>
+                        <p class="text-gray-600 text-sm">Aprofundamento sobre a topologia Cloud, eventos do RabbitMQ e as decisões do Domain-Driven Design (DDD).</p>
+                    </a>
+
+                    <a href="../docs/guides/devops-runbook.md" class="block bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md hover:border-green-500 transition-all group">
+                        <i class="fas fa-server text-3xl text-green-500 mb-4 group-hover:scale-110 transition-transform"></i>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">DevOps & Runbook</h3>
+                        <p class="text-gray-600 text-sm">Troubleshooting, Helm charts, setup do ArgoCD e infraestrutura de alta disponibilidade no Kubernetes.</p>
+                    </a>
+
+                    <a href="../README.md" class="block bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md hover:border-slate-500 transition-all group">
+                        <i class="fas fa-code-branch text-3xl text-slate-500 mb-4 group-hover:scale-110 transition-transform"></i>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Root Repository (Git)</h3>
+                        <p class="text-gray-600 text-sm">Acesse a raiz do repositório para os códigos fontes, setup inicial e arquivos de infraestrutura.</p>
+                    </a>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+</body>
+</html>

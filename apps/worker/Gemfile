@@ -5,9 +5,21 @@ source "https://rubygems.org"
 # Specify your gem's dependencies in worker.gemspec
 gemspec
 
+gem "aws-sdk-s3", "~> 1.169"
+gem "bunny", "~> 2.24"
+gem "csv", "~> 3.3"
 gem "irb"
+gem "pg", "~> 1.5"
 gem "rake", "~> 13.0"
+gem "rexml", "~> 3.3"
+gem "roo", "~> 3.0"
+gem "rubyzip", ">= 2.4", "< 4.0"
+
+group :parquet, optional: true do
+  gem "parquet", "~> 0.7"
+end
 
 gem "rspec", "~> 3.0"
+gem "simplecov", require: false
 
 gem "rubocop", "~> 1.21"

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://streamgate.local/contracts/http/job-list-response.v1.json",
+  "title": "JobListResponseV1",
+  "type": "object",
+  "required": ["data", "meta"],
+  "properties": {
+    "data": {
+      "type": "array",
+      "items": { "$ref": "../shared/resources/job.v1.json" }
+    },
+    "meta": { "$ref": "../shared/envelopes/success-envelope.v1.json#/properties/meta" }
+  },
+  "additionalProperties": false
+}

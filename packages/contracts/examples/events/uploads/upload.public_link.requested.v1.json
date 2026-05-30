@@ -1,0 +1,23 @@
+{
+  "event_id": "event_public_link_requested",
+  "event_name": "upload.public_link.requested.v1",
+  "occurred_at": "2026-04-24T14:00:00Z",
+  "producer": "api",
+  "payload_version": 1,
+  "correlation_id": "req_public_link",
+  "trace_id": "trace_public_link",
+  "request_id": "req_public_link",
+  "upload_id": "upload_public_link",
+  "job_id": "job_public_link",
+  "payload": {
+    "acquisition_id": "acq_public_link",
+    "source_url": "https://data.example.com/export.csv?token=example",
+    "url_hash": "4f16e1f2e91c3b6b8fdd8d4ac6b6ac1ac3d6f68b0c4d9843791d7c7f7c6b5a3a",
+    "url_masked": "https://data.example.com/export.csv",
+    "source_host": "data.example.com",
+    "storage_key": "uploads/external/user_fixture_operator/2026/04/24/plink_export.csv",
+    "filename": "export.csv",
+    "content_type": "text/csv",
+    "declared_byte_size": 1024
+  }
+}

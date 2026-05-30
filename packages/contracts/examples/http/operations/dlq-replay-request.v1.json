@@ -1,0 +1,20 @@
+{
+  "data": {
+    "id": "dlqreplay_fixture_requested",
+    "message_id": "message-123",
+    "status": "requested",
+    "requested_by_id": "user_fixture_admin",
+    "approved_by_id": null,
+    "executed_by_id": null,
+    "reason": "Replay controlado apos inspecao.",
+    "approval_reason": null,
+    "execution_reason": null,
+    "approved_at": null,
+    "executed_at": null,
+    "expires_at": "2026-05-20T00:00:00Z",
+    "outbox_event_id": null,
+    "trace_id": "trace_fixture_1",
+    "created_at": "2026-04-20T00:00:00Z",
+    "updated_at": "2026-04-20T00:00:00Z"
+  }
+}
