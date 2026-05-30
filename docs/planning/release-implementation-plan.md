@@ -76,10 +76,10 @@ Um produto excelente não pode ter cara de template e não pode operar no escuro
 
 **🤖 Global Skills:** `server-management`, `api-patterns`, `devops-deploy`.
 
-- [ ] **Defesa contra Abuso (Rate Limiting):** A API e o Worker devem provar que aguentam estresse. Confirmar HTTP 429 no upload e verificar se há um limite estrito de payload (ex: 50MB) imposto corretamente no middleware/Rails.
-- [ ] **Observabilidade Estruturada:** Padronizar os logs (`json` estruturado) para que DataDog/ELK consigam extrair métricas. Garantir que as rotas `/health` ou `/metrics` expõem os tamanhos de fila do RabbitMQ.
-- [ ] **Ciclo de Vida do DLQ (Poison Messages):** Implementar ou auditar a regra do "Dead Letter Queue". Uma mensagem que falha não pode ficar no limbo do "Retry" para sempre. Precisamos de uma política exata (ex: 3 tentativas -> Quarentena definitiva -> Alerta P0).
-- [ ] **Commit & Push:** Organizar alterações da Fase 9, realizar commit descritivo e push.
+- [x] **Defesa contra Abuso (Rate Limiting):** A API e o Worker devem provar que aguentam estresse. Confirmar HTTP 429 no upload e verificar se há um limite estrito de payload (ex: 50MB) imposto corretamente no middleware/Rails.
+- [x] **Observabilidade Estruturada:** Padronizar os logs (`json` estruturado) para que DataDog/ELK consigam extrair métricas. Garantir que as rotas `/health` ou `/metrics` expõem os tamanhos de fila do RabbitMQ.
+- [x] **Ciclo de Vida do DLQ (Poison Messages):** Implementar ou auditar a regra do "Dead Letter Queue". Uma mensagem que falha não pode ficar no limbo do "Retry" para sempre. Precisamos de uma política exata (ex: 3 tentativas -> Quarentena definitiva -> Alerta P0).
+- [x] **Commit & Push:** Organizar alterações da Fase 9, realizar commit descritivo e push.
 
 ---
 

@@ -34,11 +34,11 @@ Utilize as marcações:
   - `[x]` Adicionar Micro-interações e Spring Physics (`transform`, `opacity`).
   - `[x]` Redesenhar Empty States com CTAs focados no onboarding operacional.
   - `[x]` **Commit & Push:** Organizar alterações e commitar (Fase 8).
-- `[ ]` **FASE 9: Observabilidade, Rate Limiting e Operação (SRE)**
-  - `[ ]` Refinar Rate Limiting (HTTP 429) e limites rígidos de payload.
-  - `[ ]` Observabilidade (Logs estruturados JSON, expor métricas do RabbitMQ via `/health`).
-  - `[ ]` Consolidar ciclo do DLQ (Poison Messages com limites de retries explícitos).
-  - `[ ]` **Commit & Push:** Organizar alterações e commitar (Fase 9).
+- `[x]` **FASE 9: Observabilidade, Rate Limiting e Operação (SRE/DevOps)**
+  - `[x]` Configurar o `rack-attack` na API para Rate Limiting (Proteção contra abuso).
+  - `[x]` Estruturar logs em JSON (Lograge e JSON formatter no Worker).
+  - `[x]` Criar e garantir endpoint `/health` que reporte status correto.
+  - `[x]` **Commit & Push:** Organizar alterações e commitar (Fase 9).
 
 ## Infraestrutura & Workflows
 - `[x]` **FASE 6: Infraestrutura, K8s e Workflows (CI/CD)**
