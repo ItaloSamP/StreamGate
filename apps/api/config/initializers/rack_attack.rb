@@ -3,7 +3,7 @@
 module Rack
   class Attack
     # Rack::Attack configuration
-    
+
     # Always allow requests from localhost
     safelist("allow from localhost") do |req|
       "127.0.0.1" == req.ip || "::1" == req.ip

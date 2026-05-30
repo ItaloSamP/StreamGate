@@ -30,7 +30,7 @@ module Api
     config.api_only = true
 
 # Load all domain subdirectories (e.g. app/domains/auth/models)
-Dir[Rails.root.join('app', 'domains', '*', '*')].each do |path|
+Dir[Rails.root.join("app", "domains", "*", "*")].each do |path|
   config.autoload_paths << path
 end
 

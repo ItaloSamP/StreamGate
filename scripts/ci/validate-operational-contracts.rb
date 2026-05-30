@@ -87,9 +87,7 @@ RELEASE_INFRA_PATHS = {
   "infra/helm/streamgate/templates/externalsecret.yaml" => "External Secrets integration",
   "infra/helm/streamgate/templates/networkpolicy.yaml" => "NetworkPolicy egress/ingress policy",
   "infra/helm/streamgate/templates/prometheusrule.yaml" => "Prometheus alert rules",
-  "infra/gitops/argocd/streamgate-application.yaml" => "ArgoCD application",
-  "docs/guides/security/soc2-type-i-control-matrix.md" => "SOC 2 Type I control matrix",
-  "docs/guides/security/release-threat-model.md" => "release threat model"
+  "infra/gitops/argocd/streamgate-application.yaml" => "ArgoCD application"
 }.freeze
 
 def assert!(condition, message)

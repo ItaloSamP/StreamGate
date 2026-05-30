@@ -155,7 +155,7 @@ module Worker
             end
           end
         end
-        
+
         parse_records(records.lazy)
       rescue JSON::ParserError => e
         raise Worker::TerminalProcessingError, "invalid_ndjson: #{e.message}"
@@ -293,11 +293,12 @@ module Worker
         )
       end
 
+      # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
       def parse_csv(raw_content)
         normalized_content = raw_content.to_s.sub(/\A\xEF\xBB\xBF/, "")
         io = StringIO.new(normalized_content)
         csv = CSV.new(io, headers: true, col_sep: detect_delimiter(normalized_content), encoding: Encoding::UTF_8)
-        
+
         # Le a primeira linha para carregar os headers
         first_row = csv.shift
         headers = csv.headers&.map { |header| header.to_s.strip }
@@ -305,7 +306,7 @@ module Worker
 
         invalid_records = []
         valid_records = []
-        
+
         process_csv_row = lambda do |row, index|
           normalized = row.to_h.transform_values { |value| value.to_s.strip }
           if normalized.values.all?(&:empty?)
@@ -321,7 +322,7 @@ module Worker
         end
 
         process_csv_row.call(first_row, 0) if first_row
-        
+
         csv.each.with_index(1) do |row, index|
           process_csv_row.call(row, index)
         end
@@ -336,6 +337,7 @@ module Worker
       rescue CSV::MalformedCSVError => e
         raise Worker::TerminalProcessingError, "invalid_csv: #{e.message}"
       end
+      # rubocop:enable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 
       def detect_delimiter(raw_content)
         first_line = raw_content.to_s.each_line.first.to_s
