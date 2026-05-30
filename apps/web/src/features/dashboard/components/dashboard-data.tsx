@@ -51,7 +51,7 @@ export const jobs: JobData[] = [
 export const formatRows = [
   { label: 'CSV', jobs: '84', width: '72%', tone: 'var(--signal-blue)', pct: '56.8%' },
   { label: 'JSON', jobs: '38', width: '40%', tone: 'var(--signal-teal)', pct: '25.7%' },
-  { label: 'Parquet', jobs: '18', width: '20%', tone: 'var(--signal-purple)', pct: '12.2%' },
+  { label: 'Parquet', jobs: '18', width: '20%', tone: 'var(--signal-cyan)', pct: '12.2%' },
   { label: 'NDJSON', jobs: '5', width: '7%', tone: 'var(--signal-yellow)', pct: '3.4%' },
   { label: 'XLSX', jobs: '3', width: '4%', tone: 'var(--signal-red)', pct: '2.0%' },
 ] as const

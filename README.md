@@ -1,31 +1,47 @@
-# 🌊 StreamGate
+<div align="center">
+  <img src="https://via.placeholder.com/150" alt="StreamGate Logo" width="150"/>
+  <h1>🌊 StreamGate</h1>
+  <p><strong>Plataforma Definitiva de Ingestão e Segurança de Ativos em Larga Escala</strong></p>
+</div>
 
-O **StreamGate** é uma plataforma robusta projetada para ingestão escalável, processamento seguro e análise de grandes volumes de dados de streaming e eventos.
+---
 
-## 🌟 Arquitetura
+O **StreamGate** é uma plataforma robusta projetada para ingestão massiva, segurança em tempo real, e análise de dados em ambientes operacionais distribuídos. Com foco na resiliência e entrega segura (zero-trust), ele atua como o principal portão de entrada para uploads institucionais garantindo que todo arquivo passe por varreduras de malware e fluxos granulares de conformidade.
 
-O sistema é dividido em aplicações (apps) independentes que compartilham pacotes comuns:
+## 🌟 O Valor de Negócio (Visão do Produto)
 
-- **Command Center (`apps/web`)**: Painel de administração e frontend do usuário final (React, Vite, Tailwind CSS). Focado na usabilidade, monitoramento de jobs, links públicos e gestão de contas.
-- **API Server (`apps/api`)**: Core backend (Ruby on Rails). Responsável por gerenciar todo o ciclo de vida da aplicação de forma síncrona. Organizado sob o padrão de **Domínios (Bounded Contexts)**.
-- **Worker (`apps/worker`)**: Processamento assíncrono (Ruby puro). Focado na resiliência e alto desempenho no consumo de filas via RabbitMQ e inserções no ClickHouse.
-- **Contracts (`packages/contracts`)**: Contratos unificados usando OpenAPI.
+Na era digital, aceitar arquivos do mundo exterior é um risco constante. O **StreamGate** elimina esta fricção oferecendo:
+1. **Ambiente Isolado (Quarentena)**: Uploads suspeitos ficam retidos. Zero chance de infecção para a rede da corporação.
+2. **Ingestão Multi-Canal**: Via Web (drag-and-drop), links públicos anônimos, ou conectores nativos para Google Drive e S3.
+3. **Analytics em Tempo Real**: Visão imediata do comportamento de tráfego (Volume, Ameaças mitigadas) extraído em relatórios ricos de inteligência (OLAP ClickHouse).
 
-👉 Para visualizar todos os componentes detalhados do sistema, visite o nosso **[Hub de Documentação](docs/README.md)**.
+## 🧩 Arquitetura Tecnológica
 
-## ⚙️ Bounded Contexts
+Construído sob os preceitos do **Domain-Driven Design (DDD)** e arquitetura de microsserviços, com separação brutal de responsabilidades e Segurança desde o Código (Security-by-Design):
 
-Toda a arquitetura é orientada a domínios:
-- `Auth`: Gestão de identidade e acessos.
-- `Uploads`: Manipulação e segurança de ativos digitais.
-- `Analytics`: Dashboards, métricas e integração OLAP (ClickHouse).
-- `Operations`: Quarentenas, notificações, DLQ e auditoria.
+- 🎨 **[Command Center (`apps/web`)](docs/README.md)**: Aplicação frontend imersiva usando React, Vite, Tailwind CSS e TypeScript (Feature-Sliced Design). Focada em painéis de telemetria, exploração analítica e controle de acesso seguro.
+- ⚙️ **[API Server (`apps/api`)](docs/README.md)**: O cérebro transacional. Feito em Ruby on Rails em modo estrito de API. Gerencia Autenticação, Operações baseadas em RBAC, Conectores OIDC e garante idempotência (`Idempotency-Key`).
+- 👷 **[Data Worker (`apps/worker`)](docs/README.md)**: Motor escalável (Ruby puro) que consome massas de eventos do RabbitMQ e as integra com o ecossistema externo (ClamAV para antivírus) gravando resultados agressivamente em bancos OLAP (ClickHouse) ou S3.
+- 📜 **[Contracts (`packages/contracts`)](docs/README.md)**: A fonte da verdade para comunicação HTTP. Esqueça ambiguidades: o OpenAPI v3 rege todas as interações do ecossistema.
 
-## 🚀 Como Iniciar
+> 👉 **Mergulhe fundo na nossa infraestrutura no [Hub Central de Documentação](docs/README.md).**
 
-O StreamGate possui ferramentas poderosas para facilitar o bootstraping de toda a stack local.
+Ou acesse os guias fundamentais da plataforma:
+- 📖 **[Manual do Usuário Final](docs/guides/user-manual.md)** (Operações do Command Center)
+- 🏗️ **[Arquitetura do Sistema](docs/guides/architecture.md)** (Topologia dos Microsserviços e Eventos)
+- 🛠️ **[DevOps Runbook](docs/guides/devops-runbook.md)** (Troubleshooting, ArgoCD, e Helm)
 
-### Inicialização (App Stack Completa)
+## 🚀 Como Iniciar o Desenvolvimento
+
+A inicialização foi desenhada para oferecer uma réplica 100% fidedigna da produção através de contêineres e automações avançadas.
+
+### 1. Requisitos
+- Docker Engine & Docker Compose
+- Windows PowerShell (ou Bash no macOS/Linux)
+
+### 2. Inicialização Completa (App Stack)
+
+Suba o cluster de infra (Postgres, RabbitMQ, Redis, ClickHouse, Minio) e os serviços das aplicações de forma assistida:
 
 No Windows (PowerShell):
 ```powershell
@@ -37,18 +53,19 @@ No Linux/Mac (Bash):
 bash scripts/dev/dev-up.sh full
 ```
 
-### Pipelines de Integração (CI Local)
+### 3. Validação e CI Local (Integração Contínua)
 
-Execute os pipelines localmente para garantir qualidade:
+O repositório é guardado por fluxos restritos. É obrigatório testar os pacotes antes de submeter PRs. Acesse o **[Guia de Scripts](scripts/README.md)** para mais detalhes.
+
 ```powershell
-# Frontend
+# Execução unitária das ferramentas
 powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 frontend
-
-# Backend
 powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 backend
 
-# Testes E2E e Smokes
-powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1
+# Para fechamento completo (Testes ponta a ponta e auditoria)
+powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -Profile full-closeout
 ```
 
-> **Nota:** Nunca espalhe chamadas HTTP fora dos contratos oficiais. Mutacoes sensíveis exigem `Idempotency-Key` e auditoria em todos os domínios.
+## 🔐 Compromisso com a Segurança
+
+Toda e qualquer rota operacional mutável na API requer controle de acesso `Role-Based (RBAC)` e gera trilhas de auditoria criptograficamente isoladas. Nenhuma exceção é permitida para bypassar o fluxo de quarentena. Para mais informações, acesse o painel de **Security & SaaS** na inicialização do sistema.

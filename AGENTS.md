@@ -1,71 +1,41 @@
-# AGENTS
+# 🤖 AGENTS (AG Kit)
 
-Guia rapido para agentes e contribuidores trabalhando no StreamGate.
+Guia de referência para a atuação de Agentes Autônomos (IA) operando no ecossistema **StreamGate**. 
+Este arquivo funciona como um adendo ao `GEMINI.md` para prover contexto topológico. Todo agente ativo deve aderir estritamente às normas documentadas.
 
-## Mapa do repositorio
+## 🗺️ Mapa Topológico e Domínios
 
-- `apps/api`: Rails API-only, auth, operacao segura, artefatos, notificacoes e contratos OpenAPI.
-- `apps/web`: React + Vite, command center, inbox de notificacoes e painel admin de operacoes.
-- `apps/worker`: runtime Ruby para consumo de eventos, processamento, artefatos e notificacoes operacionais.
-- `packages/contracts`: schemas e examples compartilhados por dominio.
-- `scripts`: bootstrap, dev, compose, CI local, smokes e reports.
-- `docs`: guias tecnicos, roadmap, closeouts e referencias operacionais.
+O ecossistema adota Bounded Contexts estritos. Nunca espalhe regras de negócio ou referencie bibliotecas erradas entre as fronteiras:
 
-## Comandos oficiais
+- `apps/api`: Servidor transacional (Ruby on Rails). Fonte da verdade para Auth, Segurança, Conectores e Mutação de Status. Respeite os namespaces em `app/domains/`.
+- `apps/web`: O Command Center (React, Vite, Tailwind). Aplicação focada no usuário final. Mutações e Consultas devem obrigatoriamente usar os adaptadores em `src/lib/api/` e NUNCA realizar chamadas fetch soltas ou `axios` aleatórios.
+- `apps/worker`: Escravo de alta performance (Ruby puro). Responsável por engolir as filas do **RabbitMQ**, processar integrações de IO pesado (ClamAV) e enviar telemetria analítica ao **ClickHouse**.
+- `packages/contracts`: A lei máxima do repositório. Definições OpenAPI (`yaml`/`json`). Qualquer mudança na API precisa ser versionada e descrita primeiro nos contratos.
+- `scripts`: A base da infraestrutura dev. O bootstrap e o ambiente Docker.
+- `docs/guides`: Nossos hubs documentais (`user-manual.md`, `architecture.md`, `devops-runbook.md`).
 
-- Setup/app stack:
-  - `powershell -ExecutionPolicy Bypass -File .\scripts\dev\dev-up.ps1 -Mode app`
-  - `bash scripts/dev/dev-up.sh app`
-- Stack completa:
-  - `powershell -ExecutionPolicy Bypass -File .\scripts\dev\dev-up.ps1 -Mode full`
-  - `bash scripts/dev/dev-up.sh full`
-- Derrubar stack:
-  - `powershell -ExecutionPolicy Bypass -File .\scripts\dev\dev-down.ps1`
-  - `bash scripts/dev/dev-down.sh`
+## ⚖️ Leis Fundamentais de Atuação
 
-## Gates principais
+1. **Test-Driven Operations**: Não proponha PRs se você alterar regras de negócio sem atualizar as respectivas suítes (RSpec/Minitest para backend, Vitest/Playwright para frontend).
+2. **Idempotência Operacional**: Mutacoes na infraestrutura, uploads ou liberação de quarentenas requerem chaves de idempotência (`Idempotency-Key`) no cabeçalho.
+3. **Privacidade e Auditoria**: O StreamGate lida com Segurança Zero-Trust. Evite usar `console.log` para payload sensível ou senhas; toda alteração de permissionamento deve ocorrer por vias de Eventos (Event Sourcing) ou gerando entradas no DB de Auditoria.
+4. **Sem Arquivos Órfãos**: Nunca crie componentes front-end soltos fora dos domínios do *Feature-Sliced Design* (`src/features/*`). Componentes puros de UI devem ir para `src/components/ui/`.
 
-- Fast gates do dia a dia:
+## 🛡️ Gates Oficiais e Certificação
+
+Antes de sugerir um merge para a `main`, o Agente deve validar seu próprio trabalho contra o Master Checklist do AG Kit e os scripts locais:
+
+- Validação Mestre (AG Kit):
+  - `python .agents/scripts/checklist.py .`
+- Testes Locais de Fast-Feedback:
   - `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 frontend`
   - `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 backend`
-  - `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 e2e`
-  - `powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 docker`
-- Frontend:
-  - `cd apps/web && pnpm test:run`
-  - `cd apps/web && pnpm test:integration`
-  - `cd apps/web && pnpm build`
-- Backend:
-  - `cd apps/api && bundle exec rails test`
-- Worker:
-  - `cd apps/worker && bundle exec rspec`
-- Contratos:
-  - `ruby scripts/ci/validate-operational-contracts.rb`
-- Operational gate:
-  - `powershell -ExecutionPolicy Bypass -File .\scripts\smokes\run-smokes.ps1`
-- Full-closeout gate:
+- Orquestração Definitiva de Relatórios:
   - `powershell -ExecutionPolicy Bypass -File .\scripts\reports\run-all-reports.ps1 -Profile full-closeout`
 
-## Politica operacional dos gates
+## 📚 Referências Essenciais
 
-- `WSL/Compose-first` e o caminho oficial para gates pesados; Windows host continua suportado para checks rapidos e suporte local.
-- `ci-local all` continua existindo, mas deve ser reservado para fechamento relevante ou diagnostico; no dia a dia prefira workflows isolados.
-- `run-smokes` e o gate operacional ponta a ponta para runtime, worker, notificacoes, artefatos e operacao segura.
-- `run-all-reports` e o orquestrador oficial de evidencias; ele nao deve rerodar `ci-local all` em cascata.
-- Use `-SkipInstallSteps` e `-ResumeFromStep` no `ci-local.ps1` quando a investigacao exigir retomar o fluxo sem repetir bootstrap pesado.
-
-## Regras de trabalho
-
-- Nao espalhe chamadas HTTP fora da fronteira oficial do client no frontend.
-- Toda mudanca de endpoint precisa manter OpenAPI e `packages/contracts` sincronizados no mesmo ciclo.
-- Mutacoes operacionais sensiveis exigem RBAC, motivo obrigatorio, auditoria e `Idempotency-Key`.
-- Smokes e reports devem continuar sobrescrevendo artefatos locais sem versionar lixo de execucao.
-- Docs afetadas por runtime, contratos, seguranca ou UX operacional devem ser atualizadas junto com o codigo.
-
-## Referencias de apoio
-
-- `README.md`
-- `docs/planning/`
-- `docs/guides/platform/devops-roadmap.md`
-- `docs/guides/operations/worker-runtime-runbook.md`
-- `docs/guides/backend/api-docs.md`
-- `docs/reports/index.html`
+- 🏠 **[Hub de Documentação Principal](docs/README.md)**
+- 📖 **[Manual do Usuário Final](docs/guides/user-manual.md)**
+- 🏗️ **[Arquitetura do Sistema](docs/guides/architecture.md)**
+- 🛠️ **[DevOps Runbook](docs/guides/devops-runbook.md)**

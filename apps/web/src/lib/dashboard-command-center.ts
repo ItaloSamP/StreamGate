@@ -220,8 +220,8 @@ const STATUS_TONES: Record<string, string> = {
   pending: 'var(--text-faint)',
   queued: 'var(--text-faint)',
   failed: 'var(--signal-red)',
-  quarantined: 'var(--signal-purple)',
-  quarantined_with_warnings: 'var(--signal-purple)',
+  quarantined: 'var(--signal-cyan)',
+  quarantined_with_warnings: 'var(--signal-cyan)',
 }
 
 export function buildDashboardCommandCenterModel({
@@ -947,7 +947,7 @@ function formatLabel(row: AnalyticsDashboardFormatItem) {
 
 function formatTone(index: number, label: string) {
   if (label === 'JSON') return 'var(--signal-teal)'
-  if (label === 'Parquet') return 'var(--signal-purple)'
+  if (label === 'Parquet') return 'var(--signal-cyan)'
   if (label === 'NDJSON') return 'var(--signal-yellow)'
   if (label === 'XLSX') return 'var(--signal-orange)'
   return index === 0 ? 'var(--signal-blue)' : 'var(--text-faint)'

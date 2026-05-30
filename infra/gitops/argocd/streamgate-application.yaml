@@ -10,7 +10,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/streamgate/streamgate.git
-    targetRevision: release
+    targetRevision: dev
     path: infra/helm/streamgate
     helm:
       valueFiles:
