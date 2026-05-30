@@ -5,8 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from '@/App'
 import { AuthProvider } from '@/features/auth/auth-context'
 import { createStoredAuthSession, storeAuthSession } from '@/lib/auth'
-import { AnalyticsPage } from '@/pages/AnalyticsPage'
-import { QuarantinePage } from '@/pages/QuarantinePage'
+import { AnalyticsPage } from '@/features/analytics/pages/AnalyticsPage'
+import { QuarantinePage } from '@/features/operations/pages/QuarantinePage'
 
 const originalFetch = global.fetch
 

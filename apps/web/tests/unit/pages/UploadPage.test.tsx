@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AuthProvider } from '@/features/auth/auth-context'
 import { createStoredAuthSession, storeAuthSession } from '@/lib/auth'
-import { UploadPage } from '@/pages/UploadPage'
+import { UploadPage } from '@/features/uploads/pages/UploadPage'
 
 const originalFetch = global.fetch
 const originalCrypto = globalThis.crypto

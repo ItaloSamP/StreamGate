@@ -29,6 +29,12 @@ module Api
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
 
+# Load all domain subdirectories (e.g. app/domains/auth/models)
+Dir[Rails.root.join('app', 'domains', '*', '*')].each do |path|
+  config.autoload_paths << path
+end
+
+
     config.middleware.use Rack::Attack
   end
 end

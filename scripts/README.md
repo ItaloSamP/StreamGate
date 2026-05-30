@@ -1,54 +1,36 @@
-# StreamGate Scripts & DevOps
+# 💻 Automações e Scripts (DevOps Local)
 
-Pasta central contendo os comandos oficiais do repositório para inicialização, CI Local, deploy e testes de sanidade/E2E operacionais.
+A pasta `scripts/` é o coração das operações de desenvolvimento e CI/CD local do StreamGate. O uso de automações garante que todo desenvolvedor rode o projeto exatamente do mesmo jeito, eliminando a frase "na minha máquina funciona".
 
-Nossa regra de ouro: **Nenhuma ferramenta na máquina do desenvolvedor deve estar quebrando por depender de configurações mágicas**. O pipeline aqui é o mesmo do CI.
+## 🚀 Como Usar os Scripts
 
-## 📁 Estrutura de Diretórios
+Temos subpastas especializadas por ciclo de desenvolvimento:
 
-- `ci/`: Contém os scripts executados por pipelines como GitHub Actions, GitLab CI ou localmente para fechamento completo de pull request.
-  - Ex: `ci-local.ps1`, `validate-operational-contracts.rb`
-- `dev/`: Contém os bootstraps primários.
-  - Ex: `dev-up.sh` / `dev-up.ps1` (Para levantar toda a infra via Compose).
-  - Ex: `dev-down.sh` / `dev-down.ps1`
-- `reports/`: Ferramentas responsáveis por orquestrar execuções e consolidar os arquivos JUnit/Coverage gerados pela web, worker e api.
-  - Ex: `run-all-reports.ps1`
-- `smokes/`: Scripts dedicados para validar a aplicação End-to-End.
-  - Ex: `run-smokes.ps1`
+### 1. Ambiente Local (`dev/` e `compose/`)
 
-## 🚀 Uso Básico (Dia-a-Dia)
+Para subir toda a infraestrutura ou partes isoladas.
 
-### Para rodar a Stack:
-**No Windows:**
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\dev\dev-up.ps1 -Mode full
-```
+- `dev-up.ps1 -Mode full`: Sobe Docker, API, Frontend e Worker.
+- `dev-up.ps1 -Mode app`: Sobe infraestrutura e API (ideal para focar no Web).
+- `dev-down.ps1`: Derruba todos os containers, limpando networks e dados efêmeros.
 
-**No WSL/Linux:**
-```bash
-bash scripts/dev/dev-up.sh full
-```
+### 2. Integração Contínua Local (`ci/`)
 
-### Para Derrubar a Stack e limpar os Volumes Padrões:
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\dev\dev-down.ps1
-```
+Scripts para validações idênticas ao GitHub Actions.
 
----
+- `ci-local.ps1 frontend`: Lint, type-check e testes unitários do web.
+- `ci-local.ps1 backend`: Rubocop e RSpec/Minitest do rails e worker.
+- `ci-local.ps1 e2e`: Execução do Playwright contra o ambiente local.
+- `validate-operational-contracts.rb`: Garante que OpenAPI não tem quebras.
 
-## 🔒 Gates de Qualidade
+### 3. Operação e Smokes (`smokes/`)
 
-Para passar no Pente Fino, recomendamos sempre usar o script de CI isolado por camada antes do commit:
+- `run-smokes.ps1`: Executa testes *Ponta-a-Ponta* agressivos (Smokes) no runtime em andamento para validar conectividade com RabbitMQ, S3 e banco de dados em tempo real.
 
-```powershell
-# Apenas Frontend (Lint + Test + Build)
-powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 frontend
+### 4. Relatórios de Qualidade (`reports/`)
 
-# Apenas Backend / API (Rspec)
-powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 backend
+- `run-all-reports.ps1`: Orquestra todas as camadas do `ci-local` gerando evidências tangíveis (`html`, `xml`) gravadas em `docs/reports` ao finalizar uma release. Usado para o *Closeout Gate*.
 
-# Tudo! (Pesado, demora, use antes do fechamento de PR)
-powershell -ExecutionPolicy Bypass -File .\scripts\ci\ci-local.ps1 all
-```
+## ⚖️ Regras de Criação de Scripts
 
-*Nota para Troubleshooting: Caso um gate falhe, use a flag `-ResumeFromStep` para retomar o passo com erro ao invés de perder tempo reinstalando o frontend.*
+Qualquer novo script deve ser idôneo: se for abortado no meio, pode ser rodado de novo sem duplicar estados errados no banco ou na infraestrutura. Preferência estrita por `Powershell` (`.ps1`) para o ecossistema Windows primário, com fallback em `Bash` (`.sh`) para CI em Linux/macOS.

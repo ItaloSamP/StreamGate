@@ -3,8 +3,8 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 
 import { AuthProvider } from '@/features/auth/auth-context'
-import { LandingPage } from '@/pages/LandingPage'
-import { LoginPage } from '@/pages/LoginPage'
+import { LandingPage } from '@/features/public/pages/LandingPage'
+import { LoginPage } from '@/features/auth/pages/LoginPage'
 
 describe.skip('entry surfaces', () => {
   it('keeps the landing page focused on the product value and dashboard access', () => {
