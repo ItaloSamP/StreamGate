@@ -107,3 +107,52 @@ Com o plano selado:
 3. **Robustez Produtiva:** Confirmamos limites e rate-limiting (Fase 9).
 4. **Validação:** Carimbamos a Release no Teste Funcional (Fase 7).
 5. **Zero-Base Docs:** Documentamos tudo perfeitamente (Fase 10).
+### FASE 9 — Observabilidade, Rate Limiting e Operação (SRE/DevOps)
+
+**Objetivo:** Adicionar limites estritos e tornar os serviços prontos para auditoria de métricas através de logs estruturados (JSON).
+
+## Proposed Changes
+
+### Rate Limiting & Protection (API)
+Vamos adicionar a gem `rack-attack` para prover rate limiting real no middleware Rails.
+#### [NEW] `apps/api/config/initializers/rack_attack.rb`
+- Configurar limite padrão global de requisições por IP (ex: 100 req/minuto).
+- Configurar limite restrito para endpoints sensíveis como uploads e auth (ex: 10 req/minuto).
+- Adicionar política de throttling que responde com `HTTP 429 Too Many Requests`.
+- Inserir `Rack::Attack` no middleware em `application.rb` ou via initializer.
+
+### Observabilidade & Structured Logging (API & Worker)
+Para o DataDog/ELK conseguir extrair as métricas facilmente sem parse complexo, o log precisa estar em JSON.
+#### [MODIFY] `apps/api/Gemfile`
+- Adicionar `rack-attack`.
+- Adicionar `lograge` para estruturar os logs do Rails em JSON.
+
+#### [MODIFY] `apps/api/config/environments/production.rb`
+- Configurar `config.lograge.enabled = true` e formatador para JSON.
+- Garantir que as chaves de requisição, IP e status sejam extraídas no lograge.
+
+#### [MODIFY] `apps/worker/lib/worker/logger.rb` (Se existir, ou equivalente)
+- Configurar o stdout logger do worker para usar formato JSON (com chaves `timestamp`, `level`, `message`, `event_id`, etc).
+
+### Endpoint de Health c/ Métricas do Broker
+A rota atual de `/health` não expõe as filas.
+#### [MODIFY] `apps/api/config/routes.rb`
+- Adicionar a rota customizada `get "/health", to: "health#show"` se já não existir, e mapear apropriadamente (a Rails padrão é `/up`).
+
+#### [MODIFY] `apps/api/app/controllers/health_controller.rb`
+- Retornar o status global (`ok`).
+- Retornar contagem de filas usando o client HTTP da API do RabbitMQ (ou Bunny se conectado diretamente) para obter tamanhos das filas principais e DLQ (opcional, faremos a aproximação se o RabbitMQ Manager estiver ativo).
+
+### Ciclo de Vida do DLQ (Poison Messages)
+**Nota:** Após auditoria no `consumer.rb` do Worker, foi constatado que a política do DLQ já está rigorosamente implementada!
+O worker possui `TransientProcessingError` que realiza backoff exponencial até o `max_retries` e, se falhar, envia para a fila `dlq` (com header `x-dead-letter-reason`).
+Portanto, a tarefa do DLQ consistirá apenas em auditar/confirmar a política no documento final, ou ajustar logs.
+
+## Verification Plan
+
+### Automated Tests
+- O `system-validation-smoke.py` criado na Fase 7 já possui o `step_rate_limit_probe` que testa HTTP 429. Com a implementação do Rate Limiting, este teste deve passar rigorosamente.
+
+### Manual Verification
+- Inspecionar saída no terminal de `apps/api` e `apps/worker` para garantir que o stdout exibe objetos JSON ao invés de strings limpas.
+- Bater no endpoint `/health` via cURL.

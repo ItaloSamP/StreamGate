@@ -2,6 +2,7 @@
 
 require_relative "worker/version"
 require_relative "worker/config"
+require_relative "worker/logger"
 require_relative "worker/id"
 require_relative "worker/runtime/errors"
 require_relative "worker/runtime/db_client"
@@ -29,6 +30,6 @@ module Worker
   class Error < StandardError; end
 
   def self.run!
-    Runtime::Consumer.new.run
+    Runtime::Consumer.new(logger: Worker.logger).run
   end
 end
