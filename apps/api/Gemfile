@@ -37,7 +37,7 @@ gem "rack-cors", "~> 2.0"
 gem "bunny", "~> 3.1"
 gem "csv", "~> 3.3"
 gem "rack-attack", "~> 6.7"
-gem "lograge", "~> 0.14.0"
+gem "lograge", "~> 0.15.0"
 
 group :development do
   gem "rswag-api"
