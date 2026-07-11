@@ -33,7 +33,7 @@ gem "thruster", require: false
 gem "image_processing", "~> 2.0"
 
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
-gem "rack-cors", "~> 2.0"
+gem "rack-cors", "~> 3.0"
 gem "bunny", "~> 3.1"
 gem "csv", "~> 3.3"
 gem "rack-attack", "~> 6.7"
