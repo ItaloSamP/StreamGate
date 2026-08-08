@@ -22,4 +22,4 @@ end
 gem "rspec", "~> 3.0"
 gem "simplecov", require: false
 
-gem "rubocop", "~> 1.88"
+gem "rubocop", "~> 1.89"
